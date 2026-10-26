@@ -178,3 +178,42 @@
   font-size: 0.85rem;
   white-space: pre-wrap;
 }
+
+/* Ecosystem cards: one per tool, with a first command and an official link. */
+.eco-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  margin-top: 1.5rem;
+}
+.eco-card {
+  margin: 0;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.eco-card p {
+  margin: 0;
+  font-size: 0.92rem;
+}
+.eco-layer {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--ink-3);
+}
+.eco-name {
+  margin: 0;
+  font-size: 1.1rem;
+}
+.eco-cmd {
+  white-space: pre-wrap;
+  font-size: 0.8rem;
+  margin: 0;
+}
+.eco-card .btn {
+  align-self: flex-start;
+}

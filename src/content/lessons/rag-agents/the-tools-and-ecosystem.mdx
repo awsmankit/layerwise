@@ -1,0 +1,114 @@
+---
+title: "The tools and the ecosystem"
+track: rag-agents
+level: intermediate
+order: 5
+summary: Where models come from, how they run locally and on servers, and how agents reach tools through function calling, MCP servers and skills. Know which layer each tool sits in, and what it is responsible for.
+updated: 2026-10-26
+sources:
+  - label: "Model Context Protocol specification, 2026-07-28 revision"
+    url: https://modelcontextprotocol.io/specification/2026-07-28
+  - label: "Agent Skills specification"
+    url: https://agentskills.io/specification
+  - label: "vLLM: OpenAI-compatible server"
+    url: https://docs.vllm.ai/en/latest/serving/online_serving/openai_compatible_server/
+  - label: "Hugging Face Hub documentation"
+    url: https://huggingface.co/docs/hub/index
+  - label: "llama.cpp (GGUF and llama-server)"
+    url: https://github.com/ggml-org/llama.cpp
+---
+
+import PipelineFlow from '../../../components/viz/PipelineFlow.tsx';
+import EcosystemCards from '../../../components/viz/EcosystemCards.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+The AI ecosystem is crowded, and the names overlap. A "framework", a "runtime", a "server", a "protocol" and a "skill" can all sound like the same thing. They are not. The useful question for any tool is: which layer of the stack does it sit in, and what does it own?
+
+## The stack, from bottom to top
+
+Think of five layers. Each one has a few tools, and a good system can swap a tool in one layer without rewriting the others.
+
+| Layer | What it does | Examples |
+| --- | --- | --- |
+| Models | Where weights come from, with a licence and a model card | Hugging Face Hub, model vendors' own catalogues |
+| Runtime on your machine | Loads weights and generates tokens on a laptop or workstation | Ollama, LM Studio, llama.cpp |
+| Serving engine on a server | Handles many users at once, with batching and a cache | vLLM, SGLang, TensorRT-LLM |
+| Application libraries | Calls the model, builds prompts, handles retrieval and parsing | Model SDKs, orchestration libraries |
+| Tools and agents | Lets the model act: call an API, read a file, run a query | Function calling, MCP servers, Agent Skills |
+
+The [inference engines lesson](../../local/inference-engines-compared/) goes deeper on the middle rows. This lesson is about the outer rows, and about how the tools connect.
+
+## Models and where they come from
+
+Most open models live on the **Hugging Face Hub**. A repository holds the weight files, a **model card** describing what the model was trained for and where it fails, and often example code. Two things to check before you use any of them:
+
+- **The licence.** "Open weights" does not always mean an open-source licence. Some models forbid certain uses, require attribution, or limit the size of company that can use them. Read the licence on the model card, not a summary.
+- **The file format.** **Safetensors** stores only the weights and tensor shapes, so loading it cannot run code. Older pickle-based checkpoints can run code when loaded, so treat them with the same care as any downloaded program. **GGUF** is the format llama.cpp and the tools built on it use, and it stores quantized weights with their metadata in one file.
+
+## Running on your own machine
+
+Three tools cover most local use. They differ in who they are for, not in what they can do.
+
+- **Ollama** is the shortest path: one command to download and run a model, and a local API on the same machine.
+- **LM Studio** is a desktop app for browsing, chatting and serving models, with a local server you can call from code.
+- **llama.cpp** is the engine underneath many of these tools. It is the first place many new architectures and features arrive, and it is the most flexible, at the cost of more setup.
+
+The cards at the end of this lesson have a first command for each tool, and the [sandbox](../../../tools/sandbox/) shows the output those commands print.
+
+## Serving many users
+
+On a GPU server, the tool that matters is the **serving engine**. **vLLM** is widely used. It exposes an OpenAI-compatible API, so an application that talks to one can usually switch to another by changing the base URL and model name. **SGLang** and **TensorRT-LLM** are other options, each with trade-offs in model support and tuning. **TGI** is in maintenance mode, so do not start a new deployment on it; the [inference engines lesson](../../local/inference-engines-compared/) explains the change.
+
+The API shape is the stable part. Tool-calling and structured-output details still differ between engines, so test the features you rely on.
+
+## How an agent reaches a tool
+
+A model cannot run anything by itself. It can only produce text. When an agent acts, the loop has a fixed shape, and this is the part to understand before you look at any framework.
+
+<PipelineFlow
+  client:visible
+  title="One agent request with a tool"
+  stages={[
+    { title: 'Ask', detail: 'Your application sends the user message, the list of available tools and their input schemas to the model.' },
+    { title: 'Propose', detail: 'The model replies with a structured tool call: a tool name and arguments. It has not run anything yet.' },
+    { title: 'Check', detail: 'Your code validates the call against the schema, checks permissions, and asks the user to confirm anything that changes data.' },
+    { title: 'Run', detail: 'The tool runs. It might be a function in your code, a tool on an MCP server, or a script bundled with a skill.' },
+    { title: 'Answer', detail: 'The result goes back to the model as untrusted data. The model writes the reply, or proposes the next call.' },
+  ]}
+/>
+
+The check step is where most production problems are. The model's output is a suggestion. Your code decides what happens.
+
+## Three ways to give a model tools
+
+These are often confused, so keep them apart.
+
+- **Function calling** is a feature of the model API. You describe your functions, the model returns a structured call, and your code runs it. Nothing is stored outside your application. It is the basic building block.
+- **MCP (Model Context Protocol)** is an open protocol for connecting an application to tool and data servers. An MCP server exposes tools, resources and prompts over a standard interface, so any compatible client can use it. The latest revision of the specification is dated 2026-07-28 on the [official site](https://modelcontextprotocol.io/specification/2026-07-28), and it removed the old session handshake in favour of stateless requests.
+- **Agent Skills** are a folder with a `SKILL.md` file of instructions, plus optional scripts and reference files. The file starts with a name and a description. An agent reads the description for every installed skill, and loads the full instructions only when a task matches. The format is an open standard released in December 2025, documented at [agentskills.io](https://agentskills.io/specification).
+
+A quick way to remember it: function calling is how the model asks, MCP is how a tool server is plugged in, and a skill is a set of instructions and scripts the agent can pick up when needed.
+
+<Callout title="Skills and MCP servers run code" kind="cost">
+Both can run code in your environment. Install skills and MCP servers only from sources you trust, read what they do, and give each one the least access it needs. A tool that can send email or change data should ask for confirmation first.
+</Callout>
+
+## Which layer to choose
+
+- For a single app that calls a few internal functions, plain function calling is enough. Do not add a protocol you do not need.
+- For tools shared across several apps or clients, an MCP server keeps the integration in one place.
+- For repeatable know-how, such as how your team writes release notes or runs a migration, a skill keeps the instructions and scripts together.
+- For a fixed series of steps, a plain workflow in code is simpler and easier to test than an agent. The [agents and tool use lesson](../agents-and-tool-use/) covers when an agent is worth its extra cost.
+
+<Deep title="Questions interviewers ask about this stack">
+
+Expect a question like "what is the difference between MCP and function calling?" The short answer: function calling is the model API's way to request a call, and MCP is a protocol for exposing tools from a separate server. A longer answer adds that MCP lets one tool server serve many clients, and that both still need your code to validate every call and control what it may do.
+
+</Deep>
+
+## Try it
+
+The cards below give each tool's official site and a first command. They are a starting point, not a recommendation for every case. Read the project's own documentation before you rely on a flag, because versions change quickly.
+
+<EcosystemCards client:visible />

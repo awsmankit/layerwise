@@ -1,0 +1,92 @@
+---
+title: "Parameters and hyperparameters"
+track: llm
+level: intermediate
+order: 5
+summary: The three kinds of numbers behind a model. Parameters are learned, training hyperparameters are chosen before training, and sampling settings are chosen per request. Know which is which, and what each one costs you.
+updated: 2026-10-26
+sources:
+  - label: "Attention Is All You Need (Vaswani et al., 2017)"
+    url: https://arxiv.org/abs/1706.03762
+  - label: "LoRA: Low-Rank Adaptation of Large Language Models (Hu et al., 2021)"
+    url: https://arxiv.org/abs/2106.09685
+  - label: "Adam: A Method for Stochastic Optimization (Kingma and Ba, 2014)"
+    url: https://arxiv.org/abs/1412.6980
+  - label: "The Curious Case of Neural Text Degeneration (Holtzman et al., 2019)"
+    url: https://arxiv.org/abs/1904.09751
+---
+
+import KnobMap from '../../../components/viz/KnobMap.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+People say "the model has 7 billion parameters", "set the learning rate to 2e-5" and "use temperature 0.2", and treat them as the same kind of thing. They are not. Each one is set at a different time, by a different person, and each one costs you something different.
+
+<KnobMap client:visible />
+
+## Parameters: the learned numbers
+
+A **parameter** is one of the numbers inside the model that training adjusts. A language model is a large set of weight matrices. Every weight is a parameter. Training from the [previous lessons](../../foundations/how-models-learn/) nudges them all, step by step, until the outputs fit the data.
+
+When someone says "a 7B model", the 7 billion is the count of these numbers. You can estimate it from the architecture. For a plain decoder-only transformer, each layer holds roughly four square matrices for attention and a feed-forward block that is often four times as wide, which comes to about 12 times the model width squared. The embedding table adds vocabulary size times width. The formula is rough: real models add gated feed-forward layers, grouped-query attention and norms. Use it to check the order of magnitude, not to quote an exact number.
+
+The count matters because it sets the memory bill. Each parameter takes a fixed number of bytes, depending on its precision.
+
+| Precision | Bytes per parameter | 7 billion parameters, weights only |
+| --- | --- | --- |
+| 16-bit (fp16 or bf16) | 2 | about 14 GB |
+| 8-bit | 1 | about 7 GB |
+| 4-bit | about 0.5, plus overhead for scales | about 4 GB or a bit more |
+
+These are weights only. The KV cache, activations and the runtime add to them, and the cache grows with every token of context. That is why a model that "fits" in memory can still run out of room with a long prompt.
+
+## Training hyperparameters: the knobs you choose before training
+
+A **hyperparameter** is a setting that the training process does not learn. You choose it before the run starts, and the run then produces the parameters. Common ones:
+
+- **Learning rate**: the size of each step, which the previous lesson showed can crawl, work or explode. Usually paired with a warm-up period and a schedule that lowers it.
+- **Batch size**: how many examples go into each gradient estimate. Larger batches are steadier and need more memory.
+- **Training length**: the number of steps or epochs, and when to stop. Watch the validation loss, not only the training loss.
+- **Optimizer settings**: the choice of optimizer, such as Adam or AdamW (see the paper in the sources), and its weight decay.
+- **Sequence length**: how many tokens each example is cut to. Longer costs more memory and compute.
+
+For fine-tuning, the list grows. With **LoRA**, a common parameter-efficient method, you choose the **rank** (how many numbers the small adapter matrices use), a scaling factor that is often called alpha, the dropout rate, and which weight matrices get an adapter. A higher rank has more capacity and more risk of overfitting. You do not need to know the maths for the interview; you need to know these are choices, and that you pick them with a validation set, not by guessing.
+
+Architecture settings belong here too, though they are usually fixed by whoever designed the model: the number of layers, the model width, the number of attention heads, the context length and the vocabulary size. If you train from scratch, you choose them. If you use a published model, they are already part of its parameter count.
+
+<Callout title="The test for a hyperparameter" kind="note">
+If changing it means you must train again, it is a training hyperparameter. If it only changes how one answer is generated, it is a sampling setting. If it is a number inside the trained model, it is a parameter.
+</Callout>
+
+## Sampling settings: the knobs you set per request
+
+When a model answers, it does not pick the single most likely next token every time. It samples from a probability distribution over the vocabulary. The sampling settings control how that choice is made. They can change on every request, and no retraining is needed.
+
+- **Temperature** rescales the distribution before sampling. Lower values make the top choices dominate, so answers are more repeatable. Higher values spread the choice, so answers are more varied and more likely to go wrong. Temperature 0 is not a guarantee of identical output: batching, hardware and the serving engine can still change the result.
+- **Top-p** (nucleus sampling) keeps the smallest set of tokens whose probabilities add up to p, then samples from that set. A value of 0.9 cuts off the long tail of unlikely tokens. The original paper (see the sources) explains why this beats fixed cut-offs for open-ended text.
+- **Top-k** keeps only the k most likely tokens. Simpler than top-p, and less adaptive.
+- **Max tokens** caps the length of the reply. It limits cost and stops runaway output, but a cut-off reply is not a safe reply.
+- **Stop sequences** end generation when a given string appears, which is useful for structured output.
+- **Seed** makes sampling repeatable where the provider supports it.
+
+Providers name and support these differently. Some expose presence or frequency penalties, some do not expose top-k at all. Check the API reference for the exact names before you write code against them.
+
+## Why the difference matters
+
+Three mistakes come from mixing these up.
+
+- **Tuning temperature to fix a wrong fact.** Temperature changes how the model chooses among what it knows. It does not add knowledge. If the fact is wrong at temperature 0, it will be wrong at 0.7 too, just less often. For that you need retrieval, or fine-tuning, which changes parameters.
+- **Calling it "training" when you changed the learning rate on a hosted model.** You cannot change the training hyperparameters of a hosted base model. You can only set them when you fine-tune, and then the choice is a training decision with a cost and a validation step.
+- **Budgeting memory from the sampling settings.** Max tokens does not decide the memory your server needs. The KV cache and the number of concurrent requests do. The [KV cache lesson](../../serving/kv-cache-and-memory/) shows how.
+
+## How to choose
+
+For a new feature, start with the sampling settings: they are cheap to change and easy to measure. Set temperature low for extraction and classification, somewhat higher for drafting, and cap the output length to what the task needs. Measure with an [eval set](../../evals/evals-101/) before you change anything else.
+
+Only move to training hyperparameters when prompting and retrieval have stopped improving the result and you have a validation set to tell you whether the change helped. Only move to the parameters themselves, by fine-tuning or choosing a bigger model, when you have shown that the first two cannot get you there. The [prompting, RAG and fine-tuning chooser](../prompting-vs-rag-vs-fine-tuning/) walks through that order.
+
+<Deep title="Estimating parameters and memory by hand">
+
+Take a model with 32 layers, width 4096 and a vocabulary of 32,000. The rough count is 12 × 32 × 4096² for the layers, which is about 6.4 billion, plus 32,000 × 4096, about 0.13 billion. The total is about 6.6 billion, close to the "7B class" label. At 16 bits that is about 13 GB of weights. The [sandbox](../../../tools/sandbox/) runs this arithmetic in your browser, along with the KV cache estimate for a given context length.
+
+</Deep>

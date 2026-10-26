@@ -1,0 +1,14 @@
+---
+import ToolPage from '../../layouts/ToolPage.astro';
+import EcosystemCards from '../../components/viz/EcosystemCards.tsx';
+import { withBase } from '../../lib/url';
+---
+
+<ToolPage figure="stack" title="The tools and the ecosystem" lede="The main tools for models, running them, serving them and giving them tools. Each card has the official site and a first command to try on your own machine.">
+  <EcosystemCards client:visible />
+  <Fragment slot="notes">
+    <h2>How to read the stack</h2>
+    <p>Models come from a hub. You run one on your machine with a local runtime, serve it to many users with a server engine, and give it tools through a protocol or skills. Each layer can be swapped as long as the interface stays the same.</p>
+    <p>Read the lessons in order: <a href={withBase('/learn/llm/parameters-and-hyperparameters/')}>Parameters and hyperparameters</a>, then <a href={withBase('/learn/rag-agents/the-tools-and-ecosystem/')}>The tools and the ecosystem</a>.</p>
+  </Fragment>
+</ToolPage>
