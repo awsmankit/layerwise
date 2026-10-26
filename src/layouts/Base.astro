@@ -116,7 +116,12 @@ const trackStyle = track ? `--track:${track.color};--on-track:${track.on}` : und
 
     <footer class="site-footer">
       <div class="wrap">
-        <p>{site.name}. {site.tagline}.</p>
+        <div>
+          <p>{site.name}. {site.tagline}.</p>
+          <p class="licence">
+            Lessons and teaching material: <a href={site.contentLicence.url} rel="license noopener">{site.contentLicence.label}</a>, reuse freely with credit. Code: <a href={`${site.repo}/blob/main/LICENSE`} rel="noopener">MIT</a>.
+          </p>
+        </div>
         <ul>
           {footerNav.map((item) => <li><a href={withBase(item.href)}>{item.label}</a></li>)}
           <li><a href={withBase('/rss.xml')}>RSS</a></li>

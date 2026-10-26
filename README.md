@@ -65,6 +65,11 @@ GitHub Pages on a **private** repository needs a paid GitHub plan. Public reposi
 
 The footer's source link comes from `repo` in `src/site.ts`; change it if you fork the project.
 
+## Licence
+
+- **Code:** MIT, see [LICENSE](LICENSE).
+- **Lessons and teaching material** (lessons, quizzes, interview questions, glossary, course plans, game scenarios, site text): CC BY 4.0, see [LICENSE-CONTENT](LICENSE-CONTENT). Reuse freely with credit: “Based on Layerwise by awsmankit, licensed under CC BY 4.0.”
+
 ## Credits
 
 - Isometric line figures: [`@lucasmarkes/hairline`](https://github.com/lucasmarkes/hairline) by Lucas Marques, MIT licence.

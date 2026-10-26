@@ -1106,3 +1106,9 @@ main + .site-footer {
     grid-template-columns: 1fr;
   }
 }
+
+.site-footer .licence {
+  margin-top: 0.4rem;
+  font-size: 0.85rem;
+  color: #a29cd8;
+}
