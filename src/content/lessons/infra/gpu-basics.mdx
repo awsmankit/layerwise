@@ -20,6 +20,7 @@ import Callout from '../../../components/ui/Callout.astro';
 import Deep from '../../../components/ui/Deep.astro';
 import Disclosure from '../../../components/viz/Disclosure.tsx';
 import NodeGraph from '../../../components/viz/NodeGraph.tsx';
+import CpuGpu from '../../../components/viz/CpuGpu.tsx';
 
 A language model is, underneath, a very large pile of multiplications and additions. Running one means doing billions of them for every word. This lesson explains the chip that does that work well, and the one idea that explains most of what you will later read about AI hardware: sometimes the chip waits for arithmetic, and sometimes it waits for data.
 
@@ -47,6 +48,8 @@ Modern datacenter GPUs add special units called **tensor cores**. A normal arith
 TPUs, Trainium and Inferentia need different software from the NVIDIA world (for example, AWS uses its Neuron SDK instead of CUDA). The ideas in this track apply to all of them, though the vocabulary changes.
 
 ## Inside a GPU
+
+<CpuGpu client:visible />
 
 Click a part to see what it does and what limits it.
 

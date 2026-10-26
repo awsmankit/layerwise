@@ -13,6 +13,7 @@ sources:
 ---
 
 import TokenChips from '../../../components/viz/TokenChips.tsx';
+import TokenDissect from '../../../components/viz/TokenDissect.tsx';
 import EmbeddingSpace from '../../../components/viz/EmbeddingSpace.tsx';
 import Callout from '../../../components/ui/Callout.astro';
 
@@ -23,6 +24,8 @@ A language model never sees letters or words. Computers only work with numbers, 
 A **tokenizer** splits text into pieces called tokens and gives each piece an ID number from a fixed list, the vocabulary. Common words get a single token. Rarer words are split into familiar parts, the way "unhappiness" can be read as "un", "happi" and "ness". Anything unusual falls back to smaller pieces, down to single characters. That keeps the vocabulary to a manageable size, typically tens of thousands of pieces, while still being able to write any text. (The most common way of building such a vocabulary is called byte-pair encoding, if you want to look it up.)
 
 <TokenChips client:visible />
+
+<TokenDissect client:visible />
 
 Three consequences follow.
 

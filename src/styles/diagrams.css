@@ -1,0 +1,94 @@
+/* Line diagrams: hairline strokes, short labels, one accent for what is active. */
+
+.dx-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.dx-steps {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+.dx-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 760px;
+  margin: 1rem auto 0;
+  overflow: visible;
+}
+.dx-tall {
+  max-width: 520px;
+}
+
+.dx-frame {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.dx-core {
+  fill: var(--surface);
+  stroke: var(--ink);
+  stroke-width: 1;
+  stroke-opacity: 0.7;
+}
+.dx-hot {
+  stroke: var(--signal);
+  stroke-opacity: 1;
+}
+.dx-link {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1;
+  stroke-opacity: 0.6;
+}
+.dx-residual {
+  fill: none;
+  stroke: var(--signal);
+  stroke-width: 1;
+  stroke-dasharray: 5 4;
+}
+.dx-packet {
+  fill: var(--signal);
+}
+
+.dx-cell {
+  fill: var(--signal);
+  stroke: var(--ink);
+  stroke-width: 0.5;
+  stroke-opacity: 0.5;
+}
+.dx-bar {
+  fill: var(--signal);
+}
+.dx-bar-v {
+  fill: var(--signal);
+  fill-opacity: 0.85;
+}
+
+.dx-name {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  fill: var(--ink);
+}
+.dx-word {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 600;
+  fill: var(--ink);
+}
+.dx-small {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  fill: var(--ink-3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dx-residual {
+    stroke-dasharray: none;
+  }
+}

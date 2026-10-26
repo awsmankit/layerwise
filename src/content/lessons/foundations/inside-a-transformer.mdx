@@ -19,6 +19,7 @@ sources:
 ---
 
 import NodeGraph from '../../../components/viz/NodeGraph.tsx';
+import TransformerFlow from '../../../components/viz/TransformerFlow.tsx';
 import Callout from '../../../components/ui/Callout.astro';
 import Deep from '../../../components/ui/Deep.astro';
 
@@ -27,6 +28,8 @@ import Deep from '../../../components/ui/Deep.astro';
 ## One token's journey
 
 Every token starts as a vector (its embedding, from [Tokens and embeddings](../tokens-and-embeddings/)). That vector passes through a stack of identical blocks, often dozens. Each block reads it, mixes in information from other tokens, transforms it, and passes it on at the same size. Click each step.
+
+<TransformerFlow client:visible />
 
 <NodeGraph
   client:visible
