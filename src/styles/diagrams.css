@@ -217,3 +217,201 @@
 .eco-card .btn {
   align-self: flex-start;
 }
+
+/* Pipeline: outlined cards with a glyph each, joined by hairline connectors. */
+.pf-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 1rem;
+  overflow: visible;
+}
+.pf-card {
+  cursor: pointer;
+  color: var(--ink-3);
+  outline: none;
+}
+.pf-card rect {
+  fill: var(--surface);
+  stroke: var(--ink);
+  stroke-opacity: 0.35;
+  stroke-width: 1;
+  transition: stroke 0.2s, stroke-opacity 0.2s, fill 0.2s;
+}
+.pf-card:hover rect,
+.pf-card:focus-visible rect {
+  stroke-opacity: 0.8;
+}
+.pf-card:focus-visible rect {
+  stroke: var(--signal);
+  stroke-width: 2;
+}
+.pf-card.is-past {
+  color: var(--ink);
+}
+.pf-card.is-past rect {
+  stroke-opacity: 0.7;
+}
+.pf-card.is-active {
+  color: var(--signal);
+}
+.pf-card.is-active rect {
+  stroke: var(--signal);
+  stroke-opacity: 1;
+  stroke-width: 1.5;
+  fill: var(--signal-wash);
+}
+.pf-n {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  fill: currentColor;
+  opacity: 0.8;
+}
+.pf-label {
+  font-family: var(--font-display);
+  font-size: 13.5px;
+  font-weight: 600;
+  fill: var(--ink);
+}
+.pf-conn line,
+.pf-conn path,
+.pf-loopline path {
+  fill: none;
+  stroke: var(--ink);
+  stroke-opacity: 0.35;
+  stroke-width: 1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.pf-conn line {
+  stroke-dasharray: 3 4;
+}
+.pf-conn.is-lit line,
+.pf-conn.is-lit path {
+  stroke: var(--signal);
+  stroke-opacity: 1;
+  stroke-dasharray: none;
+}
+.pf-loopline path {
+  stroke: var(--signal);
+  stroke-opacity: 0.7;
+  stroke-dasharray: 5 4;
+}
+
+/* Node graph: each node is a small outlined card, glyph above a wrapping label. */
+.viz .ng-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  width: max-content;
+  max-width: 8.6rem;
+  padding: 0.55rem 0.7rem 0.6rem;
+  white-space: normal;
+  text-align: center;
+  font-size: 0.84rem;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--ink) 35%, transparent);
+}
+.viz .ng-node.is-sel {
+  box-shadow: none;
+  border: 1.5px solid var(--signal);
+  background: color-mix(in srgb, var(--signal) 9%, var(--surface));
+}
+.viz .ng-node.core {
+  background: var(--surface);
+  color: var(--ink);
+  border-color: var(--ink);
+  border-width: 1.5px;
+}
+.ng-glyph {
+  flex: none;
+  color: var(--ink-3);
+}
+.ng-node.is-sel .ng-glyph {
+  color: var(--signal);
+}
+.ng-node.core .ng-glyph {
+  color: currentColor;
+}
+
+/* KV cache diagrams */
+.kv-new {
+  fill: var(--signal);
+  stroke: var(--signal);
+}
+.kv-cached {
+  fill: color-mix(in srgb, var(--signal) 16%, var(--surface));
+  stroke: var(--signal);
+  stroke-width: 1;
+}
+.kv-a {
+  fill: color-mix(in srgb, var(--signal) 70%, var(--surface));
+  stroke: var(--signal);
+}
+.kv-b {
+  fill: color-mix(in srgb, var(--cost) 60%, var(--surface));
+  stroke: var(--cost);
+}
+.kv-c {
+  fill: color-mix(in srgb, var(--ok) 55%, var(--surface));
+  stroke: var(--ok);
+}
+.kv-shared {
+  fill: var(--ink);
+  stroke: var(--ink);
+}
+.kv-free {
+  fill: none;
+  stroke: var(--ink);
+  stroke-opacity: 0.3;
+  stroke-dasharray: 3 3;
+}
+.kv-reserved {
+  stroke: var(--ink);
+  stroke-opacity: 0.35;
+  stroke-dasharray: 4 3;
+}
+.kv-hatch-line {
+  stroke: var(--ink);
+  stroke-opacity: 0.18;
+  stroke-width: 1.5;
+}
+.kv-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--ink-3);
+}
+.kv-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.kv-legend i {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  border: 1px solid var(--ink);
+}
+.kv-legend i.kv-a { background: color-mix(in srgb, var(--signal) 70%, var(--surface)); border-color: var(--signal); }
+.kv-legend i.kv-b { background: color-mix(in srgb, var(--cost) 60%, var(--surface)); border-color: var(--cost); }
+.kv-legend i.kv-c { background: color-mix(in srgb, var(--ok) 55%, var(--surface)); border-color: var(--ok); }
+.kv-legend i.kv-shared { background: var(--ink); }
+.kv-legend i.kv-free,
+.kv-legend i.kv-reserved-swatch { border-style: dashed; border-color: var(--ink-3); }
+.kv-legend i.kv-reserved-swatch {
+  background: repeating-linear-gradient(45deg, transparent 0 3px, color-mix(in srgb, var(--ink) 18%, transparent) 3px 4.5px);
+}
+.dx-glyph-hot {
+  color: var(--signal);
+}
+
+.dx-small.kv-on {
+  fill: var(--on-signal);
+}

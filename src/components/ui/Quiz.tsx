@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { Root, EASE } from '../viz/shared';
+import { Root, EASE, markDone } from '../viz/shared';
 import { useStore, KEYS } from '../../lib/store';
 import type { QuizItem } from '../../data/lesson-extras';
 import Confetti from './Confetti';
@@ -53,6 +53,8 @@ export default function Quiz({ id, items }: { id: string; items: QuizItem[] }) {
     if (next.every((p) => p !== null)) {
       const s = next.reduce<number>((n, p, i) => n + (p === items[i].answer ? 1 : 0), 0);
       if (s === items.length) setBurst((b) => b + 1);
+      // passing the quiz finishes the lesson, so the sidebar and progress page count it
+      if (s * 2 >= items.length) markDone(id);
       if (!best || s > best.score) setSaved({ ...saved, [id]: { score: s, total: items.length } });
     }
   };
@@ -120,7 +122,8 @@ export default function Quiz({ id, items }: { id: string; items: QuizItem[] }) {
                 <b className="num">
                   {score} of {items.length}
                 </b>{' '}
-                {score === items.length ? 'Perfect. On to the next lesson.' : 'Reread the explanations above, then try again.'}
+                {score === items.length ? 'Perfect. On to the next lesson.' : score * 2 >= items.length ? 'Passed. Reread the ones you missed.' : 'Reread the explanations above, then try again.'}
+                {score * 2 >= items.length && ' This lesson now counts as done.'}
               </p>
               <button type="button" className="btn quiet" onClick={reset}>
                 Try again

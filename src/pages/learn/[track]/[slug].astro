@@ -107,6 +107,10 @@ const groups = tracks.map((t) => ({
             <div class="lesson-quiz">
               <Quiz client:visible id={key} items={extra.quiz} />
             </div>
+            <div class="lesson-done">
+              <DoneButton client:load id={key} />
+              <p>Pass the quiz, or mark the lesson done yourself. Done lessons are counted in the sidebar and on <a href={withBase('/progress/')}>Your progress</a>. Nothing leaves this browser.</p>
+            </div>
             {extra.play && extra.play.length > 0 && (
               <p class="practise">
                 <b>Practise it:</b>{' '}
@@ -130,9 +134,6 @@ const groups = tracks.map((t) => ({
             </>
           )
         }
-        <div class="lesson-done">
-          <DoneButton client:load id={key} />
-        </div>
         <PathNext client:load current={key} lessons={lessonIndex} />
         <nav class="pager" aria-label="Previous and next lesson">
           {

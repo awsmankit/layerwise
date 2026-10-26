@@ -40,7 +40,7 @@ export default function TrackTree({
                 onClick={() => toggle(g.id)}
               >
                 <span className="tt-name">{g.title}</span>
-                <span className="tt-count num">
+                <span className="tt-count num" title="Lessons done in this track. A lesson counts once you pass its quiz or mark it done.">
                   {finished}/{g.lessons.length}
                 </span>
                 <span className="sx-plus" aria-hidden="true" />

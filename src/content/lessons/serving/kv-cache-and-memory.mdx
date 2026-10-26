@@ -16,8 +16,13 @@ sources:
 
 import ModelMemory from '../../../components/viz/ModelMemory.tsx';
 import Callout from '../../../components/ui/Callout.astro';
+import KvGrowth from '../../../components/viz/KvGrowth.tsx';
+import DecodeRead from '../../../components/viz/DecodeRead.tsx';
+import KvPaging from '../../../components/viz/KvPaging.tsx';
 
-When a model generates the next token, attention needs the keys and values of every earlier token. Recomputing them at each step would waste most of the work, so they are computed once and stored. That store is the **KV cache**. It turns generation from quadratic redundant work into a steady one-token-at-a-time process, at the price of memory.
+When a model generates the next token, attention needs the keys and values of every earlier token. They are computed once and stored: that store is the **KV cache**. It saves the work of recomputing them at every step, at the price of memory.
+
+<KvGrowth client:visible />
 
 ## How big is it?
 
@@ -36,7 +41,11 @@ Two things stand out. The **weights** are a fixed cost, paid once per copy of th
 
 ## Why decode is limited by memory bandwidth
 
-In each decode step the chip must read all the weights and the whole KV cache from memory to produce a single token. The multiplications are cheap compared with that data movement. So generation speed is set mostly by how fast memory can be read, not by how many operations per second the chip can perform. This is why:
+Generation speed is set mostly by how fast memory can be read, not by how many operations per second the chip can perform.
+
+<DecodeRead client:visible />
+
+This is why:
 
 - Smaller weights (quantization) speed generation up, not just shrink the model.
 - Batching helps: one read of the weights serves many users' tokens at once.
@@ -46,9 +55,10 @@ In each decode step the chip must read all the weights and the whole KV cache fr
 
 - **Fewer KV heads.** Multi-query and grouped-query attention share keys and values across several query heads. Many recent models use grouped-query attention, which is why the example shapes above have far fewer KV heads than attention heads.
 - **Lower precision.** Storing the cache in 8 bits instead of 16 halves it, with some effect on quality that you should measure.
-- **Paged allocation.** Systems such as vLLM, which introduced PagedAttention, store the cache in fixed-size blocks instead of one contiguous region per request. This cuts the memory lost to fragmentation and over-reservation, so more requests fit.
-- **Prefix sharing.** Requests that begin with the same prompt can share the cache for it. This is the mechanism behind prompt caching.
+- **Paged allocation and prefix sharing.** vLLM introduced PagedAttention, and many engines now use the same idea. Compare the three layouts below.
 - **Eviction or windowing.** Some designs keep only part of the history, which trades memory for fidelity.
+
+<KvPaging client:visible />
 
 <Callout kind="cost" title="What this means for price">
 A long-context, high-concurrency workload is expensive largely because of the KV cache: fewer requests fit per GPU, so each token carries a larger share of the hardware. When a provider charges more for long contexts, this is part of why.

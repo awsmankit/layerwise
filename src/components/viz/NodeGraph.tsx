@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Root, EASE } from './shared';
+import { Glyph, glyphFor } from './glyphs';
 
 type GNode = {
   id: string;
@@ -61,6 +62,7 @@ export default function NodeGraph({
                     y1={from.y}
                     stroke="var(--ink-3)"
                     strokeWidth={1}
+                    strokeDasharray="3 4"
                     vectorEffect="non-scaling-stroke"
                     initial={{ x2: from.x, y2: from.y }}
                     whileInView={{ x2: to.x, y2: to.y }}
@@ -102,7 +104,8 @@ export default function NodeGraph({
                 viewport={{ once: true, margin: '-40px' }}
                 transition={{ duration: 0.4, delay: i * 0.06, ease: EASE }}
               >
-                {n.label}
+                <Glyph key={n.id === sel ? `on-${sel}` : 'off'} name={glyphFor(n.label, n.detail.slice(0, 80))} draw={n.id === sel} size={26} className="ng-glyph" />
+                <span>{n.label}</span>
               </motion.button>
             ))}
           </div>

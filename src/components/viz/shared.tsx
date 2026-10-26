@@ -45,6 +45,18 @@ function read(): string[] {
   }
 }
 
+/** Add a lesson to the done list without toggling it off. Used when a quiz is passed. */
+export function markDone(id: string) {
+  const current = read();
+  if (current.includes(id)) return;
+  try {
+    localStorage.setItem(KEY, JSON.stringify([...current, id]));
+  } catch {
+    /* storage can be blocked; the UI simply will not persist */
+  }
+  window.dispatchEvent(new Event(EVENT));
+}
+
 export function useDone() {
   const [done, setDone] = useState<string[]>([]);
 

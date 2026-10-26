@@ -238,6 +238,16 @@
 }
 .lesson-done {
   margin-top: 1.6rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.lesson-done p {
+  margin: 0;
+  flex: 1 1 18rem;
+  font-size: 0.9rem;
+  color: var(--ink-3);
 }
 .pager {
   display: grid;
