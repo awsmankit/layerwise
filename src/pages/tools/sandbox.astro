@@ -1,0 +1,16 @@
+---
+import ToolPage from '../../layouts/ToolPage.astro';
+import CommandSandbox from '../../components/viz/CommandSandbox.tsx';
+import PyPad from '../../components/viz/PyPad.tsx';
+import { withBase } from '../../lib/url';
+---
+
+<ToolPage figure="terminal" title="Sandbox" lede="Type the commands the tools use and see what they print, or run real Python for the arithmetic behind model sizes.">
+  <CommandSandbox client:visible />
+  <PyPad client:visible />
+  <Fragment slot="notes">
+    <h2>What is real and what is recorded</h2>
+    <p>The terminal cannot run Ollama, vLLM or the Hugging Face CLI in a web page. It replays example output, so you can learn what each command prints and what to look for. The Python pad is real: it runs in your browser through Pyodide.</p>
+    <p>To run the tools for real, install them on your own machine and try the same commands. Start with <a href={withBase('/learn/local/run-models-locally/')}>Run models locally</a>.</p>
+  </Fragment>
+</ToolPage>

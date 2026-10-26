@@ -99,3 +99,82 @@
   stroke-width: 1.6;
   stroke-linecap: round;
 }
+
+/* Sandboxes: a terminal screen and a code pad. */
+.cs-screen {
+  margin-top: 1rem;
+  padding: 1rem 1.1rem;
+  min-height: 9rem;
+  max-height: 22rem;
+  overflow-y: auto;
+  background: var(--night);
+  color: var(--paper);
+  border-radius: var(--r-sm);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+.cs-line {
+  margin: 0;
+}
+.cs-in {
+  color: var(--paper);
+}
+.cs-out {
+  color: var(--sun);
+}
+.cs-note {
+  color: var(--tint-sky);
+  font-style: italic;
+  margin-bottom: 0.4rem;
+}
+.cs-prompt {
+  color: var(--tint-mint);
+}
+.cs-form {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+  font-family: var(--font-mono);
+}
+.cs-form input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--ink);
+}
+.cs-suggest {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+}
+.cs-code textarea {
+  width: 100%;
+  margin-top: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  padding: 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--ink);
+  resize: vertical;
+}
+.cs-result {
+  margin: 0.75rem 0 0;
+  padding: 0.8rem 1rem;
+  min-height: 4rem;
+  background: var(--night);
+  color: var(--paper);
+  border-radius: var(--r-sm);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  white-space: pre-wrap;
+}
