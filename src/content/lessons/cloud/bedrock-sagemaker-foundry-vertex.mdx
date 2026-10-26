@@ -1,8 +1,8 @@
 ---
-title: Bedrock, SageMaker, Foundry and Vertex
+title: Choosing between AWS, Azure and Google AI platforms
 track: cloud
 level: intermediate
-order: 2
+order: 6
 summary: What each cloud AI platform is for, how they map onto each other, and the questions that decide which to use.
 updated: 2026-10-26
 sources:
@@ -10,17 +10,23 @@ sources:
     url: https://aws.amazon.com/bedrock/
   - label: "Amazon SageMaker AI"
     url: https://aws.amazon.com/sagemaker/
-  - label: "Azure AI Foundry"
-    url: https://azure.microsoft.com/products/ai-foundry
-  - label: "Google Cloud Vertex AI"
-    url: https://cloud.google.com/vertex-ai
+  - label: "Amazon Bedrock or Amazon SageMaker AI? (AWS decision guide)"
+    url: https://docs.aws.amazon.com/decision-guides/latest/decision-guides/bedrock-or-sagemaker.html
+  - label: "Deployment types for Microsoft Foundry Models"
+    url: https://learn.microsoft.com/en-us/azure/foundry/foundry-models/concepts/deployment-types
+  - label: "Gemini Enterprise Agent Platform overview"
+    url: https://docs.cloud.google.com/gemini-enterprise-agent-platform/overview
 ---
 
 import Callout from '../../../components/ui/Callout.astro';
 
 Each major cloud offers two kinds of AI service, and the names make it easy to mix them up. One kind is a **managed model API**: you call a model somebody else trained and hosts. The other is an **ML platform**: you bring data and code to train, tune and host models yourself.
 
+For a full job-by-job translation of the names, start with [the cloud AI map](../cloud-ai-service-map/). This lesson is about choosing.
+
 ## The two families
+
+As of October 2026:
 
 | | Managed model API | ML platform |
 |---|---|---|
@@ -28,11 +34,22 @@ Each major cloud offers two kinds of AI service, and the names make it easy to m
 | You get | Access to hosted foundation models | Notebooks, training jobs, endpoints, pipelines |
 | Billing | Mostly per token, some reserved capacity | Instance time, storage, plus any managed features |
 | Control over the model | Limited to what the provider allows | Full, within your own compute |
-| AWS | Bedrock | SageMaker AI |
-| Microsoft | Azure AI Foundry, which includes Azure OpenAI models | Azure Machine Learning |
-| Google | Vertex AI model access (Gemini and Model Garden) | Vertex AI training and prediction |
+| AWS | Amazon Bedrock | Amazon SageMaker AI |
+| Microsoft | Microsoft Foundry (formerly Azure AI Foundry), whose Foundry Models include Azure OpenAI models | Azure Machine Learning |
+| Google | Vertex AI / Gemini Enterprise Agent Platform: Gemini and Model Garden models | Vertex AI / Gemini Enterprise Agent Platform: training and prediction |
 
-Boundaries blur. Foundry and Vertex bundle model access with tooling in one portal, and each platform has added agent, evaluation and guardrail features. Treat the table as a map of intent, not of product boundaries.
+<Callout title="Two renames in 2026" kind="note">
+Azure AI Foundry became **Microsoft Foundry** in 2026. Google announced on 22 April 2026 that Vertex AI is being succeeded by the **Gemini Enterprise Agent Platform**. Google says the services did not change and both names appear in docs and invoices. Search for both names.
+</Callout>
+
+Boundaries blur. Foundry and Google's platform bundle model access with tooling in one portal, and each cloud has added agent, evaluation and guardrail features. Treat the table as a map of intent, not of product boundaries.
+
+## Deep dives
+
+- [Microsoft Foundry and Azure OpenAI](../microsoft-foundry-and-azure-openai/): deployment types, PTUs, spillover.
+- [Google Cloud: Vertex AI and the Gemini Enterprise Agent Platform](../google-vertex-and-gemini-platform/): Model Garden, Provisioned Throughput, TPUs.
+- [Amazon SageMaker AI](../sagemaker-and-hyperpod/): endpoints, HyperPod, when to leave Bedrock.
+- [Security and networking for AI](../cloud-security-and-networking-for-ai/) and [Quotas, capacity and regions](../quotas-capacity-and-regions/) apply to all three.
 
 ## Questions that decide it
 
@@ -49,7 +66,8 @@ Boundaries blur. Foundry and Vertex bundle model access with tooling in one port
 - **Pick the model first and the platform second**, unless a constraint such as data residency forces the platform.
 - **Put a thin abstraction in your own code** around model calls: one function that takes messages and returns text plus usage. Switching platforms then touches one file, and your evals keep working.
 - **Evaluate on your own cases before deciding.** Public leaderboards are a starting point, not a verdict.
+- **Check capacity as well as features.** A model you cannot get throughput for is not an option. See [Quotas, capacity and regions](../quotas-capacity-and-regions/).
 
 <Callout title="Verify before you decide">
-Catalogs, regions, quotas and prices are the parts of this comparison that change fastest. Use the vendor pages in the sources for anything that would decide a purchase.
+Catalogs, regions, quotas, names and prices are the parts of this comparison that change fastest. Use the vendor pages in the sources for anything that would decide a purchase.
 </Callout>

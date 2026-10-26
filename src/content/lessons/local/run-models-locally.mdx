@@ -1,0 +1,116 @@
+---
+title: Run a model on your own computer
+track: local
+level: basic
+order: 1
+summary: Why people run models locally, what to expect, which friendly tools to start with, and how much memory each model size needs.
+updated: 2026-10-26
+sources:
+  - label: "Ollama"
+    url: https://ollama.com
+  - label: "llama.cpp (GGUF, CPU and GPU inference)"
+    url: https://github.com/ggml-org/llama.cpp
+  - label: "Safetensors documentation"
+    url: https://huggingface.co/docs/safetensors
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+You do not need an API key to talk to a language model. Many open-weights models can run on a laptop, a desktop or a single GPU, and the tools for doing it are now friendly enough for a beginner. This lesson explains why you might want to, what to expect, and how to do a first run without guessing.
+
+## Why run a model locally
+
+- **Privacy.** Your prompts and files stay on your machine. Nothing is sent to a provider.
+- **Offline use.** It works on a plane, in a lab, or behind a firewall.
+- **Cost for experiments.** There is no per-token bill while you learn. (At scale the maths changes. See [the economics lesson](../self-hosting-vs-api-economics/).)
+- **Learning.** You see the real files, memory use and speeds that cloud services hide.
+- **Control.** You pick the exact model and version, and it does not change under you.
+
+## What to expect
+
+Be honest with yourself about the trade-offs.
+
+- The models that fit on a normal computer are **much smaller** than the frontier models behind the big APIs. A small local model is often good at summarising, rewriting, classifying, simple extraction and casual chat.
+- It is usually **weaker** at long multi-step reasoning, hard coding tasks, rare facts and following long, complicated instructions. It may also make things up more often.
+- It is usually **slower**, unless you have a good GPU or a recent Apple chip.
+- You become the operator. Updates, disk space and "why is it slow" are your job.
+
+<Callout title="A fair way to think about it">
+A local model is a very capable intern who works privately, for free, on your hardware. It is not a free copy of the best cloud model. Try your own task before you decide.
+</Callout>
+
+## The friendly tools
+
+| Tool | What it is | Good for |
+| --- | --- | --- |
+| Ollama | A small app and background service that downloads and runs models with simple commands | The easiest start on Mac, Windows and Linux |
+| LM Studio | A desktop app with a window for finding, downloading and chatting with models | People who prefer a graphical interface |
+| llama.cpp | The open-source engine many other tools are built on. Runs on CPU and on several kinds of GPU, including Metal on Apple silicon | Maximum control, and understanding what is under the hood |
+| MLX | Apple's array framework for Apple silicon, with model-running tools built on it | Mac users who want to use Apple's own stack |
+
+Ollama and LM Studio are wrappers: they handle downloading, picking a suitable file and starting the engine. Features and supported platforms change, so check each project's site for what is current.
+
+## What hardware matters
+
+**Memory comes first.** The whole model has to sit in memory while it runs. If it does not fit, it will not run well, or at all. **Memory bandwidth comes second.** Generating each token means reading the model from memory, so a faster memory system gives more tokens per second. The next lesson, [the memory maths](../memory-math-for-local-models/), explains both.
+
+Two kinds of machine, in short:
+
+- **Apple silicon Macs** use *unified memory*: the CPU and GPU share one pool. A Mac with more memory can load bigger models.
+- **PCs with a discrete GPU** have separate GPU memory (VRAM). The model is fastest when it fits entirely in VRAM.
+
+## Model files and formats
+
+A model is mostly a huge list of numbers called weights, stored in a file. You will meet two formats.
+
+- **GGUF** is the single-file format used by llama.cpp, Ollama and LM Studio. It often holds a *quantized* model: the numbers are stored with fewer bits so the file is smaller. Names like `Q4_K_M` describe how.
+- **Safetensors** is the common format for sharing models in the Hugging Face ecosystem. It stores plain tensors and cannot run code when loaded.
+
+Quantization is how an 8-billion-parameter model fits on a normal laptop. It costs a little quality. See [Quantization](../../serving/quantization/).
+
+## Which size suits which memory
+
+These are rough starting points, assuming a typical 4-bit quantized model and a modest conversation length. The [next lesson](../memory-math-for-local-models/) shows the arithmetic.
+
+| Your memory | A sensible first choice |
+| --- | --- |
+| 8 GB | Models of about 1 to 4 billion parameters. Expect basic tasks only. |
+| 16 GB | Models of about 7 to 14 billion parameters. A good place to learn. |
+| 24 GB | Up to roughly 20 to 30 billion parameters, depending on context length. |
+| 64 GB or more | Models in the 70 billion class become possible, with tight limits. |
+
+On a shared-memory laptop, your operating system and apps also need memory, so leave headroom.
+
+## Your first run, step by step
+
+1. **Install Ollama** from [ollama.com](https://ollama.com), following the instructions for your system.
+2. **Pick a small model** from the model library on the Ollama site. Choose one that matches your memory from the table above. If unsure, go smaller.
+3. **Run it.** In a terminal, type `ollama run` followed by the model name:
+
+   ```bash
+   ollama run <model>
+   ```
+
+   The first time, it downloads the model, which can be several gigabytes, then opens a chat prompt.
+4. **Chat.** Type a question and press Enter. Notice how fast the words appear.
+5. **See what you have.** This lists the models downloaded to your computer:
+
+   ```bash
+   ollama list
+   ```
+
+6. **Try a task you really have**, such as summarising a paragraph. Compare it with what a cloud model gives you.
+
+If it is painfully slow, the model is probably too big for your memory. Try a smaller one.
+
+<Deep title="Why a model that almost fits can be very slow">
+When a model does not fully fit in fast memory, the engine can keep some layers in ordinary system memory and run them on the CPU. That works, but those layers are read through a much slower path, and every token has to pass through all layers. A small overflow can cut speed sharply. It is usually better to choose a smaller or more aggressively quantized model that fits entirely.
+</Deep>
+
+## What to take forward
+
+- Local means private, offline and under your control, with smaller and slower models than frontier APIs.
+- Memory decides what you can run. Bandwidth decides how fast.
+- GGUF and quantization make big models fit. Safetensors is the safe sharing format.
+- Start small, run a real task of yours, and judge the result honestly.

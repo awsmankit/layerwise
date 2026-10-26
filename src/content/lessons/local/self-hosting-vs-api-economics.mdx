@@ -1,0 +1,96 @@
+---
+title: "Self-hosting versus an API: the economics"
+track: local
+level: advanced
+order: 4
+summary: How to compute the cost per million tokens of your own GPU, why utilisation dominates, where the break-even sits and which hidden costs to include.
+updated: 2026-10-26
+sources:
+  - label: "vLLM documentation"
+    url: https://docs.vllm.ai
+  - label: "Efficient Memory Management for LLM Serving with PagedAttention"
+    url: https://arxiv.org/abs/2309.06180
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import BreakEven from '../../../components/viz/BreakEven.tsx';
+
+"Self-hosting is cheaper than an API" is true for some workloads and badly false for others. The difference is almost entirely one number: how busy you keep the GPU. This lesson gives you the formula, the break-even logic and the costs people forget.
+
+<Callout kind="cost" title="About the numbers">
+Every figure below is a placeholder example to show the shape of the calculation. They are not real prices. Take current prices from your provider or vendor and measure your own throughput.
+</Callout>
+
+## The cost per million tokens when you self-host
+
+A GPU costs the same per hour whether it is working or idle. So the cost of a token depends on how many tokens you get out of each paid hour:
+
+```text
+cost per million tokens =
+    GPU cost per hour / (tokens per second x utilisation x 3600) x 1,000,000
+```
+
+- **Tokens per second** is the aggregate throughput of the GPU across all concurrent requests, not the speed one user sees. Batching raises it a lot.
+- **Utilisation** is the fraction of time the GPU is doing useful work at that throughput, from 0 to 1.
+- 3600 turns seconds into hours.
+
+## Why utilisation dominates
+
+Example only: a GPU costing 4 currency units per hour, with aggregate throughput of 1,500 tokens per second when busy.
+
+| Utilisation | Tokens per hour | Cost per million tokens (example) |
+| --- | --- | --- |
+| 100 percent | 5.4 million | about 0.74 |
+| 50 percent | 2.7 million | about 1.48 |
+| 10 percent | 0.54 million | about 7.41 |
+
+Same hardware, same model, a tenfold difference in unit cost. A GPU used for office hours only, or for a service with a few dozen requests a day, sits mostly idle. Real traffic is also spiky, and you pay for peak capacity. Getting to high utilisation needs steady, high-volume traffic, or batch work you can schedule to fill the gaps.
+
+## Fixed monthly cost versus a variable bill
+
+An API charges per token, so a quiet month costs little. A GPU you reserve costs the same every month. Using the same example, 4 per hour over roughly 730 hours is about 2,920 per month. If an API's blended price for the same quality of model were, say, 1 per million tokens (example), you would break even at about 2.9 billion tokens a month, which is roughly 74 percent of this GPU's capacity.
+
+Below that line, the API is cheaper. Above it, self-hosting wins, **if** a model you can host is good enough for the job. Try the lines yourself:
+
+<BreakEven client:visible />
+
+## What moves the break-even
+
+- **Batching efficiency.** A well-configured engine with continuous batching can deliver several times the aggregate throughput of a naive setup. See [Inference engines compared](../inference-engines-compared/).
+- **Model size.** A smaller model gives more tokens per second per GPU, but only helps if its quality is enough.
+- **Quantization.** Lower precision means more speed and more room for concurrent requests, with some quality risk you must measure.
+- **Buying model.** Spot, on-demand, reserved or owned hardware have very different effective hourly costs. Cheaper commitments need more certainty about use.
+- **Prompt caching and discounts on the API side.** Providers discount repeated prefixes and offer batch pricing, which lowers the API line. Check current terms. See [Cost levers](../../cost/cost-levers/).
+- **Input versus output mix.** Long prompts are cheaper to process than long answers on both sides. Use your real ratio.
+
+<Deep title="Where the throughput number comes from">
+Decoding is limited by memory bandwidth, and one read of the weights can serve many users' tokens at once. That is why aggregate tokens per second rises with concurrency until compute or cache memory runs out. Measure this with a load test at your real concurrency, prompt length and output length. A vendor's peak number, or a single-user speed, will mislead you.
+</Deep>
+
+## The costs people forget
+
+The GPU rate is only the start.
+
+- **Engineers.** Someone sets it up, tunes it and fixes it. Their time often exceeds the hardware bill for small deployments.
+- **On-call.** A production service needs someone who answers when it fails at night.
+- **Redundancy.** One GPU is a single point of failure. A second one doubles the idle cost.
+- **Idle capacity.** You size for the peak and pay for the valleys.
+- **Upgrades and evals.** New models arrive often. Each switch needs testing against your own evaluation set. See [Evals 101](../../evals/evals-101/).
+- **Security, monitoring and storage**, plus networking and the time to get capacity in the first place.
+
+## A decision checklist
+
+1. Do you have a **hard requirement** (data may not leave, offline, regulation)? Then cost may not be the deciding factor. Read [Private and air-gapped AI](../private-and-air-gapped-ai/).
+2. Is the traffic **high and steady**, or batchable, so that utilisation can plausibly stay high?
+3. Is an open model **good enough** on your own evaluation, not on a public leaderboard?
+4. Do you have the **people** to run it, or will you pay for managed hosting?
+5. Did you include the API-side discounts, and redundancy and engineering on the self-hosted side?
+6. Can you **start on an API** and measure real volume before buying hardware?
+
+## What to take forward
+
+- Cost per token equals hourly cost divided by tokens actually produced per hour.
+- Utilisation is the lever that matters most, and it is a traffic question more than a hardware question.
+- Break-even depends on your volume, your batching and your model, so compute it with your numbers.
+- Self-hosting is often chosen for privacy and control first, and for cost only when volume is high and steady.

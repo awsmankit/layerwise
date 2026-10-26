@@ -60,7 +60,7 @@ const layers: Layer[] = [
     id: 'platforms',
     color: '#5BC0FF',
     title: 'Model platforms',
-    line: 'Bedrock, Vertex, Foundry, SageMaker',
+    line: 'AWS, Azure and Google Cloud',
     before: 'You trained, packaged and hosted your own model on your own instances.',
     points: [
       'A managed API gives you many models behind one authenticated endpoint.',
@@ -68,8 +68,9 @@ const layers: Layer[] = [
       'You rent the model, so the vendor controls its versions and deprecations.',
     ],
     links: [
-      { label: 'What is AWS Bedrock?', href: '/learn/cloud/what-is-bedrock/' },
-      { label: 'Platform comparison', href: '/learn/cloud/bedrock-sagemaker-foundry-vertex/' },
+      { label: 'The cloud AI map', href: '/learn/cloud/cloud-ai-service-map/' },
+      { label: 'Choosing a platform', href: '/learn/cloud/bedrock-sagemaker-foundry-vertex/' },
+      { label: 'Quotas and capacity', href: '/learn/cloud/quotas-capacity-and-regions/' },
     ],
   },
   {
@@ -86,6 +87,7 @@ const layers: Layer[] = [
     links: [
       { label: 'Life of a request', href: '/learn/serving/life-of-a-request/' },
       { label: 'KV cache and memory', href: '/learn/serving/kv-cache-and-memory/' },
+      { label: 'Inference engines compared', href: '/learn/local/inference-engines-compared/' },
     ],
   },
   {
@@ -120,16 +122,18 @@ const layers: Layer[] = [
   {
     id: 'hardware',
     color: '#FFC233',
-    title: 'Hardware and kernels',
-    line: 'GPUs, accelerators, memory bandwidth',
+    title: 'Hardware and infrastructure',
+    line: 'GPUs, instances, clusters, networking',
     before: 'CPUs were often enough; GPUs were for training deep nets.',
     points: [
       'Generating text is mostly limited by how fast weights move from memory, not by arithmetic.',
-      'Quantization shrinks weights so the same chip serves a bigger model or more users.',
-      'On a device with a milliwatt budget, the same idea decides what can run at all.',
+      'Big models are split across GPUs, and the links between them decide whether that helps.',
+      'On a device with a milliwatt budget, the same memory limits decide what can run at all.',
     ],
     links: [
-      { label: 'Quantization', href: '/learn/serving/quantization/' },
+      { label: 'What a GPU is', href: '/learn/infra/gpu-basics/' },
+      { label: 'Reading a GPU spec sheet', href: '/learn/infra/reading-a-gpu-spec-sheet/' },
+      { label: 'Run models locally', href: '/learn/local/run-models-locally/' },
       { label: 'Edge vs cloud inference', href: '/learn/edge/edge-vs-cloud-inference/' },
     ],
   },

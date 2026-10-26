@@ -47,7 +47,7 @@ Real files are slightly larger because of scales and other metadata. Change the 
 
 **Quantization-aware training (QAT)** simulates low precision during training so the model learns to be robust to it. It is more work and generally gives better quality at very low bit widths.
 
-<Disclosure title="Why scale factors per group?">
+<Disclosure client:visible title="Why scale factors per group?">
 
 A single scale for a whole tensor is thrown off by a few large values, which squashes everything else into too few levels. Using a separate scale for each small group of weights, commonly 32 to 128 of them, keeps precision where it is needed at the cost of storing a few extra numbers.
 

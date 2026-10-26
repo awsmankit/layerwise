@@ -2,7 +2,7 @@
 title: What is AWS Bedrock?
 track: cloud
 level: basic
-order: 1
+order: 2
 summary: A managed API for foundation models, plus the building blocks around it. What each part does and where it fits next to the ML tools you already know.
 updated: 2026-10-26
 sources:
@@ -18,6 +18,10 @@ import NodeGraph from '../../../components/viz/NodeGraph.tsx';
 import Callout from '../../../components/ui/Callout.astro';
 
 **Amazon Bedrock is AWS's managed service for using foundation models through an API.** You send a request, AWS runs the model on its own accelerators, and you pay for what you use. You do not provision GPUs, load weights or patch a serving stack.
+
+<Callout title="One of three equal clouds" kind="note">
+Bedrock is AWS's example of a managed model API. Microsoft Foundry and Google's Gemini Enterprise Agent Platform (formerly Vertex AI) do the same job under different names. See [The cloud AI map](../cloud-ai-service-map/) for a side-by-side translation, and [Choosing between AWS, Azure and Google AI platforms](../bedrock-sagemaker-foundry-vertex/) for how to decide.
+</Callout>
 
 If you know SageMaker, the contrast is useful. SageMaker is about building, training and hosting models that you control. Bedrock is about consuming models that already exist, from several providers, inside your AWS account's security and billing.
 
@@ -81,4 +85,4 @@ Bedrock's model list, features and pricing change often. The structure above is 
 
 ## Where it sits in the stack
 
-In the stack on the home page, Bedrock is the **platform** layer: it sits above inference engineering, which AWS runs for you, and below your retrieval, agents and evals, some of which it also offers as managed pieces. The next lesson compares it with SageMaker and with the equivalents on other clouds.
+In the stack on the home page, a managed model API such as Bedrock is the **platform** layer: it sits above inference engineering, which the cloud runs for you, and below your retrieval, agents and evals, some of which it also offers as managed pieces. Azure and Google Cloud have equivalent layers. The next lessons cover [Microsoft Foundry](../microsoft-foundry-and-azure-openai/), [Google's platform](../google-vertex-and-gemini-platform/) and [SageMaker](../sagemaker-and-hyperpod/), and [Choosing between AWS, Azure and Google AI platforms](../bedrock-sagemaker-foundry-vertex/) compares them.

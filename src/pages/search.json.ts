@@ -19,6 +19,8 @@ export const GET: APIRoute = async () => {
     ...games.map((g) => ({ t: g.title, u: u(g.href), k: 'Game', s: `${g.tagline}. ${g.blurb}` })),
     { t: 'Cost calculator', u: u('/tools/cost/'), k: 'Tool', s: 'Estimate monthly spend from traffic and token counts.' },
     { t: 'Model memory calculator', u: u('/tools/memory/'), k: 'Tool', s: 'Weights plus KV cache against device memory.' },
+    { t: 'GPU explorer', u: u('/tools/gpu/'), k: 'Tool', s: 'Which accelerators hold a model, how many users fit and how fast each decodes.' },
+    { t: 'API or your own GPUs?', u: u('/tools/breakeven/'), k: 'Tool', s: 'Break-even between API pricing and self-hosted GPUs.' },
     { t: 'Latency budget', u: u('/tools/latency/'), k: 'Tool', s: 'Cloud versus on-device inference against a time budget.' },
     { t: 'Start here', u: u('/start/'), k: 'Page', s: 'Find your starting point and get a learning path.' },
     { t: 'Glossary', u: u('/glossary/'), k: 'Page', s: 'Every term used on the site, in plain English.' },

@@ -1,0 +1,124 @@
+---
+title: Kubernetes and autoscaling for LLM inference
+track: infra
+level: advanced
+order: 6
+summary: Learn how GPUs are scheduled on Kubernetes, why LLM servers cold-start slowly, and which autoscaling signals work when CPU use does not.
+updated: 2026-10-26
+sources:
+  - label: "Kubernetes: Schedule GPUs"
+    url: https://kubernetes.io/docs/tasks/manage-gpus/scheduling-gpus/
+  - label: "vLLM documentation"
+    url: https://docs.vllm.ai
+  - label: "NVIDIA DCGM documentation"
+    url: https://docs.nvidia.com/datacenter/dcgm/latest/index.html
+  - label: "Hugging Face safetensors"
+    url: https://huggingface.co/docs/safetensors
+  - label: "Efficient Memory Management for Large Language Model Serving with PagedAttention (Kwon et al., 2023)"
+    url: https://arxiv.org/abs/2309.06180
+  - label: "Amazon SageMaker inference: 2026 year-to-date launches in review"
+    url: https://aws.amazon.com/blogs/machine-learning/amazon-sagemaker-inference-2026-year-to-date-launches-in-review/
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import Disclosure from '../../../components/viz/Disclosure.tsx';
+import NodeGraph from '../../../components/viz/NodeGraph.tsx';
+
+Kubernetes is the usual way to run many copies of a model server and keep them healthy. It was designed for small, fast-starting, CPU-bound web services, and LLM servers are the opposite: huge, slow to start and limited by GPU memory. Most of the useful knowledge is about where the defaults stop working. This lesson assumes you know [what a serving request does](../../serving/life-of-a-request/).
+
+## A serving stack on Kubernetes
+
+<NodeGraph
+  client:visible
+  title="An LLM serving stack"
+  height={420}
+  initial="engine"
+  failuresLabel="What goes wrong"
+  nodes={[
+    { id: 'client', label: 'Clients', x: 7, y: 50, detail: 'Applications calling an OpenAI-style or similar HTTP API, usually with streamed responses that stay open for seconds to minutes.', fails: ['Long-lived streams are cut by load balancer idle timeouts', 'Retries after a timeout duplicate expensive work'] },
+    { id: 'gw', label: 'Gateway', x: 27, y: 50, detail: 'Authentication, rate limits per tenant, request validation and routing. It is where you cap prompt length and output tokens before they reach a GPU.', fails: ['No per-tenant limits, so one client starves the rest', 'Plain round-robin sends similar prompts to different replicas and wastes prefix caches'] },
+    { id: 'router', label: 'Router and queue', x: 47, y: 25, detail: 'Chooses a replica. Better routers consider queue depth and cache locality (some systems route by prompt prefix or KV cache contents). A queue absorbs short bursts so requests wait instead of failing.', fails: ['Unbounded queues turn overload into huge latency', 'Routing on stale load data'] },
+    { id: 'engine', label: 'Serving engine pods', x: 67, y: 50, kind: 'core', detail: 'Pods running vLLM, SGLang, TensorRT-LLM or similar, each holding the model on one or more GPUs and batching requests continuously. Each pod requests GPUs through the device plugin.', fails: ['Slow start: image pull plus weight load plus warm-up', 'KV cache full, so requests queue or are preempted', 'GPU hang while the process still answers health checks'] },
+    { id: 'nodes', label: 'GPU node pool', x: 87, y: 25, detail: 'Nodes with GPUs, kept separate from CPU nodes and tainted so only GPU workloads land there. The node autoscaler adds and removes them.', fails: ['No GPU capacity available in the region or zone', 'Nodes take minutes to join', 'Node drivers out of date'] },
+    { id: 'store', label: 'Model storage', x: 87, y: 78, detail: 'Where the weights come from: an object store, a shared file system, or a local cache on each node. Loading speed here decides cold start time.', fails: ['Every new pod downloads tens of gigabytes again', 'Pickled model files can run code on load, so prefer safetensors'] },
+    { id: 'metrics', label: 'Metrics and autoscaler', x: 47, y: 80, detail: 'Collects engine metrics (queue length, running requests, KV cache use) and GPU metrics, and tells Kubernetes how many replicas to run.', fails: ['Scaling on CPU or GPU utilisation, which do not reflect load', 'Too-fast scale-down kills replicas that are mid-stream'] },
+  ]}
+  edges={[['client','gw'],['gw','router'],['router','engine'],['engine','nodes'],['engine','store'],['engine','metrics'],['metrics','router']]}
+/>
+
+## GPU scheduling
+
+Kubernetes does not see GPUs by itself. A **device plugin** (NVIDIA's is the common one, installed with the GPU operator or your cloud's GPU node image) advertises GPUs as a schedulable resource, such as `nvidia.com/gpu`. A pod asks for whole GPUs in its limits:
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: llm-server
+spec:
+  tolerations:
+    - key: nvidia.com/gpu
+      operator: Exists
+      effect: NoSchedule
+  containers:
+    - name: engine
+      image: registry.example.com/llm-engine:1.0
+      resources:
+        limits:
+          nvidia.com/gpu: 2   # whole GPUs; they cannot be fractionally requested by default
+```
+
+By default GPUs are whole units and are not shared between pods. Put GPU nodes in their own **node pool** with a **taint**, so ordinary pods do not occupy expensive nodes, and give the serving pods a matching toleration. Some clouds add such a taint automatically, so check yours. Sharing a GPU (time slicing, or MIG partitions on supported cards) exists, but see the failure modes lesson for the noisy-neighbour risk. The Kubernetes page on scheduling GPUs is the reference.
+
+## Cold starts
+
+A new replica must wait for all of these: a node to exist (minutes if the autoscaler must add one), the container image to download (a multi-GB image with CUDA libraries), the model weights to download and load into GPU memory (tens to hundreds of GB), and warm-up, such as capturing CUDA graphs. A cold start of several minutes is normal. Ways to shorten it:
+
+- Keep the **image small** and separate from the **weights**. Do not bake 100 GB of weights into the image.
+- **Cache** images and weights on the node (local NVMe or a shared cache) so a second pod on the same node starts faster.
+- Use **safetensors**, which loads quickly and avoids the code-execution risk of pickled files.
+- Keep **spare capacity**: a minimum replica count, or a warm pool of ready nodes.
+
+## Autoscaling signals that work
+
+The standard Kubernetes autoscaler scales on CPU. For LLM servers that is the wrong signal: the CPU is mostly idle even when the GPU is saturated. GPU utilisation is not much better, because it only says that some kernel was running, not how full the batch is. Use signals that reflect the engine's state:
+
+| Signal | What it tells you | Note |
+|---|---|---|
+| Queue depth (requests waiting) | Demand exceeds capacity right now | Simple and responsive. A good primary signal. |
+| Requests or tokens in flight | How much concurrent work each replica has | Scale to a tested target per replica. |
+| KV cache utilisation | How close the replica is to running out of memory for new requests | Strong sign of saturation. Scale up well before 100 percent. |
+| Time to first token (p95) | What users actually feel | Slower to react, good as a guard rail. |
+
+Engines such as vLLM expose these as Prometheus metrics. Metric names change between versions, so read your version's metrics endpoint. Feed them to the autoscaler through the Prometheus adapter or KEDA, with a target found by load testing (see [capacity planning](../gpu-observability-and-capacity-planning/)). Scale up fast and scale down slowly, because a replica takes minutes to come back.
+
+<Callout title="Cost" kind="cost">
+Scale-to-zero saves money on idle GPUs, but the first request after idle waits for a full cold start, which can be minutes. It suits internal tools, batch jobs and development. For interactive products keep at least one warm replica, or accept the delay with a clear message to the user.
+</Callout>
+
+## Health checks and rollouts
+
+Use a **startup probe** with a generous time limit, and make **readiness** true only after the model has loaded and a test generation works. A short liveness timeout will kill a pod that is simply still loading. Beware that a hung GPU can leave the HTTP server answering a trivial health endpoint, so add a probe that runs a tiny real generation, or watch GPU error metrics.
+
+Rolling updates are hard when GPUs are scarce. The default surge creates a new pod before removing the old one, which needs spare GPUs you may not have. Set `maxUnavailable` and `maxSurge` deliberately, or roll one replica at a time. Give pods a long termination grace period and drain, so streams in progress finish instead of being cut.
+
+<Deep title="Managed Kubernetes and managed inference on the three clouds">
+
+EKS, AKS and GKE all run the Kubernetes control plane for you and offer GPU node pools with preinstalled drivers. Each has node autoscaling (for example Karpenter on EKS, or the cluster autoscaler and provider-specific provisioning on the others). Exact features and names change, so check the current docs. On AWS, SageMaker HyperPod Inference gives Kubernetes-native control on dedicated GPU clusters, including a two-tier KV cache and prefix-aware or KV-aware routing (per AWS's 2026 launch summary), while standard SageMaker endpoints are fully managed. Choose Kubernetes when you want one platform for many workloads and portable manifests. Choose a managed endpoint when you want fewer moving parts and can accept its limits. See [Bedrock, SageMaker, Foundry and Vertex compared](../../cloud/bedrock-sagemaker-foundry-vertex/).
+
+</Deep>
+
+<Disclosure client:visible title="Why not scale on GPU utilisation?">
+
+GPU utilisation as reported by common tools is the share of time during which at least one kernel was running. A server handling one request at a time can show 90 percent, while a server batching 100 requests also shows 90 percent. It cannot tell you whether another request will fit.
+
+</Disclosure>
+
+## What to take forward
+
+- Install the device plugin, taint the GPU pool, request whole GPUs.
+- Expect cold starts of minutes. Separate weights from images and cache them.
+- Scale on queue depth, in-flight work and KV cache use, not CPU.
+- Make readiness mean "model loaded and generating", and roll out one replica at a time.
+- Scale to zero only where a slow first request is acceptable.

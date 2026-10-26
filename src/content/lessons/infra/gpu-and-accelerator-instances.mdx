@@ -1,0 +1,112 @@
+---
+title: GPU and accelerator instances on AWS, Azure and Google
+track: infra
+level: intermediate
+order: 3
+summary: Compare the GPU and accelerator instance families on the three big clouds, learn which suit training and which suit inference, and understand quotas, reservations and Spot.
+updated: 2026-10-26
+sources:
+  - label: "AWS: accelerated computing instance types"
+    url: https://aws.amazon.com/ec2/instance-types/accelerated-computing/
+  - label: "AWS: EC2 accelerated computing instance documentation"
+    url: https://docs.aws.amazon.com/ec2/latest/instancetypes/ac.html
+  - label: "AWS: Amazon EC2 P6-B200 instances (launch post)"
+    url: https://aws.amazon.com/blogs/aws/new-amazon-ec2-p6-b200-instances-powered-by-nvidia-blackwell-gpus-to-accelerate-ai-innovations/
+  - label: "Microsoft Learn: ND family"
+    url: https://learn.microsoft.com/en-us/azure/virtual-machines/sizes/gpu-accelerated/nd-family
+  - label: "Microsoft Learn: NC family"
+    url: https://learn.microsoft.com/en-us/azure/virtual-machines/sizes/gpu-accelerated/nc-family
+  - label: "Microsoft Learn: ND GB200 v6 series"
+    url: https://learn.microsoft.com/en-us/azure/virtual-machines/sizes/gpu-accelerated/nd-gb200-v6-series
+  - label: "Google Cloud: GPU machine types"
+    url: https://docs.cloud.google.com/compute/docs/gpus
+  - label: "Google Cloud: accelerator-optimized machines"
+    url: https://docs.cloud.google.com/compute/docs/accelerator-optimized-machines
+  - label: "Google Cloud: TPU machine types"
+    url: https://docs.cloud.google.com/compute/docs/tpus/tpu-machines
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import Disclosure from '../../../components/viz/Disclosure.tsx';
+
+All three big clouds rent you GPUs by the hour, but they name and package them differently, and getting access is often harder than choosing. This lesson maps the families, says what each is for, and explains the quota and reservation rules that catch teams out. Everything here is as of October 2026. Instance lists change every few months, so use the linked pages for the final word.
+
+## The families, side by side
+
+| | AWS | Azure | Google Cloud |
+|---|---|---|---|
+| Newest large-scale training | P6e-GB200, P6-B300, P6-B200 | ND GB200 v6 (4 Blackwell GPUs per VM, 18 VMs form a 72-GPU rack) | A4X (GB200), A4X Max (GB300, bare metal), A4 (8x B200) |
+| Hopper generation (H100, H200) | P5 (H100), P5e and P5en (H200) | ND H100 v5, ND H200 v5 | A3 Mega, High and Edge (H100), A3 Ultra (H200) |
+| Older training | P4 (A100) | ND A100 v4 (8x A100 40 GB) | A2 (A100) |
+| Inference and fine-tuning, NVIDIA | G6 (L4), G6e (L40S), G5 (A10G), newer G7 | NC A100 v4, NCads H100 v5, NCasT4_v3 (T4) | G2 (L4), G4 |
+| Own silicon | Trainium (Trn2, Trn3), Inferentia (Inf2) | none for NVIDIA-style training; AMD option: ND MI300X v5 | TPUs: v5e, v5p, v6e (Trillium), Ironwood |
+| Software for own silicon | AWS Neuron SDK, not CUDA | n/a | JAX and XLA, plus PyTorch support; check the TPU docs |
+
+Some details worth knowing:
+
+- **AWS P5** has up to 8 H100 GPUs with up to 3,200 Gbps of EFA networking and 900 GB/s NVSwitch between GPUs. **P6-B200** has 8 Blackwell GPUs and 1,440 GB of total GPU memory. The EC2 docs also list P6-B300 and P6e-GB200.
+- **Azure ND H100 v5** is 8 H100 80 GB GPUs with 400 Gbps Quantum-2 InfiniBand per GPU, and there is no single-GPU size. ND is the large-scale training family, NC is for applied AI and inference, and NV is for visualization. Microsoft says net new NC A100 v4 capacity is not planned, with new capacity going to NCads H100 v5 (up to 2 H100 NVL 94 GB).
+- **Google A3 Mega** gives up to 1,800 Gbps GPU-to-GPU. **A3 Ultra and A4** give up to 3,600 Gbps over RDMA.
+- **Google Ironwood (TPU7x)** reached general availability in late 2025: 192 GB HBM3E per chip and a 9,216-chip superpod. TPU 8t and 8i were announced for later in 2026.
+
+## Training versus inference
+
+For **training**, you want many GPUs on a very fast network, in the same place: AWS P5 or P6, Azure ND, Google A3 or A4, or Trainium and TPUs if your software stack supports them. See [Training infrastructure](../training-infrastructure/).
+
+For **inference**, you want enough memory for the weights plus KV cache, and the best bandwidth per unit of money. Small and medium models run well on one L4, A10G or L40S class card (AWS G-series, Azure NC, Google G2). Larger models need H100, H200 or newer, often several GPUs in one server. Inferentia and some TPU types target cost-efficient inference too, at the price of porting your serving stack.
+
+## How to pick for a model size
+
+A rough guide, assuming the serving engine and quantization are mature. Work out weights plus KV cache with the [spec sheet lesson](../reading-a-gpu-spec-sheet/) and the [KV cache lesson](../../serving/kv-cache-and-memory/).
+
+| Model size | Typical starting point |
+|---|---|
+| Up to about 8B parameters | One 24 GB class GPU (L4, A10G), especially if quantized. An L40S for headroom. |
+| About 13B to 34B | One 48 GB L40S, or one 80 GB class GPU. |
+| About 70B | FP8 or INT4 on one H200-class or two 80 GB GPUs. FP16 needs 140 GB for weights alone, so at least two to four GPUs. |
+| Very large dense or mixture-of-experts models | A full 8-GPU H100, H200 or B200 node, and possibly several nodes. |
+
+## Quotas and reservations
+
+This is where plans fail. Availability is a separate question from price.
+
+- **Azure.** Every subscription starts with zero vCPU quota for GPU VM series in each region. You must request an increase for each series before you can create one, and approval is not instant. Having quota does not guarantee that capacity exists in the region.
+- **Google Cloud.** A3 Ultra and A4 cannot be created as ordinary on-demand VMs. You need a capacity reservation, Spot, or Flex-start. GPU quota also applies per region. Check the current docs for each machine type.
+- **AWS.** Large GPU instances are often obtained through **EC2 Capacity Blocks for ML**: you reserve a block of GPUs for a fixed period starting at a chosen date. P6-B200 launched this way. AWS also applies vCPU service quotas per instance family. Check the quota console for your family.
+
+<Callout title="Ask early" kind="note">
+Request quota and reservations before you need them, and in more than one region if you can. Waiting days or weeks for capacity is common for the newest GPUs.
+</Callout>
+
+## On-demand, reserved and Spot
+
+| Model | How it works | Good for | Watch out |
+|---|---|---|---|
+| On-demand | Pay as you go, no commitment | Experiments, small steady loads | Capacity may not be available when you ask |
+| Reserved, committed or Capacity Block | Commit to a period or block | Training runs, steady inference, guaranteed capacity | You pay whether or not you use it |
+| Spot (also called preemptible) | Spare capacity at a steep discount, can be taken back at short notice | Fault-tolerant jobs with checkpoints, batch work | Interruptions. Not for latency-critical serving without a fallback |
+
+<Callout title="Cost" kind="cost">
+This lesson lists no prices because they change often and vary by region. Compare current prices on each cloud's pricing page. Remember that an idle GPU still bills by the hour, so the cheapest GPU is often the one you turn off. The break-even tool linked at the end of this page compares a self-hosted GPU against a pay-per-token API.
+</Callout>
+
+<Deep title="Practical notes for platform teams">
+
+Instance names do not tell you everything. Confirm the GPU variant (SXM or PCIe, memory size), the networking (EFA, InfiniBand, or plain Ethernet) and local storage on each instance's documentation page. For multi-node work, ask whether instances are placed close together, for example with placement groups on AWS, proximity placement on Azure, or compact placement policies on Google Cloud. The names of these features and their limits change, so verify in the docs. Mixing instance types in a single serving pool, with automatic fallback, helps with capacity shortages. SageMaker's Capacity-Aware Instance Pools (announced May 2026) do this on AWS for up to five instance types.
+
+</Deep>
+
+<Disclosure client:visible title="Managed alternatives to renting GPUs">
+
+If you do not want to run GPU servers, each cloud sells models per token: Amazon Bedrock, Microsoft Foundry and Google's Gemini Enterprise Agent Platform (the successor to Vertex AI). See [Bedrock, SageMaker, Foundry and Vertex compared](../../cloud/bedrock-sagemaker-foundry-vertex/). Renting raw GPUs makes sense when you need a specific open model, tight control or very high steady volume.
+
+</Disclosure>
+
+## What to take forward
+
+- Match the family to the job: P, ND and A-series for training, G, NC and G2 for inference.
+- Start from memory: weights plus KV cache decide the GPU, then bandwidth decides speed.
+- Quota and capacity are the real gate. Request them first.
+- Use reserved capacity for steady and guaranteed work, Spot for interruptible work with checkpoints.
+- Re-check this table before every purchase. It is dated October 2026.

@@ -28,6 +28,8 @@ const icons: Record<string, Shape[]> = {
   crunch: [c(32, 32, 23), p('M32 19 V45'), p('M23 37 L32 46 L41 37')],
   fit: [p('M10 22 L32 10 L54 22 V42 L32 54 L10 42 Z'), p('M10 22 L32 34 L54 22'), p('M32 34 V54')],
   incident: [p('M32 7 L58 54 H6 Z'), p('M32 25 V39'), c(32, 46, 1.6)],
+  infra: [p('M10 8 H54 V22 H10 Z'), p('M10 26 H54 V40 H10 Z'), p('M10 44 H54 V58 H10 Z'), c(18, 15, 1.7), c(18, 33, 1.7), c(18, 51, 1.7), p('M30 15 H46 M30 33 H46 M30 51 H46')],
+  local: [p('M14 14 H50 V40 H14 Z'), p('M7 46 H57 L52 54 H12 Z'), p('M26 27 L32 21 L38 27')],
   edge: [p('M18 18 H46 V46 H18 Z'), p('M26 26 H38 V38 H26 Z'), p('M25 18 V9 M32 18 V9 M39 18 V9 M25 46 V55 M32 46 V55 M39 46 V55 M18 25 H9 M18 32 H9 M18 39 H9 M46 25 H55 M46 32 H55 M46 39 H55')],
 };
 const shapes = icons[name] ?? icons.start;

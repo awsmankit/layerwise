@@ -1,0 +1,98 @@
+---
+title: "Private and air-gapped AI: privacy, licences and supply chain"
+track: local
+level: advanced
+order: 5
+summary: What running a model yourself does and does not protect, how to read open-weights licences, how to handle model files safely, and how to run with no internet.
+updated: 2026-10-26
+sources:
+  - label: "Safetensors documentation"
+    url: https://huggingface.co/docs/safetensors
+  - label: "vLLM documentation"
+    url: https://docs.vllm.ai
+  - label: "llama.cpp"
+    url: https://github.com/ggml-org/llama.cpp
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import PipelineFlow from '../../../components/viz/PipelineFlow.tsx';
+
+Many people self-host a model because the data cannot go to a third party. That is a good reason, and it is also easy to overstate. This lesson covers what "private" really gives you, the licence and supply-chain issues that come with open weights, and how an air-gapped deployment works. It is engineering guidance, not legal advice.
+
+## What "private" really guarantees
+
+Running the model inside your own boundary guarantees one thing: **the prompts and outputs are not sent to an outside provider**. That removes a whole category of risk, namely a vendor's retention, staff access and breach.
+
+It does not guarantee the rest.
+
+- **The model can mix users' data if you share it.** A shared server can leak between users through a shared prompt cache, shared logs or a conversation store with weak access control. Isolate by tenant where it matters, and check how your engine's caching is scoped.
+- **Logging.** Prompts and answers often end up in application logs, traces and monitoring tools. Those are now your data stores with your retention duties.
+- **Prompt injection still works.** A local model that reads untrusted documents or web pages can be steered by hidden instructions, exactly like a cloud model. If it can call tools, that is a real attack path. Limit its permissions.
+- **Access control and network exposure.** An inference server with no authentication on an open port is a data leak. Do not assume your engine enforces authentication by default. Check its docs, and put it behind your own gateway.
+- **Model behaviour.** Open models may be less safety-tuned or less robust than frontier ones. Test them.
+- **Insiders and stolen laptops.** Local files can be copied. Encrypt disks and control who can reach the model files.
+
+<Callout kind="note" title="Private is not the same as secure">
+"Nothing leaves our building" describes where data goes. "Secure" depends on everything you build around it. For the cloud version of this problem, see [Cloud security and networking for AI](../../cloud/cloud-security-and-networking-for-ai/).
+</Callout>
+
+## Open weights are not all the same licence
+
+"Open" covers a wide range. Some models use permissive licences such as Apache 2.0 or MIT. Others use custom licences that allow most uses but add restrictions, for example on very large user counts, on certain uses, on using outputs to train other models, or on required notices and naming. Some are for research only.
+
+So read the licence for the exact model and version you use, and have the right person in your organisation read it too. Do not assume a model's licence from the family name, from a leaderboard or from a blog post. The model card and the licence file in the repository are the source of truth. Licences can differ between sizes and versions of the same family. Also check the licence on any fine-tune, since it can add terms on top of the base model's.
+
+## Model supply chain security
+
+A model file is software you download and run. Treat it that way.
+
+- **Prefer safetensors.** It stores plain numbers and cannot run code when loaded. Older formats that use Python's pickle can execute arbitrary code when loaded. Avoid pickle-based files from sources you do not trust.
+- **Watch `trust_remote_code`.** Some loaders can run custom Python code that ships with a model repository. Turn that off unless you have read the code.
+- **GGUF is a data format**, which is safer than pickle in principle, but any parser can have bugs. Keep your runtime up to date.
+- **Verify the source.** Download from the publisher's official account, not from a similarly named copy. Look for typosquatted names.
+- **Verify checksums.** Compare the hash of the file with a value the publisher provides, ideally through a different channel.
+- **Scan.** Use your organisation's malware and pickle scanners where available. Scanning helps but does not prove safety.
+- **Pin versions.** Record the exact repository, revision or commit and file hash of each model. Never deploy "latest".
+- **Mirror internally.** Download once, review, store in your own registry, and have production pull only from that.
+- **Do not forget the engine.** Containers, Python packages and drivers are also supply-chain risks. Pin and scan them too.
+
+<Deep title="Why pickle is dangerous and safetensors is not">
+Pickle is a Python serialisation format that can describe "call this function with these arguments" when it is read. A malicious file can therefore run code the moment you load it. Safetensors was designed to store only tensor data and metadata, so loading it does not execute anything. It is still worth checking the file came from where you think it did, because a safe format does not make a bad model good. Some frameworks also offer restricted loading modes for pickle-based files. Check the current docs, and prefer safetensors anyway.
+</Deep>
+
+## Air-gapped deployment
+
+An air-gapped system has no connection to the internet or to untrusted networks. Models, code and updates still have to get in. The usual pattern:
+
+<PipelineFlow client:visible title="Getting a model into an air-gapped site" stages={[
+  {title: 'Fetch and verify', detail: 'On a connected staging machine, download the model and engine from the official sources. Check checksums and record versions.'},
+  {title: 'Scan and review', detail: 'Run scanners, review the licence and the model card, and test the model against your evaluation set.'},
+  {title: 'Sign and package', detail: 'Bundle the artefacts and sign them, so the inside can tell they were not altered.'},
+  {title: 'Transfer', detail: 'Move the bundle across the gap using approved media or a one-way transfer system, under your site rules.'},
+  {title: 'Verify and load', detail: 'Inside, verify signatures and hashes, load into the internal registry, then deploy only from there.'}
+]} caption="Every update repeats this path. Plan for it to be slower than a normal download." />
+
+Practical points:
+
+- **An offline registry** holds container images, packages and model files. Nothing inside pulls from the internet.
+- **Disable the tools' phone-home behaviour** and any automatic downloads. Check that your runtime does not try to fetch tokenizers, configuration or telemetry at startup.
+- **Updates are deliberate.** Security patches for engines, drivers and models travel by transfer, so plan the cadence.
+- **Evaluations travel too.** Keep your test set inside and rerun it for each new model version.
+
+## Regulation, at a high level
+
+Rules about personal data, sector secrecy, export control and AI systems differ by country and industry. Running a model yourself can make some obligations easier, because data stays in one place, and it does not remove them: you still handle data subject rights, retention, access records and documentation. Talk to your legal and compliance teams. This lesson does not tell you what the law requires.
+
+## An operations checklist
+
+- [ ] Licence for each model and fine-tune read and recorded.
+- [ ] Models in safetensors where possible; no unreviewed remote code.
+- [ ] Source, revision and checksum recorded for every model and image.
+- [ ] Internal mirror or registry; production pulls only from it.
+- [ ] Inference server behind authentication and network controls.
+- [ ] Logging policy: what is stored, who can read it, how long it is kept.
+- [ ] Tenant isolation checked for caches and conversation history.
+- [ ] Untrusted input and tool permissions reviewed for prompt injection.
+- [ ] Disk encryption and access control on model files.
+- [ ] Update, rollback and re-evaluation process written down and practised.

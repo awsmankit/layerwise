@@ -1,0 +1,84 @@
+---
+title: "Google Cloud: Vertex AI and the Gemini Enterprise Agent Platform"
+track: cloud
+level: intermediate
+order: 4
+summary: What Google's AI platform contains, what the 2026 rebrand changes and does not change, and how TPUs and GPUs fit.
+updated: 2026-10-26
+sources:
+  - label: "Gemini Enterprise Agent Platform overview"
+    url: https://docs.cloud.google.com/gemini-enterprise-agent-platform/overview
+  - label: "Compute Engine accelerator-optimized machines"
+    url: https://docs.cloud.google.com/compute/docs/accelerator-optimized-machines
+  - label: "Compute Engine TPU machines"
+    url: https://docs.cloud.google.com/compute/docs/tpus/tpu-machines
+  - label: "Zero data retention on the Gemini Enterprise Agent Platform"
+    url: https://docs.cloud.google.com/vertex-ai/generative-ai/docs/data-governance
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+Google Cloud keeps its model access, training tools and agent tooling in one platform. For years that platform was called **Vertex AI**. On 22 April 2026, at Cloud Next, Google announced that Vertex AI is being succeeded by the **Gemini Enterprise Agent Platform**.
+
+## What the rebrand means in practice
+
+Google's stated position, as of October 2026:
+
+- The services did not change.
+- Existing customers do not need to migrate.
+- The `aiplatform.googleapis.com` API name is unchanged.
+- Both names appear in documentation, consoles and invoices.
+
+So in practice: search for both names, expect old tutorials and Terraform modules to say Vertex AI, and do not rewrite working code only because of the name. The new name signals where Google is investing, which is agents. Check the current overview page for the exact scope.
+
+<Callout title="Same pattern on other clouds" kind="note">
+Microsoft renamed Azure AI Foundry to Microsoft Foundry in 2026 too. When a vendor renames a platform, check the API names, SDK package names and IAM role names before assuming anything changed. See [the service map](../cloud-ai-service-map/).
+</Callout>
+
+## The pieces
+
+| Piece | What it does |
+|---|---|
+| Model Garden | A catalogue of 200+ models as of October 2026: Gemini, Claude, Gemma, Llama and others. Some are Google-hosted APIs, some you deploy to your own endpoint. |
+| Gemini API | Google's own models through a managed API, with per-token billing. |
+| Provisioned Throughput | Reserved capacity for Gemini, with SLAs and predictable per-token pricing. |
+| Vector Search | A managed vector index. Billed for index-hosting nodes per hour whether or not traffic arrives. |
+| RAG Engine | Managed retrieval-augmented generation that connects your data to a model. |
+| Agent Runtime | Hosted execution for agents, formerly called Agent Engine, with Memory Bank and Sessions. |
+| Agent Development Kit (ADK) | Open-source framework for building agents, in Python, Go, Java and TypeScript. |
+| Agent Studio | Low-code agent builder. |
+
+Two of these cost money while idle. A Vector Search index bills for its nodes by the hour, and Provisioned Throughput reserves capacity whether you use it or not. Delete experiments.
+
+## Gemini API: on-demand versus provisioned
+
+By default you share capacity with other customers and are billed per token. If you hit throttling at peak, or need steady latency, **Provisioned Throughput** reserves a slice for you. The trade is the same as on every cloud: a commitment in return for predictability. Work out your steady baseline first, and let on-demand traffic handle spikes. See [Quotas, capacity and regions](../quotas-capacity-and-regions/).
+
+## Agents on Google
+
+Agent Runtime hosts agents. ADK is the code you write. You can write an agent in ADK and run it elsewhere, since ADK is open source, and you can also host agents built with other frameworks. Memory Bank and Sessions give an agent state across turns. For what an agent is and why loops need caps, see [Agents and tool use](../../rag-agents/agents-and-tool-use/).
+
+## TPUs versus GPUs
+
+Google offers its own chips, **TPUs**, next to NVIDIA GPUs.
+
+- **GPUs** on Compute Engine are the familiar CUDA path. Families as of October 2026 include A4X (GB200), A4 (8x B200), A3 Ultra (H200), A3 Mega, High and Edge (H100), A2 (A100), G2 (L4) and G4. A3 Ultra and A4 cannot be created as ordinary on-demand VMs: they need a capacity reservation, Spot or Flex-start.
+- **TPUs** include v5e (cost-efficient), v5p, v6e (Trillium) and Ironwood, which was generally available from late 2025. They run frameworks such as JAX, and PyTorch support exists but check the current docs for your model.
+
+A rough rule: if your team already depends on CUDA libraries or custom kernels, use GPUs. If you train or serve large models on frameworks with good TPU support, and the price-performance matters, evaluate TPUs. Measure both on your workload, because vendor figures do not transfer.
+
+<Deep title="Why accelerator choice affects portability">
+CUDA code does not run on a TPU, and Trainium and Inferentia on AWS need the Neuron SDK. A managed model API hides all of this. The moment you serve your own model on a custom chip, you take on a compiler, a framework version and a library ecosystem that is specific to that chip. The savings can be real, but treat the porting work as part of the cost.
+</Deep>
+
+## Data handling
+
+Google says it will not use your data to train or fine-tune models without your prior permission or instruction, per the data governance page opened on 26 October 2026. It also documents caching defaults, abuse-monitoring logging for some customers and endpoint location rules, so read that page for your contract. More in [Security and networking for AI](../cloud-security-and-networking-for-ai/).
+
+## What to take forward
+
+- Vertex AI and Gemini Enterprise Agent Platform refer to the same platform in 2026. Expect both names.
+- Idle Vector Search nodes and provisioned capacity keep billing.
+- A3 Ultra and A4 GPUs need reservations, Spot or Flex-start.
+- Choose TPUs only after checking framework support and measuring your workload.

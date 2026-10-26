@@ -1,0 +1,94 @@
+---
+title: Security and networking for AI on AWS, Azure and Google
+track: cloud
+level: intermediate
+order: 7
+summary: How identity, private connectivity, encryption keys, residency and logging map across the three clouds, and what to confirm about training on your data.
+updated: 2026-10-26
+sources:
+  - label: "Amazon Bedrock data protection"
+    url: https://docs.aws.amazon.com/bedrock/latest/userguide/data-protection.html
+  - label: "Data, privacy and security for Foundry Models sold by Azure"
+    url: https://learn.microsoft.com/en-us/azure/foundry/responsible-ai/openai/data-privacy
+  - label: "Zero data retention on the Gemini Enterprise Agent Platform"
+    url: https://docs.cloud.google.com/vertex-ai/generative-ai/docs/data-governance
+  - label: "Deployment types for Microsoft Foundry Models"
+    url: https://learn.microsoft.com/en-us/azure/foundry/foundry-models/concepts/deployment-types
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+Security for a model API is mostly ordinary cloud security applied to a new kind of data: prompts, retrieved documents and model output often contain exactly the things you would never put in a public bucket. The controls are the same on every cloud. Only the names differ.
+
+## The controls side by side
+
+| Control | AWS | Microsoft Azure | Google Cloud |
+|---|---|---|---|
+| Identity and permissions | IAM (roles, policies), IAM Identity Center for people | Microsoft Entra ID with Azure RBAC, managed identities for services | Cloud IAM, service accounts |
+| Private connectivity | VPC endpoints with AWS PrivateLink | Private Endpoints (Azure Private Link) | Private Service Connect |
+| Encryption keys | AWS KMS | Azure Key Vault | Cloud KMS |
+| Audit trail | AWS CloudTrail | Azure Monitor activity and resource logs | Cloud Audit Logs |
+| Residency control | Choose the Region, and watch cross-region inference profiles | Regional, Data Zone or Global deployment scope | Regional, multi-regional or global endpoints |
+
+Product names and exact feature coverage per model change. Check that each control is supported for the specific model and feature you plan to use, since preview features often skip some of them.
+
+## Identity
+
+Give each application its own identity and the narrowest permission that works: "may invoke this model", not "may do anything with AI". Prefer short-lived credentials from roles, managed identities or service accounts over long-lived API keys. Keep identities for people separate from identities for services.
+
+For agents, scope the permissions of every tool the agent can call. An agent with an over-broad role turns a prompt injection into a data breach. See [Agents and tool use](../../rag-agents/agents-and-tool-use/).
+
+## Private connectivity
+
+By default, calls to a model API go over the provider's public endpoint, protected by TLS and authentication. Private connectivity lets traffic stay on the cloud's private network: AWS PrivateLink through a VPC endpoint, Azure Private Endpoints, and Google Private Service Connect. This matters when policy says "no public internet path to the service". Also check DNS: private endpoints need private DNS resolution, and misconfigured DNS is a common cause of "it works from my laptop but not from the cluster".
+
+## Encryption keys
+
+All three clouds encrypt data at rest by default with provider-managed keys. If your policy requires keys you control, use a customer-managed key in KMS, Key Vault or Cloud KMS. Support varies by feature. For example, Google documents that customer-managed keys are not supported for durable caching of Gemini requests, and Microsoft notes some preview features do not support customer-managed keys. Read the feature page before promising a key policy.
+
+## Data residency
+
+"Where is my data" has two parts: where it is **stored** and where it is **processed**.
+
+- On Azure, Global and Data Zone deployment types may process prompts outside your resource's region, within the zone for Data Zone. Stored data stays in your designated geography, per Microsoft's data privacy page.
+- On Google, global endpoints can serve requests and cached data from any region, while regional endpoints keep to the selected location.
+- On AWS, cross-region inference profiles can route requests to other Regions. Check which Regions are in the profile.
+
+Choosing the widest scope usually gives more capacity. Choosing the narrowest gives the strictest residency. See [Quotas, capacity and regions](../quotas-capacity-and-regions/).
+
+## Audit logging, and the logging trap
+
+Turn on the audit trail (CloudTrail, Azure Monitor, Cloud Audit Logs) so you know who called what. That records the call, not the content.
+
+**Prompt and response logging is a different thing, and it is risky.** If you log prompts and responses to debug quality, the log now holds whatever users typed: personal data, secrets pasted by mistake, retrieved confidential documents. Decide before launch:
+
+1. Whether to log content at all, and for how long.
+2. Who can read the logs, which should be fewer people than can call the model.
+3. Whether to redact personal data before logging.
+4. Whether logs are encrypted with a key you control.
+
+Request-response logging is off by default on Google, per its docs, and AWS Bedrock invocation logging is something you choose to configure. Verify the defaults for your account.
+
+## What providers say about training on your data
+
+Each provider publishes a statement, and each has caveats such as abuse monitoring, caching or preview features.
+
+- **AWS** states that Bedrock model providers do not have access to the deployment accounts that run their models, so they do not see Bedrock logs or customer prompts and completions. Its data protection page also covers abuse detection.
+- **Microsoft** states that prompts, completions, embeddings and training data for models sold by Azure are not used to train foundation models without your permission, and are not available to other customers or to the model providers. It also describes abuse monitoring, with a process to apply for modified monitoring.
+- **Google** states it will not use your data to train or fine-tune models without your prior permission or instruction, and documents caching and logging behaviour that may affect zero data retention.
+
+These were read on 26 October 2026. **Confirm against the current terms and your contract** before relying on any of them, particularly for models from third-party providers, preview features and fine-tuned models. This lesson is not legal advice.
+
+<Deep title="Zero data retention is not one switch">
+Features can retain data even when the base model does not: caching, stored conversation state for agents, grounding with search, abuse-monitoring stores and your own logs. For a strict policy, list each feature you use and look up what it stores, for how long, and where. Disable what you cannot justify.
+</Deep>
+
+## Checklist
+
+- One identity per application, least privilege, short-lived credentials.
+- Private endpoints if policy requires no public path, and tested DNS.
+- Customer-managed keys where required, confirmed for each feature.
+- Residency scope chosen on purpose, with the capacity trade-off understood.
+- Audit logging on, content logging decided and documented.
+- Provider data terms re-read for the exact services you use.

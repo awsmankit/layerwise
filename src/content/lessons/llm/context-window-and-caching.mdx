@@ -62,7 +62,7 @@ Look for cache read and cache write counts in the usage data that comes back wit
 - **Trim tool output.** A tool that returns a huge JSON blob fills the window for every later step. Return only what the model needs.
 - **Set a maximum output length** appropriate to the task.
 
-<Disclosure title="Rule of thumb for deciding between caching and retrieval">
+<Disclosure client:visible title="Rule of thumb for deciding between caching and retrieval">
 
 If the reference material is small enough to fit comfortably and is reused on most requests, caching it is simpler and often better. If it is large, changes often, or only a small part is relevant to each question, retrieve it.
 

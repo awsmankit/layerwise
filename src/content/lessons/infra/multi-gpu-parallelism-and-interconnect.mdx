@@ -1,0 +1,92 @@
+---
+title: Splitting a model across GPUs
+track: infra
+level: advanced
+order: 4
+summary: Understand data, tensor, pipeline and expert parallelism, why each needs a different kind of network, and how to choose a split when one GPU is not enough.
+updated: 2026-10-26
+sources:
+  - label: "Megatron-LM: Training Multi-Billion Parameter Language Models Using Model Parallelism (Shoeybi et al., 2019)"
+    url: https://arxiv.org/abs/1909.08053
+  - label: "Efficient Large-Scale Language Model Training on GPU Clusters Using Megatron-LM (Narayanan et al., 2021)"
+    url: https://arxiv.org/abs/2104.04473
+  - label: "GPipe: Efficient Training of Giant Neural Networks using Pipeline Parallelism (Huang et al., 2018)"
+    url: https://arxiv.org/abs/1811.06965
+  - label: "Switch Transformers (Fedus et al., 2021)"
+    url: https://arxiv.org/abs/2101.03961
+  - label: "Mixtral of Experts (Jiang et al., 2024)"
+    url: https://arxiv.org/abs/2401.04088
+  - label: "ZeRO: Memory Optimizations Toward Training Trillion Parameter Models (Rajbhandari et al., 2019)"
+    url: https://arxiv.org/abs/1910.02054
+  - label: "Amazon EC2 accelerated computing instance types"
+    url: https://aws.amazon.com/ec2/instance-types/accelerated-computing/
+  - label: "Microsoft Learn: ND GB200 v6 series"
+    url: https://learn.microsoft.com/en-us/azure/virtual-machines/sizes/gpu-accelerated/nd-gb200-v6-series
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import Disclosure from '../../../components/viz/Disclosure.tsx';
+import ParallelismViz from '../../../components/viz/ParallelismViz.tsx';
+
+Sooner or later a model stops fitting on one GPU, or one GPU stops being fast enough. A 70-billion-parameter model in 16-bit form needs 140 GB for weights alone, and the largest single GPUs hold 80 to roughly 190 GB. The answer is to spread the work over several GPUs. There are four main ways to do it, and the way you choose depends mostly on how fast the GPUs can talk to each other.
+
+## Four ways to split the work
+
+<ParallelismViz client:visible />
+
+**Data parallelism.** Every GPU holds a full copy of the model and processes a different slice of the batch. In training, the GPUs then average their gradients (an all-reduce) before updating. In inference it simply means running several replicas behind a load balancer. It does not help a model that does not fit on one GPU, so it is used on top of the other methods.
+
+**Tensor parallelism.** Each layer's big matrices are cut into pieces, and each GPU computes its piece of every layer. The partial results are combined with an all-reduce. Megatron-LM showed how to do this for transformers with two all-reduces per layer in the forward pass (one after attention, one after the feed-forward block). It cuts both the memory per GPU and the time per token, but it communicates constantly.
+
+**Pipeline parallelism.** The layers are divided into consecutive stages, one stage per GPU or group of GPUs. A batch is cut into micro-batches that flow through the stages like items on an assembly line, as in GPipe. Communication is small and happens only at stage boundaries. The cost is idle time, called the **bubble**, while the pipeline fills and drains. For GPipe with p stages and m micro-batches, the idle fraction is about (p minus 1) divided by (m plus p minus 1), so you want many micro-batches per stage.
+
+**Expert parallelism.** Mixture-of-experts models (Switch Transformers, Mixtral) replace one feed-forward block with many "experts" and send each token to only a few. Mixtral 8x7B has about 47 billion parameters in total but uses about 13 billion for any one token. Expert parallelism places different experts on different GPUs, so tokens must be sent to the GPUs that hold their experts and back again (an all-to-all exchange).
+
+## Why the network decides
+
+The methods differ in how much data they move, and how often.
+
+| Method | Communication | Frequency | Link needed |
+|---|---|---|---|
+| Tensor | All-reduce of activations | Twice per layer, every step | Very fast: NVLink class |
+| Pipeline | Activations between stages | Once per stage boundary per micro-batch | Modest: fine across nodes |
+| Data (training) | All-reduce of gradients | Once per step, can overlap with compute | Good: fast between nodes |
+| Expert | All-to-all of tokens | Each MoE layer | Fast, and sensitive to imbalance |
+
+Inside one server, GPUs connect with **NVLink** through **NVSwitch**. On an H100 server that is about 900 GB/s per GPU (AWS lists 900 GB/s NVSwitch for P5). Between servers, traffic crosses **InfiniBand** or Ethernet with RDMA, such as AWS EFA, which is slower. A P5 instance has up to 3,200 Gbps of EFA for all 8 GPUs, and Azure ND H100 v5 has 400 Gbps of InfiniBand per GPU. Per GPU that is about 50 GB/s, roughly an order of magnitude below NVLink. Google quotes up to 3,600 Gbps over RDMA for A3 Ultra and A4 nodes.
+
+That gap is why tensor parallelism stays inside a node, while pipeline and data parallelism are the ones stretched across nodes. Newer rack-scale systems such as the GB200 NVL72 (offered on Azure as ND GB200 v6, where 18 VMs form a 72-GPU NVLink domain with 13.5 TB of shared HBM) widen the fast domain so that larger tensor-parallel groups become practical.
+
+<Callout title="Latency matters as much as bandwidth" kind="note">
+During decode, the messages are small: a batch of 32 tokens with a hidden size of 8,192 in 16-bit form is about half a megabyte per all-reduce. An 80-layer model does around 160 of these per generated token. Each has a fixed latency cost, so the number of hops matters as much as the bandwidth.
+</Callout>
+
+## When you must split, and how
+
+1. **Does it fit on one GPU** with room for the KV cache? Then do not split. Replicate with data parallelism for throughput.
+2. **Fits in one node (typically up to 8 GPUs)?** Use tensor parallelism across the node's NVLink-connected GPUs, and replicate the node for scale.
+3. **Does not fit in one node?** Add pipeline parallelism across nodes, keeping tensor parallelism within each node.
+4. **Mixture of experts?** Add expert parallelism, usually combined with data parallelism for the attention layers.
+5. **Training at large scale?** Combine all of them, as in the Megatron 3D parallelism paper, and shard optimizer state with ZeRO or FSDP (see [Training infrastructure](../training-infrastructure/)).
+
+Examples that make this concrete, with weights only and as of October 2026: a 70B model in FP16 (140 GB) can be tensor-parallel across 4 GPUs of 80 GB, leaving room for KV cache. A 405B model needs about 810 GB in FP16, more than the 640 GB of an 8x H100 node, so it uses FP8 (about 405 GB) on one node, or an 8x H200 node (about 1.1 TB of memory), or several nodes with pipeline parallelism.
+
+<Deep title="Costs and traps">
+
+Splitting reduces memory per GPU but never gives perfect speedup. Tensor parallel efficiency drops as the group grows, and a group that straddles two nodes pays the slow-link penalty on every layer. Pipeline parallelism has the bubble, plus uneven stages if layers differ in cost. For serving, a pipeline adds latency for every token because each token must traverse all stages in order, so tensor parallelism is usually preferred for latency and pipeline for fitting. Data parallel replicas multiply cost linearly but give the cleanest scaling. In mixture-of-experts models, if the router sends most tokens to a few experts, those GPUs become the bottleneck while others idle, so load balancing losses and capacity limits matter. Also remember that GPU placement matters: NCCL (the communication library) can only use the fast path if GPUs are in the same NVLink domain and the topology is detected correctly.
+
+</Deep>
+
+<Disclosure client:visible title="What about inference engines?">
+
+Serving engines such as vLLM, SGLang and TensorRT-LLM expose tensor parallel size as a setting and can run data-parallel replicas and, for large mixture-of-experts models, expert parallelism. The decision above is what you set in those flags. See [Kubernetes and autoscaling](../kubernetes-and-autoscaling-for-inference/) for running replicas.
+
+</Disclosure>
+
+## What to take forward
+
+- Tensor parallelism: fastest links, inside one node. Pipeline: tolerates slower links, between nodes. Data: scales throughput. Expert: for mixture-of-experts.
+- Do not split if you do not have to. Every split adds communication.
+- NVLink inside, InfiniBand or EFA between: the gap is roughly ten times or more.
+- Fit first (memory), then speed (bandwidth), then scale (replicas).

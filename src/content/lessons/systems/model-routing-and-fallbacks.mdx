@@ -50,7 +50,7 @@ Failures to plan for: throttling, timeouts, provider outages, a retired model, a
 4. **A fallback target:** another region, another model on the same platform, or another provider. Choose something already tested on your evals.
 5. **A graceful floor.** Decide what the product does if every option fails: a cached answer, a shorter degraded mode, or a clear message.
 
-<Disclosure title="Why jitter matters">
+<Disclosure client:visible title="Why jitter matters">
 
 If many clients all back off for exactly one second, two seconds, four seconds, they retry in lockstep and hit the service in waves. Adding randomness to each delay spreads the load, which gives an overloaded service room to recover.
 

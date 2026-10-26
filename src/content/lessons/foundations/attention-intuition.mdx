@@ -48,7 +48,7 @@ def attention(Q, K, V, causal=True):
     return weights @ V                            # blend the values
 ```
 
-<Disclosure title="The formula">
+<Disclosure client:visible title="The formula">
 
 The standard form is `softmax(Q Kᵀ / √d) V`. Dividing by the square root of the dimension keeps the scores from growing with the vector size, which would push the softmax into regions where gradients vanish.
 

@@ -83,7 +83,7 @@ export default function FitModelGame() {
               {scenario.deviceGB} GB {scenario.deviceName}
               {scenario.devices > 1 ? ` (${total} GB in all)` : ''}
             </li>
-            <li>{scenario.users} users at once</li>
+            <li>{scenario.users} {scenario.users === 1 ? 'user' : 'users'} at once</li>
             <li>{scenario.ctx.toLocaleString('en-US')} tokens of context each</li>
             <li>task score of at least {scenario.minQuality}</li>
           </ul>

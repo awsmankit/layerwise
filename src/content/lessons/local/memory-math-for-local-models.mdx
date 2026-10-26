@@ -1,0 +1,105 @@
+---
+title: The memory maths for local models
+track: local
+level: intermediate
+order: 2
+summary: Work out whether a model fits your machine, from weights and quantization to the KV cache, and why memory bandwidth sets your speed.
+updated: 2026-10-26
+sources:
+  - label: "llama.cpp (GGUF and quantization types)"
+    url: https://github.com/ggml-org/llama.cpp
+  - label: "PagedAttention paper (Kwon et al., 2023)"
+    url: https://arxiv.org/abs/2309.06180
+  - label: "GPTQ (Frantar et al., 2022)"
+    url: https://arxiv.org/abs/2210.17323
+  - label: "AWQ (Lin et al., 2023)"
+    url: https://arxiv.org/abs/2306.00978
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import ModelMemory from '../../../components/viz/ModelMemory.tsx';
+
+"Will it fit?" is the first question of local inference, and it is mostly arithmetic. Two things use memory: the model's **weights**, and the **KV cache** that grows as the conversation gets longer. Add some overhead and compare the total with your device's memory.
+
+## Weights: parameters times bytes
+
+```text
+weight memory = number of parameters x bytes per parameter
+```
+
+A model with 8 billion parameters stored in 16-bit form uses 2 bytes each, so about 16 GB. Stored in 8 bits it is about 8 GB. Stored in 4 bits it is about 4 GB. Quantization is simply choosing fewer bytes per parameter.
+
+## GGUF quantization levels
+
+Local tools mostly use GGUF files with named quantization types. The names are not obvious, so here is the trade-off in plain terms. The bits-per-weight figures are approximate and differ a little between models and versions, so check the file size on the download page, which is the number that matters.
+
+| Type | Roughly bits per weight | What to expect |
+| --- | --- | --- |
+| Q8_0 | about 8.5 | Very close to the original quality. Large. |
+| Q6_K | about 6.5 | Quality very near Q8, noticeably smaller. |
+| Q5_K_M | about 5.5 | A good quality-focused choice. |
+| Q4_K_M | about 4.5 to 5 | The common default. Best balance for most people. |
+| Q3 and below | about 3.5 or less | Quality loss becomes easier to notice, especially on small models. Use only when it is the only way to fit. |
+
+The "K" types use grouped scaling, which is why they use slightly more than their headline bit count. A larger model at Q4 usually beats a smaller model at Q8, but test on your own task. See [Quantization](../../serving/quantization/) for how the methods work, and note that other formats such as GPTQ and AWQ exist for GPU servers.
+
+## The KV cache grows with context
+
+As you chat, the model stores keys and values for every earlier token so it does not recompute them. That is the KV cache:
+
+```text
+KV bytes per token = 2 x layers x KV heads x head dimension x bytes per value
+KV cache total     = KV bytes per token x tokens in context
+```
+
+For an 8B-class model with the shape used in the widget below (32 layers, 8 KV heads, head dimension 128, 16-bit values), that is about 131 KB per token. An 8,000-token context is therefore about 1 GB, and 32,000 tokens is about 4 GB. A 70B-class shape (80 layers) is about 2.5 times that per token. Models differ, so treat these as examples. Full detail is in [the KV cache lesson](../../serving/kv-cache-and-memory/).
+
+<ModelMemory client:visible />
+
+Choose a model, set the precision, and then raise the context length. Watch the cache grow while the weights stay fixed.
+
+## Unified memory versus VRAM
+
+- **Apple silicon** has one pool of unified memory shared by CPU and GPU. A 64 GB Mac can hold a model that no 24 GB graphics card can. The operating system limits how much of that pool the GPU may use by default (a fraction, not all of it), and the limit can usually be changed. Check Apple's and your tool's documentation.
+- **A discrete GPU** has its own VRAM, which is fast but limited. If the model does not fit, the engine can **offload layers** to the CPU and system RAM. That works, but those layers are read over a much slower path, and each token must pass through every layer. Even a modest overflow can cut speed sharply compared with a model that fits.
+
+## A worked table: what fits
+
+Assumptions, so you can redo it for your case: Q4_K_M is about 0.6 bytes per parameter; Q8_0 is about 1.06 bytes per parameter; context is 8,000 tokens with a 16-bit KV cache; usable memory is about 5 GB of an 8 GB laptop, 11 to 12 GB of a 16 GB laptop, 20 GB of a 24 GB dedicated GPU, and 48 GB of a 64 GB unified-memory Mac (the rest goes to the operating system and apps). These are rules of thumb, not guarantees.
+
+| Machine | Fits comfortably | Tight or too big |
+| --- | --- | --- |
+| 8 GB | 3B at Q4 (about 2 GB). 4B at Q4. | 8B at Q4 is about 4.8 GB plus about 1 GB of cache. Possible only with short context. |
+| 16 GB | 8B at Q8 (about 8.5 GB plus cache). 14B at Q4 (about 8.5 GB plus cache). | 14B at Q8 (about 15 GB) is too big. |
+| 24 GB | 14B at Q8. 20B to 24B at Q4. | 32B at Q4 is about 19 GB plus cache: only with short context. |
+| 64 GB | 32B at Q8 (about 34 GB). | 70B at Q4 is about 42 GB plus about 3 GB of cache: it fits, with little spare room for long context. |
+
+## Context length versus memory
+
+Doubling the context doubles the KV cache. A model that fits at 4,000 tokens can fail at 32,000. If you run out, lower the context setting, use a smaller model, or use a lower precision for the cache if your tool offers it (and test the quality).
+
+## Why bandwidth sets tokens per second
+
+To produce one token, the chip reads the model's weights, and the cache, from memory. So speed has a ceiling:
+
+```text
+tokens per second  <=  memory bandwidth / bytes read per token
+```
+
+Illustration: a 4.8 GB model on memory delivering 100 GB/s has a ceiling of about 20 tokens per second. At 400 GB/s the ceiling is about 80. Real speed is lower. These bandwidths are examples. Look up your machine's figure. Typical desktop memory is far slower than graphics-card memory, and datacenter GPUs with HBM are higher still.
+
+<Callout title="Try it">
+The Fit the Model game lets you practise this, and the memory tool does the sums for you. Both are linked alongside this lesson.
+</Callout>
+
+<Deep title="Why a smaller file is also faster">
+Because decoding is bound by reading memory, a 4-bit model is both smaller and quicker than the same model at 8 bits, since fewer bytes are read per token. Prompt processing (prefill) is different: it is limited more by compute, so quantization helps it less.
+</Deep>
+
+## What to take forward
+
+- Weights equal parameters times bytes. The KV cache grows with context. Add headroom.
+- Q4_K_M is a sensible default. Go up if you have room, go below Q4 only when you must.
+- Prefer a model that fits entirely in fast memory over one that spills to the CPU.
+- Bandwidth divided by model size gives a speed ceiling.

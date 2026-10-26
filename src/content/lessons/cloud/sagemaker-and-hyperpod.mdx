@@ -1,0 +1,86 @@
+---
+title: "Amazon SageMaker AI: endpoints, HyperPod and when to leave Bedrock"
+track: cloud
+level: intermediate
+order: 5
+summary: The SageMaker AI endpoint types, inference components, training jobs and HyperPod, and the criteria AWS gives for choosing Bedrock or SageMaker AI.
+updated: 2026-10-26
+sources:
+  - label: "Amazon Bedrock or Amazon SageMaker AI? (AWS decision guide)"
+    url: https://docs.aws.amazon.com/decision-guides/latest/decision-guides/bedrock-or-sagemaker.html
+  - label: "Amazon SageMaker inference: 2026 year-to-date launches in review"
+    url: https://aws.amazon.com/blogs/machine-learning/amazon-sagemaker-inference-2026-year-to-date-launches-in-review/
+  - label: "EC2 accelerated computing instance types"
+    url: https://docs.aws.amazon.com/ec2/latest/instancetypes/ac.html
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+Bedrock lets you call models someone else hosts. **Amazon SageMaker AI** (formerly Amazon SageMaker) is for the cases where you want to train, customise or host models yourself, and to control the container, the instance type and the cost-latency-throughput trade-off. Microsoft Azure Machine Learning and Google's training and prediction tools sit in the same slot, see [the service map](../cloud-ai-service-map/).
+
+## Ways to host a model
+
+SageMaker AI offers several inference options. The list below is the stable core as of October 2026. AWS adds features often, so check the current docs for exact limits.
+
+| Option | Shape | Typical use |
+|---|---|---|
+| Real-time endpoint | Always-on instances behind an HTTPS endpoint | Interactive traffic with steady latency needs |
+| Asynchronous endpoint | Requests queue, results land in storage | Large payloads or long-running requests |
+| Serverless endpoint | Capacity scales with traffic, including down to idle | Spiky, low-volume traffic. Not suited to big GPU models, so check current limits. |
+| Batch transform | A job processes a dataset and stops | Scoring a large set of records offline |
+
+<Callout title="A real-time endpoint bills while it exists" kind="cost">
+A real-time endpoint bills for every hour it is up, whether or not requests arrive. Delete test endpoints. The AWS decision guide notes endpoints can also scale to zero, so check whether that applies to your setup.
+</Callout>
+
+### Inference components
+
+Hosting many models, or many small ones, on separate endpoints wastes GPUs. **Inference components** let several models share one endpoint's instances, each with its own resource request (for example, how much accelerator memory it needs). AWS describes this as a way to reduce deployment cost by hosting multiple models behind one endpoint.
+
+### JumpStart
+
+**SageMaker JumpStart** is a model hub inside SageMaker AI. The AWS decision guide describes nearly 1,000 models, including open models from Hugging Face, Meta and others, with one-step deployment to your own endpoint. Some proprietary models, such as Claude, are on Bedrock and not on JumpStart.
+
+### 2026 inference launches
+
+AWS's 2026 review lists several additions: Inference Recommendations (April), which help you pick an instance type, Capacity-Aware Instance Pools (May), which let you list up to five instance types with automatic fallback when one is out of stock, and OpenAI-compatible APIs (May). Treat the list as a snapshot and read the post for details.
+
+## Training
+
+**Training jobs** run your training code on instances that exist only for the duration of the job, then shut down. You choose the instance type and count, and can use NVIDIA GPUs or AWS Trainium. Trainium uses the AWS Neuron SDK, not CUDA. SageMaker AI also offers serverless model customisation for supported open models with techniques such as supervised fine-tuning and preference optimisation, per the decision guide.
+
+## HyperPod
+
+**SageMaker HyperPod** is for big, long-running jobs on dedicated clusters. It has two roles.
+
+- **Training clusters.** Resilient infrastructure for training at scale, with orchestration through Kubernetes (EKS) or Slurm. The idea is that a failed node is replaced and training resumes, rather than someone being paged at 3 am.
+- **HyperPod Inference.** Kubernetes-native serving on dedicated GPU clusters. It supports a two-tier KV cache (CPU memory per node as L1, a shared Redis as L2) and prefix-aware and KV-aware routing, so requests that share a prompt prefix go where the cache is warm. See [KV cache and memory](../../serving/kv-cache-and-memory/).
+
+<Deep title="Managed endpoints versus HyperPod Inference">
+Managed endpoints hide the cluster. You pick an instance type and AWS runs the fleet. HyperPod Inference gives you the Kubernetes layer: you decide how pods map to GPUs, how traffic is routed, and which serving stack runs. That control costs operational skill. If nobody on your team has run a GPU Kubernetes cluster, start with endpoints.
+</Deep>
+
+## Bedrock or SageMaker AI?
+
+AWS publishes a decision guide, last updated 23 July 2026 when opened. Its main points:
+
+- **Bedrock** for building applications and agents on pre-trained models with prompting and retrieval, with minimal infrastructure work and per-token billing.
+- **SageMaker AI** when you need training, heavy customisation, or direct control of the container and instances to manage cost, throughput and latency, for example large-scale LLM serving where you want to maximise GPU use.
+- **Both together** is common: prototype on Bedrock, customise on SageMaker AI, then serve either on a SageMaker endpoint or by importing the model into Bedrock.
+
+A practical checklist for leaving Bedrock:
+
+1. The model you need is not on Bedrock, or is only on JumpStart or your own weights.
+2. You need to control batching, quantization, serving stack or hardware.
+3. Your volume is high and steady enough that owning GPUs beats per-token billing. Test it with the break-even tool in the Tools section.
+4. You must train a model from scratch or fine-tune beyond what Bedrock customisation supports.
+
+If none of these apply, stay on Bedrock. Operating GPUs is real work.
+
+## What to take forward
+
+- SageMaker AI is for control. Bedrock is for convenience.
+- Pick an endpoint type from your traffic pattern, and delete what you are not using.
+- HyperPod is for scale, with Kubernetes or Slurm skills required.
+- Start on Bedrock and move only when a specific need shows up.

@@ -1,0 +1,95 @@
+---
+title: "The cloud AI map: AWS, Azure and Google side by side"
+track: cloud
+level: basic
+order: 1
+summary: The same dozen jobs exist on every major cloud under different names. Learn to translate between them, and which 2026 renames to expect.
+updated: 2026-10-26
+sources:
+  - label: "Amazon Bedrock or Amazon SageMaker AI? (AWS decision guide)"
+    url: https://docs.aws.amazon.com/decision-guides/latest/decision-guides/bedrock-or-sagemaker.html
+  - label: "Amazon Bedrock AgentCore"
+    url: https://aws.amazon.com/bedrock/agentcore/
+  - label: "Deployment types for Microsoft Foundry Models"
+    url: https://learn.microsoft.com/en-us/azure/foundry/foundry-models/concepts/deployment-types
+  - label: "Gemini Enterprise Agent Platform overview"
+    url: https://docs.cloud.google.com/gemini-enterprise-agent-platform/overview
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import ServiceMap from '../../../components/viz/ServiceMap.tsx';
+
+AWS, Microsoft Azure and Google Cloud all sell the same kinds of AI building blocks. You can call a hosted model, train your own, run an agent, search your documents, filter unsafe output, rent a GPU, and lock down who can do what. The jobs are the same. The product names are not, and that is the main source of confusion when you move between clouds or read a vendor's marketing.
+
+This lesson is a translation table. The other lessons in this track go deeper on each cloud, so use this one to find your bearings first.
+
+## The map
+
+Pick a job and see what each cloud calls it. Treat it as a starting point for your own reading, because names change often.
+
+<ServiceMap client:visible />
+
+## How to translate
+
+Ask "what job is this?" before you ask "what is it called?". Almost every AI service fits one of these jobs.
+
+1. **Managed model API.** You send a prompt and get text back. You never see a GPU.
+2. **ML platform.** You bring data and code to train, tune and host models yourself.
+3. **Agent runtime.** A place to run a model-driven loop that calls tools, with identity, memory and tracing.
+4. **Retrieval and vector search.** Store embeddings, find relevant passages.
+5. **Safety guardrails.** Check inputs and outputs for harmful content, personal data and off-topic requests.
+6. **GPU virtual machines.** Raw accelerated compute you manage.
+7. **Custom accelerators.** Chips the cloud designed itself: Trainium and Inferentia on AWS, TPUs on Google. Microsoft also designs its own AI chip, called Maia, so check current docs for what customers can use.
+8. **Kubernetes.** A managed cluster you schedule GPU workloads on.
+9. **Reserved capacity.** A way to hold capacity so you are not competing with everyone else.
+10. **Batch.** Cheaper, slower, asynchronous processing.
+11. **Identity and private access.** Who may call what, and whether traffic stays off the public internet.
+12. **Observability.** Logs, metrics and traces.
+
+## The three headline products
+
+As of October 2026:
+
+| Job | AWS | Microsoft Azure | Google Cloud |
+|---|---|---|---|
+| Managed model API | Amazon Bedrock | Foundry Models in Microsoft Foundry, which includes Azure OpenAI models | Gemini and Model Garden models on Vertex AI, now part of the Gemini Enterprise Agent Platform |
+| ML platform | Amazon SageMaker AI | Azure Machine Learning | Vertex AI training and prediction, same platform |
+| Agent runtime | Bedrock AgentCore Runtime | Agent features in Microsoft Foundry (check the docs for the current service name) | Agent Runtime, built with the Agent Development Kit (ADK) |
+
+<Callout title="2026 renames to know" kind="note">
+**Microsoft:** "Azure AI Foundry" is now **Microsoft Foundry**. "Foundry Models" is the term for models sold by Azure, including Azure OpenAI models. Older articles, forum answers and some code still use the old names.
+
+**Google:** Vertex AI is being succeeded by the **Gemini Enterprise Agent Platform**, announced on 22 April 2026 at Google Cloud Next. Google says the services did not change, existing customers do not need to migrate, and the `aiplatform.googleapis.com` API name is unchanged. Both names appear in docs and on invoices. Agent Runtime was previously called Agent Engine.
+
+**AWS:** Amazon SageMaker is now documented as SageMaker AI, and Bedrock AgentCore became generally available on 20 October 2025.
+</Callout>
+
+## Where the clouds really differ
+
+Names are the easy part. The substance differs in a few places.
+
+- **Model catalogue.** Each cloud hosts some models others do not. Check that the model you measured is available in the region you need.
+- **Capacity model.** How you reserve throughput, and how hard GPUs are to get, differs a lot. See [Quotas, capacity and regions](../quotas-capacity-and-regions/).
+- **Accelerators.** AWS has Trainium and Inferentia with the Neuron SDK, Google has TPUs, and all three rent NVIDIA GPUs. Custom chips can lower cost but are not CUDA.
+- **Identity.** AWS uses IAM, Azure uses Microsoft Entra ID with Azure RBAC, and Google uses Cloud IAM. If your company already runs on one, that matters.
+
+<Deep title="Why the same job is split differently">
+Each cloud grew its AI services from a different starting point. AWS began with SageMaker for ML builders and added Bedrock as a separate model API. Microsoft started with the Azure OpenAI Service and folded it into a broader Foundry portal. Google already had Vertex AI as one platform for both training and Gemini access, and is now extending it toward agents. That is why a table row can have one product on one cloud and three on another. Do not read a missing row as a missing feature.
+</Deep>
+
+## How to choose
+
+1. **Start with the model you have measured** on your own task, then see which cloud hosts it where you need it.
+2. **Follow your data and your identity system.** Moving data between clouds costs money and raises compliance questions.
+3. **Check compliance needs early:** residency, private networking, logging and what each provider says about training on your data.
+4. **Check capacity in your target region** before you commit to a design, especially for GPUs.
+5. **Keep your model calls behind one thin function** so you can move later.
+
+The choice is rarely permanent. Many teams use more than one cloud, for example a managed API on one and GPUs on another.
+
+## What to take forward
+
+- The jobs are the same on every cloud. Learn the jobs, then look up the names.
+- Names changed in 2026 on Azure and Google. Search for both old and new names.
+- Continue with [Choosing between AWS, Azure and Google AI platforms](../bedrock-sagemaker-foundry-vertex/), then the deep dives for [Microsoft Foundry](../microsoft-foundry-and-azure-openai/), [Google](../google-vertex-and-gemini-platform/) and [SageMaker](../sagemaker-and-hyperpod/).

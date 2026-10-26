@@ -1,0 +1,14 @@
+---
+import ToolPage from '../../layouts/ToolPage.astro';
+import BreakEven from '../../components/viz/BreakEven.tsx';
+import { withBase } from '../../lib/url';
+---
+
+<ToolPage figure="plot" title="API or your own GPUs?" lede="Compare a pay-per-token API with renting GPUs, and find the volume where self-hosting starts to win, if it ever does.">
+  <BreakEven client:load />
+  <Fragment slot="notes">
+    <h2>What to look for</h2>
+    <p>Self-hosting is a fixed cost: whole servers, busy or idle. The API is a variable cost. So the answer depends on volume and, above all, on how busy you can keep the GPUs. Try halving the utilisation and watch the break-even move out, or disappear.</p>
+    <p>More in <a href={withBase('/learn/local/self-hosting-vs-api-economics/')}>Self-hosting versus an API</a> and <a href={withBase('/learn/cost/cost-levers/')}>Cost levers</a>.</p>
+  </Fragment>
+</ToolPage>

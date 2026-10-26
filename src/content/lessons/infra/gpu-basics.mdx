@@ -1,0 +1,107 @@
+---
+title: What a GPU is, and why AI wants one
+track: infra
+level: basic
+order: 1
+summary: Understand what a GPU does differently from a CPU, why matrix arithmetic suits it, and why generating text is limited by memory speed rather than by arithmetic.
+updated: 2026-10-26
+sources:
+  - label: "Efficient Memory Management for Large Language Model Serving with PagedAttention (Kwon et al., 2023)"
+    url: https://arxiv.org/abs/2309.06180
+  - label: "FlashAttention: Fast and Memory-Efficient Exact Attention (Dao et al., 2022)"
+    url: https://arxiv.org/abs/2205.14135
+  - label: "Amazon EC2 accelerated computing instance types"
+    url: https://aws.amazon.com/ec2/instance-types/accelerated-computing/
+  - label: "Google Cloud: TPU machine types"
+    url: https://docs.cloud.google.com/compute/docs/tpus/tpu-machines
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import Disclosure from '../../../components/viz/Disclosure.tsx';
+import NodeGraph from '../../../components/viz/NodeGraph.tsx';
+
+A language model is, underneath, a very large pile of multiplications and additions. Running one means doing billions of them for every word. This lesson explains the chip that does that work well, and the one idea that explains most of what you will later read about AI hardware: sometimes the chip waits for arithmetic, and sometimes it waits for data.
+
+## CPU versus GPU
+
+A **CPU** has a handful of powerful cores (a laptop has 8 to 16, a server maybe 64 to 128). Each core is clever. It handles branching, unpredictable code and many different kinds of tasks quickly, one after another. Think of a few expert chefs who can cook anything.
+
+A **GPU** (graphics processing unit) has thousands of much simpler arithmetic units. Each one is slow and not clever, but they all work at the same time on different pieces of the same job. Think of a huge kitchen line where every cook does one simple step, all at once. GPUs were built to colour millions of screen pixels at the same time. It turned out that the same trick suits neural networks.
+
+## Why matrix multiplication fits
+
+A neural network layer is mostly a **matrix multiplication**: a big grid of weights multiplied by a grid of numbers coming in. Each cell of the answer is a separate sum of products, and none of those sums depends on the others. That is exactly the kind of work you can hand to thousands of workers at once.
+
+Modern datacenter GPUs add special units called **tensor cores**. A normal arithmetic unit multiplies two numbers. A tensor core multiplies and adds a whole small block of numbers in one step, usually in a low-precision format such as 16-bit or 8-bit. Most of the headline speed in a GPU's datasheet comes from these.
+
+## The other chip names
+
+| Chip | What it is | In one sentence |
+|---|---|---|
+| GPU | NVIDIA, AMD and others | General parallel hardware with tensor cores. Runs almost any model. |
+| TPU | Google's accelerator | Built around large matrix units. Used on Google Cloud. |
+| Trainium, Inferentia | AWS accelerators | Amazon's own chips for training and inference. |
+| NPU | Neural processing unit | A small accelerator in a phone or laptop, for on-device models. |
+
+TPUs, Trainium and Inferentia need different software from the NVIDIA world (for example, AWS uses its Neuron SDK instead of CUDA). The ideas in this track apply to all of them, though the vocabulary changes.
+
+## Inside a GPU
+
+Click a part to see what it does and what limits it.
+
+<NodeGraph
+  client:visible
+  title="A GPU, simplified"
+  height={400}
+  initial="hbm"
+  failuresLabel="What limits it"
+  nodes={[
+    { id: 'hbm', label: 'High-bandwidth memory (HBM)', x: 14, y: 50, detail: 'The large main memory of the GPU, stacked right next to the chip so data can flow very fast. Model weights and the KV cache live here. Capacity is measured in gigabytes and speed (bandwidth) in terabytes per second.', fails: ['Capacity: a model that does not fit cannot run', 'Bandwidth: text generation spends most of its time waiting on this'] },
+    { id: 'l2', label: 'Cache (L2 and shared memory)', x: 40, y: 50, detail: 'Small, much faster memory on the chip itself. Smart software keeps the data it needs next in here so it does not have to fetch it from main memory again. FlashAttention is a well-known example of this idea.', fails: ['Very small compared with HBM, so it only helps when data is reused'] },
+    { id: 'sm', label: 'Streaming multiprocessors', x: 66, y: 50, kind: 'core', detail: 'The GPU is divided into many identical blocks. Each block has many simple arithmetic units, a bit of fast memory and a scheduler. A datacenter GPU has over a hundred of them, all running in parallel.', fails: ['They sit idle if data does not arrive fast enough', 'Branching, irregular code runs poorly compared with a CPU'] },
+    { id: 'tc', label: 'Tensor cores', x: 86, y: 22, detail: 'Units inside each block that multiply small matrix tiles in a single step, in low-precision formats such as FP16, FP8 or FP4 (which formats are supported depends on the GPU generation). This is where most of the peak arithmetic speed comes from.', fails: ['Only fast if the numbers are in a supported format and shaped to fit'] },
+    { id: 'link', label: 'Interconnect (NVLink, PCIe)', x: 40, y: 12, detail: 'The wires that join this GPU to other GPUs and to the host computer. NVLink is the fast GPU-to-GPU link inside a server. PCIe is the slower general link to the rest of the machine. Between servers, networks such as InfiniBand or Ethernet carry the traffic.', fails: ['Splitting a model across GPUs only works well if this link is fast enough'] },
+  ]}
+  edges={[['hbm','l2'],['l2','sm'],['sm','tc'],['link','hbm'],['link','sm']]}
+/>
+
+## Compute-bound and memory-bound
+
+Picture a restaurant kitchen. If customers order dishes that take a lot of chopping and cooking, the cooks are the limit. Hire more cooks and you serve more. That is **compute-bound**: the work is limited by arithmetic speed.
+
+Now picture a kitchen where each dish needs one pinch of salt, but the pantry is down a long corridor and only one person can carry things at a time. The cooks stand around waiting. More cooks would not help. A wider corridor would. That is **memory-bound**: the work is limited by how fast data moves from memory to the arithmetic units.
+
+The same chip can be either, depending on how much arithmetic you do per byte you fetch.
+
+## Why generating text is memory-bound
+
+Reading your prompt is compute-bound. The model processes all your words in one large batch of arithmetic, so the tensor cores stay busy. This is called **prefill**.
+
+Writing the reply is different. The model produces one token, then needs the result to produce the next. For each token it must read all of its weights from memory (an 8-billion-parameter model in 16-bit form is about 16 GB), do a comparatively small amount of arithmetic with them, and then do it all again. The arithmetic units mostly wait. This phase is called **decode**, and its speed is set by memory bandwidth, not by the headline compute number.
+
+That is why a GPU with faster memory can generate text faster even if its arithmetic speed is the same. It is also why serving many users at once helps: one read of the weights can serve many requests in the same step.
+
+<Callout title="The idea to keep">
+Prefill is limited by arithmetic. Decode is limited by memory bandwidth. Almost every spec, trade-off and cost question in this track comes back to which of the two you are in.
+</Callout>
+
+<Deep title="Arithmetic intensity, the precise version">
+
+The ratio of arithmetic operations to bytes moved is called **arithmetic intensity**. Every GPU has a break-even intensity: its peak operations per second divided by its memory bandwidth. Work below that intensity is memory-bound, work above it is compute-bound. Decode for one user does roughly two operations per weight read (one multiply, one add), and a 16-bit weight is two bytes, so its intensity is about one operation per byte. Datacenter GPUs break even at something like a few hundred operations per byte, so single-user decode sits far into memory-bound territory. Batching raises intensity because each weight read is reused across the batch, until you cross over and become compute-bound or run out of memory for the KV cache. The [next lesson](../reading-a-gpu-spec-sheet/) turns this into a formula you can use.
+
+</Deep>
+
+<Disclosure client:visible title="Why not just use a CPU?">
+
+You can, and for small models it works. Optimised CPU runtimes such as llama.cpp run quantized models on laptops. But a CPU has far less memory bandwidth and far fewer arithmetic units than a datacenter GPU, so large models and many simultaneous users quickly become slow. See [Edge versus cloud inference](../../edge/edge-vs-cloud-inference/) for the other end of that trade-off.
+
+</Disclosure>
+
+## What to take forward
+
+- A GPU does thousands of simple operations at once, which suits matrix multiplication.
+- Tensor cores are the fast arithmetic units. HBM is the fast memory.
+- Compute-bound means waiting for arithmetic. Memory-bound means waiting for data.
+- Reading a prompt is compute-bound. Generating a reply is memory-bound.
+- Other accelerators (TPU, Trainium, Inferentia, NPU) follow the same logic with different software.

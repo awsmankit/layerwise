@@ -718,3 +718,20 @@
     border-bottom: 1px solid var(--line-soft);
   }
 }
+
+/* ---------- rack and stack ---------- */
+
+.rs-counts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+.rs-price {
+  margin-left: 0.4rem;
+  padding: 0.05rem 0.5rem;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--tint-sun);
+  font-size: 0.78rem;
+  font-weight: 700;
+}

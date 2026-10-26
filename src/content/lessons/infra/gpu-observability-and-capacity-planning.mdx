@@ -1,0 +1,127 @@
+---
+title: GPU observability and capacity planning
+track: infra
+level: advanced
+order: 7
+summary: Learn what to measure on GPU inference fleets, how to load test realistically, and how to turn tokens per second and peak traffic into a fleet size with headroom.
+updated: 2026-10-26
+sources:
+  - label: "NVIDIA DCGM documentation"
+    url: https://docs.nvidia.com/datacenter/dcgm/latest/index.html
+  - label: "vLLM documentation"
+    url: https://docs.vllm.ai
+  - label: "Efficient Memory Management for Large Language Model Serving with PagedAttention (Kwon et al., 2023)"
+    url: https://arxiv.org/abs/2309.06180
+  - label: "Kubernetes: Schedule GPUs"
+    url: https://kubernetes.io/docs/tasks/manage-gpus/scheduling-gpus/
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import Disclosure from '../../../components/viz/Disclosure.tsx';
+
+You cannot size a GPU fleet from a datasheet. The number that matters is how many tokens per second one GPU sustains with your model, your prompts and your latency target, and the only way to get it is to measure. This lesson covers what to watch in production, how to load test honestly, and a worked sizing example. It builds on [Kubernetes and autoscaling](../kubernetes-and-autoscaling-for-inference/) and [Reading a GPU spec sheet](../reading-a-gpu-spec-sheet/).
+
+## What to measure
+
+Group the measurements by what they tell you.
+
+**What users feel**
+- **Time to first token (TTFT).** Mostly queueing plus prefill. Track p50 and p95 or p99.
+- **Inter-token latency** (time per output token) or its inverse, the per-user tokens per second. Decode speed.
+- **End-to-end latency** by prompt and output length bucket.
+- **Error and timeout rate**, including rejected requests (429 or 503).
+
+**How loaded the engine is**
+- **Queue depth**: requests waiting.
+- **Requests running** (batch size) and **tokens in flight**.
+- **KV cache utilisation**: how full the cache is, and whether requests are being preempted.
+- **Throughput**: input and output tokens per second per replica.
+
+**How the GPU is doing**
+- Memory used, temperature, power, clock speeds and throttle reasons.
+- Hardware errors (see below).
+
+## Utilisation is not saturation
+
+Dashboards love the "GPU utilisation" percentage, and it misleads. Standard tools report the share of sample time in which any kernel ran on the GPU. A GPU doing one tiny request can read near 100 percent. **Saturation** is the question that matters: is there more demand than the system can serve without hurting latency? The signs are a growing queue, a nearly full KV cache, rising TTFT and falling per-user speed. Watch those before the utilisation number. NVIDIA's DCGM exports finer metrics, such as tensor-core activity, that say more than the headline figure.
+
+## DCGM-style GPU metrics
+
+NVIDIA's Data Center GPU Manager (DCGM) and its exporter publish GPU metrics to Prometheus. Examples of the kinds of fields it offers (names as in common exporter defaults; check your version):
+
+| Metric (typical name) | Why you care |
+|---|---|
+| `DCGM_FI_DEV_FB_USED` | Memory in use. Creeping growth suggests leaks or fragmentation. |
+| `DCGM_FI_DEV_GPU_TEMP`, `DCGM_FI_DEV_POWER_USAGE` | Heat and power. Sudden changes can mean cooling trouble. |
+| `DCGM_FI_DEV_CLOCK_THROTTLE_REASONS` (or similar) | Whether the GPU is slowing itself down. |
+| `DCGM_FI_PROF_PIPE_TENSOR_ACTIVE` | How busy the tensor cores are. Closer to real work than basic utilisation. |
+| `DCGM_FI_DEV_XID_ERRORS` | Driver-reported GPU errors. A signal to drain and replace. |
+
+Combine these with the engine's own metrics. On Kubernetes, alerts that tie a GPU error to a node let you cordon it automatically.
+
+## Load testing that tells the truth
+
+A load test gives you your capacity number. Make it realistic:
+
+- **Use real length distributions.** Sample prompt and output lengths from production logs. A test with 100-token prompts says nothing about a service whose prompts are 4,000 tokens plus retrieved documents.
+- **Generate arrivals at a fixed rate**, not as fast as possible. Real users do not wait for the last response before sending the next. Ramp the rate up and note where latency breaks.
+- **Measure at your SLO, not at maximum.** Capacity is the highest throughput at which TTFT and inter-token latency still meet your targets, not the highest throughput the GPU can reach.
+- **Mix cached and uncached prompts** in the proportion you expect, if you rely on prefix caching.
+- **Test the whole path**, including the gateway, and test during a rollout and after a replica fails.
+
+## SLOs
+
+A **service level objective** is a target you commit to, written as a percentile over a window. For LLM serving, typical ones are: p95 TTFT under a set number of seconds for prompts up to a set length, inter-token latency (or per-user speed) above a set rate at p95, availability, and an error budget. Pick values from the product, not from what the GPU happens to do, and set separate targets for interactive and batch traffic. Throughput at the SLO is then the capacity number above.
+
+## Sizing a fleet: a worked example
+
+Assumptions (all invented for illustration, replace them with your own measurements): a self-hosted 8B model, peak traffic of 10 requests per second, 1,000 input tokens and 300 output tokens on average. A load test on your chosen GPU shows it sustains 1,500 output tokens per second per replica while still meeting the TTFT and inter-token SLOs. You want to run at no more than 70 percent of tested capacity at peak, and survive losing one replica.
+
+1. **Peak output tokens per second:** 10 x 300 = 3,000.
+2. **Replicas at 100 percent:** 3,000 / 1,500 = 2.
+3. **Add headroom** (run at 70 percent): 3,000 / (1,500 x 0.7) = 2.86, so 3.
+4. **Add one for failure and rollouts (N+1):** 4 replicas.
+5. **Sanity check memory.** By Little's law, concurrent requests are arrival rate times time in system. If a request takes about 12 seconds (300 tokens at 25 tokens per second per user), that is 10 x 12 = 120 requests in flight, or about 30 per replica. Each holds about 1,300 tokens of KV cache. At about 128 KiB per token (the 8B layout from the spec sheet lesson), that is about 5 GB per replica, comfortably inside the spare memory of an 80 GB GPU, so memory is not the limit here.
+6. **Check prefill.** 10 x 1,000 = 10,000 input tokens per second across 4 replicas. Your load test already includes it if the prompts are realistic, which is one more reason to test with real lengths.
+
+Four replicas, then, for this peak. If traffic is much lower off-peak, autoscaling can lower the count, but leave the warm minimum you need for cold-start reasons. Compare the result against pay-per-token pricing with the break-even tool before you commit to renting GPUs.
+
+<Callout title="Cost" kind="cost">
+Headroom is not waste. It is what keeps latency flat when a burst arrives or a replica dies while new ones take minutes to start. But every idle GPU bills by the hour, so revisit your headroom number as you learn the real traffic shape.
+</Callout>
+
+## Failure modes
+
+- **Memory fragmentation.** Long-running servers can fail to allocate memory even though total free memory looks fine. Engines with paged KV caches (PagedAttention) reduce this inside the cache, but other allocations still fragment. Symptoms: out-of-memory errors at moderate load, memory creeping up.
+- **Noisy neighbours.** When GPUs, network or storage are shared (time slicing, shared nodes, a shared file system), another workload can slow yours. Latency becomes erratic while your own metrics look normal.
+- **Thermal throttling.** An overheating or power-capped GPU lowers its clocks. Throughput drops with no error. Watch temperature, clocks and throttle reasons.
+- **Hung or failing GPUs.** A GPU falls off the bus, or the driver reports XID errors, or a process hangs. The server may still answer health checks. Detect it with error metrics and a real-generation probe, then drain and replace the node.
+- **Silent slowdowns after a rollout.** New driver, engine or model version changes performance. Compare tokens per second per replica before and after.
+
+<Deep title="Beyond averages: tails and mixed traffic">
+
+Averages hide the problem. One long prompt can occupy the prefill stage and delay everyone's first token, so many engines split long prompts into chunks or isolate prefill from decode on separate replicas. If you mix interactive and batch requests, separate their queues or replicas, or give interactive priority, otherwise a batch job steals the capacity you sized for users. Track tails (p95, p99) by prompt-length bucket, and keep a record of load test results per model version, engine version and GPU type so that you can detect regressions and plan the next hardware step with real data.
+
+</Deep>
+
+<Disclosure client:visible title="A one-page capacity checklist">
+
+- Measured tokens per second per replica at your SLO, with realistic lengths
+- Peak and typical traffic, in requests and tokens per second
+- Headroom target and an N+1 allowance
+- Memory check: weights plus KV cache for expected concurrency
+- Autoscaling target set from the load test, with scale-down slower than scale-up
+- Alerts on queue depth, KV cache use, TTFT p95, error rate, GPU errors and throttling
+- Runbook for a hung GPU: drain, replace, confirm
+- Quota and reserved capacity confirmed for the peak, in a second region if needed
+- Re-test after every model, engine or driver change
+
+</Disclosure>
+
+## What to take forward
+
+- Measure saturation (queue, KV cache, TTFT), not just GPU utilisation.
+- Your capacity number comes from a realistic load test at your SLO.
+- Fleet size is peak tokens per second divided by tested capacity per GPU, then headroom, then N+1.
+- Plan for failure: hung GPUs, throttling and noisy neighbours are normal events.

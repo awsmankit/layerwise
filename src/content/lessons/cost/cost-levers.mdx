@@ -55,7 +55,7 @@ cost per 1M tokens = GPU cost per hour / (tokens per second x utilisation x 3600
 
 The number that surprises people is **utilisation**. A GPU that is busy 20 per cent of the time costs five times as much per token as one that is busy all the time. Managed APIs spread that risk across many customers. Self-hosting tends to pay off when volume is high, steady and predictable, and when you have people to operate it.
 
-<Disclosure title="What the formula leaves out">
+<Disclosure client:visible title="What the formula leaves out">
 
 It ignores engineering time, on-call load, redundancy for failures, idle capacity for peaks, the cost of staying current with new models, and any discount you could get on API pricing at volume. Include them before concluding that self-hosting is cheaper.
 

@@ -1,0 +1,84 @@
+---
+title: Quotas, capacity and regions
+track: cloud
+level: intermediate
+order: 8
+summary: Why GPUs and model throughput are scarce, the three capacity models every cloud offers, and how to plan for throttling before it hits production.
+updated: 2026-10-26
+sources:
+  - label: "Provisioned throughput for Foundry Models"
+    url: https://learn.microsoft.com/en-us/azure/foundry/openai/concepts/provisioned-throughput
+  - label: "Azure virtual machine sizes overview"
+    url: https://learn.microsoft.com/en-us/azure/virtual-machines/sizes/overview
+  - label: "Compute Engine accelerator-optimized machines"
+    url: https://docs.cloud.google.com/compute/docs/accelerator-optimized-machines
+  - label: "EC2 accelerated computing instance types"
+    url: https://docs.aws.amazon.com/ec2/latest/instancetypes/ac.html
+  - label: "New Amazon EC2 P6-B200 instances"
+    url: https://aws.amazon.com/blogs/aws/new-amazon-ec2-p6-b200-instances-powered-by-nvidia-blackwell-gpus-to-accelerate-ai-innovations/
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+Most AI projects hit their first cloud wall in the same place: the code works, the model is chosen, and the request for GPUs or throughput is refused, throttled or stuck. Capacity is a planning topic, not an afterthought.
+
+## Why capacity is scarce
+
+Accelerators are expensive, built in limited numbers, and a large model needs many of them linked by fast networking in the same place. A cloud cannot simply spin up more. Demand is also uneven across regions and moves through the day. So every cloud rations access in two ways: **quota**, which is a permission limit, and **capacity**, which is real hardware. You can have the first without the second.
+
+## Three capacity models
+
+| Model | What it is | Trade-off |
+|---|---|---|
+| On-demand, shared | Pay as you use, capacity shared with other customers | Flexible, but you can be throttled or refused at peak |
+| Provisioned or reserved | You pay to hold a fixed slice, whether used or not | Predictable latency and throughput, but you pay for idle time |
+| Reservations, blocks, Flex-start and Spot | You book capacity for a set period, queue for it, or use spare capacity that can be taken back | Good for training and batch, with scheduling effort |
+
+### Managed model APIs
+
+On Bedrock, Azure and Gemini, the on-demand option is per-token billing with rate limits. The provisioned options are Bedrock Provisioned Throughput (and service tiers), Azure PTUs, and Gemini Provisioned Throughput. On Azure, PTU quota does not guarantee capacity, and a deployment can fail if the region lacks it. Read [Microsoft Foundry and Azure OpenAI](../microsoft-foundry-and-azure-openai/) for that case.
+
+### GPU virtual machines
+
+- **Azure:** every subscription starts with zero vCPU quota for GPU VM series per region. You must request an increase before you can create an ND or NC machine. Microsoft says net new capacity for the NC A100 v4 series is only going to NCads H100 v5, so check which sizes are still being sold.
+- **Google Cloud:** A3 Ultra (H200) and A4 (B200) cannot be provisioned as ordinary on-demand VMs. They need a capacity reservation, Spot, or Flex-start. Older types such as A3 Mega and A2 may be easier to obtain, but check per zone.
+- **AWS:** **EC2 Capacity Blocks for ML** let you reserve GPU instances for a defined time window. P6-B200 instances were launched through Capacity Blocks. P5 and P6 families are also available through other purchase options, so check the instance page.
+
+Treat all of this as of October 2026. Instance names, availability and the rules for getting them change often.
+
+## Regions and residency
+
+Capacity is regional, and so is quota. Quota in one region does not carry to another. The broader the scope you accept, the more capacity you can usually reach:
+
+- **Cross-region inference** (AWS inference profiles, Azure Global deployments, Google global endpoints) can route a request to wherever there is room. Throttling falls and availability rises.
+- The cost is **residency**: your prompts may be processed outside your home region or zone. Data Zone and regional options narrow that, with less capacity behind them.
+
+If you have a legal residency requirement, that decides the scope and capacity planning follows from it. If you do not, prefer the broader scope. See [Security and networking for AI](../cloud-security-and-networking-for-ai/).
+
+## Throttling and fallback
+
+A `429` or a capacity error is normal. Plan for it.
+
+1. **Retry with backoff and jitter**, and cap the attempts.
+2. **Queue what can wait.** Send batch work to batch APIs, which have separate and often larger limits.
+3. **Fall back** to a second deployment, region or model when the first is exhausted. Azure spillover does this inside Azure, from provisioned to standard.
+4. **Fall back across clouds** only if your prompts, output parsing and evals work on both. Test the fallback model on your own cases, since the same prompt behaves differently on different models.
+5. **Alert on throttle rate**, not only on errors.
+
+The routing patterns are in [Model routing and fallbacks](../../systems/model-routing-and-fallbacks/).
+
+<Deep title="Mixing provisioned and on-demand">
+A common design is to size provisioned capacity for the steady baseline and let on-demand absorb spikes, with spillover or a router in front. Size provisioned for the average, not the peak, since idle reserved capacity costs the same as busy capacity. Measure utilisation after launch, because an over-bought reservation is a silent monthly cost.
+</Deep>
+
+## Planning checklist
+
+- List the exact models and GPU types you need, and check each exists in your target regions.
+- Estimate peak tokens per minute and requests per minute.
+- File quota requests early, since approvals on some clouds take days.
+- Verify capacity, not only quota, by creating the deployment or reservation in a test.
+- Decide the residency scope, and what it costs in capacity.
+- Pick a capacity model per workload: provisioned for interactive baseline, batch for bulk, blocks or Spot for training.
+- Build retry, queueing and a tested fallback before launch.
+- Re-check the cloud docs every quarter, since the rules and names keep changing.

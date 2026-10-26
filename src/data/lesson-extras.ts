@@ -4,6 +4,10 @@
  * Keys are "<track>/<slug>".
  */
 
+import { extrasCloud } from './extras/cloud';
+import { extrasLocal } from './extras/local';
+import { extrasInfra } from './extras/infra';
+
 export type QuizItem = {
   q: string;
   options: string[];
@@ -24,7 +28,7 @@ const CRUNCH = { label: 'Play Cost Crunch', href: '/play/cost-crunch/' };
 const BLUEPRINT = { label: 'Play Blueprint', href: '/play/blueprint/' };
 const INCIDENT = { label: 'Play Incident Room', href: '/play/incident-room/' };
 
-export const extras: Record<string, Extra> = {
+const baseExtras: Record<string, Extra> = {
   'start/what-is-ai-in-plain-english': {
     takeaways: [
       'Machine learning means the computer learns the rules from examples, instead of people writing them.',
@@ -415,3 +419,6 @@ export const extras: Record<string, Extra> = {
     ],
   },
 };
+
+/** Core lessons plus the per-track files in ./extras. */
+export const extras: Record<string, Extra> = { ...baseExtras, ...extrasCloud, ...extrasInfra, ...extrasLocal };

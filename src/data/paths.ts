@@ -1,4 +1,4 @@
-export type PathId = 'newcomer' | 'builder' | 'practitioner';
+export type PathId = 'newcomer' | 'builder' | 'practitioner' | 'infra';
 
 export type Step =
   | { kind: 'lesson'; key: string }
@@ -32,6 +32,7 @@ export const paths: Record<PathId, LearningPath> = {
       { kind: 'lesson', key: 'foundations/tokens-and-embeddings' },
       { kind: 'game', label: 'Cost Crunch, level 1', href: '/play/cost-crunch/', note: 'Put tokens and prices to work.' },
       { kind: 'lesson', key: 'llm/prompting-and-structured-output' },
+      { kind: 'lesson', key: 'local/run-models-locally' },
     ],
   },
   builder: {
@@ -52,6 +53,7 @@ export const paths: Record<PathId, LearningPath> = {
       { kind: 'lesson', key: 'rag-agents/chunking-and-retrieval-quality' },
       { kind: 'lesson', key: 'rag-agents/agents-and-tool-use' },
       { kind: 'lesson', key: 'evals/evals-101' },
+      { kind: 'lesson', key: 'cloud/cloud-ai-service-map' },
       { kind: 'lesson', key: 'cloud/what-is-bedrock' },
       { kind: 'game', label: 'Incident Room', href: '/play/incident-room/', note: 'Debug what you just learned to build.' },
     ],
@@ -73,10 +75,37 @@ export const paths: Record<PathId, LearningPath> = {
       { kind: 'lesson', key: 'systems/model-routing-and-fallbacks' },
       { kind: 'game', label: 'Blueprint, level 3', href: '/play/blueprint/', note: 'Three valid designs out of 1,296.' },
       { kind: 'lesson', key: 'cost/cost-levers' },
+      { kind: 'lesson', key: 'local/self-hosting-vs-api-economics' },
       { kind: 'lesson', key: 'evals/llm-as-judge-pitfalls' },
       { kind: 'lesson', key: 'cloud/bedrock-sagemaker-foundry-vertex' },
+      { kind: 'lesson', key: 'cloud/cloud-security-and-networking-for-ai' },
       { kind: 'lesson', key: 'edge/edge-vs-cloud-inference' },
       { kind: 'lesson', key: 'edge/quantization-for-edge' },
+    ],
+  },
+  infra: {
+    id: 'infra',
+    title: 'I run GPUs and the platform',
+    who: 'You provision, scale or pay for the hardware and cloud services behind AI workloads, on AWS, Azure or Google Cloud.',
+    promise: 'GPU hardware, instances, clusters, Kubernetes, capacity and the cloud services around them.',
+    color: '#00B8D9',
+    on: '#00222B',
+    icon: 'infra',
+    steps: [
+      { kind: 'lesson', key: 'infra/gpu-basics' },
+      { kind: 'lesson', key: 'infra/reading-a-gpu-spec-sheet' },
+      { kind: 'game', label: 'Rack & Stack', href: '/play/rack-and-stack/', note: 'Pick the GPUs for a job.' },
+      { kind: 'lesson', key: 'infra/gpu-and-accelerator-instances' },
+      { kind: 'lesson', key: 'cloud/cloud-ai-service-map' },
+      { kind: 'lesson', key: 'cloud/quotas-capacity-and-regions' },
+      { kind: 'lesson', key: 'infra/multi-gpu-parallelism-and-interconnect' },
+      { kind: 'lesson', key: 'infra/training-infrastructure' },
+      { kind: 'lesson', key: 'infra/kubernetes-and-autoscaling-for-inference' },
+      { kind: 'lesson', key: 'infra/gpu-observability-and-capacity-planning' },
+      { kind: 'lesson', key: 'local/inference-engines-compared' },
+      { kind: 'lesson', key: 'local/self-hosting-vs-api-economics' },
+      { kind: 'lesson', key: 'cloud/cloud-security-and-networking-for-ai' },
+      { kind: 'lesson', key: 'local/private-and-air-gapped-ai' },
     ],
   },
 };

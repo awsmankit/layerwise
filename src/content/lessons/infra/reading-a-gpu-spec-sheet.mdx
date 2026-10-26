@@ -1,0 +1,117 @@
+---
+title: Reading a GPU spec sheet
+track: infra
+level: intermediate
+order: 2
+summary: Learn which numbers on a GPU datasheet matter for LLMs, and use one formula to estimate how fast a model can generate text on a given card.
+updated: 2026-10-26
+sources:
+  - label: "Amazon EC2 accelerated computing instance types"
+    url: https://aws.amazon.com/ec2/instance-types/accelerated-computing/
+  - label: "Google Cloud: GPU machine types"
+    url: https://docs.cloud.google.com/compute/docs/gpus
+  - label: "Microsoft: GPU accelerated VM sizes (ND family)"
+    url: https://learn.microsoft.com/en-us/azure/virtual-machines/sizes/gpu-accelerated/nd-family
+  - label: "Efficient Memory Management for Large Language Model Serving with PagedAttention (Kwon et al., 2023)"
+    url: https://arxiv.org/abs/2309.06180
+  - label: "FlashAttention (Dao et al., 2022)"
+    url: https://arxiv.org/abs/2205.14135
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import Disclosure from '../../../components/viz/Disclosure.tsx';
+import GpuExplorer from '../../../components/viz/GpuExplorer.tsx';
+
+A GPU datasheet lists dozens of numbers. For running language models, five of them do most of the work: memory capacity, memory bandwidth, compute at the precision you use, the link to other GPUs, and power. This lesson says what each one tells you and ends with a formula you can use on the back of an envelope. Read [What a GPU is](../gpu-basics/) first if the words "compute-bound" and "memory-bound" are new.
+
+## The five numbers
+
+**Memory capacity (GB).** Decides what fits. The weights must fit, and so must the **KV cache**, the stored keys and values for every token of every active request. A model that does not fit does not run, or has to be split across GPUs.
+
+**Memory bandwidth (GB/s or TB/s).** Decides how fast text can be generated. During decode, the GPU reads the weights from memory for every token.
+
+**Compute (TFLOPS) at a given precision.** Decides how fast prompts are processed (prefill) and how large a batch you can serve before arithmetic becomes the limit. The number depends on precision: lower precision such as FP8 or FP4 runs faster than FP16 on GPUs that support it. Datasheets often print a bigger figure that assumes "sparsity", a trick most models do not use. Compare the dense figures.
+
+**Interconnect (GB/s).** How fast this GPU can talk to other GPUs. It decides whether splitting one model across several cards works well. See [Splitting a model across GPUs](../multi-gpu-parallelism-and-interconnect/).
+
+**Power (watts).** Decides cooling, rack space and, in your own datacenter, what you can fit. In the cloud it is mostly someone else's problem, but a 1,000 W card is a different class of machine from a 70 W one.
+
+## Why HBM versus GDDR matters
+
+Cheaper cards (T4, L4, A10G, L40S) use GDDR memory on a circuit board around the chip. Datacenter cards (A100, H100, H200, B200) use **HBM**, high-bandwidth memory stacked beside the chip on the same package. HBM delivers several times the bandwidth: from about 2.4 times (an A100 against an L40S) to more than ten times (an H100 against an L4). For memory-bound decode, that gap shows up directly as tokens per second. It is the main reason an H100 is not just "a faster L4".
+
+## Approximate specs
+
+Approximate vendor figures, as of October 2026. Variants differ (SXM versus PCIe, different memory sizes), so check the current datasheet before you rely on a number.
+
+| GPU | Memory | Type | Bandwidth | FP16 or BF16 dense compute | GPU-to-GPU link | Power |
+|---|---|---|---|---|---|---|
+| T4 | 16 GB | GDDR6 | 320 GB/s | about 65 TFLOPS | PCIe only | about 70 W |
+| L4 | 24 GB | GDDR6 | about 300 GB/s | about 120 TFLOPS | PCIe only | about 72 W |
+| A10G | 24 GB | GDDR6 | about 600 GB/s | check datasheet | PCIe only | check datasheet |
+| L40S | 48 GB | GDDR6 | 864 GB/s | about 360 TFLOPS | PCIe only | about 350 W |
+| A100 | 80 GB | HBM2e | about 2.0 TB/s | about 312 TFLOPS | NVLink, about 600 GB/s | up to about 400 W |
+| H100 SXM | 80 GB | HBM3 | 3.35 TB/s | about 990 TFLOPS | NVLink, about 900 GB/s | up to about 700 W |
+| H200 | 141 GB | HBM3e | 4.8 TB/s | about 990 TFLOPS (same as H100) | NVLink, about 900 GB/s | up to about 700 W |
+| B200 | about 180 to 192 GB | HBM3e | about 8 TB/s | roughly double H100 or more; check datasheet | NVLink, about 1.8 TB/s | about 1,000 W |
+
+Notice that H200 has the same arithmetic as H100 but more and faster memory. For decode-heavy serving, that alone makes it faster.
+
+## The decode speed formula
+
+For one user, each generated token needs the GPU to read the whole model and that user's KV cache once. So the best case is:
+
+```text
+tokens per second per user  ≈  memory bandwidth / (weight bytes + KV bytes read per step)
+```
+
+This is a ceiling. Real systems reach a fraction of it, and the fraction depends on the serving software, kernels and batch. But it explains most of the differences you will see between GPUs and between precisions.
+
+KV cache per token is `2 x layers x KV heads x head dim x bytes per value`.
+
+## Worked example
+
+Assumptions, stated so you can change them: an 8-billion-parameter model with 32 layers, 8 KV heads and head dimension 128 (a layout similar to Llama 3 8B), one user, a 4,000-token context, KV cache in 16-bit, and INT4 weights taking about 4.5 GB once scales are included.
+
+- KV per token: 2 x 32 x 8 x 128 x 2 bytes = 131,072 bytes, about 128 KiB. At 4,000 tokens that is about 0.5 GB.
+- FP16 weights: 8 billion x 2 bytes = 16 GB.
+
+| GPU | Bytes read per step | Ceiling, tokens per second |
+|---|---|---|
+| L4 (300 GB/s), FP16 | 16 + 0.5 = 16.5 GB | about 18 |
+| L4, INT4 weights | 4.5 + 0.5 = 5.0 GB | about 60 |
+| H100 (3,350 GB/s), FP16 | 16.5 GB | about 200 |
+| H100, INT4 weights | 5.0 GB | about 670 |
+
+Two lessons. First, quantizing weights to 4 bits made decode about three times faster on both GPUs, because there were fewer bytes to read. Second, the H100 is roughly eleven times faster than the L4 here, matching the bandwidth ratio and not the compute ratio. Both models fit in 24 GB, so capacity was not the problem on the L4. Speed was.
+
+<Callout title="What the formula leaves out">
+It ignores prefill time, the overhead of the serving software, and the fact that real servers batch many users. Batching spreads one read of the weights across many requests, so total throughput per GPU is far higher than the per-user ceiling. It also grows the KV bytes, which is why long contexts and many users eventually run out of memory.
+</Callout>
+
+## Try it
+
+Pick a model in the explorer and see which GPUs have room for it and how fast decode can be.
+
+<GpuExplorer client:visible />
+
+<Deep title="Where the ceiling comes from, and where real numbers fall short">
+
+Dividing peak compute by bandwidth gives each GPU's break-even arithmetic intensity. For an H100 that is about 990 TFLOPS over 3.35 TB/s, roughly 300 operations per byte. Single-user decode sits near one operation per byte, so it is far below that line and bandwidth-bound. Practical shortfalls include achieved bandwidth being lower than the peak (often 70 to 90 percent on large reads), kernel launch gaps, the cost of attention over a growing KV cache, and communication when the model spans several GPUs. Mixture-of-experts models read only the active experts per token, so their decode bytes follow the active parameters, though a batch of many users touches most experts anyway. Speculative decoding and smaller draft models can beat the single-stream ceiling by producing several tokens per read of the weights.
+
+</Deep>
+
+<Disclosure client:visible title="Which numbers to ignore">
+
+Peak FP4 or FP8 figures only matter if your model and runtime actually use those formats. Sparsity figures only matter if your weights are structured for it. Graphics specs (ray tracing, video encode) are irrelevant to LLMs. Always check whether a bandwidth or power figure is for the SXM, PCIe or NVL variant of the card.
+
+</Disclosure>
+
+## Checklist when you read a datasheet
+
+- Does the model plus KV cache fit, with headroom?
+- Is the memory HBM or GDDR, and what is the bandwidth?
+- Is the compute figure dense, at the precision you will use?
+- How do GPUs connect inside one server and between servers?
+- Is this the variant (SXM, PCIe, NVL, memory size) the cloud instance actually offers?

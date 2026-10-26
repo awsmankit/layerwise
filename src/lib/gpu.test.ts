@@ -1,0 +1,103 @@
+import { describe, expect, it } from 'vitest';
+import { gpus, gpuById } from '../data/gpus';
+import { estimate, usableGB, PARALLEL_EFFICIENCY } from './gpu';
+
+const h100 = gpuById('h100');
+const l4 = gpuById('l4');
+const t4 = gpuById('t4');
+
+describe('gpu data', () => {
+  it('has unique ids and sane values', () => {
+    expect(new Set(gpus.map((g) => g.id)).size).toBe(gpus.length);
+    for (const g of gpus) {
+      expect(g.memGB, g.id).toBeGreaterThan(8);
+      expect(g.bwGBs, g.id).toBeGreaterThan(100);
+      expect(g.clouds.length, g.id).toBeGreaterThan(3);
+    }
+  });
+
+  it('keeps the verified headline figures from the vendor and cloud docs', () => {
+    expect(gpuById('h100')).toMatchObject({ memGB: 80, bwGBs: 3350 });
+    expect(gpuById('h200')).toMatchObject({ memGB: 141, bwGBs: 4800 });
+    expect(gpuById('l40s').bwGBs).toBe(864);
+    expect(gpuById('a100-80').bwGBs).toBe(2039);
+    expect(gpuById('ironwood')).toMatchObject({ memGB: 192, bwGBs: 7370 });
+  });
+
+  it('HBM parts have several times the bandwidth of the GDDR cards', () => {
+    const hbm = gpus.filter((g) => g.memType.startsWith('HBM')).map((g) => g.bwGBs);
+    const gddr = gpus.filter((g) => g.memType.startsWith('GDDR')).map((g) => g.bwGBs);
+    expect(Math.min(...hbm)).toBeGreaterThan(Math.max(...gddr));
+  });
+});
+
+describe('estimate', () => {
+  it('matches the hand calculation for an 8B FP16 model on one H100', () => {
+    const e = estimate(h100, 1, '8B', 'fp16', 'fp16', 8192, 1);
+    expect(e.weightsGB).toBeCloseTo(16, 6);
+    expect(e.kvPerUserGB).toBeCloseTo((131072 * 8192) / 1e9, 6);
+    const expected = (3350 * 0.65) / (16 + (131072 * 8192) / 1e9);
+    expect(e.perUserTokS).toBeCloseTo(expected, 6);
+    expect(e.fits).toBe(true);
+  });
+
+  it('a bigger model does not fit a small card, and reports zero speed', () => {
+    const e = estimate(t4, 1, '70B', 'fp16', 'fp16', 4096, 1);
+    expect(e.fits).toBe(false);
+    expect(e.perUserTokS).toBe(0);
+    expect(e.maxUsers).toBe(0);
+    expect(e.devicesNeeded).toBeGreaterThan(8);
+  });
+
+  it('quantizing weights makes decode faster, because there is less to read', () => {
+    const fp16 = estimate(h100, 1, '8B', 'fp16', 'fp16', 4096, 1);
+    const int8 = estimate(h100, 1, '8B', 'int8', 'fp16', 4096, 1);
+    const int4 = estimate(h100, 1, '8B', 'int4', 'fp16', 4096, 1);
+    expect(int8.perUserTokS).toBeGreaterThan(fp16.perUserTokS);
+    expect(int4.perUserTokS).toBeGreaterThan(int8.perUserTokS);
+  });
+
+  it('more bandwidth means faster decode on the same model', () => {
+    const a = estimate(l4, 1, '8B', 'int8', 'fp16', 4096, 1);
+    const b = estimate(h100, 1, '8B', 'int8', 'fp16', 4096, 1);
+    expect(b.perUserTokS).toBeGreaterThan(a.perUserTokS * 5);
+  });
+
+  it('more users slow each user down but raise total throughput', () => {
+    const one = estimate(h100, 1, '8B', 'fp16', 'fp16', 4096, 1);
+    const many = estimate(h100, 1, '8B', 'fp16', 'fp16', 4096, 16);
+    expect(many.perUserTokS).toBeLessThan(one.perUserTokS);
+    expect(many.totalTokS).toBeGreaterThan(one.totalTokS);
+  });
+
+  it('maxUsers is the largest count that still fits', () => {
+    const e = estimate(h100, 1, '8B', 'fp16', 'fp16', 8192, 1);
+    expect(e.maxUsers).toBeGreaterThan(0);
+    const atMax = estimate(h100, 1, '8B', 'fp16', 'fp16', 8192, e.maxUsers);
+    const over = estimate(h100, 1, '8B', 'fp16', 'fp16', 8192, e.maxUsers + 1);
+    expect(atMax.fits).toBe(true);
+    expect(over.fits).toBe(false);
+  });
+
+  it('splitting across devices adds memory and bandwidth, with a communication penalty', () => {
+    const one = estimate(h100, 1, '70B', 'int4', 'fp8', 8192, 4);
+    const two = estimate(h100, 2, '70B', 'int4', 'fp8', 8192, 4);
+    expect(two.capacityGB).toBeGreaterThan(one.capacityGB * 1.9);
+    expect(PARALLEL_EFFICIENCY[2]).toBeLessThan(1);
+    expect(usableGB(h100, 2)).toBeCloseTo(2 * (80 * 0.9 - 1.5), 6);
+
+    // a model that fits on one device: two devices are faster, but less than twice as fast
+    const solo = estimate(h100, 1, '8B', 'fp16', 'fp16', 4096, 1);
+    const duo = estimate(h100, 2, '8B', 'fp16', 'fp16', 4096, 1);
+    expect(duo.perUserTokS).toBeGreaterThan(solo.perUserTokS);
+    expect(duo.perUserTokS).toBeLessThan(solo.perUserTokS * 2);
+  });
+
+  it('devicesNeeded is consistent with fits', () => {
+    for (const g of gpus) {
+      const e = estimate(g, 1, '70B', 'int4', 'fp8', 4096, 2);
+      const needed = estimate(g, e.devicesNeeded, '70B', 'int4', 'fp8', 4096, 2);
+      expect(needed.fits).toBe(true);
+    }
+  });
+});

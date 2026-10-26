@@ -1,0 +1,14 @@
+---
+import ToolPage from '../../layouts/ToolPage.astro';
+import GpuExplorer from '../../components/viz/GpuExplorer.tsx';
+import { withBase } from '../../lib/url';
+---
+
+<ToolPage figure="cabinet" title="GPU explorer" lede="Pick a model and see which accelerators can hold it, how many users fit, and how fast each can decode.">
+  <GpuExplorer client:load />
+  <Fragment slot="notes">
+    <h2>How to read it</h2>
+    <p>Memory decides <strong>whether</strong> a model runs: the weights plus every user’s KV cache must fit. Memory bandwidth decides <strong>how fast</strong>, because each generated token reads all of it. That is why the high-bandwidth data-centre parts are several times quicker than cheaper cards that hold the same model.</p>
+    <p>Background: <a href={withBase('/learn/infra/gpu-basics/')}>What a GPU is</a>, <a href={withBase('/learn/infra/reading-a-gpu-spec-sheet/')}>Reading a GPU spec sheet</a> and <a href={withBase('/learn/serving/kv-cache-and-memory/')}>KV cache and memory</a>.</p>
+  </Fragment>
+</ToolPage>

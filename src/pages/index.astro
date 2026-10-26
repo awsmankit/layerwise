@@ -23,12 +23,15 @@ const gameColors: Record<string, { c: string; on: string; icon: string }> = {
   blueprint: { c: '#4F6BFF', on: '#FFFFFF', icon: 'blueprint' },
   'cost-crunch': { c: '#F25F5C', on: '#FFFFFF', icon: 'crunch' },
   'fit-the-model': { c: '#FF9F1C', on: '#2A1A00', icon: 'fit' },
+  'rack-and-stack': { c: '#00B8D9', on: '#00222B', icon: 'infra' },
   'incident-room': { c: '#FF4F8B', on: '#FFFFFF', icon: 'incident' },
 };
 
 const tools = [
   { href: '/tools/cost/', title: 'Cost calculator', body: 'Traffic and token counts in, monthly spend out. Then see which lever saves the most.' },
   { href: '/tools/memory/', title: 'Model memory calculator', body: 'Will this model fit on that device? Weights, KV cache, precision and users.' },
+  { href: '/tools/gpu/', title: 'GPU explorer', body: 'Which accelerators hold your model, how many users fit, and how fast each decodes.' },
+  { href: '/tools/breakeven/', title: 'API or your own GPUs?', body: 'Find the volume where renting GPUs beats paying per token.' },
   { href: '/tools/latency/', title: 'Latency budget', body: 'Cloud against on-device inference, against the time your product can afford.' },
 ];
 
@@ -57,7 +60,7 @@ const heroTail = ['at', 'a', 'time'];
           <a class="btn quiet" href={withBase('/play/')}>Play a game</a>
         </div>
         <ContinueCard client:load />
-        <p class="hero-hint">Open a layer on the right to see what it replaced from classical machine learning.</p>
+        <p class="hero-hint">Open any layer to see what it replaced from classical machine learning.</p>
       </div>
       <div class="hero-card">
         <p class="hero-card-title">The AI stack, top to bottom</p>
@@ -132,7 +135,7 @@ const heroTail = ['at', 'a', 'time'];
 
   <section class="section wrap" aria-labelledby="tracks-h" style="padding-top:clamp(2.5rem,6vw,4.5rem)">
     <div class="section-head">
-      <h2 id="tracks-h">Ten tracks, <span class="squig" style="--squig:#12C2A4">basic to advanced</span></h2>
+      <h2 id="tracks-h">{tracks.length} tracks, <span class="squig" style="--squig:#12C2A4">basic to advanced</span></h2>
       <p>Every lesson is marked basic, intermediate or advanced. Follow a path, or jump straight to a topic.</p>
     </div>
     <div class="tiles" data-stagger>
@@ -158,7 +161,7 @@ const heroTail = ['at', 'a', 'time'];
       <div class="section">
         <div class="section-head">
           <h2 id="play-h">Learn by <span class="squig" style="--squig:#FF4F8B">playing</span></h2>
-          <p>Four system design games. Real maths, honest scoring, and a lesson behind every mistake.</p>
+          <p>Five system design games. Real maths, honest scoring, and a lesson behind every mistake.</p>
         </div>
         <div class="tiles" data-stagger>
           {

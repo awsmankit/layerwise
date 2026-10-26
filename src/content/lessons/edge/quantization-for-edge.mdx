@@ -56,7 +56,7 @@ A model trained in a data centre in 32-bit floating point will usually not fit, 
 | Output differs between runs or devices | Fixed-point rounding and different kernels | Test across units and set tolerances |
 | Cannot update safely | No versioning or rollback | Design model delivery and fallback before the first release |
 
-<Disclosure title="Per-layer precision">
+<Disclosure client:visible title="Per-layer precision">
 
 Not all layers tolerate low precision equally. The first and last layers and layers with large activation ranges are often the most sensitive. Mixed-precision schemes keep these in higher precision and quantize the rest more aggressively, trading a little size for much better accuracy.
 

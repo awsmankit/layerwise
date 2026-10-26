@@ -9,6 +9,8 @@ npm install
 npm run dev        # http://localhost:4321
 npm run build      # static site in dist/
 npm run preview    # serve the built site
+npm test           # vitest: game engines, data integrity, lesson guards
+npm run check      # astro check: types
 ```
 
 Requires Node 22.23 or newer.
@@ -39,7 +41,13 @@ Requires Node 22.23 or newer.
 
 ### Visualisations
 
-`StackExplorer`, `Timeline`, `RequestLifecycle`, `AttentionViz`, `TokenChips`, `EmbeddingSpace`, `PipelineFlow` (with an optional loop), `NodeGraph` (boxes and lines with failure modes), `DecisionTree`, `ModelMemory`, `CostCalculator`, `LatencyBudget`, `Disclosure`. All respect `prefers-reduced-motion`.
+`StackExplorer`, `Timeline`, `RequestLifecycle`, `AttentionViz`, `TokenChips`, `EmbeddingSpace`, `NextToken`, `PipelineFlow` (optional loop), `NodeGraph` (boxes and lines with failure modes), `DecisionTree`, `ModelMemory`, `CostCalculator`, `LatencyBudget`, `GpuExplorer`, `BreakEven`, `ServiceMap`, `ParallelismViz`, `Disclosure`, and `HairFigure` (isometric line figures). All respect `prefers-reduced-motion`.
+
+In MDX every React component needs a `client:` directive (`client:visible` is the usual choice). A test fails the build if one is missing, because without it the component renders as inert HTML.
+
+### Games
+
+Five games live in `src/games/` as pure TypeScript engines with tests (`blueprint`, `costcrunch`, `fitmodel`, `rackstack`, `incidents`) and their interfaces in `src/components/games/`. Hardware specs are in `src/data/gpus.ts` and are approximate; always check the vendor datasheet.
 
 Data used in visualisations is labelled in its caption as illustrative or example. Keep it that way: replace example prices and speeds with sourced numbers before presenting them as fact.
 
@@ -55,7 +63,12 @@ The workflow works out the site URL and base path from the repository name, so n
 
 GitHub Pages on a **private** repository needs a paid GitHub plan. Public repositories can use Pages for free.
 
-After the first deploy, set `repo` in `src/site.ts` to the repository URL to show a source link in the footer.
+The footer's source link comes from `repo` in `src/site.ts`; change it if you fork the project.
+
+## Credits
+
+- Isometric line figures: [`@lucasmarkes/hairline`](https://github.com/lucasmarkes/hairline) by Lucas Marques, MIT licence.
+- Fonts: Bricolage Grotesque, Source Serif 4 and JetBrains Mono through Fontsource (SIL Open Font Licence).
 
 ## Roadmap
 

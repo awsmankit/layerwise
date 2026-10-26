@@ -1,6 +1,7 @@
 import { scenarios } from '../games/blueprint';
 import { crunchScenarios } from '../games/costcrunch';
 import { fitScenarios } from '../games/fitmodel';
+import { rackScenarios } from '../games/rackstack';
 import { incidents } from '../games/incidents';
 
 export type GameMeta = {
@@ -53,6 +54,18 @@ export const games: GameMeta[] = [
     minutes: '5 to 10 min',
     practises: 'KV cache, quantization, serving capacity',
     startHere: 'Best after the serving lessons',
+  },
+  {
+    id: 'rack-and-stack',
+    href: '/play/rack-and-stack/',
+    title: 'Rack & Stack',
+    tagline: 'Pick the GPUs for the job',
+    blurb: 'Choose the accelerator, how many, and the precision to serve a model at a target speed for the least money. Memory decides if it fits, bandwidth decides how fast.',
+    prefix: 'rack',
+    levelIds: rackScenarios.map((s) => s.id),
+    minutes: '5 to 10 min',
+    practises: 'GPU specs, memory vs bandwidth, multi-GPU trade-offs',
+    startHere: 'Best after the GPU lessons',
   },
   {
     id: 'incident-room',

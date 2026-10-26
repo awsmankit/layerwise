@@ -46,7 +46,7 @@ Most of the assistants you use are produced by a sequence of training stages. Kn
 Training a frontier model is an enormous one-off expense for the lab. As a user you pay per token for inference instead, and that cost recurs for as long as the feature runs. Budget for the second one.
 </Callout>
 
-<Disclosure title="RLHF versus DPO, in one paragraph">
+<Disclosure client:visible title="RLHF versus DPO, in one paragraph">
 
 Reinforcement learning from human feedback trains a separate reward model from human rankings, then optimises the language model against that reward. Direct preference optimisation skips the reward model and trains the language model directly on pairs of preferred and rejected responses, which is simpler to run. Both turn "people preferred this answer" into a training signal.
 
