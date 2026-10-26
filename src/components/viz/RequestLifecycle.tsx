@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Root, EASE, fmt } from './shared';
+import { Glyph, type GlyphName } from './glyphs';
 
 const stages = [
   {
@@ -36,39 +37,41 @@ const stages = [
 ] as const;
 
 const sample = ['Explain', ' the', ' KV', ' cache', ' in', ' one', ' paragraph', '.'];
-const sampleIds = [15234, 279, 85411, 6636, 304, 832, 14646, 13];
+/** Real IDs from the o200k_base tokenizer, checked October 2026. Other tokenizers give other IDs. */
+const sampleIds = [176289, 290, 119317, 11956, 306, 1001, 27853, 13];
 const reply = ['The', ' KV', ' cache', ' stores', ' the', ' attention', ' keys', ' and', ' values', ' …'];
 
 function RouteVisual() {
-  const nodes = ['Your app', 'Access check', 'Regional endpoint', 'Model fleet'];
+  const nodes: { label: string; glyph: GlyphName }[] = [
+    { label: 'Your app', glyph: 'screen' },
+    { label: 'Access check', glyph: 'shield' },
+    { label: 'Region', glyph: 'cloud' },
+    { label: 'Model fleet', glyph: 'server' },
+  ];
+  const cx = (i: number) => 40 + i * 88;
   return (
-    <div className="rl-route">
-      <div className="rl-route-line" />
-      <motion.span
-        className="rl-packet"
-        initial={{ left: '4%' }}
-        animate={{ left: '96%' }}
-        transition={{ duration: 2.2, ease: 'easeInOut', repeat: Infinity, repeatType: 'reverse' }}
-      />
-      {nodes.map((n, i) => (
-        <motion.div
-          key={n}
-          className="rl-route-node"
-          style={{ left: `${4 + (i * 92) / (nodes.length - 1)}%` }}
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: i * 0.18, duration: 0.4, ease: EASE }}
-        >
-          <span className="rl-dot" />
-          {n}
-        </motion.div>
+    <svg viewBox="0 0 344 110" className="dx-svg rl-svg" role="img" aria-label="Your app, then an access check, then a regional endpoint, then the model fleet">
+      {nodes.slice(1).map((_, i) => (
+        <g key={i}>
+          <path d={`M ${cx(i) + 26} 44 H ${cx(i + 1) - 30}`} className="dx-link" style={{ strokeDasharray: '3 4' }} />
+          <path d={`M ${cx(i + 1) - 35} 40 L ${cx(i + 1) - 30} 44 L ${cx(i + 1) - 35} 48`} className="dx-link" />
+        </g>
       ))}
-    </div>
+      {nodes.map((n, i) => (
+        <motion.g key={n.label} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.18, duration: 0.4, ease: EASE }}>
+          <rect x={cx(i) - 26} y="18" width="52" height="52" rx="10" className={i === 3 ? 'dx-core dx-hot' : 'dx-core'} />
+          <Glyph name={n.glyph} size={26} x={cx(i) - 13} y={31} className={i === 3 ? 'dx-glyph-hot' : 'ng-glyph'} />
+          <text x={cx(i)} y="92" textAnchor="middle" className="dx-small" style={{ fill: 'var(--ink)' }}>{n.label}</text>
+        </motion.g>
+      ))}
+      <motion.circle r="4" cy="44" className="dx-packet" initial={{ cx: cx(0) + 26 }} animate={{ cx: [cx(0) + 26, cx(3) - 30] }} transition={{ duration: 2.2, ease: 'easeInOut', repeat: Infinity, repeatType: 'reverse' }} />
+    </svg>
   );
 }
 
 function TokenizeVisual() {
   return (
+    <div>
     <div className="rl-tokens">
       {sample.map((t, i) => (
         <motion.span
@@ -83,54 +86,49 @@ function TokenizeVisual() {
         </motion.span>
       ))}
     </div>
+      <p className="rl-note">Real IDs from the o200k_base tokenizer. Another model's tokenizer gives different ones.</p>
+    </div>
   );
 }
+
+const chip = (i: number) => 8 + (i % 4) * 82;
+const row = (i: number) => 8 + Math.floor(i / 4) * 34;
 
 function PrefillVisual() {
   return (
     <div>
-      <div className="rl-cells">
-        {Array.from({ length: 32 }).map((_, i) => (
-          <motion.span
-            key={i}
-            className="rl-cell"
-            initial={{ opacity: 0.12 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.15 + (i % 8) * 0.015, duration: 0.5 }}
-          />
+      <svg viewBox="0 0 340 150" className="dx-svg rl-svg" role="img" aria-label="All eight prompt tokens light up together, each leaving a key and value in the cache">
+        {sample.map((t, i) => (
+          <g key={i}>
+            <motion.rect x={chip(i)} y={row(i)} width="74" height="26" rx="6" className="dx-core" initial={{ opacity: 0.3 }} animate={{ opacity: 1 }} transition={{ delay: 0.2, duration: 0.4 }} style={{ stroke: 'var(--signal)' }} />
+            <text x={chip(i) + 37} y={row(i) + 17} textAnchor="middle" className="dx-small" style={{ fill: 'var(--ink)' }}>{t.trim()}</text>
+            <motion.rect x={chip(i) + 22} y={86 + Math.floor(i / 4) * 26} width="14" height="16" rx="3" className="kv-cached" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7, duration: 0.3 }} />
+            <motion.rect x={chip(i) + 39} y={86 + Math.floor(i / 4) * 26} width="14" height="16" rx="3" className="kv-cached" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7, duration: 0.3 }} />
+          </g>
         ))}
-      </div>
+        <text x="8" y="146" className="dx-small">K and V for every prompt token, in one pass</text>
+      </svg>
       <p className="rl-note">Every prompt token is processed at the same time.</p>
     </div>
   );
 }
 
 function DecodeVisual() {
-  const total = 20;
+  const shown = reply.length - 1;
   return (
     <div>
-      <div className="rl-cells">
-        {Array.from({ length: total }).map((_, i) => (
-          <motion.span
-            key={i}
-            className="rl-cell"
-            initial={{ opacity: 0.12 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 + i * 0.16, duration: 0.25 }}
-          />
+      <svg viewBox="0 0 340 130" className="dx-svg rl-svg" role="img" aria-label="Reply tokens appear one at a time while the cache grows">
+        {reply.slice(0, shown).map((w, i) => (
+          <motion.g key={i} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + i * 0.4, duration: 0.25 }}>
+            <rect x={8 + (i % 5) * 66} y={8 + Math.floor(i / 5) * 32} width="60" height="24" rx="6" className="dx-core dx-hot" />
+            <text x={38 + (i % 5) * 66} y={24 + Math.floor(i / 5) * 32} textAnchor="middle" className="dx-small" style={{ fill: 'var(--ink)' }}>{w.trim()}</text>
+          </motion.g>
         ))}
-      </div>
-      <div className="rl-kv">
-        <span className="rl-kv-label">KV cache</span>
-        <span className="rl-kv-bar">
-          <motion.span
-            className="rl-kv-fill"
-            initial={{ scaleX: 0.3 }}
-            animate={{ scaleX: 1 }}
-            transition={{ delay: 0.2, duration: total * 0.16, ease: 'linear' }}
-          />
-        </span>
-      </div>
+        <text x="8" y="94" className="dx-small">KV cache</text>
+        <rect x="64" y="84" width="268" height="14" rx="7" className="dx-frame" />
+        <motion.rect x="64" y="84" height="14" rx="7" className="kv-a" initial={{ width: 268 * (8 / 17) }} animate={{ width: 268 }} transition={{ delay: 0.2, duration: shown * 0.4, ease: 'linear' }} />
+        <text x="8" y="122" className="dx-small">8 prompt tokens + 1 more per step</text>
+      </svg>
       <p className="rl-note">One new token per step. The cache grows with every token.</p>
     </div>
   );

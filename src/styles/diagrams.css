@@ -486,3 +486,8 @@
   font-family: var(--font-display);
   color: var(--ink);
 }
+
+.rl-svg {
+  margin: 0.4rem 0 0;
+  max-width: 420px;
+}
