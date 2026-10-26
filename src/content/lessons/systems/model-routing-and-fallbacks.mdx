@@ -14,6 +14,8 @@ sources:
 
 import Callout from '../../../components/ui/Callout.astro';
 import Disclosure from '../../../components/viz/Disclosure.tsx';
+import Cascade from '../../../components/viz/Cascade.tsx';
+import FallbackChain from '../../../components/viz/FallbackChain.tsx';
 
 Using one model for everything is simple, and often the wrong trade-off. Easy requests do not need the most capable model, and one provider's outage should not take your product down. Routing and fallbacks handle both.
 
@@ -26,7 +28,11 @@ Using one model for everything is simple, and often the wrong trade-off. Easy re
 | Classifier router | A small model or rule decides the difficulty or type up front | Request types differ a lot in difficulty |
 | Policy-based | Choose by user tier, data sensitivity, region or budget | Compliance or product tiers constrain the choice |
 
-The check in a cascade is the hard part. Options include schema validation, a confidence signal, a retrieval-support check, a unit test for generated code, or a cheap judge. A weak check either sends everything upward, which saves nothing, or lets bad answers through.
+The check in a cascade is the hard part. Besides the options in the drawing, a retrieval-support check confirms the answer is backed by the retrieved passages.
+
+<Cascade client:visible />
+
+<Disclosure client:visible title="The cascade in code">
 
 ```python
 def answer(request, small, large, accept):
@@ -36,6 +42,8 @@ def answer(request, small, large, accept):
     return large(request), "large"      # escalate only when the check fails
 ```
 
+</Disclosure>
+
 <Callout kind="cost" title="Escalations cost twice">
 A request that fails on the small model has paid for both calls and waited for both. If more than a modest share escalates, a cascade can cost and delay more than using the large model directly. Track the escalation rate.
 </Callout>
@@ -44,11 +52,9 @@ A request that fails on the small model has paid for both calls and waited for b
 
 Failures to plan for: throttling, timeouts, provider outages, a retired model, and responses that are empty or malformed.
 
-1. **Timeouts on every call**, set from your latency budget, not left at library defaults.
-2. **Retries with exponential backoff and jitter**, for errors that are likely to be temporary. Cap the attempts. Do not retry errors that will not change, such as invalid input.
-3. **A circuit breaker.** After repeated failures, stop calling the failing model for a short period instead of waiting on each request.
-4. **A fallback target:** another region, another model on the same platform, or another provider. Choose something already tested on your evals.
-5. **A graceful floor.** Decide what the product does if every option fails: a cached answer, a shorter degraded mode, or a clear message.
+Set a timeout on every call rather than leaving library defaults, and retry with exponential backoff only for errors that are likely to be temporary.
+
+<FallbackChain client:visible />
 
 <Disclosure client:visible title="Why jitter matters">
 

@@ -34,7 +34,7 @@ export default function QuantLevels() {
   const groupSmall = quantize(small, bits);
   const q = grouped ? W.map((v, i) => (i === OUTLIER ? v : groupSmall.q[small.indexOf(v)])) : one.q;
   const err = W.reduce((n, v, i) => n + Math.abs(v - q[i]), 0) / W.length;
-  const zeroed = W.filter((v, i) => i !== OUTLIER && q[i] === 0).length;
+  const zeroed = W.filter((_, i) => i !== OUTLIER && q[i] === 0).length;
 
   const scale = grouped ? groupSmall.scale : one.scale;
   const top = 2 ** (bits - 1) - 1;

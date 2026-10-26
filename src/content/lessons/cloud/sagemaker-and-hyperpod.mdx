@@ -16,19 +16,16 @@ sources:
 
 import Callout from '../../../components/ui/Callout.astro';
 import Deep from '../../../components/ui/Deep.astro';
+import EndpointShapes from '../../../components/viz/EndpointShapes.tsx';
+import PrefixRouting from '../../../components/viz/PrefixRouting.tsx';
 
 Bedrock lets you call models someone else hosts. **Amazon SageMaker AI** (formerly Amazon SageMaker) is for the cases where you want to train, customise or host models yourself, and to control the container, the instance type and the cost-latency-throughput trade-off. Microsoft Azure Machine Learning and Google's training and prediction tools sit in the same slot, see [the service map](../cloud-ai-service-map/).
 
 ## Ways to host a model
 
-SageMaker AI offers several inference options. The list below is the stable core as of October 2026. AWS adds features often, so check the current docs for exact limits.
+SageMaker AI offers several inference options. The four below are the stable core as of October 2026.
 
-| Option | Shape | Typical use |
-|---|---|---|
-| Real-time endpoint | Always-on instances behind an HTTPS endpoint | Interactive traffic with steady latency needs |
-| Asynchronous endpoint | Requests queue, results land in storage | Large payloads or long-running requests |
-| Serverless endpoint | Capacity scales with traffic, including down to idle | Spiky, low-volume traffic. Not suited to big GPU models, so check current limits. |
-| Batch transform | A job processes a dataset and stops | Scoring a large set of records offline |
+<EndpointShapes client:visible />
 
 <Callout title="A real-time endpoint bills while it exists" kind="cost">
 A real-time endpoint bills for every hour it is up, whether or not requests arrive. Delete test endpoints. The AWS decision guide notes endpoints can also scale to zero, so check whether that applies to your setup.
@@ -55,7 +52,9 @@ AWS's 2026 review lists several additions: Inference Recommendations (April), wh
 **SageMaker HyperPod** is for big, long-running jobs on dedicated clusters. It has two roles.
 
 - **Training clusters.** Resilient infrastructure for training at scale, with orchestration through Kubernetes (EKS) or Slurm. The idea is that a failed node is replaced and training resumes, rather than someone being paged at 3 am.
-- **HyperPod Inference.** Kubernetes-native serving on dedicated GPU clusters. It supports a two-tier KV cache (CPU memory per node as L1, a shared Redis as L2) and prefix-aware and KV-aware routing, so requests that share a prompt prefix go where the cache is warm. See [KV cache and memory](../../serving/kv-cache-and-memory/).
+- **HyperPod Inference.** Kubernetes-native serving on dedicated GPU clusters, with a two-tier KV cache and routing that knows where each prompt prefix is cached. See [KV cache and memory](../../serving/kv-cache-and-memory/).
+
+<PrefixRouting client:visible />
 
 <Deep title="Managed endpoints versus HyperPod Inference">
 Managed endpoints hide the cluster. You pick an instance type and AWS runs the fleet. HyperPod Inference gives you the Kubernetes layer: you decide how pods map to GPUs, how traffic is routed, and which serving stack runs. That control costs operational skill. If nobody on your team has run a GPU Kubernetes cluster, start with endpoints.

@@ -13,19 +13,21 @@ const boosts: Record<number, Record<number, number>> = {
   6: { 3: 1.4, 10: 0.9 }, // because -> cross, tired
 };
 
-function weightsFor(i: number): number[] {
-  const raw = tokens.map((_, j) => Math.exp(-Math.abs(i - j) / 2.2) * (j === i ? 0.6 : 1) + (boosts[i]?.[j] ?? 0));
+/** With the causal mask, a token gets no weight on anything after it, as in every chat model. */
+function weightsFor(i: number, causal: boolean): number[] {
+  const raw = tokens.map((_, j) => (causal && j > i ? 0 : Math.exp(-Math.abs(i - j) / 2.2) * (j === i ? 0.6 : 1) + (boosts[i]?.[j] ?? 0)));
   const sum = raw.reduce((a, b) => a + b, 0);
   return raw.map((w) => w / sum);
 }
 
 export default function AttentionViz() {
   const [sel, setSel] = useState(7);
+  const [causal, setCausal] = useState(true);
   const wrap = useRef<HTMLDivElement>(null);
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
   const [centers, setCenters] = useState<{ x: number; y: number }[]>([]);
   const [width, setWidth] = useState(0);
-  const weights = useMemo(() => weightsFor(sel), [sel]);
+  const weights = useMemo(() => weightsFor(sel, causal), [sel, causal]);
 
   useLayoutEffect(() => {
     const measure = () => {
@@ -46,20 +48,30 @@ export default function AttentionViz() {
   }, []);
 
   const top = [...weights.keys()]
-    .filter((j) => j !== sel)
+    .filter((j) => j !== sel && weights[j] > 0)
     .sort((a, b) => weights[b] - weights[a])
     .slice(0, 3);
 
   return (
     <Root>
       <div className="viz av">
-        <p className="viz-title">Choose a word, see what it attends to</p>
+        <div className="dx-top">
+          <p className="viz-title">Choose a word, see what it attends to</p>
+          <div className="dx-steps" role="group" aria-label="Which words can be seen">
+            <button type="button" className="btn quiet" aria-pressed={causal} onClick={() => setCausal(true)}>
+              Only earlier words
+            </button>
+            <button type="button" className="btn quiet" aria-pressed={!causal} onClick={() => setCausal(false)}>
+              Both directions
+            </button>
+          </div>
+        </div>
         <div className="av-scroll">
           <div className="av-wrap" ref={wrap}>
             <svg className="av-arcs" width={width} height={120} aria-hidden="true">
               {centers.length === tokens.length &&
                 tokens.map((_, j) => {
-                  if (j === sel) return null;
+                  if (j === sel || weights[j] === 0) return null;
                   const w = weights[j];
                   const a = centers[sel];
                   const b = centers[j];
@@ -67,7 +79,7 @@ export default function AttentionViz() {
                   const d = `M ${a.x} 118 Q ${(a.x + b.x) / 2} ${118 - lift * 2} ${b.x} 118`;
                   return (
                     <motion.path
-                      key={`${sel}-${j}`}
+                      key={`${sel}-${j}-${causal}`}
                       d={d}
                       fill="none"
                       stroke="var(--signal)"
@@ -88,7 +100,7 @@ export default function AttentionViz() {
                     refs.current[i] = el;
                   }}
                   type="button"
-                  className={`av-token${i === sel ? ' is-sel' : ''}`}
+                  className={`av-token${i === sel ? ' is-sel' : ''}${causal && i > sel ? ' is-masked' : ''}`}
                   aria-pressed={i === sel}
                   onClick={() => setSel(i)}
                   onMouseEnter={() => setSel(i)}
@@ -100,6 +112,12 @@ export default function AttentionViz() {
           </div>
         </div>
         <p className="av-read">
+          {top.length === 0 ? (
+            <>
+              “<b>{tokens[sel]}</b>” is the first word, so with the mask it can only look at itself.
+            </>
+          ) : (
+            <>
           “<b>{tokens[sel]}</b>” looks mostly at{' '}
           {top.map((j, k) => (
             <span key={j}>
@@ -108,8 +126,13 @@ export default function AttentionViz() {
             </span>
           ))}
           .
+            </>
+          )}
         </p>
         <p className="viz-cap">
+          {causal
+            ? 'Chat models use a causal mask: each word sees only the words before it, which is why text is generated left to right. '
+            : 'Encoder models such as BERT, used for search and classification, let every word see the whole sentence. '}
           Illustrative weights written by hand to show the idea. A real model has many attention heads in many layers, each with its own pattern.
         </p>
       </div>

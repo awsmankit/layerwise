@@ -19,6 +19,7 @@ sources:
 ---
 
 import Callout from '../../../components/ui/Callout.astro';
+import ServiceLayers from '../../../components/viz/ServiceLayers.tsx';
 
 Each major cloud offers two kinds of AI service, and the names make it easy to mix them up. One kind is a **managed model API**: you call a model somebody else trained and hosts. The other is an **ML platform**: you bring data and code to train, tune and host models yourself.
 
@@ -26,23 +27,14 @@ For a full job-by-job translation of the names, start with [the cloud AI map](..
 
 ## The two families
 
-As of October 2026:
+<ServiceLayers client:visible />
 
-| | Managed model API | ML platform |
-|---|---|---|
-| You do | Prompt, retrieve, orchestrate, evaluate | Prepare data, train, tune, deploy, monitor |
-| You get | Access to hosted foundation models | Notebooks, training jobs, endpoints, pipelines |
-| Billing | Mostly per token, some reserved capacity | Instance time, storage, plus any managed features |
-| Control over the model | Limited to what the provider allows | Full, within your own compute |
-| AWS | Amazon Bedrock | Amazon SageMaker AI |
-| Microsoft | Microsoft Foundry (formerly Azure AI Foundry), whose Foundry Models include Azure OpenAI models | Azure Machine Learning |
-| Google | Vertex AI / Gemini Enterprise Agent Platform: Gemini and Model Garden models | Vertex AI / Gemini Enterprise Agent Platform: training and prediction |
+The managed API side gives you hosted foundation models, with some reserved capacity on offer beside per-token billing. The platform side gives you notebooks, training jobs, endpoints and pipelines, billed for instance time, storage and any managed features, with full control of the model within your own compute.
 
 <Callout title="Two recent renames" kind="note">
 Microsoft announced at Ignite in November 2025 that Azure AI Foundry is now **Microsoft Foundry**; the new name appears in Microsoft’s product terms from January 2026. Google announced on 22 April 2026 that Vertex AI is being succeeded by the **Gemini Enterprise Agent Platform**. Google says the services did not change and both names appear in docs and invoices. Search for both names.
 </Callout>
 
-Boundaries blur. Foundry and Google's platform bundle model access with tooling in one portal, and each cloud has added agent, evaluation and guardrail features. Treat the table as a map of intent, not of product boundaries.
 
 ## Deep dives
 

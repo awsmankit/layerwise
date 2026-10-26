@@ -14,6 +14,7 @@ sources:
 
 import PipelineFlow from '../../../components/viz/PipelineFlow.tsx';
 import Callout from '../../../components/ui/Callout.astro';
+import WorkflowVsAgent from '../../../components/viz/WorkflowVsAgent.tsx';
 
 A plain model call takes text in and gives text out. An **agent** adds two things: the model can request actions through **tools**, and a loop feeds the results of those actions back to it until the task is done.
 
@@ -55,7 +56,9 @@ The **Model Context Protocol** (MCP) standardises how tools and data sources are
 
 ## Workflows or agents
 
-A **workflow** is a fixed sequence of steps you design, with model calls inside some of them. An **agent** lets the model choose the steps. Workflows are more predictable, cheaper and easier to test. Reach for an agent when the path genuinely cannot be known in advance, and keep the loop as small as the task allows.
+A **workflow** is a fixed sequence of steps you design, with model calls inside some of them. An **agent** lets the model choose the steps.
+
+<WorkflowVsAgent client:visible />
 
 ## Guardrails that matter
 

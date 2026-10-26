@@ -18,6 +18,9 @@ sources:
 
 import Callout from '../../../components/ui/Callout.astro';
 import Deep from '../../../components/ui/Deep.astro';
+import PrivatePath from '../../../components/viz/PrivatePath.tsx';
+import ResidencyScopes from '../../../components/viz/ResidencyScopes.tsx';
+import LoggingGates from '../../../components/viz/LoggingGates.tsx';
 
 Security for a model API is mostly ordinary cloud security applied to a new kind of data: prompts, retrieved documents and model output often contain exactly the things you would never put in a public bucket. The controls are the same on every cloud. Only the names differ.
 
@@ -41,7 +44,9 @@ For agents, scope the permissions of every tool the agent can call. An agent wit
 
 ## Private connectivity
 
-By default, calls to a model API go over the provider's public endpoint, protected by TLS and authentication. Private connectivity lets traffic stay on the cloud's private network: AWS PrivateLink through a VPC endpoint, Azure Private Endpoints, and Google Private Service Connect. This matters when policy says "no public internet path to the service". Also check DNS: private endpoints need private DNS resolution, and misconfigured DNS is a common cause of "it works from my laptop but not from the cluster".
+Private connectivity matters when policy says "no public internet path to the service". On AWS it is PrivateLink through a VPC endpoint; on Azure, Private Endpoints; on Google, Private Service Connect.
+
+<PrivatePath client:visible />
 
 ## Encryption keys
 
@@ -55,18 +60,15 @@ All three clouds encrypt data at rest by default with provider-managed keys. If 
 - On Google, global endpoints can serve requests and cached data from any region, while regional endpoints keep to the selected location.
 - On AWS, cross-region inference profiles can route requests to other Regions. Check which Regions are in the profile.
 
-Choosing the widest scope usually gives more capacity. Choosing the narrowest gives the strictest residency. See [Quotas, capacity and regions](../quotas-capacity-and-regions/).
+<ResidencyScopes client:visible />
+
+See [Quotas, capacity and regions](../quotas-capacity-and-regions/) for the capacity side.
 
 ## Audit logging, and the logging trap
 
-Turn on the audit trail (CloudTrail, Azure Monitor, Cloud Audit Logs) so you know who called what. That records the call, not the content.
+**Prompt and response logging is a different thing from the audit trail, and it is risky.** Teams turn it on to debug quality, and the log then holds whatever users typed.
 
-**Prompt and response logging is a different thing, and it is risky.** If you log prompts and responses to debug quality, the log now holds whatever users typed: personal data, secrets pasted by mistake, retrieved confidential documents. Decide before launch:
-
-1. Whether to log content at all, and for how long.
-2. Who can read the logs, which should be fewer people than can call the model.
-3. Whether to redact personal data before logging.
-4. Whether logs are encrypted with a key you control.
+<LoggingGates client:visible />
 
 Request-response logging is off by default on Google, per its docs, and AWS Bedrock invocation logging is something you choose to configure. Verify the defaults for your account.
 

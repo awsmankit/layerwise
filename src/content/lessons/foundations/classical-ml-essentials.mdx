@@ -19,16 +19,16 @@ sources:
 import Callout from '../../../components/ui/Callout.astro';
 import Deep from '../../../components/ui/Deep.astro';
 import Disclosure from '../../../components/viz/Disclosure.tsx';
+import DataSplit from '../../../components/viz/DataSplit.tsx';
+import ConfusionDots from '../../../components/viz/ConfusionDots.tsx';
 
 Large language models did not make classical machine learning obsolete. The habits that keep a fraud model honest are the same ones that keep an LLM feature honest: hold data back, do not let the answer leak in, pick a metric that matches the cost of being wrong. Interviewers still test these ideas because they separate people who measured something from people who hoped.
 
 ## Splits: train, validation, test
 
-- **Training set:** the model learns from it.
-- **Validation set:** you use it to choose settings (features, hyperparameters, thresholds, prompts).
-- **Test set:** touched once, at the end, to estimate how the final choice will do on new data.
+<DataSplit client:visible />
 
-Every time you look at a score and change something, that data stops being an unbiased estimate. That is why the test set is kept apart from the validation set.
+The **test set** estimates how the final choice will do on new data, which is why it is kept apart from the **validation set** you tune on (features, hyperparameters, thresholds, prompts).
 
 **Cross-validation** splits the non-test data into k folds, trains k times, and validates on each fold in turn. It gives a steadier estimate when data is scarce. Two variants matter in practice:
 
@@ -61,10 +61,7 @@ Duplicates across splits and random splits on time series are the other usual su
 
 A fraud model scores 1,000 transactions. 50 are really fraud. The model flags 60, of which 40 are fraud.
 
-| | Predicted fraud | Predicted fine |
-|---|---|---|
-| **Actually fraud (50)** | TP = 40 | FN = 10 |
-| **Actually fine (950)** | FP = 20 | TN = 930 |
+<ConfusionDots client:visible />
 
 - **Accuracy** = (TP + TN) / total = (40 + 930) / 1,000 = **0.97**
 - **Precision** = TP / (TP + FP) = 40 / 60 = **0.667** (of what was flagged, how much was fraud)

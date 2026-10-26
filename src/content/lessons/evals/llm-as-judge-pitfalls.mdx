@@ -14,6 +14,7 @@ sources:
 
 import Disclosure from '../../../components/viz/Disclosure.tsx';
 import Callout from '../../../components/ui/Callout.astro';
+import PositionSwap from '../../../components/viz/PositionSwap.tsx';
 
 Open-ended output cannot be checked with string matching, and human review does not scale. The common answer is to have a second model grade the first one against a rubric. It works well enough to be useful, and badly enough that you must treat the judge as an instrument to be calibrated, not as an oracle.
 
@@ -32,9 +33,11 @@ Studies of model judges, including the MT-Bench work, found consistent patterns:
 1. **Use a specific rubric, not "rate the quality".** Break it into questions that can be answered yes or no: Is every claim supported by the passage? Does the answer address all parts of the question? Does it avoid unsupported advice?
 2. **Ask for reasoning before the verdict**, and keep the reasoning in your logs for review.
 3. **Prefer pairwise comparison for ranking, and binary checks for gating.** Absolute 1 to 10 scores are noisy.
-4. **Randomise order** in pairwise comparisons, or run both orders and keep only consistent results.
+4. **Randomise order** in pairwise comparisons, or run both orders and keep only consistent results (see below).
 5. **Give the judge the reference or the source** when you have one. Judging against evidence is much more reliable than judging from memory.
 6. **Use a different model family** from the one being judged where you can, to reduce self-preference.
+
+<PositionSwap client:visible />
 
 ## Calibrate against people
 

@@ -29,6 +29,8 @@ sources:
 import Callout from '../../../components/ui/Callout.astro';
 import Deep from '../../../components/ui/Deep.astro';
 import Disclosure from '../../../components/viz/Disclosure.tsx';
+import SizeToGpu from '../../../components/viz/SizeToGpu.tsx';
+import PricingModes from '../../../components/viz/PricingModes.tsx';
 
 All three big clouds rent you GPUs by the hour, but they name and package them differently, and getting access is often harder than choosing. This lesson maps the families, says what each is for, and explains the quota and reservation rules that catch teams out. Everything here is as of October 2026. Instance lists change every few months, so use the linked pages for the final word.
 
@@ -60,12 +62,7 @@ For **inference**, you want enough memory for the weights plus KV cache, and the
 
 A rough guide, assuming the serving engine and quantization are mature. Work out weights plus KV cache with the [spec sheet lesson](../reading-a-gpu-spec-sheet/) and the [KV cache lesson](../../serving/kv-cache-and-memory/).
 
-| Model size | Typical starting point |
-|---|---|
-| Up to about 8B parameters | One 24 GB class GPU (L4, A10G), especially if quantized. An L40S for headroom. |
-| About 13B to 34B | Quantized to 8 or 4 bits: one 48 GB L40S. At FP16 (a 34B model needs about 68 GB for weights alone): one 80 GB class GPU. |
-| About 70B | FP8 or INT4 on one H200-class or two 80 GB GPUs. FP16 needs 140 GB for weights alone, so at least two to four GPUs. |
-| Very large dense or mixture-of-experts models | A full 8-GPU H100, H200 or B200 node, and possibly several nodes. |
+<SizeToGpu client:visible />
 
 ## Quotas and reservations
 
@@ -81,11 +78,7 @@ Request quota and reservations before you need them, and in more than one region
 
 ## On-demand, reserved and Spot
 
-| Model | How it works | Good for | Watch out |
-|---|---|---|---|
-| On-demand | Pay as you go, no commitment | Experiments, small steady loads | Capacity may not be available when you ask |
-| Reserved, committed or Capacity Block | Commit to a period or block | Training runs, steady inference, guaranteed capacity | You pay whether or not you use it |
-| Spot (also called preemptible) | Spare capacity at a steep discount, can be taken back at short notice | Fault-tolerant jobs with checkpoints, batch work | Interruptions. Not for latency-critical serving without a fallback |
+<PricingModes client:visible />
 
 <Callout title="Cost" kind="cost">
 This lesson lists no prices because they change often and vary by region. Compare current prices on each cloud's pricing page. Remember that an idle GPU still bills by the hour, so the cheapest GPU is often the one you turn off. The break-even tool linked at the end of this page compares a self-hosted GPU against a pay-per-token API.

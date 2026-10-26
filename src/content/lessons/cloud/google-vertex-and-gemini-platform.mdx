@@ -18,6 +18,7 @@ sources:
 
 import Callout from '../../../components/ui/Callout.astro';
 import Deep from '../../../components/ui/Deep.astro';
+import VertexMap from '../../../components/viz/VertexMap.tsx';
 
 Google Cloud keeps its model access, training tools and agent tooling in one platform. For years that platform was called **Vertex AI**. On 22 April 2026, at Cloud Next, Google announced that Vertex AI is being succeeded by the **Gemini Enterprise Agent Platform**.
 
@@ -38,18 +39,7 @@ Microsoft did the same with Azure AI Foundry, which became Microsoft Foundry (an
 
 ## The pieces
 
-| Piece | What it does |
-|---|---|
-| Model Garden | A catalogue of 200+ models as of October 2026: Gemini, Claude, Gemma, Llama and others. Some are Google-hosted APIs, some you deploy to your own endpoint. |
-| Gemini API | Google's own models through a managed API, with per-token billing. |
-| Provisioned Throughput | Reserved capacity for Gemini, with SLAs and predictable per-token pricing. |
-| Vector Search | A managed vector index. Billed for index-hosting nodes per hour whether or not traffic arrives. |
-| RAG Engine | Managed retrieval-augmented generation that connects your data to a model. |
-| Agent Runtime | Hosted execution for agents, formerly called Agent Engine, with Memory Bank and Sessions. |
-| Agent Development Kit (ADK) | Open-source framework for building agents, in Python, Go, Java and TypeScript. |
-| Agent Studio | Low-code agent builder. |
-
-Two of these cost money while idle. A Vector Search index bills for its nodes by the hour, and Provisioned Throughput reserves capacity whether you use it or not. Delete experiments.
+<VertexMap client:visible />
 
 ## Gemini API: on-demand versus provisioned
 

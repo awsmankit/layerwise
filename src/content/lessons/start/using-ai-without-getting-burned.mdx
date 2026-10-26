@@ -12,8 +12,8 @@ sources:
     url: https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview
 ---
 
-import Callout from '../../../components/ui/Callout.astro';
 import Deep from '../../../components/ui/Deep.astro';
+import TrustCheck from '../../../components/viz/TrustCheck.tsx';
 
 You now know that a chatbot writes plausible text one piece at a time and cannot check itself. This lesson turns that into practical habits, whether you are using these tools at work or about to build with them.
 
@@ -47,11 +47,9 @@ Warning signs, none of them proof:
 - **It changes when you re-ask.** Ask the same question twice. If the facts differ, at least one is wrong.
 - **It agrees with your mistake.** Models tend to go along with a false premise in the question. Ask neutrally, or ask it to challenge your assumption.
 
-<Callout title="A simple test before you rely on something">
+Before you rely on something, ask yourself: *if this is wrong, what happens, and who finds out?*
 
-Ask yourself: *if this is wrong, what happens, and who finds out?* If the answer is "nothing much" you can move quickly. If the answer is "a customer, a patient or a court", slow down and verify.
-
-</Callout>
+<TrustCheck client:visible />
 
 <Deep title="Why builders care about all this">
 

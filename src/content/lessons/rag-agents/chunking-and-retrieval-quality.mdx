@@ -14,6 +14,7 @@ sources:
 
 import Disclosure from '../../../components/viz/Disclosure.tsx';
 import Callout from '../../../components/ui/Callout.astro';
+import ChunkSizes from '../../../components/viz/ChunkSizes.tsx';
 
 When a RAG system gives a poor answer, people usually blame the model and reach for a bigger one. In practice the passage that contained the answer is often not in the prompt at all. Improving retrieval is usually the highest-value work.
 
@@ -21,8 +22,7 @@ When a RAG system gives a poor answer, people usually blame the model and reach 
 
 A chunk is the unit that gets one vector and is returned as a whole. It has to be specific enough that its vector represents one idea, and complete enough to make sense alone.
 
-- **Too small:** a chunk loses its context. "It must be renewed annually" is useless without knowing what "it" is.
-- **Too large:** a vector averages many ideas, matches nothing well, and fills the prompt with irrelevant text.
+<ChunkSizes client:visible />
 
 Practical rules:
 

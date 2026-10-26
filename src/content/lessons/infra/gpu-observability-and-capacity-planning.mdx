@@ -19,28 +19,16 @@ sources:
 import Callout from '../../../components/ui/Callout.astro';
 import Deep from '../../../components/ui/Deep.astro';
 import Disclosure from '../../../components/viz/Disclosure.tsx';
+import MetricsMap from '../../../components/viz/MetricsMap.tsx';
+import FleetSizing from '../../../components/viz/FleetSizing.tsx';
 
 You cannot size a GPU fleet from a datasheet. The number that matters is how many tokens per second one GPU sustains with your model, your prompts and your latency target, and the only way to get it is to measure. This lesson covers what to watch in production, how to load test honestly, and a worked sizing example. It builds on [Kubernetes and autoscaling](../kubernetes-and-autoscaling-for-inference/) and [Reading a GPU spec sheet](../reading-a-gpu-spec-sheet/).
 
 ## What to measure
 
-Group the measurements by what they tell you.
+Group the measurements by what they tell you, and by where on the request they appear.
 
-**What users feel**
-- **Time to first token (TTFT).** Mostly queueing plus prefill. Track p50 and p95 or p99.
-- **Inter-token latency** (time per output token) or its inverse, the per-user tokens per second. Decode speed.
-- **End-to-end latency** by prompt and output length bucket.
-- **Error and timeout rate**, including rejected requests (429 or 503).
-
-**How loaded the engine is**
-- **Queue depth**: requests waiting.
-- **Requests running** (batch size) and **tokens in flight**.
-- **KV cache utilisation**: how full the cache is, and whether requests are being preempted.
-- **Throughput**: input and output tokens per second per replica.
-
-**How the GPU is doing**
-- Memory used, temperature, power, clock speeds and throttle reasons.
-- Hardware errors (see below).
+<MetricsMap client:visible />
 
 ## Utilisation is not saturation
 
@@ -78,12 +66,12 @@ A **service level objective** is a target you commit to, written as a percentile
 
 Assumptions (all invented for illustration, replace them with your own measurements): a self-hosted 8B model, peak traffic of 10 requests per second, 1,000 input tokens and 300 output tokens on average. A load test on your chosen GPU shows it sustains 1,500 output tokens per second per replica while still meeting the TTFT and inter-token SLOs. You want to run at no more than 70 percent of tested capacity at peak, and survive losing one replica.
 
-1. **Peak output tokens per second:** 10 x 300 = 3,000.
-2. **Replicas at 100 percent:** 3,000 / 1,500 = 2.
-3. **Add headroom** (run at 70 percent): 3,000 / (1,500 x 0.7) = 2.86, so 3.
-4. **Add one for failure and rollouts (N+1):** 4 replicas.
-5. **Sanity check memory.** By Little's law, concurrent requests are arrival rate times time in system. If a request takes about 12 seconds (300 tokens at 25 tokens per second per user), that is 10 x 12 = 120 requests in flight, or about 30 per replica. Each holds about 1,300 tokens of KV cache. At about 128 KiB per token (the 8B layout from the spec sheet lesson), that is about 5 GB per replica, comfortably inside the spare memory of an 80 GB GPU, so memory is not the limit here.
-6. **Check prefill.** 10 x 1,000 = 10,000 input tokens per second across 4 replicas. Your load test already includes it if the prompts are realistic, which is one more reason to test with real lengths.
+<FleetSizing client:visible />
+
+Then two checks:
+
+1. **Sanity check memory.** By Little's law, concurrent requests are arrival rate times time in system. If a request takes about 12 seconds (300 tokens at 25 tokens per second per user), that is 10 x 12 = 120 requests in flight, or about 30 per replica. Each holds about 1,300 tokens of KV cache. At about 128 KiB per token (the 8B layout from the spec sheet lesson), that is about 5 GB per replica, comfortably inside the spare memory of an 80 GB GPU, so memory is not the limit here.
+2. **Check prefill.** 10 x 1,000 = 10,000 input tokens per second across 4 replicas. Your load test already includes it if the prompts are realistic, which is one more reason to test with real lengths.
 
 Four replicas, then, for this peak. If traffic is much lower off-peak, autoscaling can lower the count, but leave the warm minimum you need for cold-start reasons. Compare the result against pay-per-token pricing with the break-even tool before you commit to renting GPUs.
 

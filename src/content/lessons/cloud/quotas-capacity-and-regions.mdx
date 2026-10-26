@@ -20,6 +20,8 @@ sources:
 
 import Callout from '../../../components/ui/Callout.astro';
 import Deep from '../../../components/ui/Deep.astro';
+import ResidencyScopes from '../../../components/viz/ResidencyScopes.tsx';
+import ThrottleFlow from '../../../components/viz/ThrottleFlow.tsx';
 
 Most AI projects hit their first cloud wall in the same place: the code works, the model is chosen, and the request for GPUs or throughput is refused, throttled or stuck. Capacity is a planning topic, not an afterthought.
 
@@ -49,10 +51,9 @@ Treat all of this as of October 2026. Instance names, availability and the rules
 
 ## Regions and residency
 
-Capacity is regional, and so is quota. Quota in one region does not carry to another. The broader the scope you accept, the more capacity you can usually reach:
+Capacity is regional, and so is quota. **Cross-region inference** (AWS inference profiles, Azure Global deployments, Google global endpoints) can route a request to wherever there is room, so throttling falls. The cost is **residency**: your prompts may be processed outside your home region or zone.
 
-- **Cross-region inference** (AWS inference profiles, Azure Global deployments, Google global endpoints) can route a request to wherever there is room. Throttling falls and availability rises.
-- The cost is **residency**: your prompts may be processed outside your home region or zone. Data Zone and regional options narrow that, with less capacity behind them.
+<ResidencyScopes client:visible />
 
 If you have a legal residency requirement, that decides the scope and capacity planning follows from it. If you do not, prefer the broader scope. See [Security and networking for AI](../cloud-security-and-networking-for-ai/).
 
@@ -60,11 +61,7 @@ If you have a legal residency requirement, that decides the scope and capacity p
 
 A `429` or a capacity error is normal. Plan for it.
 
-1. **Retry with backoff and jitter**, and cap the attempts.
-2. **Queue what can wait.** Send batch work to batch APIs, which have separate and often larger limits.
-3. **Fall back** to a second deployment, region or model when the first is exhausted. Azure spillover does this inside Azure, from provisioned to standard.
-4. **Fall back across clouds** only if your prompts, output parsing and evals work on both. Test the fallback model on your own cases, since the same prompt behaves differently on different models.
-5. **Alert on throttle rate**, not only on errors.
+<ThrottleFlow client:visible />
 
 The routing patterns are in [Model routing and fallbacks](../../systems/model-routing-and-fallbacks/).
 

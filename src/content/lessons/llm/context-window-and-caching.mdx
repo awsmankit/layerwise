@@ -14,20 +14,16 @@ sources:
 
 import Callout from '../../../components/ui/Callout.astro';
 import Disclosure from '../../../components/viz/Disclosure.tsx';
+import ContextWindow from '../../../components/viz/ContextWindow.tsx';
+import PromptCache from '../../../components/viz/PromptCache.tsx';
 
 The **context window** is the maximum number of tokens a model can consider in one request. Input and output both count against it. A larger window lets you send more, but it does not mean the model uses everything equally well, and it does not make sending more cheap.
 
 ## What fills the window
 
-In a real application the user's message is usually the smallest part. The rest is:
+In a real application the user's message is usually the smallest part. The system prompt and rules, tool definitions, retrieved documents and the conversation history are resent on every request, and the reply needs room too. Pick a turn:
 
-- the system prompt and rules, resent every time
-- tool and function definitions
-- retrieved documents
-- conversation history, which grows with each turn
-- the output the model is about to write
-
-A chat that resends its entire history means cost per turn rises with each message, and total cost for a conversation rises faster than its length.
+<ContextWindow client:visible />
 
 ## Longer context has real costs
 
@@ -41,15 +37,9 @@ If many requests begin with the same long prefix, such as a system prompt, a set
 
 The rule that matters everywhere is **the cache matches from the start of the prompt**, so order decides what can be reused.
 
-```text
-[ stable ]   system instructions, rules, tool definitions
-[ stable ]   few-shot examples, reference documents
-[ cache breakpoint ]
-[ changes ]  conversation so far
-[ changes ]  the user's new message
-```
+Put the stable parts first (instructions, rules, tool definitions, examples, reference documents) and the parts that change last (the conversation so far and the new message):
 
-Putting a timestamp, a user name or any per-request value near the top silently defeats caching, because the prefix is different every time.
+<PromptCache client:visible />
 
 <Callout kind="cost" title="Measure the hit rate">
 Look for cache read and cache write counts in the usage data that comes back with each response. A cache that is configured but never hit saves nothing and may cost extra to write.

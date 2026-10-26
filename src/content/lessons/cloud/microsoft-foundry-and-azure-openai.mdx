@@ -16,6 +16,8 @@ sources:
 
 import Callout from '../../../components/ui/Callout.astro';
 import Deep from '../../../components/ui/Deep.astro';
+import DeploymentGrid from '../../../components/viz/DeploymentGrid.tsx';
+import QuotaCapacity from '../../../components/viz/QuotaCapacity.tsx';
 
 On Azure, the managed model API lives in **Microsoft Foundry**, which was called Azure AI Foundry until Microsoft renamed it at Ignite in November 2025 (and Azure AI Studio before that). Inside it, "Foundry Models" covers the models Azure sells directly, including the Azure OpenAI models, and it also lists models from other providers. Older docs, SDKs and forum posts still say "Azure OpenAI Service" or "Azure AI Foundry". They mostly point to the same things.
 
@@ -25,32 +27,17 @@ The part that trips teams up is not the API call. It is the **deployment**: the 
 
 You create a deployment of a model, and you choose a type. There are two choices to make: the billing and capacity behaviour, and the geographic scope.
 
-| Type | How you pay | What it is for |
-|---|---|---|
-| Standard | Per token | Development, and production with variable traffic. Capacity is shared and there is no latency SLA. |
-| Provisioned | Per provisioned throughput unit (PTU) per hour | Steady, high-volume, latency-sensitive production. Capacity is held for you. |
-| Batch | Per token, at a discount | Bulk work that can wait. Results come back asynchronously, with a 24-hour target. |
+<DeploymentGrid client:visible />
 
-Each of these can exist at one of three scopes:
-
-- **Global:** requests may be processed in any region where the model runs. Usually the most capacity.
-- **Data Zone:** processing stays inside a zone such as the US or the EU.
-- **Regional:** processing stays in the one region you picked.
-
-Not every model supports every type and scope, so check the current availability tables. A "Developer" tier also exists, but only for evaluating fine-tuned models. It has no SLA and its deployments are deleted after 24 hours, so it is not for production.
+A "Developer" tier also exists, but only for evaluating fine-tuned models. It has no SLA and its deployments are deleted after 24 hours, so it is not for production.
 
 ## Quota is not capacity
 
 This is the most important idea in the lesson. **Quota** is a policy limit: the most PTUs you may deploy in a subscription, region and deployment type. It is free to hold. **Capacity** is the actual hardware available when you try to create the deployment.
 
-Microsoft's docs are direct about it: having PTU quota does not guarantee capacity is available. If the region cannot supply the PTUs you ask for, the deployment fails. Capacity changes through the day, and if you delete or scale down a provisioned deployment, there is no promise you can get the same capacity back.
+Microsoft's docs are direct about it: having PTU quota does not guarantee capacity is available. If the region cannot supply the PTUs you ask for, the deployment fails. So work in this order:
 
-Practical consequences:
-
-1. **Create the deployment first**, confirm it succeeds, and only then buy a reservation to discount it. Reservations do not guarantee capacity either.
-2. **Do not scale provisioned deployments up and down with traffic.** You may not get the capacity back.
-3. **Check capacity** in the portal or with the model capacities API before planning a launch.
-4. **Ask for quota early.** Requests can take days.
+<QuotaCapacity client:visible />
 
 ## When to choose provisioned
 
