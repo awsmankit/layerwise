@@ -835,8 +835,9 @@ main + .site-footer {
 /* ---------- stack explorer: every layer has its own colour ---------- */
 
 .sx-spine {
+  /* centre the 3px spine on the node centres (9px from the left) */
   width: 3px;
-  left: 12px;
+  left: 7.5px;
   border-radius: 3px;
   opacity: 1;
   background: linear-gradient(to bottom, #f25f5c, #12c2a4, #ff4f8b, #5bc0ff, #ff9f1c, #9c8cff, #b6e43a, #ffc233);
@@ -848,7 +849,7 @@ main + .site-footer {
   width: 18px;
   height: 18px;
   margin-top: 0.22rem;
-  margin-left: -2px;
+  margin-left: 0;
   border: 3px solid var(--c);
   background: var(--paper);
   transition: transform 0.3s var(--pop), background 0.2s;
