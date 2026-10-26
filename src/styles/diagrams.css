@@ -92,3 +92,10 @@
     stroke-dasharray: none;
   }
 }
+
+.dx-curve {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}

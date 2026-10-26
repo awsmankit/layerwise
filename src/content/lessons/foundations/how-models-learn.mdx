@@ -15,6 +15,7 @@ sources:
 ---
 
 import Callout from '../../../components/ui/Callout.astro';
+import LearningCurves from '../../../components/viz/LearningCurves.tsx';
 import Deep from '../../../components/ui/Deep.astro';
 
 "The model learned from data" sounds mysterious. It is not. Training is a loop that makes a guess, measures how wrong it was, and nudges a set of numbers so the next guess is a little less wrong. This lesson builds that loop from scratch with three data points and a pencil. The same loop, scaled up enormously, trains every large language model.
@@ -75,7 +76,11 @@ In a big network a dial in the first layer affects the output only through every
 
 ## The learning rate matters
 
-The learning rate is the size of each step. In the example, 0.01 worked well. With 0.1 the steps overshoot the valley and climb the other side: the loss goes 29, about 157, about 849, and keeps exploding. With 0.001 the loss only creeps down: 29, 27.1, 25.3, and so on. Real training often starts with a small warm-up, then lowers the learning rate gradually as it goes.
+The learning rate is the size of each step. The same problem with three rates:
+
+<LearningCurves client:visible show="rate" />
+
+Real training often starts with a small warm-up, then lowers the learning rate gradually as it goes.
 
 ## Batches and epochs
 
@@ -86,6 +91,8 @@ Real datasets are too big to compute the loss on everything before each step. So
 The goal is not to do well on the training examples. It is to do well on examples the model has never seen. That is **generalisation**.
 
 A model with lots of dials and few examples can memorise the training set, noise and all, and then fail on anything new. That is **overfitting**, like a student who memorises past exam answers without understanding them. To catch it, keep some data aside as a **validation set** that is never used for training. If the training loss keeps falling while the validation loss starts rising, the model has begun to memorise. A separate **test set** is kept untouched until the very end, for an honest final score.
+
+<LearningCurves client:visible show="overfit" />
 
 <Callout title="The pattern to recognise">
 
