@@ -735,3 +735,50 @@
   font-size: 0.78rem;
   font-weight: 700;
 }
+
+/* ---------- incident room: interviewer view ---------- */
+
+.inc-mode {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+  margin: 0.2rem 0 1rem;
+  padding: 0.7rem 0.9rem;
+  border: 2px dashed var(--line);
+  border-radius: var(--r-sm);
+  font-size: 0.92rem;
+  color: var(--ink-2);
+  cursor: pointer;
+  max-width: 62rem;
+}
+.inc-mode input {
+  margin-top: 0.2rem;
+  accent-color: var(--signal);
+}
+.inc-key {
+  margin-bottom: 1.2rem;
+  padding: 1rem 1.2rem;
+  background: var(--tint-sun);
+  border: 2px solid var(--ink);
+  border-radius: var(--r-md);
+  max-width: 62rem;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+.inc-key p + p,
+.inc-key ul + p {
+  margin-top: 0.6rem;
+}
+.inc-key b {
+  font-family: var(--font-display);
+}
+.inc-key ul {
+  margin: 0.3rem 0 0;
+  padding-left: 1.2rem;
+}
+.inc-key i {
+  font-style: normal;
+  font-weight: 600;
+  font-family: var(--font-display);
+}

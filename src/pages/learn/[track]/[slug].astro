@@ -7,6 +7,7 @@ import { figureFor } from '../../../data/figures';
 import DepthToggle from '../../../components/ui/DepthToggle.astro';
 import GlossaryTips from '../../../components/ui/GlossaryTips.astro';
 import Quiz from '../../../components/ui/Quiz.tsx';
+import PathNext from '../../../components/ui/PathNext.tsx';
 import TrackTree from '../../../components/viz/TrackTree.tsx';
 import { DoneButton } from '../../../components/viz/Progress.tsx';
 import { tracks, trackById, levels } from '../../../data/tracks';
@@ -37,6 +38,8 @@ const toc = headings.filter((h) => h.depth === 2);
 const here = lessonPath(lesson);
 
 const byKey = Object.fromEntries(all.map((l) => [`${l.data.track}/${slugOf(l)}`, l]));
+const lessonIndex = Object.fromEntries(all.map((l) => [`${l.data.track}/${slugOf(l)}`, { title: l.data.title, href: lessonPath(l) }]));
+const hasDeep = /<Deep[\s>]/.test(lesson.body ?? '');
 const prereqs = (extra?.prereq ?? []).map((k) => byKey[k]).filter(Boolean);
 
 const groups = tracks.map((t) => ({
@@ -63,7 +66,7 @@ const groups = tracks.map((t) => ({
           <span>{readingMinutes(lesson.body)} min read</span>
           <span>Updated {formatDate(lesson.data.updated)}</span>
         </div>
-        <DepthToggle />
+        {hasDeep && <DepthToggle />}
       </div>
       <div class="lesson-hero-art"><HairFigure client:visible name={figureFor(track.id)} tone="track" intensity={0.7} play /></div>
     </div>
@@ -130,11 +133,12 @@ const groups = tracks.map((t) => ({
         <div class="lesson-done">
           <DoneButton client:load id={key} />
         </div>
+        <PathNext client:load current={key} lessons={lessonIndex} />
         <nav class="pager" aria-label="Previous and next lesson">
           {
             prev ? (
               <a class="prev" href={withBase(lessonPath(prev))} rel="prev">
-                <span>Previous</span>
+                <span>Previous in the full curriculum</span>
                 <b>{prev.data.title}</b>
               </a>
             ) : (
@@ -144,7 +148,7 @@ const groups = tracks.map((t) => ({
           {
             next && (
               <a class="next" href={withBase(lessonPath(next))} rel="next">
-                <span>Next</span>
+                <span>Next in the full curriculum</span>
                 <b>{next.data.title}</b>
               </a>
             )

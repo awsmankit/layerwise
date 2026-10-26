@@ -54,7 +54,7 @@ export const extrasInfra: Record<string, Extra> = {
     takeaways: [
       'Five numbers matter most for LLMs: memory capacity, memory bandwidth, compute at your precision, GPU-to-GPU link speed and power.',
       'Per-user decode speed is roughly memory bandwidth divided by the weight bytes plus KV cache bytes read per step.',
-      'HBM gives datacenter GPUs about five to ten times the bandwidth of the GDDR on cheaper cards, so they generate text much faster.',
+      'HBM gives datacenter GPUs several times the bandwidth of the GDDR on cheaper cards (from about 2.4x to over 10x), so they generate text much faster.',
       'Quantizing weights cuts the bytes read per token, so it speeds up decode as well as saving memory.',
     ],
     prereq: ['infra/gpu-basics', 'serving/kv-cache-and-memory'],

@@ -9,12 +9,13 @@ export type SearchItem = {
   s: string;
 };
 
-const KIND_BOOST: Record<string, number> = { Lesson: 0.6, Game: 0.5, Tool: 0.4, Term: 0.3, Page: 0.2, Pulse: 0.1 };
+const KIND_BOOST: Record<string, number> = { Lesson: 0.6, Game: 0.5, Tool: 0.4, Term: 0.3, Page: 0.2, Interview: 0.15, News: 0.1 };
 
 /**
- * Tiny, dependency-free ranking: every word in the query must appear
- * somewhere in the title or description. Title starts and whole-word title
- * matches count most.
+ * Tiny, dependency-free ranking. Title starts and whole-word title matches
+ * count most. Results that match every word come first; with more than one
+ * word, results matching at least half of them are kept further down, so one
+ * unknown word does not hide everything.
  */
 export function search(items: SearchItem[], query: string, limit = 8): SearchItem[] {
   const phrase = query.toLowerCase().trim().replace(/\s+/g, ' ');
@@ -26,7 +27,7 @@ export function search(items: SearchItem[], query: string, limit = 8): SearchIte
     const title = item.t.toLowerCase();
     const desc = item.s.toLowerCase();
     let score = 0;
-    let ok = true;
+    let matched = 0;
     for (const w of words) {
       let s = 0;
       if (title === w) s += 10;
@@ -34,13 +35,12 @@ export function search(items: SearchItem[], query: string, limit = 8): SearchIte
       else if (new RegExp(`\\b${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).test(title)) s += 4;
       else if (title.includes(w)) s += 2.5;
       if (desc.includes(w)) s += 1.2;
-      if (s === 0) {
-        ok = false;
-        break;
-      }
+      if (s > 0) matched++;
       score += s;
     }
-    if (!ok) continue;
+    const needed = words.length === 1 ? 1 : Math.ceil(words.length / 2);
+    if (matched < needed) continue;
+    if (matched === words.length) score += 100; // full matches always rank above partial ones
     // whole-phrase bonuses: an exact title should always beat a partial one
     if (words.length > 1) {
       if (title === phrase) score += 20;

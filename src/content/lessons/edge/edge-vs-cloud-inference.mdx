@@ -48,7 +48,7 @@ Pick the real-time audio scenario. The cloud path loses on network time alone, e
 | **Device first, cloud fallback** | A small on-device model handles the common case; harder cases go to the cloud when a connection allows |
 | **Split by task** | Time-critical work (wake word, noise suppression, safety) on device; heavy work (summaries, search) in the cloud |
 | **Cloud-trained, device-deployed** | Train and evaluate in the cloud, compress the model, ship it to the device |
-| **Speculative or cascaded** | A device model answers right away and a larger model corrects it later if needed |
+| **Answer now, refine later** | A device model answers right away and a larger cloud model replaces or corrects the answer when it arrives. (Not to be confused with speculative decoding, a technique inside one server.) |
 
 ## Constraints that are easy to underestimate
 

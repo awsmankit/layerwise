@@ -13,12 +13,12 @@ export const tracks = [
     color: '#FFC233',
     on: '#1A1440',
     hue: 'sun',
-    title: 'Start here',
+    title: 'AI basics',
     blurb: 'New to AI? Plain-English answers to what it is, how a chatbot answers you, and how to use it without getting burned.',
   },
   {
     id: 'foundations',
-    color: '#4F6BFF',
+    color: '#3B54E0',
     on: '#FFFFFF',
     hue: 'cobalt',
     title: 'Foundations',
@@ -26,7 +26,7 @@ export const tracks = [
   },
   {
     id: 'llm',
-    color: '#9B5CFF',
+    color: '#7B3FE4',
     on: '#FFFFFF',
     hue: 'violet',
     title: 'Working with LLMs',
@@ -42,7 +42,7 @@ export const tracks = [
   },
   {
     id: 'evals',
-    color: '#FF4F8B',
+    color: '#C92A63',
     on: '#FFFFFF',
     hue: 'pink',
     title: 'Evals and quality',
@@ -90,7 +90,7 @@ export const tracks = [
   },
   {
     id: 'cost',
-    color: '#F25F5C',
+    color: '#C93531',
     on: '#FFFFFF',
     hue: 'coral',
     title: 'Cost and FinOps',

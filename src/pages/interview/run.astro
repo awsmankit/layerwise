@@ -1,0 +1,16 @@
+---
+import Base from '../../layouts/Base.astro';
+import RunInterview from '../../components/interview/RunInterview.tsx';
+import { withBase } from '../../lib/url';
+---
+
+<Base title="Run an interview" description="Build a consistent AI engineering interview for a role and level, score it on a shared rubric, and export the scorecard.">
+  <div class="wrap">
+    <header class="page-head">
+      <h1>Run an interview</h1>
+      <p>Choose the role, level and length to get a question set that fits the time. Each question comes with what a strong answer covers, follow-ups in escalating order, red flags and a four-point rubric. Export the scorecard when you are done. Nothing is stored or sent.</p>
+      <p class="gm-note"><a href={withBase('/interview/#interviewers')}>Guidance for interviewers</a></p>
+    </header>
+    <RunInterview client:load />
+  </div>
+</Base>

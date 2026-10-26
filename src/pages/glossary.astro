@@ -12,12 +12,18 @@ const byLetter = letters.map((l) => ({ l, terms: sorted.filter((t) => t.term[0].
   <div class="wrap">
     <header class="page-head">
       <h1>Glossary</h1>
-      <p>{glossary.length} terms, in plain English. Inside lessons, the first mention of each term shows its definition when you hover or tap it.</p>
+      <p>{glossary.length} terms, in plain English. New to AI? Tick “Beginner terms only” for the {glossary.filter((t) => t.basic).length} words to learn first. Inside lessons, the first mention of each term shows its definition when you hover or tap it.</p>
       <div class="gl-tools">
-        <label class="gl-search">
-          <span class="sr-only">Filter terms</span>
-          <input id="gl-filter" type="search" placeholder="Filter terms" autocomplete="off" />
-        </label>
+        <div class="gl-row">
+          <label class="gl-search">
+            <span class="sr-only">Filter terms</span>
+            <input id="gl-filter" type="search" placeholder="Filter terms" autocomplete="off" />
+          </label>
+          <label class="gl-basic">
+            <input id="gl-basic" type="checkbox" />
+            <span>Beginner terms only ({glossary.filter((t) => t.basic).length})</span>
+          </label>
+        </div>
         <nav class="gl-letters" aria-label="Jump to letter">
           {letters.map((l) => <a href={`#letter-${l}`}>{l}</a>)}
         </nav>
@@ -31,8 +37,8 @@ const byLetter = letters.map((l) => ({ l, terms: sorted.filter((t) => t.term[0].
             <h2 class="gl-letter" aria-hidden="true">{g.l}</h2>
             <dl>
               {g.terms.map((t) => (
-                <div class="gl-term" id={t.id} data-text={`${t.term} ${(t.aka ?? []).join(' ')} ${t.short}`.toLowerCase()}>
-                  <dt>{t.term}{t.aka && t.aka.length > 0 && <small>also: {t.aka.join(', ')}</small>}</dt>
+                <div class="gl-term" id={t.id} data-basic={t.basic ? '1' : '0'} data-text={`${t.term} ${(t.aka ?? []).join(' ')} ${t.short}`.toLowerCase()}>
+                  <dt>{t.term}{t.basic && <span class="gl-badge">beginner</span>}{t.aka && t.aka.length > 0 && <small>also: {t.aka.join(', ')}</small>}</dt>
                   <dd>
                     {t.short}
                     {t.lesson && <> <a href={withBase(t.lesson)}>Read the lesson</a></>}
@@ -50,15 +56,17 @@ const byLetter = letters.map((l) => ({ l, terms: sorted.filter((t) => t.term[0].
   <script is:inline>
     (function () {
       var input = document.getElementById('gl-filter');
+      var basic = document.getElementById('gl-basic');
       var items = [].slice.call(document.querySelectorAll('.gl-term'));
       var groups = [].slice.call(document.querySelectorAll('.gl-group'));
       var none = document.getElementById('gl-none');
       if (!input) return;
-      input.addEventListener('input', function () {
+      function apply() {
         var q = input.value.trim().toLowerCase();
+        var onlyBasic = basic && basic.checked;
         var shown = 0;
         items.forEach(function (el) {
-          var ok = !q || el.getAttribute('data-text').indexOf(q) !== -1;
+          var ok = (!q || el.getAttribute('data-text').indexOf(q) !== -1) && (!onlyBasic || el.getAttribute('data-basic') === '1');
           el.style.display = ok ? '' : 'none';
           if (ok) shown++;
         });
@@ -67,7 +75,9 @@ const byLetter = letters.map((l) => ({ l, terms: sorted.filter((t) => t.term[0].
           g.style.display = any ? '' : 'none';
         });
         none.hidden = shown !== 0;
-      });
+      }
+      input.addEventListener('input', apply);
+      if (basic) basic.addEventListener('change', apply);
       /* highlight a term when linked to directly */
       function flash() {
         var id = location.hash.slice(1);

@@ -1,0 +1,156 @@
+---
+title: "How a model learns: loss, gradients and training"
+track: foundations
+level: basic
+order: 2
+summary: What training actually does to a model's numbers, worked through by hand on three points, with the ideas that carry over to the largest models.
+updated: 2026-10-26
+sources:
+  - label: "Adam: A Method for Stochastic Optimization (Kingma and Ba, 2014)"
+    url: https://arxiv.org/abs/1412.6980
+  - label: "Scaling Laws for Neural Language Models (Kaplan et al., 2020)"
+    url: https://arxiv.org/abs/2001.08361
+  - label: "Training Compute-Optimal Large Language Models (Hoffmann et al., 2022)"
+    url: https://arxiv.org/abs/2203.15556
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+"The model learned from data" sounds mysterious. It is not. Training is a loop that makes a guess, measures how wrong it was, and nudges a set of numbers so the next guess is a little less wrong. This lesson builds that loop from scratch with three data points and a pencil. The same loop, scaled up enormously, trains every large language model.
+
+## A neural network is layers of numbers
+
+A **neural network** takes numbers in and gives numbers out. In between are **layers**. Each layer multiplies its inputs by a grid of numbers called **weights**, adds a few more numbers, and applies a simple bend so the network can represent curves, not only straight lines. The output of one layer is the input to the next.
+
+Picture a mixing desk with a huge number of dials. Each weight is one dial. A small model has millions; a large language model has billions. Training never changes the design of the desk. It only turns the dials. The dials together are called the model's **parameters**.
+
+## A loss is a score of how wrong
+
+To turn dials in a useful direction you need a single number that says how badly the model is doing. That number is the **loss**. Lower is better; zero means perfect on the examples you checked.
+
+A common choice is the **squared error**: take the difference between the prediction and the right answer, square it so misses in either direction count, and add these up over the examples. A language model uses a different loss, based on how much probability it gave to the actual next token, but the idea is the same.
+
+## A worked example by hand
+
+Here are three data points. The hidden rule is y = 2x + 1, but the model does not know that.
+
+| x | Right answer y |
+|---|---|
+| 1 | 3 |
+| 2 | 5 |
+| 3 | 7 |
+
+The model is a straight line with two dials: a slope **w** and an offset **b**. Its prediction is w times x, plus b. Try some settings and score each one with the squared error.
+
+| Dials (w, b) | Predictions | Errors (prediction minus answer) | Squared errors | Loss |
+|---|---|---|---|---|
+| (1, 0) | 1, 2, 3 | -2, -3, -4 | 4, 9, 16 | **29** |
+| (3, 0) | 3, 6, 9 | 0, 1, 2 | 0, 1, 4 | **5** |
+| (2, 0) | 2, 4, 6 | -1, -1, -1 | 1, 1, 1 | **3** |
+| (2, 1) | 3, 5, 7 | 0, 0, 0 | 0, 0, 0 | **0** |
+
+Guessing works for two dials. It is hopeless for a billion. Training needs a way to know which direction to turn each dial without trying every setting.
+
+## Gradient descent: walking downhill in fog
+
+Imagine standing on a hillside in thick fog, trying to reach the valley floor. You cannot see the valley, but you can feel the slope under your feet. So you take a step in the steepest downhill direction, feel again, and repeat.
+
+The landscape is the loss for every possible setting of the dials. The slope under your feet is the **gradient**: for each dial, how much the loss would rise or fall if you turned that dial up a little. **Gradient descent** means: work out the gradient, turn every dial a small step against it, repeat.
+
+Start from (w, b) = (1, 0), loss 29. Every prediction is too low, so both dials should go up. The errors are biggest where x is biggest, and w is multiplied by x, so w has more effect on the loss. Worked out exactly (see the deeper section), the gradient is -40 for w and -18 for b. Multiply by a **learning rate** of 0.01 and step the other way:
+
+| | w | b | Predictions | Loss |
+|---|---|---|---|---|
+| Before | 1 | 0 | 1, 2, 3 | 29 |
+| After one step | 1.40 | 0.18 | 1.58, 2.98, 4.38 | about 12.96 |
+| After two steps | 1.67 | 0.30 | | about 5.82 |
+| After 1,000 steps | 2.000 | 1.000 | 3, 5, 7 | about 0 |
+
+Nobody told the model the rule. It found w = 2 and b = 1 by repeatedly stepping downhill.
+
+## Backpropagation: which dials to nudge, and by how much
+
+In a big network a dial in the first layer affects the output only through every layer after it. **Backpropagation** is the bookkeeping method that works out, for every dial at once, how much it contributed to the final error. It starts at the loss and works backwards through the layers, passing blame along. The result is the gradient for every parameter, computed in roughly the same time as a couple of forward passes. Gradient descent then uses it to take the step.
+
+## The learning rate matters
+
+The learning rate is the size of each step. In the example, 0.01 worked well. With 0.1 the steps overshoot the valley and climb the other side: the loss goes 29, about 157, about 849, and keeps exploding. With 0.001 the loss only creeps down: 29, 27.1, 25.3, and so on. Real training often starts with a small warm-up, then lowers the learning rate gradually as it goes.
+
+## Batches and epochs
+
+Real datasets are too big to compute the loss on everything before each step. So training takes a random **batch** of examples, computes the loss and gradient on just those, and takes a step. The estimate is noisy, but steps are cheap and the noise averages out. One pass through the whole dataset is an **epoch**. Small models often train for many epochs; large language models often see most of their data only about once.
+
+## Overfitting and generalisation
+
+The goal is not to do well on the training examples. It is to do well on examples the model has never seen. That is **generalisation**.
+
+A model with lots of dials and few examples can memorise the training set, noise and all, and then fail on anything new. That is **overfitting**, like a student who memorises past exam answers without understanding them. To catch it, keep some data aside as a **validation set** that is never used for training. If the training loss keeps falling while the validation loss starts rising, the model has begun to memorise. A separate **test set** is kept untouched until the very end, for an honest final score.
+
+<Callout title="The pattern to recognise">
+
+Training loss falls, validation loss falls: learning. Training loss falls, validation loss rises: overfitting. Both stay high: the model is too small, the learning rate is wrong, or the data does not contain the answer.
+
+</Callout>
+
+## Why more data and bigger models helped
+
+For years the worry was that bigger models would just overfit. In practice, large neural networks trained on far more data kept getting better. Research on language models found that loss falls smoothly and predictably as model size, data and compute grow together, and later work showed that many large models had been trained on too little data for their size. More data gives more patterns to learn and makes memorising harder; more parameters give room to store those patterns. Both cost compute, which is why training the largest models needs thousands of chips.
+
+<Deep title="The maths, and the example in Python">
+
+For the line model, the prediction is `p = w·x + b`, the error is `e = p − y`, and the loss is the sum of `e²` over the three points.
+
+Differentiating gives the two gradients:
+
+```text
+dLoss/dw = 2 × sum(e × x)
+dLoss/db = 2 × sum(e)
+```
+
+At (1, 0) the errors are -2, -3, -4. So `dLoss/dw = 2 × (-2 − 6 − 12) = -40` and `dLoss/db = 2 × (-9) = -18`. The update is `w ← w − lr × dLoss/dw`, which with lr = 0.01 gives 1.4, and likewise b becomes 0.18.
+
+Backpropagation is the chain rule applied layer by layer: the gradient for a weight deep in the network is the product of local derivatives along the path from that weight to the loss. Frameworks such as PyTorch do this automatically. Most real training uses an optimiser such as Adam, which keeps a running average of recent gradients and scales each parameter's step individually, instead of plain gradient descent.
+
+```python
+xs = [1, 2, 3]
+ys = [3, 5, 7]           # the hidden rule is y = 2x + 1
+
+w, b = 1.0, 0.0          # starting guess for the two dials
+lr = 0.01                # learning rate: how big each nudge is
+
+for step in range(1, 1001):
+    errors = [w * x + b - y for x, y in zip(xs, ys)]
+    loss = sum(e * e for e in errors)
+    grad_w = 2 * sum(e * x for e, x in zip(errors, xs))   # how loss changes if w grows
+    grad_b = 2 * sum(errors)                               # how loss changes if b grows
+    w -= lr * grad_w     # step downhill
+    b -= lr * grad_b
+    if step in (1, 2, 3, 10, 100, 1000):
+        print(f"step {step:4d}  loss before step {loss:7.4f}  w={w:.3f}  b={b:.3f}")
+```
+
+Output:
+
+```text
+step    1  loss before step 29.0000  w=1.400  b=0.180
+step    2  loss before step 12.9612  w=1.666  b=0.301
+step    3  loss before step  5.8204  w=1.844  b=0.383
+step   10  loss before step  0.1031  w=2.171  b=0.554
+step  100  loss before step  0.0226  w=2.100  b=0.772
+step 1000  loss before step  0.0000  w=2.000  b=1.000
+```
+
+Notice that w overshoots to about 2.17 early on while b lags behind. The loss surface is a long, narrow valley, and gradient descent zig-zags along it. Optimisers like Adam exist partly to handle this better. Change `lr` to 0.1 to watch it diverge.
+
+</Deep>
+
+## What to take forward
+
+- A model is a fixed design with many adjustable numbers. Training only changes the numbers.
+- The loss is one number that says how wrong the model is. Training tries to make it smaller.
+- Gradient descent steps every dial downhill; backpropagation works out the direction for each dial.
+- Too large a learning rate diverges, too small crawls.
+- Judge a model on held-out validation data, never only on the data it trained on.
+
+Next: [Tokens and embeddings](../tokens-and-embeddings/) shows how text becomes the numbers a network can use. Then [How a model is trained, stage by stage](../training-pipeline/) shows how this loop is used to build an assistant.

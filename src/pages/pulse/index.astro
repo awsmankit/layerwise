@@ -6,11 +6,11 @@ import { getPulse, formatDate } from '../../lib/content';
 const entries = await getPulse();
 ---
 
-<Base title="Pulse" description="Short notes on what changed in AI and why an engineer should care.">
+<Base title="News" description="Short notes on what changed in AI and why an engineer should care.">
   <div class="wrap">
     <header class="page-head">
-      <h1>Pulse</h1>
-      <p>What changed in models, cloud platforms and pricing, and what it means for the systems you build. Each note links to its source.</p>
+      <h1>News</h1>
+      <p>Short, dated notes on what changed in models, cloud platforms and tools, and what it means for the systems you build. Each note links to its source. Follow along with the <a href={withBase('/rss.xml')}>RSS feed</a>, which also announces new lessons.</p>
     </header>
     {
       entries.length === 0 ? (

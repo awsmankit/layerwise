@@ -48,8 +48,16 @@
 .nav {
   margin-left: auto;
 }
+@media (min-width: 1101px) and (max-width: 1260px) {
+  .nav {
+    gap: 0.2rem;
+  }
+  .nav a {
+    padding-inline: 0.6rem;
+  }
+}
 
-@media (max-width: 860px) {
+@media (max-width: 1100px) {
   .menu-btn {
     display: inline-grid;
   }
@@ -191,8 +199,11 @@ kbd {
 .sp-kind.k-tool {
   background: var(--tint-mint);
 }
+.sp-kind.k-interview {
+  background: #ffe2b8;
+}
 .sp-kind.k-page,
-.sp-kind.k-pulse {
+.sp-kind.k-news {
   background: var(--tint-sky);
 }
 .sp-text {
@@ -802,7 +813,7 @@ html[data-depth='essentials'] .deep {
 }
 .gl-search input:focus {
   transform: translate(-2px, -2px);
-  box-shadow: 5px 5px 0 var(--ink);
+  box-shadow: 5px 5px 0 var(--shadow-ink);
 }
 .gl-letters {
   display: flex;
@@ -918,4 +929,329 @@ html[data-depth='essentials'] .deep {
     position: static;
     font-size: 2.6rem;
   }
+}
+
+/* ---------- print: clean handouts for teachers and students ---------- */
+
+@media print {
+  :root {
+    --paper: #fff;
+    --surface: #fff;
+    --ink: #000;
+    --ink-2: #222;
+    --ink-3: #444;
+  }
+  body,
+  body.has-track {
+    background: #fff !important;
+    color: #000;
+    font-size: 11pt;
+  }
+  .site-header,
+  .site-footer,
+  .skip,
+  .reading-progress,
+  .lesson-nav,
+  .lesson-toc,
+  .lesson-hero-art,
+  .depth,
+  .lesson-done,
+  .pager,
+  .practise,
+  .hero-art,
+  .marquee,
+  .confetti,
+  #term-tip,
+  .sp-backdrop,
+  .btn,
+  .viz-controls,
+  .rl-buttons {
+    display: none !important;
+  }
+  .lesson-hero {
+    background: #fff !important;
+    color: #000 !important;
+    border-bottom: 2px solid #000;
+  }
+  .lesson-hero::before,
+  .lesson-hero::after {
+    display: none;
+  }
+  .wrap.lesson {
+    display: block;
+    max-width: none;
+  }
+  html[data-depth] .deep {
+    display: block !important;
+  }
+  .viz,
+  .takeaways,
+  .qz,
+  .callout,
+  .prose pre,
+  .prose table,
+  .dc {
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+  .prose h2,
+  .prose h3 {
+    break-after: avoid;
+  }
+  .prose a {
+    background: none;
+    border: 0;
+    text-decoration: underline;
+  }
+  .prose a[href^='http']::after {
+    content: ' (' attr(href) ')';
+    font-size: 0.8em;
+    color: #444;
+    word-break: break-all;
+  }
+  .term {
+    border: 0;
+  }
+  [data-reveal],
+  html.js [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+.pp-assumes {
+  margin-top: 1rem;
+  padding: 0.7rem 1rem;
+  border: 2px dashed var(--line);
+  border-radius: var(--r-sm);
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  color: var(--ink-2);
+}
+.pp-assumes b {
+  color: var(--ink);
+}
+.pp-result-alt {
+  margin-top: 0.7rem;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  color: var(--ink-2);
+}
+
+/* ---------- path next (lesson pages) ---------- */
+
+.path-next {
+  margin-top: 2rem;
+  padding: 1rem 1.2rem 1.1rem;
+  border: 2px solid var(--ink);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  box-shadow: 4px 4px 0 var(--c);
+  font-family: var(--font-display);
+  display: grid;
+  gap: 0.6rem;
+}
+.path-next-where {
+  font-size: 0.9rem;
+  color: var(--ink-3);
+}
+.path-next-where a {
+  font-weight: 700;
+  color: var(--ink);
+}
+.path-next-bar {
+  display: flex;
+  gap: 3px;
+}
+.path-next-bar i {
+  flex: 1;
+  height: 6px;
+  border-radius: 6px;
+  background: var(--line-soft);
+}
+.path-next-bar i.past {
+  background: var(--c);
+  opacity: 0.55;
+}
+.path-next-bar i.now {
+  background: var(--c);
+}
+.path-next-go {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--c) 16%, transparent);
+  text-decoration: none;
+  transition: transform 0.25s var(--pop);
+}
+.path-next-go:hover {
+  transform: translateX(4px);
+  color: var(--ink);
+}
+.path-next-go small {
+  font-size: 0.8rem;
+  color: var(--ink-3);
+}
+.path-next-go b {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+/* ---------- progress page ---------- */
+
+.pg {
+  display: grid;
+  gap: 2.2rem;
+  padding-top: 1.6rem;
+  font-family: var(--font-display);
+}
+.pg h2 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin-bottom: 0.8rem;
+}
+.pg-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 1rem;
+  margin: 0;
+}
+.pg-big b {
+  display: block;
+  font-size: 2.6rem;
+  font-weight: 800;
+  line-height: 1;
+}
+.pg-big span,
+.pg-path span {
+  font-size: 0.9rem;
+  color: var(--ink-3);
+}
+.pg-path {
+  display: grid;
+  align-content: center;
+  gap: 0.2rem;
+}
+.pg-path a {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+.pg-tracks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+.pg-tracks li {
+  display: grid;
+  grid-template-columns: minmax(150px, 16rem) minmax(0, 1fr) 3.5rem;
+  gap: 1rem;
+  align-items: center;
+}
+.pg-tracks a {
+  font-weight: 650;
+  text-decoration: none;
+}
+.pg-bar {
+  height: 10px;
+  border-radius: 10px;
+  background: var(--line-soft);
+  overflow: hidden;
+}
+.pg-bar > span {
+  display: block;
+  height: 100%;
+  background: var(--c);
+  transform-origin: left;
+}
+.pg-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.pg-row h3 {
+  font-size: 1.1rem;
+}
+.pg-review {
+  margin: 0;
+}
+.pg-games {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.3rem;
+}
+.pg-games li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--line-soft);
+  text-transform: capitalize;
+}
+@media (max-width: 640px) {
+  .pg-tracks li {
+    grid-template-columns: 1fr 3rem;
+  }
+  .pg-tracks .pg-bar {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}
+
+/* ---------- teach page ---------- */
+
+.course-sessions {
+  margin: 1.2rem 0 0;
+  padding-left: 1.4rem;
+  display: grid;
+  gap: 1.2rem;
+  max-width: 70ch;
+}
+.course-sessions h3 {
+  font-size: 1.2rem;
+}
+.course-sessions h3 .num {
+  font-weight: 500;
+  color: var(--ink-3);
+  font-size: 0.95rem;
+}
+.course-sessions p {
+  margin-top: 0.3rem;
+  font-size: 1.02rem;
+  line-height: 1.5;
+}
+.course-sessions b {
+  font-family: var(--font-display);
+}
+
+.gl-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.8rem 1.4rem;
+}
+.gl-basic {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-display);
+  font-weight: 600;
+  cursor: pointer;
+}
+.gl-basic input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--signal);
+}
+.gl-badge {
+  margin-left: 0.6rem;
+  padding: 0.05rem 0.5rem;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--tint-sun);
+  font-size: 0.72rem;
+  font-weight: 700;
+  vertical-align: middle;
 }

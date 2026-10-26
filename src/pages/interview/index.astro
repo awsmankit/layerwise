@@ -1,0 +1,94 @@
+---
+import Base from '../../layouts/Base.astro';
+import QuestionBank from '../../components/interview/QuestionBank.tsx';
+import { questions, roles } from '../../data/interview';
+import { withBase } from '../../lib/url';
+
+const bank = questions.map((q) => ({ id: q.id, prompt: q.prompt, roles: q.roles, level: q.level, kind: q.kind, topics: q.topics, minutes: q.minutes }));
+---
+
+<Base title="Interview prep" description="Practise AI engineering interviews, or run them: a question bank with strong-answer points, follow-ups, red flags and a shared rubric.">
+  <div class="wrap">
+    <header class="page-head">
+      <h1>Interview <span class="squig" style="--squig:#E69A00">prep</span></h1>
+      <p>
+        {questions.length} questions for AI application, ML platform and ML engineering roles, from junior to senior. The same questions serve both sides of the table: candidates practise against what a strong answer covers; interviewers score against the same points with one shared rubric.
+      </p>
+      <div class="hero-cta">
+        <a class="btn" href={withBase('/interview/practice/')}>Practise as a candidate</a>
+        <a class="btn quiet" href={withBase('/interview/run/')}>Run an interview</a>
+      </div>
+    </header>
+
+    <div class="prose iv-guide">
+      <h2 id="rounds">The rounds, and how to answer each</h2>
+
+      <h3>Explain a concept</h3>
+      <p>Tests whether you understand a mechanism well enough to reason about it, not whether you memorised a definition. Start with one plain sentence, then the mechanism, then a consequence that matters in practice (cost, latency, a failure). Expect the follow-ups to push one level deeper each time.</p>
+
+      <h3>Estimation</h3>
+      <ol>
+        <li>Write down the assumptions out loud, with units.</li>
+        <li>Use round numbers and say so.</li>
+        <li>Do the arithmetic in steps someone can check.</li>
+        <li>Sanity-check the answer against something you know.</li>
+        <li>Say which assumption moves the answer most.</li>
+      </ol>
+      <p>The formulas that come up most:</p>
+      <ul>
+        <li>Weight memory = parameters × bytes per parameter (2 for FP16 or BF16, 1 for 8-bit, about 0.5 for 4-bit).</li>
+        <li>KV cache per token = 2 × layers × KV heads × head dimension × bytes per value; multiply by tokens and concurrent sequences.</li>
+        <li>Decode speed per user is at most about memory bandwidth ÷ bytes read per step (weights plus that user’s cache).</li>
+        <li>Cost per request = input tokens × input price + output tokens × output price.</li>
+        <li>Self-hosted cost per million tokens = GPU cost per hour ÷ (tokens per second × utilisation × 3,600) × 1,000,000.</li>
+      </ul>
+      <p>Practise with <a href={withBase('/play/fit-the-model/')}>Fit the Model</a> and <a href={withBase('/play/rack-and-stack/')}>Rack &amp; Stack</a>.</p>
+
+      <h3>System design</h3>
+      <ol>
+        <li><strong>Clarify.</strong> Users, traffic, latency target, quality bar, data sensitivity, budget. Ask; do not assume.</li>
+        <li><strong>Estimate.</strong> Requests per second, tokens per request, cost per day. One minute of arithmetic prevents a wrong design.</li>
+        <li><strong>Sketch the simplest thing that works.</strong> Components and data flow, end to end.</li>
+        <li><strong>Go deep on the risky part.</strong> Usually retrieval quality, access control, or serving capacity.</li>
+        <li><strong>Failure modes.</strong> What breaks, how you notice, what users see, the fallback.</li>
+        <li><strong>Evals and operations.</strong> How you know it works before launch and keep knowing after.</li>
+        <li><strong>Trade-offs.</strong> Name what you gave up and when you would revisit it.</li>
+      </ol>
+      <p>Practise with <a href={withBase('/play/blueprint/')}>Blueprint</a>. The lessons on <a href={withBase('/learn/systems/rag-service-architecture/')}>RAG service architecture</a> and <a href={withBase('/learn/systems/model-routing-and-fallbacks/')}>routing and fallbacks</a> are the reference designs.</p>
+
+      <h3>Debugging</h3>
+      <p>Restate the symptom, ask for the evidence that would separate the likely causes, rule causes out one by one, and finish with both a fix and a way to catch it next time. Interviewers watch your order of investigation more than the answer. <a href={withBase('/play/incident-room/')}>Incident Room</a> is built for exactly this.</p>
+
+      <h3>Coding</h3>
+      <p>Common AI exercises: scaled dot-product attention with a causal mask, sampling with temperature and top-p, cosine top-k retrieval, precision and recall from predictions, and retry with exponential backoff and jitter. Talk through edge cases (empty input, ties, numerical stability) and the complexity.</p>
+
+      <h3>Behavioural</h3>
+      <p>Use situation, task, action, result, and keep the action part the longest. Good AI stories: an evaluation you built that changed a decision, a model or prompt change you rolled back, a cost you cut without hurting quality, a time you said no to launching something with weak evals. Bring numbers, and say what you would do differently.</p>
+
+      <h2 id="interviewers">For interviewers</h2>
+      <ul>
+        <li><strong>Same set for every candidate for a role.</strong> The interview builder makes a reproducible set from a name, and gives you a link to share with other interviewers.</li>
+        <li><strong>Score on evidence.</strong> Tick the points the candidate actually made; write what they said, not your impression. The four-point rubric is the same for every question.</li>
+        <li><strong>Ask the follow-ups in order.</strong> They escalate, so how far a candidate gets is a useful signal of level.</li>
+        <li><strong>Avoid trivia.</strong> Product names, prices and version numbers change monthly and test nothing that matters. The question bank deliberately avoids them.</li>
+        <li><strong>Leave five minutes</strong> for the candidate’s questions, and be consistent about hints.</li>
+        <li><strong>Keep it fair.</strong> Ask about the work, never about age, family, health, religion or other protected characteristics, and offer reasonable adjustments when asked.</li>
+      </ul>
+
+      <h2 id="plans">Two-week prep plans</h2>
+      <ul>
+        <li><strong>{roles['ai-eng']}:</strong> the <a href={withBase('/start/#builder')}>“I build with LLMs” path</a>, then ten practice questions a day filtered to this role, then two Blueprint levels and the Incident Room.</li>
+        <li><strong>{roles['ml-platform']}:</strong> the <a href={withBase('/start/#infra')}>infrastructure path</a>, then the estimation questions until the formulas above are automatic, then Rack &amp; Stack and Fit the Model.</li>
+        <li><strong>{roles['ml-eng']}:</strong> the <a href={withBase('/start/#student')}>student path</a>, focusing on classical ML, transformers and fine-tuning, then the concept and coding questions.</li>
+      </ul>
+    </div>
+
+    <section class="section" aria-labelledby="bank-h">
+      <div class="section-head">
+        <h2 id="bank-h">All questions</h2>
+        <p>Open one to read it, then practise it or see what a strong answer covers.</p>
+      </div>
+      <QuestionBank client:load items={bank} />
+    </section>
+  </div>
+</Base>

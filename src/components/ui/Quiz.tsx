@@ -17,8 +17,8 @@ function mulberry32(seed: number) {
 }
 const hash = (s: string) => [...s].reduce((h, c) => (Math.imul(h, 31) + c.charCodeAt(0)) | 0, 7);
 
-export function shuffled(item: QuizItem, id: string, n: number) {
-  const rnd = mulberry32(hash(`${id}:${n}`));
+export function shuffled(item: QuizItem, id: string, n: number, attempt = 0) {
+  const rnd = mulberry32(hash(`${id}:${n}:${attempt}`));
   const order = item.options.map((_, i) => i);
   for (let i = order.length - 1; i > 0; i--) {
     const j = Math.floor(rnd() * (i + 1));
@@ -31,7 +31,8 @@ type Result = { score: number; total: number };
 
 export default function Quiz({ id, items }: { id: string; items: QuizItem[] }) {
   const [saved, setSaved] = useStore<Record<string, Result>>(KEYS.quiz, {});
-  const orders = useMemo(() => items.map((it, n) => shuffled(it, id, n)), [items, id]);
+  const [attempt, setAttempt] = useState(0);
+  const orders = useMemo(() => items.map((it, n) => shuffled(it, id, n, attempt)), [items, id, attempt]);
   const [picked, setPicked] = useState<(number | null)[]>(() => items.map(() => null));
   const [burst, setBurst] = useState(0);
   const [shakeKey, setShakeKey] = useState<string | null>(null);
@@ -56,7 +57,10 @@ export default function Quiz({ id, items }: { id: string; items: QuizItem[] }) {
     }
   };
 
-  const reset = () => setPicked(items.map(() => null));
+  const reset = () => {
+    setPicked(items.map(() => null));
+    setAttempt((a) => a + 1); // new answer order, so a retry tests understanding, not memory of positions
+  };
 
   return (
     <Root>

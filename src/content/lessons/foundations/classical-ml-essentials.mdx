@@ -1,0 +1,141 @@
+---
+title: Classical ML essentials that still matter
+track: foundations
+level: intermediate
+order: 7
+summary: Splits, leakage, overfitting, the metrics that interviewers probe, choosing a threshold from the cost of errors, and how all of it carries over to evaluating LLMs.
+updated: 2026-10-26
+sources:
+  - label: "scikit-learn: Cross-validation, evaluating estimator performance"
+    url: https://scikit-learn.org/stable/modules/cross_validation.html
+  - label: "scikit-learn: Common pitfalls and recommended practices (data leakage)"
+    url: https://scikit-learn.org/stable/common_pitfalls.html
+  - label: "scikit-learn: Probability calibration"
+    url: https://scikit-learn.org/stable/modules/calibration.html
+  - label: "Why do tree-based models still outperform deep learning on tabular data? (Grinsztajn, Oyallon and Varoquaux, 2022)"
+    url: https://arxiv.org/abs/2207.08815
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import Disclosure from '../../../components/viz/Disclosure.tsx';
+
+Large language models did not make classical machine learning obsolete. The habits that keep a fraud model honest are the same ones that keep an LLM feature honest: hold data back, do not let the answer leak in, pick a metric that matches the cost of being wrong. Interviewers still test these ideas because they separate people who measured something from people who hoped.
+
+## Splits: train, validation, test
+
+- **Training set:** the model learns from it.
+- **Validation set:** you use it to choose settings (features, hyperparameters, thresholds, prompts).
+- **Test set:** touched once, at the end, to estimate how the final choice will do on new data.
+
+Every time you look at a score and change something, that data stops being an unbiased estimate. That is why the test set is kept apart from the validation set.
+
+**Cross-validation** splits the non-test data into k folds, trains k times, and validates on each fold in turn. It gives a steadier estimate when data is scarce. Two variants matter in practice:
+
+- **Time-based splits.** If the model will predict the future, train on the past and validate on later data. A random split lets the model peek at the future. scikit-learn's `TimeSeriesSplit` does this.
+- **Group splits.** If one customer or patient has many rows, keep all of their rows on the same side (`GroupKFold`). Otherwise the model can recognise the person rather than learn the pattern.
+
+## Data leakage
+
+Leakage means the model is trained with information it will not have at prediction time. Scores look excellent, then production disappoints.
+
+1. **A feature that encodes the label.** A churn model includes "account closure date". It is only filled in for customers who already left, so the model learns to read the answer.
+2. **Preprocessing fitted on all the data.** Scaling, imputation or feature selection fitted before splitting lets test-set statistics shape training. The scikit-learn docs show feature selection on pure noise scoring well above chance this way. The fix is to split first and fit preprocessing inside a pipeline, on the training fold only.
+
+Duplicates across splits and random splits on time series are the other usual suspects.
+
+## Overfitting, bias and variance
+
+**Overfitting** is learning the training set's noise: training error keeps falling while validation error rises. **Bias** is error from a model too simple to capture the pattern (underfitting). **Variance** is error from a model so flexible that it changes a lot with the particular sample it saw. More capacity lowers bias and raises variance; more data lowers variance.
+
+**Regularisation** pushes toward simpler models:
+
+| Method | What it does |
+|---|---|
+| L2 (ridge, weight decay) | Penalises large weights; shrinks them all smoothly |
+| L1 (lasso) | Penalises absolute weights; drives some to exactly zero, so it also selects features |
+| Early stopping | Stop training when validation loss stops improving |
+| Dropout | Randomly zeroes units during training so the network cannot rely on any single one |
+
+## Classification metrics, with real numbers
+
+A fraud model scores 1,000 transactions. 50 are really fraud. The model flags 60, of which 40 are fraud.
+
+| | Predicted fraud | Predicted fine |
+|---|---|---|
+| **Actually fraud (50)** | TP = 40 | FN = 10 |
+| **Actually fine (950)** | FP = 20 | TN = 930 |
+
+- **Accuracy** = (TP + TN) / total = (40 + 930) / 1,000 = **0.97**
+- **Precision** = TP / (TP + FP) = 40 / 60 = **0.667** (of what was flagged, how much was fraud)
+- **Recall** = TP / (TP + FN) = 40 / 50 = **0.80** (of the fraud, how much was caught)
+- **F1** = 2 x P x R / (P + R) = 2 x 0.667 x 0.80 / 1.467 = **0.727**, which equals 2TP / (2TP + FP + FN) = 80 / 110
+
+Now the trap: a model that never flags anything scores accuracy 950 / 1,000 = **0.95**, with recall 0. On imbalanced data accuracy mostly measures the majority class. Report precision and recall, or a cost.
+
+## Choosing a threshold from the cost of errors
+
+Most classifiers output a score, and a threshold turns it into a decision. Lowering the threshold raises recall and usually lowers precision. Pick the threshold by cost, not by habit (0.5 is a default, not a decision).
+
+Suppose a missed fraud costs 100 times as much as a false alarm. At the current threshold the cost is 100 x 10 + 1 x 20 = **1,020** units. A lower threshold that gives FN = 4 and FP = 80 costs 100 x 4 + 80 = **480**: worse precision, much better business result. Choose thresholds on the validation set, then confirm once on test.
+
+<Deep title="The cost-optimal threshold for calibrated scores">
+If the scores are calibrated probabilities p, flagging costs C_FP x (1 - p) in expectation and not flagging costs C_FN x p. Flag when p is greater than C_FP / (C_FP + C_FN). With a 100-to-1 cost ratio that is 1 / 101, about 0.0099. The formula only holds if the probabilities are calibrated, which is the next section.
+</Deep>
+
+## Calibration
+
+A model is **calibrated** if, among cases it scores 0.8, about 80% are positive. Ranking can be excellent while probabilities are badly off. You need calibration whenever a probability feeds a decision, a cost formula or a human. Check it with a reliability plot (predicted versus observed rate, in bins). Fix it with Platt scaling (a sigmoid) or isotonic regression, fitted on data the model was not trained on. Resampling and class weights shift predicted probabilities, so recalibrate after using them.
+
+## Regression metrics, briefly
+
+**MAE** (mean absolute error) is the average size of the error, in the target's units, and treats all errors linearly. **RMSE** (root mean squared error) squares errors before averaging, so large misses dominate. RMSE is always at least MAE; a big gap between them means a few large errors.
+
+## Class imbalance remedies
+
+- **Class weights:** make mistakes on the rare class cost more in the loss. Usually the first thing to try.
+- **Resampling:** oversample the rare class or undersample the common one, **in the training set only**. Resampling before splitting puts copies of the same example in train and test, which is leakage.
+- **Better metrics and a cost-based threshold** often do more than either.
+
+## The tabular baseline
+
+For tables of rows and columns, gradient-boosted trees (XGBoost, LightGBM, CatBoost) are the baseline to beat. A 2022 benchmark study found tree-based models still ahead of deep learning on typical medium-sized tabular data. They need little preprocessing and train quickly. An LLM is rarely the right first tool for a table of numbers.
+
+<Deep title="ROC versus PR curves, and when each misleads">
+
+The **ROC curve** plots recall (true positive rate) against false positive rate, FPR = FP / (FP + TN), across all thresholds. **ROC-AUC** is the probability that a random positive is scored above a random negative. A random model scores 0.5 whatever the class balance.
+
+The **PR curve** plots precision against recall. Its area (often reported as average precision) has a random baseline equal to the positive rate: 0.05 in the fraud example.
+
+**ROC misleads under heavy imbalance.** FPR divides by the number of negatives, which is huge. In the example FPR = 20 / 950, about 0.021, which looks tiny. With a million negatives, an FPR of 1% is 10,000 false alarms. ROC-AUC can be high while precision is unusable.
+
+**PR misleads when compared across datasets.** It depends on prevalence, so the same model shows a lower PR-AUC on data with fewer positives. Do not compare PR-AUC between test sets with different positive rates, and always state the baseline.
+
+Rule of thumb: when positives are rare and false alarms cost real effort, look at PR. When you care about ranking quality independent of prevalence, ROC is fine. Neither picks your threshold; cost does.
+
+</Deep>
+
+## How this maps onto LLM evaluation
+
+| Classical idea | LLM version |
+|---|---|
+| Held-out test set | A frozen eval set you do not tune prompts against |
+| Leakage | Benchmark questions that appeared in pretraining data (contamination) |
+| Overfitting to validation | Rewriting the prompt until one small eval set passes |
+| Precision and recall | Guardrails, classifiers and retrieval built on LLMs: missed harms versus false refusals |
+| Calibration | Whether a model's or judge's stated confidence matches how often it is right |
+| Imbalance | Rare but critical failure types hidden inside a high average score |
+
+<Disclosure client:visible title="A quick interview check">
+
+If asked "your model is 99% accurate, is it good?", ask for the positive rate, the confusion matrix and the cost of each error type. If asked "how would you evaluate an LLM classifier?", answer with a labelled held-out set, precision and recall per class, a threshold chosen by cost, and a check that the eval data was not in the training or prompt-tuning loop.
+
+</Disclosure>
+
+## What to take forward
+
+- Split before you do anything else, by time or group when the data demands it.
+- Leakage is the most common reason for a model that tests well and fails in production.
+- Accuracy hides failure on imbalanced data; use precision, recall and a cost.
+- Choose the threshold from the cost of errors, and calibrate before trusting probabilities.
+- Gradient-boosted trees are the tabular baseline, and every one of these habits applies to LLM evals. See [Evals 101](../../evals/evals-101/).

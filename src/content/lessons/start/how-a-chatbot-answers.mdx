@@ -14,6 +14,7 @@ sources:
 
 import NextToken from '../../../components/viz/NextToken.tsx';
 import Callout from '../../../components/ui/Callout.astro';
+import Disclosure from '../../../components/viz/Disclosure.tsx';
 import Deep from '../../../components/ui/Deep.astro';
 
 When you press enter, the chatbot does not look up an answer. It writes one, a small piece at a time. Understanding that single fact explains most of the strange behaviour people notice.
@@ -63,5 +64,13 @@ Treat a chatbot like a fast, well-read colleague who writes fluently and sometim
 - Why does the factual example nearly always give "Paris" but the weather example varies?
 - What would you set the temperature to for writing a legal clause, and why? What about for brainstorming product names?
 - A model gives you a perfect-looking citation. What is the right response?
+
+<Disclosure client:visible title="Show suggested answers">
+
+- **Paris versus the weather.** For the capital of France, one word is far more likely than any other, so even with some chance involved it wins nearly every time. For the weather, many words are about equally plausible, so chance picks different ones.
+- **Temperature.** Low for a legal clause, because you want the most likely, precise wording and the same result each time. Higher for brainstorming names, because unusual words are exactly what you want there.
+- **The citation.** Look it up yourself. A citation that looks perfect is exactly what a model produces when it is guessing, so only the source itself can confirm it.
+
+</Disclosure>
 
 Next: [Using AI without getting burned](../using-ai-without-getting-burned/).

@@ -20,9 +20,19 @@ describe('search', () => {
     expect(search(items, 'quant')[0].u).toBe('/e');
   });
 
-  it('requires every word to match', () => {
-    expect(search(items, 'cache gpu').map((i) => i.u)).toEqual(['/a']);
-    expect(search(items, 'cache banana')).toEqual([]);
+  it('ranks results matching every word first', () => {
+    expect(search(items, 'cache gpu')[0].u).toBe('/a');
+  });
+
+  it('keeps partial matches for multi-word queries, below full matches', () => {
+    const r = search(items, 'cache banana').map((i) => i.u);
+    expect(r.length).toBeGreaterThan(0);
+    expect(search(items, 'kv cache memory')[0].u).toBe('/a');
+  });
+
+  it('drops results matching too few words', () => {
+    expect(search(items, 'banana mango cache')).toEqual([]);
+    expect(search(items, 'banana')).toEqual([]);
   });
 
   it('also matches descriptions', () => {

@@ -1,0 +1,105 @@
+---
+title: "Multimodal models: images, audio and text together"
+track: foundations
+level: intermediate
+order: 8
+summary: How images and sound are turned into something a language model can read, what contrastive training like CLIP enables, and the cost, device and failure-mode questions to ask before you ship.
+updated: 2026-10-26
+sources:
+  - label: "Learning Transferable Visual Models From Natural Language Supervision, CLIP (Radford et al., 2021)"
+    url: https://arxiv.org/abs/2103.00020
+  - label: "Robust Speech Recognition via Large-Scale Weak Supervision, Whisper (Radford et al., 2022)"
+    url: https://arxiv.org/abs/2212.04356
+  - label: "An Image is Worth 16x16 Words, Vision Transformer (Dosovitskiy et al., 2020)"
+    url: https://arxiv.org/abs/2010.11929
+  - label: "Visual Instruction Tuning, LLaVA (Liu et al., 2023)"
+    url: https://arxiv.org/abs/2304.08485
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import PipelineFlow from '../../../components/viz/PipelineFlow.tsx';
+
+A language model works on a sequence of vectors. A multimodal model is mostly a set of tricks for turning pictures and sound into vectors that can sit in that same sequence. Once you see that, the costs, the latency and most of the failure modes make sense.
+
+## How an image becomes tokens
+
+<PipelineFlow
+  client:visible
+  title="From pixels to the language model"
+  stages={[
+    { title: 'Resize', detail: 'The image is resized or tiled to the resolution the model expects. Larger or more tiles mean more pieces later.' },
+    { title: 'Patches', detail: 'The image is cut into a grid of small square patches. Each patch is flattened into a list of numbers.' },
+    { title: 'Vision encoder', detail: 'A transformer (often a Vision Transformer) turns the patches into vectors that describe what is in each region, in context of the others.' },
+    { title: 'Projection', detail: 'A small learned layer maps those vectors into the same space as the language model’s token embeddings.' },
+    { title: 'Language model', detail: 'The projected image vectors are placed in the sequence next to the text tokens. Attention lets every text token look at them.' },
+  ]}
+  caption="The common recipe for vision-language models. Details vary by model."
+/>
+
+The Vision Transformer paper put the idea in its title: an image is worth 16x16 words. Each patch plays the role a word plays in text. The key consequence is that **the number of image tokens grows with resolution**. A high-resolution screenshot cut into many tiles becomes a long sequence, and the model pays for every piece of it.
+
+## Contrastive training: CLIP
+
+CLIP trained two encoders side by side, one for images and one for text, on 400 million image and caption pairs collected from the internet. In each batch the model sees many pairs. Training pulls the vector of each image toward the vector of its own caption and pushes it away from every other caption in the batch. That is what **contrastive** means.
+
+The result is a **shared embedding space**: a photo of a dog and the sentence "a photo of a dog" land near each other. That enables:
+
+- **Zero-shot classification.** Write one sentence per label ("a photo of a cat", "a photo of a truck"), embed them, and pick the label whose sentence is closest to the image. No labelled training examples for those classes are needed.
+- **Image search.** Embed your image library once, then search it with a text query, or with another image. It is the same nearest-neighbour search used for text in [tokens and embeddings](../tokens-and-embeddings/).
+
+CLIP-style models match and rank. They do not write answers.
+
+## Vision-language models that answer questions
+
+To describe a chart, read a receipt or answer "what is wrong with this screenshot", you need a model that generates text. The usual recipe, as in LLaVA, takes a pretrained vision encoder, a pretrained language model and a projection between them. The projection is trained first on image and caption pairs, then the system is tuned on instruction-style conversations about images. The language model does the reasoning; the encoder decides what it can see.
+
+## Speech and audio
+
+| Task | Input to output | Example |
+|---|---|---|
+| Automatic speech recognition (ASR) | Audio to text | Whisper |
+| Text-to-speech (TTS) | Text to audio | Voice assistants, screen readers |
+| Audio understanding | Audio to text answer | "What is the speaker’s tone?" |
+| Speech-to-speech | Audio to audio | Real-time voice agents |
+
+Whisper is an encoder-decoder transformer trained on about 680,000 hours of audio paired with transcripts from the internet. The audio is converted to a spectrogram (a picture of energy at each frequency over time), the encoder reads it, and the decoder writes text.
+
+A voice product can be built two ways. A **pipeline** runs ASR, then a text model, then TTS. Each part is replaceable and testable, but latency adds up and tone of voice is lost at the transcript. A **native audio model** turns sound into **audio tokens**, usually by a learned codec that compresses short slices of audio into entries from a fixed vocabulary, so one model can read and produce sound directly. It can respond faster and hear emphasis, but it is harder to inspect.
+
+## Latency and cost
+
+Images and audio consume many tokens, often far more than the text around them. How many depends on image resolution and tiling, and on audio duration, and every provider counts differently, so **check your provider’s docs for how they count**. Practical levers:
+
+- Downscale or crop images to the region that matters.
+- Send a few key frames from a video, not every frame.
+- Transcribe audio once and reuse the text if tone is not needed.
+- Measure the time to first token with real media, not with a text-only test.
+
+<Callout kind="edge" title="On the device">
+Audio and vision on a phone, camera or wearable meet hard limits: memory, battery, heat and always-on power draw. Common designs run a small model on the device (wake word, voice activity detection, noise reduction, a compact ASR) and send only what is needed to the cloud. Raw audio and images staying on the device is also a privacy feature. See [edge versus cloud inference](../../edge/edge-vs-cloud-inference/).
+</Callout>
+
+## Evaluation and failure modes
+
+| Failure | What it looks like | How to test |
+|---|---|---|
+| OCR errors | Misread digits, dropped table rows, small or rotated text | Score extracted fields exactly against a labelled set of your real documents |
+| Hallucinated objects | Describes things that are not in the image | Ask about absent objects; check every claim against the image |
+| Counting and spatial relations | Wrong counts, left and right confused | Targeted test images with known answers |
+| Accents and noise | ASR errors rise for some speakers and environments | Report error rates per accent, device and noise condition |
+| Invented speech | Fluent text produced during silence or noise | Include silent and noisy clips in the test set |
+
+The general rule: evaluate on media that looks like production. Clean benchmark images and studio audio tell you little about photos taken on a phone in bad light, or speech recorded in a car.
+
+<Deep title="Word error rate, worked">
+ASR is usually scored with word error rate: WER = (substitutions + deletions + insertions) / words in the reference. A 10-word reference transcribed with 1 wrong word, 1 missing word and 1 extra word has WER = 3 / 10 = 0.30. WER can exceed 1.0 when the output has many insertions. It weighs every word equally, so a wrong drug name counts the same as a wrong "the". For critical terms, also score them separately.
+</Deep>
+
+## What to take forward
+
+- Images become patch vectors, a vision encoder reads them, and a projection maps them into the language model’s embedding space.
+- CLIP-style contrastive training builds a shared image and text space for zero-shot labels and image search.
+- Speech systems are either a pipeline (ASR, text model, TTS) or a native audio model using audio tokens.
+- Media is expensive in tokens and latency; resolution and duration drive it, and providers count differently.
+- Test on realistic media and report failures by condition, not as one average.

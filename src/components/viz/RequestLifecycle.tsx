@@ -344,7 +344,7 @@ export default function RequestLifecycle() {
               <span>
                 Output tokens <b>{fmt.int(outputTokens)}</b>
               </span>
-              <input type="range" min={10} max={4000} step={10} value={outputTokens} onChange={(e) => setOutputTokens(+e.target.value)} />
+              <input type="range" min={10} max={20000} step={10} value={outputTokens} onChange={(e) => setOutputTokens(+e.target.value)} />
             </label>
             <label className="field">
               <span>

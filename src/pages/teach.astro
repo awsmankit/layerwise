@@ -1,0 +1,69 @@
+---
+import Base from '../layouts/Base.astro';
+import { courses } from '../data/courses';
+import { getLessons, lessonPath, slugOf } from '../lib/content';
+import { withBase } from '../lib/url';
+
+const all = await getLessons();
+const byKey = Object.fromEntries(all.map((l) => [`${l.data.track}/${slugOf(l)}`, l]));
+for (const c of courses) for (const s of c.sessions) for (const k of s.lessons) if (!byKey[k]) throw new Error(`Course "${c.id}" refers to a missing lesson: ${k}`);
+---
+
+<Base title="For teachers" description="Course plans, classroom activities and practical tips for teaching AI engineering with Layerwise.">
+  <div class="wrap">
+    <header class="page-head">
+      <h1>For <span class="squig" style="--squig:#0A9F85">teachers</span></h1>
+      <p>Ready-made plans for a half-day workshop, a one-day platform workshop and a six-week course, built from the lessons, games and quizzes on this site. Adapt them freely to your group.</p>
+    </header>
+
+    <div class="prose" style="margin-top:2rem">
+      <h2>How the site works in a classroom</h2>
+      <ul>
+        <li><strong>Assign a path, not a list.</strong> Send students to <a href={withBase('/start/')}>Choose a path</a>; each lesson then shows “next in your path”, so nobody gets lost.</li>
+        <li><strong>Project the interactive pictures.</strong> They are built to be explained live: the request lifecycle, attention, the next-word demo, the parallelism diagram.</li>
+        <li><strong>Games work well in pairs.</strong> Incident Room makes a good group debugging exercise; Blueprint and Rack &amp; Stack make good “defend your design” discussions.</li>
+        <li><strong>Print handouts.</strong> Printing a lesson gives a clean handout with the summary and all the deeper sections expanded.</li>
+        <li><strong>Collect progress.</strong> Progress stays in each student’s browser. On <a href={withBase('/progress/')}>Your progress</a> they can download a file or print a summary to hand in.</li>
+        <li><strong>Mock interviews.</strong> The <a href={withBase('/interview/')}>interview question bank</a> gives discussion questions with model answers, and the interviewer mode gives a consistent rubric for peer assessment.</li>
+        <li><strong>Check the dates.</strong> Cloud product names, GPU specs and prices change. Lessons date their volatile facts; check those against the vendor pages before you teach them.</li>
+      </ul>
+    </div>
+
+    {
+      courses.map((c) => (
+        <section class="track course" id={c.id}>
+          <div class="track-head">
+            <h2>{c.title}</h2>
+            <p>
+              {c.audience} {c.length}.
+            </p>
+          </div>
+          <ol class="course-sessions">
+            {c.sessions.map((s) => (
+              <li>
+                <h3>
+                  {s.title} <span class="num">({s.minutes} min)</span>
+                </h3>
+                <p>
+                  <b>Read:</b>{' '}
+                  {s.lessons.map((k, i) => (
+                    <>
+                      {i > 0 && ', '}
+                      <a href={withBase(lessonPath(byKey[k]))}>{byKey[k].data.title}</a>
+                    </>
+                  ))}
+                </p>
+                <p>
+                  <b>Activity:</b> {s.activity}
+                </p>
+                <p>
+                  <b>Check:</b> {s.check}
+                </p>
+              </li>
+            ))}
+          </ol>
+        </section>
+      ))
+    }
+  </div>
+</Base>

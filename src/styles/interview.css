@@ -1,0 +1,412 @@
+/* Interview prep: practice, interviewer sheets, question bank. */
+
+.iv {
+  display: grid;
+  gap: 1.6rem;
+  padding-top: 1.5rem;
+  font-family: var(--font-display);
+}
+.iv-setup {
+  margin: 0;
+}
+.iv-setup-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.iv-setup-foot .gm-note {
+  max-width: 60ch;
+}
+.iv-input {
+  width: 100%;
+  font: inherit;
+  font-size: 0.98rem;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  padding: 0.35rem 0.2rem;
+}
+.iv-q {
+  padding: 1.4rem 1.5rem 1.5rem;
+  background: var(--surface);
+  border: 2px solid var(--ink);
+  border-radius: var(--r-md);
+  box-shadow: var(--hard);
+}
+.iv-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+.iv-chip {
+  padding: 0.12rem 0.6rem;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--tint-lilac);
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.iv-chip.k-design {
+  background: var(--tint-sky);
+}
+.iv-chip.k-estimation {
+  background: var(--tint-sun);
+}
+.iv-chip.k-debugging {
+  background: var(--tint-pink);
+}
+.iv-chip.k-coding {
+  background: var(--tint-mint);
+}
+.iv-chip.k-behavioural {
+  background: var(--paper-2);
+}
+.iv-tag {
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  color: var(--ink-3);
+}
+.iv-tag::before {
+  content: '#';
+}
+.iv-prompt {
+  margin-top: 0.8rem;
+  font-size: clamp(1.3rem, 2.4vw, 1.75rem);
+  font-weight: 750;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  max-width: 70ch;
+}
+.iv-prompt.big {
+  font-size: clamp(1.6rem, 3.2vw, 2.4rem);
+}
+.iv-answer,
+.iv-check {
+  margin-top: 1.3rem;
+  display: grid;
+  gap: 1rem;
+}
+.iv-check h3 {
+  margin-top: 0.8rem;
+  font-size: 1.15rem;
+}
+.iv-timer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem;
+}
+.iv-timer-ring {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+  background: conic-gradient(var(--signal) calc(var(--p) * 360deg), var(--line-soft) 0);
+}
+.iv-timer.over .iv-timer-ring {
+  background: var(--warn);
+}
+.iv-timer-read {
+  min-width: 7.5rem;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+.iv-timer.over .iv-timer-read {
+  color: var(--warn);
+}
+.iv-notes {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  color: var(--ink-3);
+}
+.iv-notes textarea {
+  width: 100%;
+  font: inherit;
+  font-family: var(--font-body);
+  font-size: 1.02rem;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: var(--r-sm);
+  padding: 0.7rem 0.9rem;
+  resize: vertical;
+}
+.iv-answer .btn,
+.iv-check > .btn {
+  justify-self: start;
+}
+.iv-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+.iv-list label,
+.iv-follow label {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.45;
+  transition: background 0.2s, border-color 0.2s;
+}
+.iv-list label input,
+.iv-follow label input {
+  margin-top: 0.25rem;
+  accent-color: var(--ok);
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+.iv-list label.on {
+  background: color-mix(in srgb, var(--ok) 12%, transparent);
+  border-color: var(--ok);
+}
+.iv-list.flags label.on {
+  background: color-mix(in srgb, var(--warn) 12%, transparent);
+  border-color: var(--warn);
+}
+.iv-list.flags input {
+  accent-color: var(--warn);
+}
+.iv-follow {
+  margin: 0;
+  padding-left: 1.3rem;
+  display: grid;
+  gap: 0.8rem;
+}
+.iv-follow b {
+  font-weight: 700;
+}
+.iv-follow p {
+  margin: 0.25rem 0 0.4rem;
+  font-family: var(--font-body);
+  color: var(--ink-2);
+}
+.iv-follow p span {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--ok);
+}
+.iv-follow label {
+  display: inline-flex;
+  padding: 0.3rem 0.6rem;
+  font-family: var(--font-display);
+  font-size: 0.88rem;
+}
+.iv-follow label.on {
+  background: color-mix(in srgb, var(--ok) 12%, transparent);
+  border-color: var(--ok);
+}
+.iv-rubric {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+.iv-score {
+  display: grid;
+  gap: 0.2rem;
+  align-content: start;
+  padding: 0.7rem 0.8rem;
+  text-align: left;
+  background: var(--paper);
+  border: 2px solid var(--line);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  font-family: var(--font-display);
+  transition: transform 0.2s var(--pop), border-color 0.2s, background 0.2s;
+}
+.iv-score b {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+.iv-score span {
+  font-weight: 700;
+}
+.iv-score small {
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: var(--ink-3);
+}
+.iv-score:hover {
+  transform: translateY(-2px);
+  border-color: var(--ink);
+}
+.iv-score.is-suggested {
+  border-style: dashed;
+  border-color: var(--signal);
+}
+.iv-score.is-on {
+  background: var(--signal);
+  border-color: var(--ink);
+  border-style: solid;
+  color: var(--on-signal);
+}
+.iv-score.is-on small {
+  color: inherit;
+  opacity: 0.85;
+}
+.iv-done {
+  display: grid;
+  gap: 0.8rem;
+  justify-items: start;
+  padding: 1rem 1.1rem;
+  background: var(--tint-mint);
+  border: 2px solid var(--ink);
+  border-radius: var(--r-md);
+}
+.iv-plan {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.8rem 1.6rem;
+}
+.iv-share {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 260px;
+  font-size: 0.9rem;
+  color: var(--ink-3);
+}
+.iv-sheet-head {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+.iv-n {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--paper);
+  font-weight: 800;
+}
+.iv-swap {
+  margin-left: auto;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.85rem;
+}
+.iv-cols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+  margin-top: 0.6rem;
+}
+.iv-cols h3,
+.sheet > h3 {
+  margin: 1rem 0 0.5rem;
+  font-size: 1.05rem;
+}
+.iv-export {
+  margin: 0;
+}
+.iv-export h2 {
+  font-size: 1.4rem;
+}
+.iv-guide h3 {
+  margin-top: 1.8em;
+}
+.iv-reveal {
+  margin-top: 2rem;
+  max-width: var(--measure);
+  border: 2px solid var(--ink);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  padding: 0.3rem 1.2rem;
+}
+.iv-reveal summary {
+  padding: 0.7rem 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  cursor: pointer;
+}
+.iv-reveal .prose {
+  padding-bottom: 1rem;
+}
+.iv-page {
+  padding-block: 2rem 0;
+}
+.iv-page .crumbs {
+  margin-bottom: 1rem;
+}
+.iv-page .gm-lessons {
+  margin-top: 1.4rem;
+}
+
+/* question bank */
+.qb-filters {
+  margin-top: 1.2rem;
+}
+.qb-row {
+  grid-template-columns: 11rem minmax(0, 1fr) 7.5rem;
+  align-items: center;
+}
+.qb-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+.qb-prompt {
+  font-family: var(--font-body);
+  font-size: 1.02rem;
+  line-height: 1.45;
+  color: var(--ink);
+}
+.qb-row em {
+  font-style: normal;
+}
+.qb-row em.weak {
+  color: var(--warn);
+}
+.qb-row em.ok {
+  color: var(--ok);
+}
+
+@media (max-width: 760px) {
+  .iv-rubric,
+  .iv-cols {
+    grid-template-columns: 1fr 1fr;
+  }
+  .iv-cols {
+    grid-template-columns: 1fr;
+  }
+  .qb-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* the interviewer sheet prints cleanly */
+@media print {
+  .iv-setup,
+  .iv-plan,
+  .iv-export,
+  .iv-swap,
+  .page-head .gm-note {
+    display: none !important;
+  }
+  .iv-q {
+    box-shadow: none !important;
+    break-inside: avoid-page;
+    border-width: 1px;
+  }
+  .iv-score small {
+    display: none;
+  }
+}

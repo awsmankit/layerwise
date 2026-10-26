@@ -1,5 +1,5 @@
 ---
-title: "Inference engines compared: llama.cpp, Ollama, vLLM, TGI, TensorRT-LLM, SGLang"
+title: "Inference engines compared: llama.cpp, Ollama, vLLM, SGLang, TensorRT-LLM"
 track: local
 level: intermediate
 order: 3
@@ -12,8 +12,8 @@ sources:
     url: https://ollama.com
   - label: "vLLM documentation"
     url: https://docs.vllm.ai
-  - label: "Hugging Face Text Generation Inference"
-    url: https://huggingface.co/docs/text-generation-inference
+  - label: "Hugging Face Text Generation Inference (maintenance-mode notice)"
+    url: https://github.com/huggingface/text-generation-inference
   - label: "NVIDIA TensorRT-LLM"
     url: https://nvidia.github.io/TensorRT-LLM/
   - label: "SGLang"
@@ -50,7 +50,7 @@ Many engines now have some version of each technique, so check what a given one 
 | llama.cpp | CPU, Apple silicon, and many GPUs | Runs almost anywhere, GGUF quantization, small footprint, built-in HTTP server | Not designed for large multi-user GPU serving | Hobbyists, developers, edge and embedded use |
 | Ollama | Mac, Windows, Linux | Very easy: one command to download and run, local API | Less tuning control, and aimed at a single machine | Beginners, personal tools, prototypes |
 | vLLM | Mainly GPU servers (NVIDIA is the best supported, other vendors vary by version) | PagedAttention, continuous batching, prefix caching, broad model support | Heavier to set up, wants a real GPU | Teams serving many users on one or a few GPUs |
-| TGI | GPU servers | Production-oriented serving from Hugging Face, tight Hub integration | Check the project's current status and supported models | Teams already using Hugging Face tooling |
+| TGI (Hugging Face) | GPU servers | Still runs existing deployments | In maintenance mode since December 2025 and archived in March 2026; Hugging Face recommends vLLM or SGLang for new work | Only teams with existing TGI deployments, planning a migration |
 | TensorRT-LLM | NVIDIA GPUs only | Highly optimised kernels, can give top performance on NVIDIA | Model compile and build steps, less flexible, vendor lock-in | NVIDIA fleets where the last bit of speed pays |
 | SGLang | GPU servers | Efficient serving, strong prefix reuse, good for structured and multi-step programs | Younger ecosystem, check model support | Teams with agent-style or heavily shared-prefix traffic |
 
@@ -74,7 +74,7 @@ See [Quantization](../../serving/quantization/) for how these methods differ.
 
 - **"I am on a Mac, and it is for me."** Start with Ollama or LM Studio. For more control use llama.cpp. If you want Apple's own stack, look at MLX.
 - **"I have a gaming PC with one GPU, for myself."** Ollama or llama.cpp. Both use the GPU and can offload to the CPU.
-- **"One server GPU, many users."** vLLM or SGLang are natural first candidates. TGI is another option if you use Hugging Face tooling.
+- **"One server GPU, many users."** vLLM or SGLang are natural first candidates. If you still run TGI, plan a move: Hugging Face put it into maintenance mode in December 2025 and points users to vLLM and SGLang.
 - **"A fleet of NVIDIA GPUs, and performance and cost per token really matter."** Consider TensorRT-LLM, possibly with a serving layer around it, and measure against vLLM or SGLang first.
 - **"An edge device or no GPU."** llama.cpp.
 - **"I am not sure."** Use the OpenAI-compatible API on whichever you start with, so you can switch later.

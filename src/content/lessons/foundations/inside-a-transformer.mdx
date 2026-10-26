@@ -1,0 +1,187 @@
+---
+title: Inside a transformer block
+track: foundations
+level: intermediate
+order: 5
+summary: Follow one token through a transformer block, from Q, K and V to the next-token choice, with the variants (GQA, RoPE, RMSNorm, mixture of experts) that interviewers ask about.
+updated: 2026-10-26
+sources:
+  - label: "Attention Is All You Need (Vaswani et al., 2017)"
+    url: https://arxiv.org/abs/1706.03762
+  - label: "RoFormer: Enhanced Transformer with Rotary Position Embedding (Su et al., 2021)"
+    url: https://arxiv.org/abs/2104.09864
+  - label: "GQA: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints (Ainslie et al., 2023)"
+    url: https://arxiv.org/abs/2305.13245
+  - label: "Switch Transformers (Fedus et al., 2021)"
+    url: https://arxiv.org/abs/2101.03961
+  - label: "Mixtral of Experts (Jiang et al., 2024)"
+    url: https://arxiv.org/abs/2401.04088
+---
+
+import NodeGraph from '../../../components/viz/NodeGraph.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+[Attention, without the mystique](../attention-intuition/) explained the core idea. This lesson opens up the rest of the block: where Q, K and V come from, what the other parts do, how position gets in, and how the last layer turns into a chosen token. It is the level of detail a good interview answer needs, without the equations unless you open them.
+
+## One token's journey
+
+Every token starts as a vector (its embedding, from [Tokens and embeddings](../tokens-and-embeddings/)). That vector passes through a stack of identical blocks, often dozens. Each block reads it, mixes in information from other tokens, transforms it, and passes it on at the same size. Click each step.
+
+<NodeGraph
+  client:visible
+  title="One token through one decoder block, then out"
+  height={440}
+  initial="qkv"
+  failuresLabel="What to watch for"
+  nodes={[
+    { id: 'emb', label: 'Token embedding', x: 9, y: 20, detail: 'The token ID is looked up in an embedding table to get a vector of size d_model, for example a few thousand numbers. Older designs add a position vector here; RoPE models add position later, inside attention.', fails: ['Rare words split into many tokens, each with its own vector'] },
+    { id: 'norm1', label: 'Norm', x: 27, y: 20, detail: 'In a pre-norm block the vector is normalised (LayerNorm or RMSNorm) before attention. The original vector is kept aside for the residual add.', fails: ['Post-norm stacks are harder to train when very deep'] },
+    { id: 'qkv', label: 'Q, K, V projections', x: 46, y: 20, detail: 'Three learned weight matrices turn the normalised vector into a query, a key and a value, then each is split into heads. The same matrices are used for every token; they are learned in training like any other weight.', fails: ['K and V for every past token must be stored: this is the KV cache'] },
+    { id: 'attn', label: 'Multi-head attention', x: 66, y: 20, kind: 'core', detail: 'Each head compares this token’s query with the keys of all earlier tokens (causal mask), turns the scores into weights with softmax, and blends their values. Head outputs are joined and passed through an output matrix.', fails: ['Work grows with context length', 'MQA and GQA share K and V across heads to shrink the cache'] },
+    { id: 'add1', label: 'Residual add', x: 88, y: 20, detail: 'The attention output is added back to the vector that entered the block. The block only has to learn a change, and gradients have a direct path backwards through the stack.', fails: ['Without residuals, deep stacks barely train'] },
+    { id: 'norm2', label: 'Norm', x: 88, y: 78, detail: 'Normalise again before the feed-forward part.', fails: [] },
+    { id: 'ffn', label: 'Feed-forward or experts', x: 66, y: 78, kind: 'core', detail: 'A small two-layer network applied to this token on its own: expand to a larger size, apply a nonlinearity, project back. In a mixture-of-experts model a router picks a few expert networks here instead of one.', fails: ['Holds most of a dense model’s parameters', 'MoE routers can overload some experts'] },
+    { id: 'add2', label: 'Residual add, next block', x: 46, y: 78, detail: 'Add the feed-forward output back, and the vector goes into the next block. This repeats for every layer in the stack.', fails: [] },
+    { id: 'head', label: 'Final norm and LM head', x: 27, y: 78, detail: 'After the last block, a final norm and one matrix map the vector to a score (logit) for every token in the vocabulary. Some models reuse the embedding table for this matrix.', fails: ['Vocabulary of tens of thousands or more makes this matrix large'] },
+    { id: 'sample', label: 'Softmax and sample', x: 9, y: 78, detail: 'Softmax turns logits into probabilities and a sampling rule picks one token. That token is appended and the whole journey runs again for the next one.', fails: ['High temperature or loose top-p adds mistakes', 'Greedy can repeat itself'] },
+  ]}
+  edges={[['emb','norm1'],['norm1','qkv'],['qkv','attn'],['attn','add1'],['add1','norm2'],['norm2','ffn'],['ffn','add2'],['add2','head'],['head','sample']]}
+  caption="A pre-norm decoder block, as used by most current open models. Residual skips are described in the nodes rather than drawn."
+/>
+
+## Where Q, K and V come from
+
+Q, K and V are not extra inputs. The block holds three learned matrices, W_Q, W_K and W_V. Each token's current vector is multiplied by each of them to give its query, key and value. Because the matrices are learned, the model decides during training what "looking for" and "offering" mean at each layer. A fourth matrix, W_O, maps the attention result back to the model's width.
+
+## Multi-head attention, and sharing K and V
+
+Instead of one big attention, the vector is split into several **heads**, each with its own slice of Q, K and V. Each head computes its own weights, so one head can track the previous word while another links a pronoun to its noun. Their outputs are joined and mixed by W_O. Many small views beat one large average.
+
+During generation, the keys and values of every earlier token are kept in the [KV cache](../../serving/kv-cache-and-memory/), and that cache often limits how many users fit on a GPU. Two variants shrink it:
+
+| Variant | Query heads | Key and value heads | Cache size compared with standard |
+|---|---|---|---|
+| Multi-head (MHA) | H | H | 1x |
+| Grouped-query (GQA) | H | G, each shared by H/G query heads | G/H |
+| Multi-query (MQA) | H | 1 | 1/H |
+
+With 32 query heads and 8 key-value heads, GQA keeps a quarter of the cache. The GQA paper found it gets close to standard quality with speed close to MQA, which is why many recent open models use it.
+
+## Feed-forward, residuals and normalisation
+
+The **feed-forward network** works on each token separately: expand the vector to a larger width (four times in the original paper), apply a nonlinearity, shrink it back. Attention moves information between tokens; the feed-forward part processes it within a token. Many current models use a gated variant (often called SwiGLU) with three matrices instead of two.
+
+**Residual connections** add each sub-layer's output to its input. Each sub-layer only learns a correction, and training signals flow straight through dozens of layers.
+
+**Normalisation** rescales the vector to a steady size so numbers neither explode nor vanish across the stack. The original paper normalised after the residual add (post-norm). Most current models normalise at the start of each sub-layer (**pre-norm**), which trains more stably. Many also replace LayerNorm with **RMSNorm**, which skips subtracting the mean and only divides by the root mean square: slightly cheaper, and it works as well in practice.
+
+## Positional information
+
+Attention on its own ignores word order: it is a weighted sum. Position must be added.
+
+| Method | How | Seen in |
+|---|---|---|
+| Sinusoidal | Fixed sine and cosine patterns added to the embedding | The original Transformer |
+| Learned absolute | A trained vector per position, added to the embedding | BERT, GPT-2 |
+| Rotary (RoPE) | Q and K are rotated by an angle that depends on position, so their match depends on the distance between tokens | Llama and many other open models |
+
+Learned absolute positions cannot go past the longest position seen in training. RoPE encodes relative distance directly, and context-extension methods work by rescaling its angles, though quality beyond the trained length still needs checking.
+
+## Three shapes of transformer
+
+| Shape | What it does | Suits | Examples |
+|---|---|---|---|
+| Decoder-only | Causal attention; predicts the next token | Chat, generation, code, general assistants | GPT series, Llama, Mistral |
+| Encoder-only | Every token sees every other token; outputs a vector per token | Classification, embeddings for search, reranking | BERT and many embedding models |
+| Encoder-decoder | Encoder reads the input fully; decoder generates while attending to it | Translation, summarisation, speech to text | The original Transformer, T5, Whisper |
+
+## From the last layer to a token
+
+After the final block and a last norm, one matrix (the **LM head**) turns the vector into one score per vocabulary token. **Softmax** turns scores into probabilities. Then a sampling rule picks:
+
+- **Greedy**: always the most likely token. Repeatable, but can loop or sound flat.
+- **Temperature**: divide the scores before softmax. Below 1 sharpens toward the top choice; above 1 flattens.
+- **Top-k**: keep only the k most likely tokens, renormalise, sample.
+- **Top-p (nucleus)**: keep the smallest set of tokens whose probabilities add up to at least p, renormalise, sample. If the top tokens have 0.5, 0.3 and 0.1 and p is 0.85, the first two only reach 0.8, so all three are kept and become about 0.56, 0.33 and 0.11.
+
+## Mixture of experts
+
+A **mixture-of-experts** (MoE) layer replaces the single feed-forward network with many expert networks and a small **router**. For each token, the router scores the experts and sends the token to the top few, then mixes their outputs by the router's weights. Switch Transformers used one expert per token; Mixtral 8x7B uses two of eight per layer, and its paper reports about 47B total parameters with about 13B active per token. The catch: compute follows active parameters, but memory must still hold all of them, and training needs an extra loss term to stop the router overloading a few experts. Serving often spreads experts across GPUs ([expert parallelism](../../infra/multi-gpu-parallelism-and-interconnect/)).
+
+<Deep title="The equations">
+
+Attention for one head, with d_k the head size and a causal mask on the scores:
+
+```text
+Attention(Q, K, V) = softmax(Q Kᵀ / √d_k) V
+Q = X W_Q,   K = X W_K,   V = X W_V
+MultiHead(X) = Concat(head_1, ..., head_H) W_O
+```
+
+A pre-norm block:
+
+```text
+h   = x + MultiHead(Norm(x))
+out = h + FFN(Norm(h))
+FFN(x) = W_2 · act(W_1 x)          # gated: W_2 · (act(W_1 x) ⊙ W_3 x)
+```
+
+LayerNorm and RMSNorm on a vector x of size d, with learned gain g (and bias b for LayerNorm):
+
+```text
+LayerNorm(x) = g ⊙ (x − mean(x)) / √(var(x) + ε) + b
+RMSNorm(x)   = g ⊙ x / √(mean(x²) + ε)
+```
+
+Sinusoidal positions, for position pos and dimension pair i: `PE(pos, 2i) = sin(pos / 10000^(2i/d))` and `PE(pos, 2i+1) = cos(pos / 10000^(2i/d))`.
+
+RoPE treats each pair of dimensions of q and k as a 2D point and rotates it by angle `pos × θ_i`, with `θ_i = 10000^(−2i/d)`. The dot product of a query rotated for position m with a key rotated for position n then depends only on m − n.
+
+Parameter count for a dense block with width d and a 4d feed-forward: attention has 4d² (W_Q, W_K, W_V, W_O), the feed-forward has 8d², so about two thirds of the block is feed-forward. GQA shrinks W_K and W_V.
+
+Sampling in plain Python:
+
+```python
+import math, random
+
+def sample_next(logits, temperature=1.0, top_k=None, top_p=None):
+    if temperature == 0:                                   # greedy
+        return max(range(len(logits)), key=lambda i: logits[i])
+    scaled = [l / temperature for l in logits]
+    m = max(scaled)
+    exps = [math.exp(s - m) for s in scaled]
+    probs = [e / sum(exps) for e in exps]                  # softmax
+    order = sorted(range(len(probs)), key=lambda i: probs[i], reverse=True)
+    if top_k is not None:
+        order = order[:top_k]                              # keep the k most likely
+    if top_p is not None:
+        kept, total = [], 0.0
+        for i in order:                                    # smallest set reaching top_p
+            kept.append(i)
+            total += probs[i]
+            if total >= top_p:
+                break
+        order = kept
+    weights = [probs[i] for i in order]                    # random.choices renormalises
+    return random.choices(order, weights=weights)[0]
+```
+
+The order of temperature, top-k and top-p differs between libraries, so check your inference engine's docs.
+
+</Deep>
+
+<Callout title="Interview shortcut">
+
+If asked to "walk through a transformer block", say: norm, attention with Q, K and V from learned projections and several heads, residual add, norm, feed-forward, residual add, repeated N times, then final norm, LM head, softmax and sampling. Then name one modern change for each part: GQA, RMSNorm with pre-norm, SwiGLU or MoE, RoPE.
+
+</Callout>
+
+## What to take forward
+
+- Q, K and V come from three learned matrices applied to every token's vector, split into heads.
+- GQA and MQA share keys and values across query heads, cutting the KV cache by the ratio of query heads to KV heads.
+- Each block is attention then feed-forward, each wrapped in a pre-norm and a residual add.
+- Position comes from added vectors (sinusoidal, learned) or from rotating Q and K (RoPE).
+- The LM head and softmax give probabilities; greedy, temperature, top-k and top-p decide the token.
+- MoE adds parameters without adding much compute per token, but every expert still needs memory.

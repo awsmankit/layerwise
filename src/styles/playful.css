@@ -57,14 +57,14 @@ body {
   border: 2px solid var(--btn-border);
   border-radius: 999px;
   background: var(--signal);
-  color: #fff;
+  color: var(--on-signal);
   box-shadow: var(--hard);
   transition: transform 0.25s var(--pop), box-shadow 0.25s var(--pop), background 0.2s, color 0.2s;
 }
 .btn:hover {
   background: var(--signal);
   border-color: var(--btn-border);
-  color: #fff;
+  color: var(--on-signal);
   transform: translate(-2px, -2px);
   box-shadow: 5px 5px 0 var(--btn-border);
 }
@@ -151,6 +151,7 @@ body {
   --signal: #9c8cff;
   --signal-ink: #bdb2ff;
   --signal-wash: rgba(156, 140, 255, 0.18);
+  --on-signal: #0e0c2e;
   --btn-border: #f1eeff;
   --hard: 3px 3px 0 #000;
   background-color: var(--night);
@@ -934,7 +935,7 @@ main + .site-footer {
   background: var(--surface);
   border: 2px solid var(--ink);
   border-radius: var(--r-lg);
-  box-shadow: 6px 6px 0 var(--ink);
+  box-shadow: 6px 6px 0 var(--shadow-ink);
 }
 .hero-card-title {
   font-family: var(--font-display);
@@ -1098,7 +1099,7 @@ main + .site-footer {
   background: var(--surface);
   border: 2px solid var(--ink);
   border-radius: var(--r-lg);
-  box-shadow: 6px 6px 0 var(--ink);
+  box-shadow: 6px 6px 0 var(--shadow-ink);
 }
 @media (max-width: 860px) {
   .pulled {

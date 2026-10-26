@@ -8,6 +8,7 @@ import '../styles/pages.css';
 import '../styles/games.css';
 import '../styles/playful.css';
 import '../styles/features.css';
+import '../styles/interview.css';
 import SearchPalette from '../components/ui/SearchPalette.tsx';
 import { site, nav, footerNav } from '../site';
 import { withBase } from '../lib/url';
@@ -47,7 +48,7 @@ const trackStyle = track ? `--track:${track.color};--on-track:${track.on}` : und
     {ogImage && <meta property="og:image" content={ogImage} />}
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg')} />
-    <link rel="alternate" type="application/rss+xml" title={`${site.name} Pulse`} href={withBase('/rss.xml')} />
+    <link rel="alternate" type="application/rss+xml" title={`${site.name}: news and lessons`} href={withBase('/rss.xml')} />
     <meta name="generator" content={Astro.generator} />
     <script is:inline>
       /* Runs before first paint: no flash of the wrong theme or depth. */

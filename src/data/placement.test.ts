@@ -49,6 +49,7 @@ describe('learning paths', () => {
       for (const step of paths[id].steps) {
         if (step.kind === 'lesson') expect(lessonKeys.has(step.key), `${id}: ${step.key}`).toBe(true);
       }
+      for (const k of paths[id].assumes ?? []) expect(lessonKeys.has(k), `${id} assumes ${k}`).toBe(true);
     }
   });
 
@@ -106,5 +107,25 @@ describe('glossary', () => {
       expect(m, g.id).not.toBeNull();
       expect(lessonKeys.has(`${m![1]}/${m![2]}`), `${g.id} -> ${g.lesson}`).toBe(true);
     }
+  });
+});
+
+describe('learning paths respect prerequisites', () => {
+  it('every lesson’s prerequisites come earlier in the same path (the Start here track is assumed)', () => {
+    const problems: string[] = [];
+    for (const id of pathIds) {
+      const seen = new Set<string>(paths[id].assumes ?? []);
+      const after = paths[id].after;
+      if (after) for (const st of paths[after].steps) if (st.kind === 'lesson') seen.add(st.key);
+      for (const step of paths[id].steps) {
+        if (step.kind !== 'lesson') continue;
+        for (const pre of extras[step.key]?.prereq ?? []) {
+          if (pre.startsWith('start/') && id !== 'newcomer') continue;
+          if (!seen.has(pre)) problems.push(`${id}: ${step.key} needs ${pre}`);
+        }
+        seen.add(step.key);
+      }
+    }
+    expect(problems).toEqual([]);
   });
 });

@@ -1,0 +1,19 @@
+---
+import Base from '../../layouts/Base.astro';
+import Practice from '../../components/interview/Practice.tsx';
+import { getLessons, lessonPath, slugOf } from '../../lib/content';
+import { withBase } from '../../lib/url';
+
+const lessons = Object.fromEntries((await getLessons()).map((l) => [`${l.data.track}/${slugOf(l)}`, { title: l.data.title, href: lessonPath(l) }]));
+---
+
+<Base title="Practise interview questions" description="Answer AI engineering interview questions against the clock, then check yourself against what a strong answer covers.">
+  <div class="wrap">
+    <header class="page-head">
+      <h1>Practise</h1>
+      <p>Pick your role and level, answer against the clock (out loud is best), then tick off what a strong answer covers and try the follow-ups. Questions you score low on come back sooner. Everything stays in this browser.</p>
+      <p class="gm-note"><a href={withBase('/interview/#rounds')}>How to approach each kind of question</a></p>
+    </header>
+    <Practice client:load lessons={lessons} />
+  </div>
+</Base>

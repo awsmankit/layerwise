@@ -1,0 +1,156 @@
+---
+title: "Fine-tuning in practice: LoRA, QLoRA and preference tuning"
+track: llm
+level: advanced
+order: 4
+summary: How to build fine-tuning data, how LoRA and QLoRA cut the cost, how preference tuning works, and how to evaluate, ship and version a custom model without fooling yourself.
+updated: 2026-10-26
+sources:
+  - label: "LoRA: Low-Rank Adaptation of Large Language Models (Hu et al., 2021)"
+    url: https://arxiv.org/abs/2106.09685
+  - label: "QLoRA: Efficient Finetuning of Quantized LLMs (Dettmers et al., 2023)"
+    url: https://arxiv.org/abs/2305.14314
+  - label: "Direct Preference Optimization (Rafailov et al., 2023)"
+    url: https://arxiv.org/abs/2305.18290
+  - label: "Training language models to follow instructions with human feedback (Ouyang et al., 2022)"
+    url: https://arxiv.org/abs/2203.02155
+  - label: "Tulu 3: Pushing Frontiers in Open Language Model Post-Training (Lambert et al., 2024)"
+    url: https://arxiv.org/abs/2411.15124
+  - label: "Distilling the Knowledge in a Neural Network (Hinton, Vinyals and Dean, 2015)"
+    url: https://arxiv.org/abs/1503.02531
+  - label: "ZeRO: Memory Optimizations Toward Training Trillion Parameter Models (Rajbhandari et al., 2019)"
+    url: https://arxiv.org/abs/1910.02054
+  - label: "Hugging Face Transformers: Chat templates"
+    url: https://huggingface.co/docs/transformers/main/en/chat_templating
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import Disclosure from '../../../components/viz/Disclosure.tsx';
+import PipelineFlow from '../../../components/viz/PipelineFlow.tsx';
+
+Fine-tuning changes a model's weights so that a behaviour you would otherwise prompt for becomes the default. It is good at format, style, narrow skills and making a small model do one job well. It is poor at adding knowledge that changes. Decide whether you need it first: [prompting, retrieval or fine-tuning](../prompting-vs-rag-vs-fine-tuning/). This lesson assumes you do.
+
+<PipelineFlow
+  client:visible
+  title="A fine-tuning project"
+  stages={[
+    { title: 'Define', detail: 'Write down the task, the metric and the baseline to beat: the base model with your best prompt.' },
+    { title: 'Data', detail: 'Collect real inputs and consistent target outputs. Deduplicate. Split off a held-out set before anything else.' },
+    { title: 'Format', detail: 'Render every example with the exact chat template of the model you will train. Mask the prompt so loss is computed on the answer.' },
+    { title: 'Train', detail: 'Usually LoRA or QLoRA. Track training and validation loss; stop when validation stops improving.' },
+    { title: 'Evaluate', detail: 'Compare against the base model and the best prompt on the held-out set, plus a general regression suite to catch forgetting.' },
+    { title: 'Prefer', detail: 'Optional: preference tuning (DPO, RLHF or verifiable rewards) when "better" is easier to judge than to write.' },
+    { title: 'Deploy', detail: 'Merge or serve the adapter, version it with its base model and data, monitor in production, and collect failures for the next round.' },
+  ]}
+  loop
+  caption="Production failures become the next round of training and eval data."
+/>
+
+## Building supervised fine-tuning data
+
+Supervised fine-tuning (SFT) trains on pairs of input and desired output. Quality beats quantity.
+
+- **Real inputs.** Use the messy, real requests the model will see, not tidy ones you invented. Synthetic inputs teach the model a distribution it will not meet.
+- **Consistent targets.** If two annotators answer the same kind of input in different styles, the model learns the average of both. Write a short style guide and check agreement.
+- **Deduplicate,** exactly and near-exactly. Duplicates over-weight some examples and, if they cross the split, inflate your scores.
+- **Hold out a test split** before training, and keep it out of every decision until the end.
+- **Use the right chat template.** A chat is turned into one token sequence with special control tokens marking each role and the end of each turn. Different models use different tokens, even models fine-tuned from the same base. Train with a different template than you serve with, or forget the end-of-turn token, and the model sees unfamiliar structure: it may continue the user's message, never stop, or leak role markers into the output.
+
+```python
+# Render training examples with the model's own template, never by hand.
+text = tokenizer.apply_chat_template(
+    [{"role": "user", "content": question},
+     {"role": "assistant", "content": answer}],
+    tokenize=False,
+    add_generation_prompt=False,  # True only at inference, to open the assistant turn
+)
+```
+
+## Full fine-tuning versus parameter-efficient methods
+
+**Full fine-tuning** updates every weight. It is the most flexible and the most expensive: you need gradients and optimizer state for every parameter, and each result is a full copy of the model. **Parameter-efficient fine-tuning** (PEFT) freezes the original weights and trains a small number of new ones. LoRA is the standard choice.
+
+## How LoRA works
+
+Take one weight matrix W in a layer. LoRA freezes W and learns an update made of two thin matrices: B (d by r) and A (r by d), where the rank r is small, such as 8, 16 or 64. For an input x the layer computes `h = W·x + (alpha / r)·B·A·x`. Alpha is a scaling hyperparameter. B starts at zero, so training starts from exactly the original model.
+
+- **Which layers.** The original paper adapted the attention query and value projections. Many recipes now target all the linear layers, attention and MLP, which usually helps at a modest extra cost.
+- **Why it is cheap.** Gradients and optimizer state exist only for A and B. With Adam that state is two extra numbers per trainable parameter, so shrinking the trainable set shrinks the optimizer memory with it.
+- **Merged or swapped.** After training you can fold the update into the weights (`W' = W + (alpha / r)·B·A`), so inference costs nothing extra. Or you keep adapters separate and load a different one per customer or task on a shared base model. Several serving engines support many adapters on one base; check your engine's docs.
+
+**Worked count.** Take one d x d projection with d = 4,096 and LoRA rank r = 16.
+
+- Full matrix: d x d = 4,096 x 4,096 = **16,777,216** trainable parameters.
+- LoRA: A has r x d and B has d x r, so 2 x d x r = 2 x 4,096 x 16 = **131,072**.
+- Ratio: 2r / d = 32 / 4,096 = 1/128, about **0.78%** of the full matrix.
+
+```python
+import torch, torch.nn as nn
+
+class LoRALinear(nn.Module):
+    def __init__(self, base: nn.Linear, r=16, alpha=32):
+        super().__init__()
+        self.base = base.requires_grad_(False)            # frozen W
+        self.A = nn.Parameter(torch.randn(r, base.in_features) * 0.01)
+        self.B = nn.Parameter(torch.zeros(base.out_features, r))  # starts at zero
+        self.scale = alpha / r
+
+    def forward(self, x):
+        return self.base(x) + self.scale * (x @ self.A.T @ self.B.T)
+```
+
+## QLoRA
+
+QLoRA stores the frozen base model in 4-bit precision (a format called NF4) and trains LoRA adapters in higher precision on top. Gradients flow through the quantized weights into the adapters. The paper reports fine-tuning a 65-billion-parameter model on a single 48 GB GPU. The trade-off is slower steps from de-quantizing on the fly, and an adapter trained against a 4-bit base: test it with the base precision you will actually serve. See [quantization](../../serving/quantization/).
+
+<Deep title="Memory arithmetic for a 7B model">
+
+The ZeRO paper counts mixed-precision Adam training at 16 bytes per parameter: 2 for 16-bit weights, 2 for gradients, and 12 for the 32-bit master weights and two Adam moments. For 7 billion parameters that is about 112 GB before activations, which means several GPUs or sharding.
+
+With LoRA the frozen weights in 16-bit take about 14 GB, and the 16 bytes per parameter apply only to the adapters, typically well under 1% of the model. With QLoRA the frozen weights drop to about 3.5 GB plus quantization constants. Activations, sequence length and batch size then decide the rest, so measure on your hardware.
+
+</Deep>
+
+## Catastrophic forgetting
+
+Training hard on a narrow task can damage abilities the model had: general instruction following, other languages, safety behaviour. Detect it by running a **general regression suite** on the base and the fine-tuned model, not only your task set. Reduce it with a lower learning rate, fewer epochs, LoRA instead of full fine-tuning, and mixing some general instruction data into training.
+
+## Evaluate against the real alternatives
+
+A fine-tune is only worth shipping if it beats **the base model with a good prompt** (instructions plus a few examples) and, ideally, a stronger model with that prompt. Use the same held-out set, the same metric and the same judge. Report quality, latency and cost per request together. Many fine-tunes lose to a better prompt; find out before you pay to host one. See [Evals 101](../../evals/evals-101/).
+
+## Preference tuning
+
+SFT needs the right answer written down. Preference tuning needs only a judgement that one answer is better than another.
+
+| Method | Signal | How it trains |
+|---|---|---|
+| RLHF (reward model and PPO) | Human rankings of responses | Train a reward model on rankings, then optimise the model with PPO against it, with a penalty for drifting far from the starting model |
+| DPO | Pairs of chosen and rejected responses | A direct loss on the pairs against a frozen reference model; no reward model and no sampling loop |
+| RL with verifiable rewards | A program that checks the answer | Sample answers, reward the ones that pass a checker (unit tests, an exact maths answer), reinforce them; used to train reasoning |
+
+**Reward hacking** is the standing risk: the model optimises the measurement, not the intent. A learned reward model may favour long, confident or flattering answers. A weak checker can be passed by special-casing the tests. Guard with the drift penalty, held-out evaluations the training never saw, and human spot checks of high-reward samples.
+
+## Distillation
+
+Distillation trains a smaller **student** model to imitate a larger **teacher**: on the teacher's output probabilities, or more often today on the teacher's generated answers used as SFT data. It is how teams get a cheap, fast model for one task. Check the teacher provider's terms of use before training on its outputs.
+
+<Callout kind="cost" title="The cost is mostly after training">
+A LoRA run can be cheap. Hosting is the recurring bill: a custom model may need dedicated or provisioned capacity rather than pay-per-token pricing, and someone must evaluate it again every time the base model changes. Check your platform's docs for how fine-tuned models are hosted and billed. As of October 2026 it varies by provider and model. Compare with [self-hosting versus API economics](../../local/self-hosting-vs-api-economics/).
+</Callout>
+
+<Disclosure client:visible title="What to version for every adapter">
+
+An adapter only works with the exact base model it was trained on. Record, together: the base model name and version, the adapter weights, the training data snapshot (with a hash), the chat template, the hyperparameters (rank, alpha, target layers, learning rate, epochs), and the eval results against the base and the best prompt. When the base model is deprecated, you will need all of it to retrain.
+
+</Disclosure>
+
+## What to take forward
+
+- Fine-tune for behaviour, format and narrow skills, after a good prompt has been measured and found short.
+- Data quality, deduplication, a held-out split and the correct chat template decide most outcomes.
+- LoRA trains a low-rank update with a tiny fraction of the parameters and optimizer memory; QLoRA adds a 4-bit frozen base.
+- Check for forgetting with a general suite, and beat the base model with a good prompt before shipping.
+- Preference tuning and verifiable rewards improve judgement-based quality but invite reward hacking.
+- Hosting and versioning are the long-term cost; tie every adapter to its base model, data and evals.

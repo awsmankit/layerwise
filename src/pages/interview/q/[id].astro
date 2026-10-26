@@ -1,0 +1,53 @@
+---
+import Base from '../../../layouts/Base.astro';
+import { questions, roles, ilevels, kinds, rubric, type Question } from '../../../data/interview';
+import { getLessons, lessonPath, slugOf } from '../../../lib/content';
+import { withBase } from '../../../lib/url';
+
+export function getStaticPaths() {
+  return questions.map((q) => ({ params: { id: q.id }, props: { q } }));
+}
+const { q } = Astro.props as { q: Question };
+const all = await getLessons();
+const byKey = Object.fromEntries(all.map((l) => [`${l.data.track}/${slugOf(l)}`, l]));
+---
+
+<Base title={`Interview question: ${q.prompt.slice(0, 60)}${q.prompt.length > 60 ? '…' : ''}`} description={q.prompt}>
+  <div class="wrap iv-page">
+    <p class="crumbs"><a href={withBase('/interview/')}>Interview prep</a> <span aria-hidden="true">/</span> <span>{kinds[q.kind]}</span></p>
+    <p class="iv-meta">
+      <span class={`iv-chip k-${q.kind}`}>{kinds[q.kind]}</span>
+      <span class="iv-chip">{ilevels[q.level]}</span>
+      <span class="iv-chip num">{q.minutes} min</span>
+      {q.roles.map((r) => <span class="iv-tag">{roles[r]}</span>)}
+    </p>
+    <h1 class="iv-prompt big">{q.prompt}</h1>
+    <div class="hero-cta">
+      <a class="btn" href={withBase(`/interview/practice/?q=${q.id}`)}>Practise this question</a>
+    </div>
+
+    <details class="iv-reveal">
+      <summary>Show what a strong answer covers (try answering first)</summary>
+      <div class="prose">
+        <h2>Strong answer covers</h2>
+        <ul>{q.strong.map((s) => <li>{s}</li>)}</ul>
+        <h2>Follow-ups</h2>
+        <ol>{q.followUps.map((f) => <li><strong>{f.q}</strong> Look for: {f.lookFor}</li>)}</ol>
+        <h2>Red flags</h2>
+        <ul>{q.redFlags.map((f) => <li>{f}</li>)}</ul>
+        <h2>Rubric</h2>
+        <ul>{rubric.map((r) => <li><strong>{r.score} {r.label}:</strong> {r.meaning}</li>)}</ul>
+      </div>
+    </details>
+
+    {
+      (q.lessons.length > 0 || q.game) && (
+        <p class="gm-lessons">
+          <b>Study:</b>{' '}
+          {q.lessons.map((k) => byKey[k] && <a href={withBase(lessonPath(byKey[k]))}>{byKey[k].data.title}</a>)}
+          {q.game && <a href={withBase(q.game.href)}>{q.game.label}</a>}
+        </p>
+      )
+    }
+  </div>
+</Base>

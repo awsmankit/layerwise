@@ -1,0 +1,169 @@
+---
+title: Vector search internals and retrieval metrics
+track: rag-agents
+level: advanced
+order: 3
+summary: How approximate nearest-neighbour indexes, hybrid search and rerankers work, and how to measure retrieval and RAG answers with numbers you can defend.
+updated: 2026-10-26
+sources:
+  - label: "Efficient and robust approximate nearest neighbor search using Hierarchical Navigable Small World graphs (Malkov and Yashunin)"
+    url: https://arxiv.org/abs/1603.09320
+  - label: "The Faiss library (Douze et al., 2024)"
+    url: https://arxiv.org/abs/2401.08281
+  - label: "Faiss wiki: Faiss indexes"
+    url: https://github.com/facebookresearch/faiss/wiki/Faiss-indexes
+  - label: "pgvector README"
+    url: https://github.com/pgvector/pgvector
+  - label: "Reciprocal Rank Fusion outperforms Condorcet and individual rank learning methods (Cormack, Clarke and Buettcher, SIGIR 2009)"
+    url: https://cormack.uwaterloo.ca/cormacksigir09-rrf.pdf
+  - label: "Ragas documentation: available metrics"
+    url: https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import Disclosure from '../../../components/viz/Disclosure.tsx';
+import NodeGraph from '../../../components/viz/NodeGraph.tsx';
+
+[RAG from scratch](../rag-from-scratch/) compared a question vector with every chunk vector. That works for thousands of chunks, not tens of millions. Real systems use approximate indexes, add keyword search, rerank, and measure the result. This lesson opens each of those boxes.
+
+## Exact versus approximate search
+
+**Exact (brute-force) search** computes the distance from the query to every stored vector and sorts. It always finds the true nearest neighbours, its cost grows linearly with the collection, and it is the reference you test approximate indexes against.
+
+**Approximate nearest-neighbour (ANN) search** skips most vectors. It is much faster and sometimes misses a true neighbour. The quality of an ANN index is measured as its **recall against exact search**: of the true top 10, how many did the index return? Every index has knobs that trade this recall against latency and memory.
+
+## The main index families
+
+| Index | Idea | Main knobs | Trade-off |
+|---|---|---|---|
+| **HNSW** | A layered graph. Search starts at a sparse top layer and greedily walks towards the query, dropping to denser layers. | `M` (links per node), `efConstruction` (build effort), `efSearch` or `ef` (candidates kept while searching) | High recall and low latency, but memory-hungry: full vectors plus the graph links. Higher `M` and `ef` raise recall and cost. |
+| **IVF** (inverted file) | Cluster vectors with k-means into lists. At query time, scan only the lists whose centroids are nearest. | `nlist` (number of lists), `nprobe` (lists scanned) | Cheap to build and store. Recall depends on probing enough lists; a neighbour in an unprobed list is missed. |
+| **PQ** (product quantization) | Split each vector into sub-vectors and replace each by the id of its nearest codebook entry. | Number of sub-vectors, bits per code | Large memory savings, lower accuracy because distances are approximate. |
+| **IVF-PQ** | IVF for coarse selection, PQ to compress what is stored in each list. | All of the above | The usual choice for very large collections that must fit in memory. |
+
+<Deep title="Product quantization in numbers">
+
+A 768-dimension float32 vector takes 768 x 4 = 3,072 bytes. Split it into 96 sub-vectors of 8 dimensions and encode each with an 8-bit code (a codebook of 256 centroids per sub-space). Each vector is now 96 bytes, a 32x reduction. A query is compared with codes through small lookup tables of precomputed distances, which is fast but approximate. A common pattern is to fetch more candidates than needed from the compressed index and re-score them with the full vectors kept on disk or in a cheaper tier. In Faiss, IVF-PQ compresses the residual (the vector minus its list centroid), which is more accurate than compressing the raw vector.
+
+</Deep>
+
+## Filtered search and why it hurts recall
+
+Real queries carry filters: this tenant, this product, documents the user may read. There are two basic strategies, and both have a weakness.
+
+- **Post-filtering:** run the ANN search, then drop results that fail the filter. If the filter matches 10 per cent of rows and the index returns 40 candidates, about 4 survive. (The pgvector README gives this example.) You can get fewer results than you asked for, or none.
+- **Pre-filtering or in-graph filtering:** only consider vectors that pass the filter during the search. With a graph index, the allowed nodes may be poorly connected, so the walk gets stuck and misses neighbours. Very selective filters are often better served by exact search over the small filtered set.
+
+Engines handle this differently (pgvector 0.8.0 added iterative index scans that keep searching until enough rows pass). Test recall with your real filters, not just unfiltered queries.
+
+## Distance metrics and normalisation
+
+- **Cosine similarity** compares direction only.
+- **Dot product** also rewards vector length.
+- **L2 (Euclidean) distance** measures straight-line distance.
+
+If vectors are normalised to unit length, all three give the same ranking, because squared L2 distance then equals 2 minus twice the cosine. Use the metric the embedding model was trained for (see its model card). For cosine, normalise vectors at write and query time so the index can use a plain dot product.
+
+## Bi-encoders, cross-encoders and hybrid search
+
+An embedding model is a **bi-encoder**: it encodes query and document separately, so document vectors are computed once at indexing time and a query costs one encoding plus an index lookup. A **cross-encoder** reads the query and a document together in one forward pass, so every token of the query can attend to every token of the document. That makes it more accurate at judging relevance, but nothing can be precomputed: 50 candidates means 50 model passes per query. That is why cross-encoders are used as **rerankers** over a short candidate list, never for first-stage search.
+
+**Hybrid search** adds a keyword engine such as BM25, which catches exact names, codes and rare terms that embeddings blur. The two scores live on different scales, so the usual way to merge them is **reciprocal rank fusion (RRF)**, which uses only ranks:
+
+`RRF(d) = sum over result lists of 1 / (k + rank of d in that list)`
+
+The original paper used k = 60. A document missing from a list contributes nothing for that list.
+
+<Disclosure client:visible title="Worked example: RRF with k = 60">
+
+BM25 returns A, B, C (ranks 1 to 3). Vector search returns C, A, D.
+
+| Doc | From BM25 | From vectors | RRF score |
+|---|---|---|---|
+| A | 1/61 = 0.01639 | 1/62 = 0.01613 | **0.03252** |
+| C | 1/63 = 0.01587 | 1/61 = 0.01639 | **0.03227** |
+| B | 1/62 = 0.01613 | none | 0.01613 |
+| D | none | 1/63 = 0.01587 | 0.01587 |
+
+Fused order: A, C, B, D. Documents found by both methods rise to the top; a large k flattens the difference between rank 1 and rank 3.
+
+</Disclosure>
+
+## The query path
+
+Click a stage to see what it does and how it fails.
+
+<NodeGraph client:visible
+  title="Query time in a hybrid RAG retriever"
+  height={420}
+  initial="ann"
+  failuresLabel="What goes wrong"
+  nodes={[
+    { id: 'q', label: 'Query', x: 7, y: 50, detail: 'The user question, ideally rewritten into a standalone search query, plus the caller identity used for filters.', fails: ['Follow-up questions such as “and the second one?” are not searchable without rewriting'] },
+    { id: 'embed', label: 'Embed (bi-encoder)', x: 25, y: 22, detail: 'The same embedding model used at indexing time turns the query into a vector, normalised if the index uses cosine.', fails: ['A different model or version from the one used for the index gives meaningless distances', 'Forgetting to normalise when the index assumes unit vectors'] },
+    { id: 'filter', label: 'Metadata filter', x: 25, y: 78, detail: 'Tenant, permissions, product, date. Applied inside both searches, not after the answer is generated.', fails: ['Post-filtering returns too few results when the filter is selective', 'Permission filters applied in the prompt instead of in retrieval'] },
+    { id: 'ann', label: 'ANN index (HNSW or IVF)', x: 48, y: 22, kind: 'core', detail: 'Returns the top candidates by vector similarity, approximately. efSearch or nprobe set the recall and latency trade-off.', fails: ['Recall against exact search never measured', 'Index parameters tuned on unfiltered queries only'] },
+    { id: 'bm25', label: 'BM25 keyword search', x: 48, y: 78, detail: 'Scores documents by term matches, weighted by how rare each term is. Strong on names, codes and error messages.', fails: ['Language analysers (stemming, tokenisation) wrong for the corpus', 'Synonyms and paraphrases missed, which is why it is paired with vectors'] },
+    { id: 'fuse', label: 'Fuse (RRF)', x: 64, y: 50, detail: 'Merges the two ranked lists by rank, for example 50 to 100 candidates in total.', fails: ['Adding raw scores from different scales lets one method dominate'] },
+    { id: 'rerank', label: 'Cross-encoder rerank', x: 80, y: 40, kind: 'core', detail: 'Scores each query and candidate pair together and keeps the best few. Often the biggest quality gain and the biggest latency cost in retrieval.', fails: ['Too many candidates blow the latency budget', 'Reranker never evaluated on your domain'] },
+    { id: 'llm', label: 'To the model', x: 88, y: 82, detail: 'The final handful of chunks, with their sources, go into the prompt.', fails: ['Right chunk retrieved but placed where the model ignores it'] },
+  ]}
+  edges={[['q','embed'],['q','filter'],['embed','ann'],['filter','ann'],['filter','bm25'],['q','bm25'],['ann','fuse'],['bm25','fuse'],['fuse','rerank'],['rerank','llm']]}
+/>
+
+## Where to store the vectors
+
+| Option | Good at | Watch out for |
+|---|---|---|
+| **pgvector in PostgreSQL** | One database, transactions, joins with your own tables and permissions. Supports HNSW and IVFFlat. | Filtering behaviour above; index build time and memory on large tables. |
+| **Search engine with vector support** (for example OpenSearch or Elasticsearch) | BM25 and vectors in one place, so hybrid search is native. | Running and tuning a search cluster. |
+| **Dedicated vector database** | Scale-out, more index and quantization options, multi-tenancy features. | Another system to run, secure and keep in sync with your source data. |
+| **Managed cloud vector search** | Less operations work. | Some bill per hour for index nodes even with no traffic (Google’s Vector Search does); check current pricing pages. |
+
+At moderate scale, the deciding factor is usually where your data and permissions already live, not raw speed.
+
+## Measuring retrieval
+
+You need a **label set**: questions, each with the chunks or documents that are relevant. Then, for each query and a cutoff k:
+
+- **Precision@k:** relevant results in the top k, divided by k.
+- **Recall@k:** relevant results in the top k, divided by all relevant items. (Some tools instead report the share of queries with at least one relevant hit, often called hit rate. Say which you mean.)
+- **MRR:** the mean over queries of 1 divided by the rank of the first relevant result.
+- **nDCG@k:** rewards relevant results near the top, and supports graded relevance.
+
+<Deep title="Worked example for one query">
+
+Top 5 returned: D3, D7, D1, D9, D2. Relevant set: D1, D2, D5 (D5 was not retrieved).
+
+- Precision@5 = 2 / 5 = **0.40**.
+- Recall@5 = 2 / 3 = **0.67**.
+- Reciprocal rank = 1 / 3 = **0.33** (first relevant result at rank 3). MRR averages this over all queries.
+- nDCG@5 with binary relevance. DCG adds `rel / log2(rank + 1)`: rank 3 gives 1 / log2(4) = 0.500, rank 5 gives 1 / log2(6) = 0.387, so DCG = 0.887. The ideal ranking puts the 3 relevant items at ranks 1 to 3: 1 + 0.631 + 0.500 = 2.131. nDCG@5 = 0.887 / 2.131 = **0.42**.
+
+</Deep>
+
+## Measuring RAG answers
+
+Retrieval metrics ignore the answer. RAG answer metrics check the whole chain:
+
+| Metric | Question it answers | Typical computation |
+|---|---|---|
+| **Faithfulness or groundedness** | Is every claim in the answer supported by the retrieved context? | Split the answer into claims; count those the context supports, divided by all claims. |
+| **Context precision** | Are the retrieved chunks relevant, and are the relevant ones ranked high? | Label each chunk relevant or not (by ids or a judge), then a rank-weighted precision. |
+| **Context recall** | Did retrieval bring everything needed? | Split a reference answer into claims; share of them supported by the retrieved context. |
+| **Answer relevance** | Does the answer address the question? | A judge rating, or (in Ragas) generate questions from the answer and compare them with the original by embedding similarity. |
+
+When you have labelled chunk ids, compute context metrics directly with no model. Claim checking needs a judge model, and a judge is an instrument you must calibrate: score a sample by hand, measure agreement, and recheck when you change the judge or prompt. See [LLM-as-judge and its pitfalls](../../evals/llm-as-judge-pitfalls/). Tools such as Ragas implement these metrics, but definitions differ between tools and versions, so read the formula before comparing numbers.
+
+<Callout title="Change one thing at a time">
+Track index recall against exact search, retrieval recall@k on labels, and faithfulness on answers as separate numbers. A drop in answer quality then points to the layer that broke.
+</Callout>
+
+## What to take forward
+
+- Approximate indexes trade recall for speed and memory; measure that recall against exact search on your data and filters.
+- HNSW is fast and memory-hungry, IVF depends on `nprobe`, PQ compresses at a cost in accuracy, IVF-PQ combines them for scale.
+- Normalised vectors make cosine, dot product and L2 rank identically; use the metric the embedding model expects.
+- Bi-encoders retrieve, cross-encoders rerank; BM25 plus RRF covers exact terms that vectors miss.
+- Keep retrieval metrics (recall@k, MRR, nDCG) separate from answer metrics (faithfulness, context precision and recall, relevance), and calibrate any judge.

@@ -2,7 +2,7 @@
 title: Tokens and embeddings
 track: foundations
 level: basic
-order: 2
+order: 3
 summary: How text becomes numbers a model can use, why you are billed in tokens, and how meaning turns into distance.
 updated: 2026-10-26
 sources:
@@ -16,11 +16,11 @@ import TokenChips from '../../../components/viz/TokenChips.tsx';
 import EmbeddingSpace from '../../../components/viz/EmbeddingSpace.tsx';
 import Callout from '../../../components/ui/Callout.astro';
 
-A language model never sees letters or words. It sees a sequence of integers, and then it turns each integer into a vector. Both steps explain things you will run into in practice: odd costs, odd failures, and how search over documents works.
+A language model never sees letters or words. Computers only work with numbers, so text is turned into numbers in two steps: first each piece of text becomes a whole number (an ID, like a page number in a dictionary), then each ID becomes a list of numbers that captures its meaning. Both steps explain things you will run into in practice: odd costs, odd failures, and how search over documents works.
 
 ## Tokens
 
-A **tokenizer** splits text into pieces called tokens and maps each piece to an integer ID. Most tokenizers are built with a **subword** method such as byte-pair encoding: common words become one token, rarer words are split into familiar parts, and anything unknown falls back to smaller pieces. That keeps the vocabulary at a manageable size while still being able to represent any text.
+A **tokenizer** splits text into pieces called tokens and gives each piece an ID number from a fixed list, the vocabulary. Common words get a single token. Rarer words are split into familiar parts, the way "unhappiness" can be read as "un", "happi" and "ness". Anything unusual falls back to smaller pieces, down to single characters. That keeps the vocabulary to a manageable size, typically tens of thousands of pieces, while still being able to write any text. (The most common way of building such a vocabulary is called byte-pair encoding, if you want to look it up.)
 
 <TokenChips client:visible />
 
@@ -36,16 +36,16 @@ Different model families use different tokenizers, so the same text has a differ
 
 ## Embeddings
 
-Each token ID is looked up in a table to get a vector, an **embedding**: a list of numbers, typically hundreds or thousands long. During training the model adjusts these vectors so that tokens used in similar ways end up near each other.
+Each token ID is looked up in a table to get an **embedding**: a list of numbers, typically hundreds or thousands long. Think of it as coordinates. Two numbers would place a word on a flat map; a thousand numbers place it in a space with a thousand directions, which is impossible to picture but works the same way. During training the model adjusts these coordinates so that tokens used in similar ways end up near each other.
 
 The same idea works on whole sentences and documents. A separate **embedding model** reads a piece of text and returns one vector for it. Texts with similar meaning land close together, which makes it possible to search by meaning rather than by keyword.
 
 <EmbeddingSpace client:visible />
 
-Closeness is usually measured with **cosine similarity**, the angle between two vectors, or with plain distance. To search a library you embed every document once, embed the question at query time, and return the nearest documents. That is the retrieval half of retrieval-augmented generation, which you will build in the RAG lesson.
+Closeness is usually measured by the angle between two embeddings (called **cosine similarity**: the smaller the angle, the more similar) or by plain distance. To search a library by meaning, you compute the embedding of every document once, compute the embedding of the question when it is asked, and return the documents closest to it. Many AI products work this way to answer from your own documents; it is called **retrieval**, and the RAG lessons build it step by step.
 
 ## Things worth remembering
 
 - Embeddings from different models live in different spaces. You cannot compare a vector from one model with a vector from another, and changing the embedding model means re-embedding everything.
 - Similar does not mean relevant. Two passages can be close in meaning and still not answer the question, which is why retrieval quality needs its own measurement.
-- Chunk size matters because one vector has to summarise the whole chunk.
+- When documents are split into passages for search, the size of each passage matters, because one embedding has to summarise the whole passage.

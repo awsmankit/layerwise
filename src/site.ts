@@ -9,10 +9,11 @@ export const site = {
 export const nav = [
   { href: '/start/', label: 'Start' },
   { href: '/learn/', label: 'Learn' },
-  { href: '/play/', label: 'Play' },
-  { href: '/tools/', label: 'Tools' },
+  { href: '/play/', label: 'Games' },
+  { href: '/tools/', label: 'Calculators' },
+  { href: '/interview/', label: 'Interviews' },
   { href: '/glossary/', label: 'Glossary' },
-  { href: '/pulse/', label: 'Pulse' },
+  { href: '/pulse/', label: 'News' },
 ];
 
-export const footerNav = [...nav, { href: '/about/', label: 'About' }];
+export const footerNav = [...nav, { href: '/progress/', label: 'Your progress' }, { href: '/teach/', label: 'For teachers' }, { href: '/about/', label: 'About' }];

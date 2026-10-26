@@ -1,0 +1,28 @@
+---
+import Base from '../layouts/Base.astro';
+import ProgressPage from '../components/ui/ProgressPage.tsx';
+import { tracks } from '../data/tracks';
+import { extras } from '../data/lesson-extras';
+import { getLessons, lessonPath, slugOf } from '../lib/content';
+
+const lessons = await getLessons();
+const info = tracks.map((t) => ({
+  id: t.id,
+  title: t.title,
+  color: t.color,
+  lessons: lessons
+    .filter((l) => l.data.track === t.id)
+    .map((l) => ({ key: `${t.id}/${slugOf(l)}`, title: l.data.title, href: lessonPath(l), level: l.data.level })),
+}));
+const quizzes = Object.fromEntries(Object.entries(extras).map(([k, e]) => [k, e.quiz]));
+---
+
+<Base title="Your progress" description="Lessons done, quiz scores, what to revise, a mixed review, and a way to move your progress between devices.">
+  <div class="wrap">
+    <header class="page-head">
+      <h1>Your progress</h1>
+      <p>What you have done, what is worth revising, and a mixed review that pulls questions from every lesson you have finished.</p>
+    </header>
+    <ProgressPage client:load tracks={info} quizzes={quizzes} />
+  </div>
+</Base>

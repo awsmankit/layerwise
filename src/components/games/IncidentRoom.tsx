@@ -13,6 +13,7 @@ export default function IncidentRoom() {
   const [iid, setIid] = useState(incidents[0].id);
   const incident = incidents.find((i) => i.id === iid)!;
   const [s, setS] = useState<Session>(fresh());
+  const [interviewer, setInterviewer] = useState(false);
 
   useEffect(() => setS(fresh()), [iid]);
 
@@ -58,6 +59,50 @@ export default function IncidentRoom() {
             {' '}Current score: <b>{score}</b>
           </p>
         </div>
+
+        <label className="inc-mode">
+          <input type="checkbox" checked={interviewer} onChange={(e) => setInterviewer(e.target.checked)} />
+          <span>
+            <b>Interviewer view.</b> Show the answer key so you can run this as a debugging interview: read the report aloud, hand over evidence only when asked, and note the order they ask for it.
+          </span>
+        </label>
+        {interviewer && (
+          <aside className="inc-key" aria-label="Answer key">
+            <p>
+              <b>Root cause:</b> {incident.causes.find((c) => c.id === incident.cause)?.label}
+            </p>
+            <p>
+              <b>Best fix:</b> {incident.fixes.find((f) => f.id === incident.fix)?.label}
+            </p>
+            <p>
+              <b>Evidence that decides it:</b> {incident.evidence.map((e) => e.label).join(', ')}. A strong candidate asks for the most telling piece early and says what they expect to see before they read it.
+            </p>
+            <p>
+              <b>If they suggest a wrong cause, probe with the reason it is wrong:</b>
+            </p>
+            <ul>
+              {incident.causes
+                .filter((c) => c.id !== incident.cause)
+                .map((c) => (
+                  <li key={c.id}>
+                    <i>{c.label}:</i> {c.ruledOut}
+                  </li>
+                ))}
+            </ul>
+            <p>
+              <b>Why the other fixes fall short:</b>
+            </p>
+            <ul>
+              {incident.fixes
+                .filter((f) => f.id !== incident.fix)
+                .map((f) => (
+                  <li key={f.id}>
+                    <i>{f.label}:</i> {f.why}
+                  </li>
+                ))}
+            </ul>
+          </aside>
+        )}
 
         <div className="gm-main inc">
           <section className="gm-play" aria-label="Evidence">

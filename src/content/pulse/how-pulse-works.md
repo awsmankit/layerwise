@@ -1,10 +1,10 @@
 ---
-title: How Pulse notes are written
+title: How News notes are written
 date: 2026-10-26
 tags: [meta]
 ---
 
-Pulse is where market changes land: a new model, a platform feature, a pricing move. Each note follows the same shape so it can be read in under two minutes.
+News is where market changes land: a new model, a platform feature, a pricing move. Each note follows the same shape so it can be read in under two minutes.
 
 - **What changed.** One or two sentences, with the date and a link to the primary source.
 - **Why it matters.** The effect on a system you might be building: design, cost, risk.

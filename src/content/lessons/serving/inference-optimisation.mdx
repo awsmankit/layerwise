@@ -1,0 +1,151 @@
+---
+title: "Inference optimisation: speculative decoding, FlashAttention and friends"
+track: serving
+level: advanced
+order: 4
+summary: The main techniques that make model serving faster or cheaper, grouped by the bottleneck each one attacks, with their costs and how to measure the result.
+updated: 2026-10-26
+sources:
+  - label: "FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness (Dao et al., 2022)"
+    url: https://arxiv.org/abs/2205.14135
+  - label: "Fast Inference from Transformers via Speculative Decoding (Leviathan, Kalman and Matias, 2022)"
+    url: https://arxiv.org/abs/2211.17192
+  - label: "Medusa: Simple LLM Inference Acceleration Framework with Multiple Decoding Heads (Cai et al., 2024)"
+    url: https://arxiv.org/abs/2401.10774
+  - label: "Efficient Memory Management for Large Language Model Serving with PagedAttention (Kwon et al., 2023)"
+    url: https://arxiv.org/abs/2309.06180
+  - label: "SARATHI: Efficient LLM Inference by Piggybacking Decodes with Chunked Prefills (Agrawal et al., 2023)"
+    url: https://arxiv.org/abs/2308.16369
+  - label: "DistServe: Disaggregating Prefill and Decoding for Goodput-optimized LLM Serving (Zhong et al., 2024)"
+    url: https://arxiv.org/abs/2401.09670
+  - label: "vLLM documentation"
+    url: https://docs.vllm.ai
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import Disclosure from '../../../components/viz/Disclosure.tsx';
+import PipelineFlow from '../../../components/viz/PipelineFlow.tsx';
+
+Each inference optimisation attacks a specific bottleneck. One aimed at the wrong bottleneck adds risk and saves nothing. This lesson groups the main techniques by the problem they solve, then shows how to measure the result. It assumes you know [life of a request](../life-of-a-request/) and [the KV cache](../kv-cache-and-memory/).
+
+## Four bottlenecks
+
+| Bottleneck | Symptom | Main techniques |
+|---|---|---|
+| **Compute-bound prefill** | Slow time to first token on long prompts | FlashAttention, prefix caching, FP8 compute |
+| **Memory-bandwidth-bound decode** | Slow tokens per second for each user | Weight quantization, speculative decoding, tensor parallelism |
+| **Memory capacity** | Few concurrent requests fit; out-of-memory at long context | PagedAttention, KV-cache quantization, prefix sharing |
+| **Scheduling** | One long prompt stalls everyone; GPUs idle between requests | Continuous batching, chunked prefill, prefill/decode disaggregation |
+
+## Compute-bound prefill
+
+**FlashAttention** computes **exact** attention (equal up to floating-point rounding, not an approximation) without ever storing the full token-by-token score matrix in the GPU's main memory (HBM). It is faster because it moves less data, and attention memory grows linearly with sequence length instead of quadratically. The gain is largest for long prompts and for training. Later versions and similar kernels are standard in modern engines, usually on by default; check your engine's docs.
+
+<Deep title="How the tiling works">
+
+Standard attention computes a score for every pair of tokens, writes that matrix to HBM, reads it back for the softmax, and writes the result again. For long sequences that memory traffic, not the arithmetic, dominates. FlashAttention splits queries, keys and values into tiles that fit in fast on-chip SRAM. For each block of queries it streams through the key and value tiles, keeping a running maximum and running sum so the softmax can be computed incrementally and rescaled as new tiles arrive. Only the final output is written to HBM. In training, the backward pass recomputes the scores from the tiles instead of storing them, trading a little extra compute for much less memory traffic.
+
+</Deep>
+
+**Prefix caching.** Many requests share a prefix: the same system prompt, the same few-shot examples, earlier turns of a conversation. The server keeps the KV cache for that prefix and skips recomputing it, cutting prefill work and time to first token. It only pays off if requests with the same prefix reach the same replica, so with several replicas you need prefix-aware routing. See [context window and caching](../../llm/context-window-and-caching/) for the API-side version.
+
+## Memory-bound decode
+
+Each decode step reads all the weights to produce one token per request, so anything that reads fewer bytes per token helps.
+
+- **Weight quantization** ([recap](../quantization/)): 4-bit weights mean roughly a quarter of the bytes of 16-bit weights per step. Formats that also quantize activations (such as FP8 on hardware with FP8 tensor cores) speed up prefill compute too.
+- **Tensor parallelism** splits each layer across GPUs, so each GPU reads only its share of the weights per step and per-token latency drops. It all-reduces at every layer, so it needs NVLink-class links, and more GPUs per replica means fewer replicas for the same budget. See [multi-GPU parallelism](../../infra/multi-gpu-parallelism-and-interconnect/).
+- **Speculative decoding** gets several tokens out of one pass over the target model's weights.
+
+### Speculative decoding
+
+A cheap proposer guesses the next k tokens. The proposer can be a small draft model with the same tokenizer, extra prediction heads on the target model (Medusa), or simple n-gram lookup in the prompt. The large target model then scores all k positions in **one** forward pass. A rejection-sampling rule accepts a prefix of the guesses and supplies one more token itself, and that rule makes the output distribution **identical** to sampling from the target alone. Quality does not change; only speed does.
+
+<PipelineFlow client:visible
+  title="One round of speculative decoding"
+  stages={[
+    { title: 'Draft', detail: 'The draft model or extra heads propose k tokens, one cheap step at a time.' },
+    { title: 'Verify', detail: 'The target model processes the context plus all k guesses in a single forward pass, giving its own probabilities at every position.' },
+    { title: 'Accept', detail: 'Walk the guesses left to right. Keep each one with probability min(1, target probability / draft probability). Stop at the first rejection.' },
+    { title: 'Correct or bonus', detail: 'On a rejection, sample a replacement from the leftover target distribution. If all k were accepted, take one extra token from the target pass for free.' },
+  ]}
+  loop
+  loopLabel="next round"
+  caption="Each round emits between 1 and k + 1 tokens for one pass of the target model."
+/>
+
+The speed-up depends on the **acceptance rate**: how often the target agrees with the guesses. Predictable text such as code or text copied from the prompt accepts well; creative text accepts poorly. Gains also **shrink at large batch sizes**. At batch 1 the target's decode pass is memory-bound, so verifying k extra positions costs almost nothing. At high load the GPU's compute is already busy with other requests, and every rejected guess is wasted work. Benchmark at your real concurrency.
+
+<Deep title="Expected tokens per target pass">
+
+Simplifying assumption: each guess is accepted independently with the same probability `a`. A round yields 1 token if the first guess is rejected, 2 if the second is, and k + 1 if all are accepted. The expectation is `1 + a + a^2 + ... + a^k`, which equals `(1 - a^(k+1)) / (1 - a)`.
+
+| Acceptance a | Draft length k | Expected tokens per target pass |
+|---|---|---|
+| 0.8 | 4 | (1 - 0.32768) / 0.2 = **3.36** |
+| 0.6 | 4 | (1 - 0.07776) / 0.4 = **2.31** |
+| 0.8 | 8 | (1 - 0.13422) / 0.2 = **4.33** |
+
+As k grows the value approaches `1 / (1 - a)`, which is 5 for a = 0.8, so long drafts give diminishing returns. Wall-clock speed-up is lower than these numbers, because the draft steps cost time and a verification pass over k + 1 positions costs a little more than a single decode step.
+
+The acceptance rule, with target probability p and draft probability q for the guessed token x: accept x with probability `min(1, p(x) / q(x))`; on rejection, sample from the normalised positive part of `p - q`. The paper proves this reproduces the target distribution exactly. With greedy decoding it reduces to "accept while the guess equals the target's top token".
+
+</Deep>
+
+## Memory capacity
+
+- **PagedAttention** ([recap](../kv-cache-and-memory/)) stores the KV cache in fixed-size blocks, so little memory is wasted and shared prefixes can share blocks. More concurrent requests fit.
+- **KV-cache quantization** stores keys and values in 8 bits (or fewer) instead of 16. That roughly halves KV memory at 8 bits, which means more requests or longer contexts per GPU. The risk is quality loss that shows up mainly on long contexts, so evaluate on long inputs, not short ones.
+
+## Scheduling
+
+- **Continuous batching** adds and removes requests at every decode step. It is the baseline in modern engines.
+- **Chunked prefill** splits a long prompt into chunks and runs each chunk alongside ongoing decode steps. Other users' tokens keep flowing instead of pausing while a 50,000-token prompt is processed. The long request's own time to first token can rise slightly.
+- **Prefill/decode disaggregation** runs the two phases on separate GPU pools. Prefill machines are sized for compute, decode machines for memory and batch size, and the KV cache moves between them over a fast network. It removes interference between the phases, at the cost of KV transfer bandwidth, two pools to size and more moving parts. It pays off at large scale with strict latency targets.
+
+## Structured output: constrained decoding
+
+Grammar-guided or **constrained decoding** masks, at each step, every token that would break a JSON schema, regular expression or grammar. Output is then guaranteed to parse, which removes retry loops. It does not make the content correct, a schema that fights the model's natural wording can lower quality, and computing the mask adds per-step overhead (libraries precompile grammars to keep it small). See [prompting and structured output](../../llm/prompting-and-structured-output/).
+
+## The comparison
+
+| Technique | What it speeds up | Cost or risk | When to use |
+|---|---|---|---|
+| FlashAttention | Prefill, long contexts | Needs supported GPU and kernels | Always, if your engine supports it |
+| Prefix caching | Time to first token on repeated prefixes | Memory; needs prefix-aware routing | Shared system prompts, chat history, agents |
+| Weight quantization | Decode speed, memory | Quality loss to measure | Most self-hosted serving |
+| Speculative decoding | Per-user decode speed | Extra model or heads; little gain at high batch | Latency-sensitive, low to medium load |
+| Tensor parallelism | Per-token latency | All-reduce cost; fewer replicas | Large models with tight latency targets |
+| PagedAttention | Concurrency | Engine support | Default in modern engines |
+| KV-cache quantization | Concurrency, long context | Long-context quality | Memory-limited, long prompts |
+| Chunked prefill | Smooth inter-token latency | Slightly slower first token for long prompts | Mixed long and short prompts |
+| Disaggregation | Latency under heavy mixed load | Complexity, KV transfer | Large fleets with strict latency targets |
+| Constrained decoding | Fewer failed parses and retries | Per-step overhead; can hurt wording | Structured output |
+
+## How to measure
+
+- **Time to first token (TTFT):** queueing plus prefill.
+- **Inter-token latency (ITL):** the gap between streamed tokens. Time per output token (TPOT) is the closely related average.
+- **Throughput:** total output tokens per second across all requests, and requests per second.
+- **Goodput:** requests per second that meet your latency targets.
+
+Report p50 and p95 or p99, not averages. Test at realistic concurrency, with your real distribution of prompt and output lengths. A batch-1 benchmark flatters speculative decoding; a benchmark that repeats one prompt flatters prefix caching.
+
+<Callout title="Change one thing at a time" kind="cost">
+Most techniques trade latency against throughput, and throughput is what sets cost per token. Record TTFT, ITL and throughput at fixed concurrency before and after each change, together with a quality eval.
+</Callout>
+
+<Disclosure client:visible title="Which engines support what?">
+
+vLLM, SGLang, TensorRT-LLM and Hugging Face TGI implement most of these techniques, but names, flags and defaults change often. As of October 2026, check the current docs of your engine rather than relying on a feature list. See [inference engines compared](../../local/inference-engines-compared/).
+
+</Disclosure>
+
+## What to take forward
+
+- Find the bottleneck first: prefill compute, decode bandwidth, memory capacity or scheduling.
+- FlashAttention is exact attention with less memory traffic; prefix caching skips repeated prefill.
+- Speculative decoding keeps the target's output distribution and speeds up decode in proportion to the acceptance rate, mostly at low batch sizes.
+- PagedAttention and KV-cache quantization raise concurrency; chunked prefill and disaggregation stop long prompts from stalling others.
+- Measure TTFT, ITL, throughput and goodput as percentiles at realistic load.

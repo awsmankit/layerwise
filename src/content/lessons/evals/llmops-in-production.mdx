@@ -1,0 +1,143 @@
+---
+title: "LLMOps: shipping and running LLM features"
+track: evals
+level: intermediate
+order: 4
+summary: How to version, test, release, monitor and fix LLM features so that changes are safe and any answer can be explained after the fact.
+updated: 2026-10-26
+sources:
+  - label: "Canarying releases (Google SRE Workbook, chapter 16)"
+    url: https://sre.google/workbook/canarying-releases/
+  - label: "Claude models overview: model IDs, aliases and retirement dates"
+    url: https://platform.claude.com/docs/en/about-claude/models/overview
+  - label: "OpenTelemetry semantic conventions for generative AI"
+    url: https://github.com/open-telemetry/semantic-conventions-genai
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import Disclosure from '../../../components/viz/Disclosure.tsx';
+import PipelineFlow from '../../../components/viz/PipelineFlow.tsx';
+
+LLMOps is the practice of shipping and running features built on language models. It borrows most of its ideas from ordinary software operations and from MLOps. What is different is that the output is non-deterministic free text, quality is hard to measure automatically, and an important dependency, the model, may belong to someone else. This lesson assumes you have read [Evals 101](../evals-101/).
+
+## The cycle
+
+<PipelineFlow
+  client:visible
+  title="Build, evaluate, release, monitor"
+  loop
+  caption="Failures found in production become new eval cases, so the next change is tested against them."
+  stages={[
+    { title: 'Change', detail: 'A new prompt, model version, retrieval setting, index rebuild or tool. Recorded as a new release version, never edited in place.' },
+    { title: 'Offline eval gate', detail: 'CI runs the eval set, including adversarial and critical cases. If scores fall below the baseline or any critical case fails, the merge is blocked.' },
+    { title: 'Shadow', detail: 'The new version receives a copy of real traffic. Its answers are logged and scored but never shown to users.' },
+    { title: 'Canary', detail: 'A small share of users get the new version. Its metrics are compared with the control group, and an automated check decides whether to continue.' },
+    { title: 'Full rollout', detail: 'Traffic moves over in steps. The previous version stays deployable so rollback is a config change.' },
+    { title: 'Monitor', detail: 'Quality signals, cost per task, latency and error rates are watched per version, with alerts and dashboards.' },
+    { title: 'Learn', detail: 'Bad answers, complaints and incidents are triaged. Each real failure becomes a test case in the eval set.' },
+  ]}
+/>
+
+## Version everything together
+
+An answer depends on more than the model. To reproduce one, you need all of these:
+
+| Component | Example of what to record |
+|---|---|
+| Model | Provider, exact model ID or snapshot, region or deployment |
+| Prompt | System prompt and templates, as a versioned file, not a string in a database someone edits by hand |
+| Parameters | Temperature, max tokens, tool definitions, output schema |
+| Retrieval | Embedding model, chunking settings, index build ID and the date of its source data |
+| Code | Application commit, including the orchestration logic |
+| Eval data | Version of the eval set used to approve the release |
+
+Bundle them into one **release manifest** and log its ID with every request. When someone reports a bad answer from last Tuesday, you look up the manifest and the trace, and can rerun the same inputs.
+
+```yaml
+release: support-bot-2026-10-21.2
+model: provider/model-id-pinned-snapshot
+prompt: prompts/support/v14.md
+params: { temperature: 0.2, max_output_tokens: 800 }
+retrieval: { embedder: embed-v3, index_build: kb-2026-10-20, top_k: 6 }
+code: git:4f2a9c1
+approved_by_eval: evalset-v31 (score 0.87, critical 0 failures)
+```
+
+A **prompt or model registry** is simply the place these manifests live, with who approved each one and which is live in each environment. A git repository plus a config service is enough to start. Dedicated tools add a UI and history.
+
+## CI eval gates
+
+Treat a prompt change like a code change. A pull request that touches prompts, retrieval or model settings runs the offline eval set. The gate fails if the average drops by more than a set margin, or if any **critical case** fails (harmful output, data leak, broken format). Because output varies, run important cases several times and gate on a rate, not a single run. Keep the run fast enough that people do not skip it, and run the full set nightly.
+
+## Staged rollout
+
+- **Shadow traffic** shows how the new version behaves on real inputs with zero user risk. It doubles model cost for the shadowed share, and it cannot measure user reactions. Never let shadow requests trigger real side effects such as sending email.
+- **Canary** exposes a small group. The Google SRE Workbook's point applies directly: compare the canary against a control group, not against the global average. A canary on 5 percent of traffic with a 20 percent error rate only raises the overall error rate by about 1 percent, which is easy to miss.
+- **A/B tests** measure effects on user outcomes, such as task completion, edits or thumbs down.
+
+<Deep title="A/B testing pitfalls with non-deterministic output">
+
+- **Noise is larger.** The same input gives different answers, so you need more samples to see a real difference. Decide the sample size and the metric before you start, and do not stop the test the moment it looks good.
+- **Assign by user or session, not by request.** Otherwise one conversation mixes two versions and neither result is clean.
+- **Proxy metrics mislead.** Longer answers can raise thumbs-up while hurting task completion. Pair a quality signal with a cost and latency signal.
+- **Judge drift.** If a model judge scores both arms, keep the judge version fixed for the whole test. See [LLM-as-judge pitfalls](../llm-as-judge-pitfalls/).
+- **Novelty effects.** Users react to change itself at first. Run long enough to see the settled behaviour.
+- **Segment.** An average win can hide a loss for one language, customer tier or document type.
+
+</Deep>
+
+## Monitoring
+
+Break every metric down by release version, so a regression is visible as one line diverging from another.
+
+| Area | Signals |
+|---|---|
+| Quality | User feedback (thumbs, edits, retries, escalations to a human), judge scores on a sample of traffic, refusal rate, format or schema failure rate, groundedness for RAG |
+| Cost | Tokens in and out per request, **cost per completed task** (not per call: agents make many calls), cache hit rate |
+| Latency | Time to first token (TTFT), inter-token latency, total time, time per agent step |
+| Reliability | Error rates by type, throttling (429) rate, timeouts, fallback rate |
+
+Sample production traffic for judge scoring and for human review each week. Judge every request and the judge becomes a large cost line. The OpenTelemetry project maintains semantic conventions for generative AI traces and metrics, which helps if you want vendor-neutral tracing.
+
+<Callout kind="cost" title="Watch cost per task">
+A prompt change that adds a retrieval step, or an agent that loops one extra time, can double cost with no visible quality change. Alert on cost per task per version, not only on the monthly bill.
+</Callout>
+
+## Drift
+
+- **Input drift.** Users start asking about a new product, or in a new language. Track the mix of topics and languages, and refresh the eval set from recent traffic.
+- **The model changes under you.** Some providers offer aliases that move to a newer snapshot, and all of them retire old models. Pin exact model IDs in production where the provider allows it, read deprecation notices, and run the eval set on a schedule against the live model. Anthropic, for example, lists a "not sooner than" retirement date for each model as of October 2026; check your provider's versioning and deprecation pages. See [Model routing and fallbacks](../../systems/model-routing-and-fallbacks/) for handling a model that disappears or degrades.
+- **Data and index freshness.** A RAG index built last month answers with last month's facts. Monitor index age, failed ingestion jobs and documents that should have been removed.
+
+## Incidents, rollback and ownership
+
+When quality drops or the feature misbehaves, the fastest fix is usually to **roll back the release manifest**, not to edit the prompt live. That only works if the old version is still deployable: the old model still available, the old index still kept. Have a kill switch that turns the feature off or falls back to a simpler path.
+
+After the incident, write a short review. Add the failing inputs to the eval set so the gate catches them next time.
+
+Someone must own the feature in production: an on-call rota that can see the dashboards, roll back and reach the provider's status page. "The model vendor owns quality" is not a plan.
+
+<Disclosure client:visible title="Minimum viable LLMOps versus what larger teams add">
+
+| Minimum viable (small team) | Larger teams add |
+|---|---|
+| Prompts and configs in git, model ID pinned | A registry with approvals and environment promotion |
+| One release ID logged with every request | Full tracing of every step, tool call and retrieved chunk |
+| 30 to 100 eval cases run in CI on prompt changes | Large eval suites, nightly runs, adversarial sets, per-segment scores |
+| Manual canary: flip a flag for internal users first | Automated canary analysis and progressive delivery |
+| Thumbs up and down plus a weekly read of failures | Sampled judge scoring, human review queues, labelling tools |
+| Dashboard of cost, latency and errors per version | Per-tenant cost attribution, budgets and anomaly alerts |
+| Rollback by changing the config back | Kill switches, automatic fallback models, game days |
+| One named owner | On-call rota, runbooks, incident reviews |
+
+</Disclosure>
+
+## What to take forward
+
+- Version the model, prompt, parameters, retrieval index, code and eval set as one release, and log its ID on every request.
+- Block merges that fail the offline eval gate, including any critical case.
+- Roll out in stages and compare canary with control, not with the global average.
+- Monitor quality, cost per task, latency and errors per release version.
+- Expect drift in inputs, models and data; pin model IDs and re-run evals on a schedule.
+- Keep rollback cheap, name an owner, and turn every incident into a test case.

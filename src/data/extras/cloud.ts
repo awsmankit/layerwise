@@ -5,7 +5,7 @@ export const extrasCloud: Record<string, Extra> = {
     takeaways: [
       'The same jobs exist on every cloud: model API, ML platform, agents, retrieval, guardrails, GPUs, and more.',
       'Translate by job first, then look up the product name on each cloud.',
-      'In 2026 Azure AI Foundry became Microsoft Foundry, and Vertex AI is being succeeded by the Gemini Enterprise Agent Platform.',
+      'Azure AI Foundry became Microsoft Foundry (announced November 2025), and Vertex AI is being succeeded by the Gemini Enterprise Agent Platform (announced April 2026).',
       'Choose from the model you measured, where your data lives, compliance needs and capacity, not from brand.',
     ],
     prereq: ['start/how-a-chatbot-answers'],

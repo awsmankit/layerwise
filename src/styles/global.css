@@ -17,9 +17,10 @@
   --signal: #5b3dff;
   --signal-ink: #3f25d9;
   --signal-wash: rgba(91, 61, 255, 0.1);
-  --cost: #b26200;
+  --on-signal: #ffffff;
+  --cost: #9a5200;
   --cost-wash: rgba(255, 159, 28, 0.2);
-  --ok: #0a8a67;
+  --ok: #08775a;
   --warn: #d0321d;
 
   /* section tints */
@@ -48,6 +49,7 @@
   --r-lg: 28px;
   --btn-border: var(--ink);
   --hard: 3px 3px 0 var(--ink);
+  --shadow-ink: var(--ink);
   color-scheme: light dark;
 }
 
@@ -64,6 +66,7 @@
     --signal: #9c8cff;
     --signal-ink: #b9adff;
     --signal-wash: rgba(156, 140, 255, 0.16);
+    --on-signal: #0e0c2e;
     --cost: #ffb347;
     --cost-wash: rgba(255, 179, 71, 0.16);
     --ok: #4fd8ac;
@@ -75,6 +78,7 @@
     --tint-sky: #12344f;
     --btn-border: #f1eeff;
     --hard: 3px 3px 0 #000;
+    --shadow-ink: #000;
   }
 }
 
@@ -90,6 +94,7 @@
   --signal: #9c8cff;
   --signal-ink: #b9adff;
   --signal-wash: rgba(156, 140, 255, 0.16);
+  --on-signal: #0e0c2e;
   --cost: #ffb347;
   --cost-wash: rgba(255, 179, 71, 0.16);
   --ok: #4fd8ac;
@@ -101,6 +106,7 @@
   --tint-sky: #12344f;
   --btn-border: #f1eeff;
   --hard: 3px 3px 0 #000;
+  --shadow-ink: #000;
   color-scheme: dark;
 }
 

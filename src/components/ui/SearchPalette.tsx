@@ -111,7 +111,7 @@ export default function SearchPalette() {
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
                   onKeyDown={onInputKey}
-                  placeholder="Search lessons, terms, games and tools"
+                  placeholder="Search lessons, terms, games, calculators and interview questions"
                   aria-label="Search"
                   role="combobox"
                   aria-expanded={results.length > 0}

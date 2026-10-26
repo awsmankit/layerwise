@@ -2,10 +2,8 @@
 import Base from '../layouts/Base.astro';
 import StackExplorer from '../components/viz/StackExplorer.tsx';
 import HeroArt from '../components/viz/HeroArt.tsx';
-import HairFigure from '../components/viz/HairFigure.tsx';
 import ContinueCard from '../components/ui/ContinueCard.tsx';
 import GameBadge from '../components/games/GameBadge.tsx';
-import Marquee from '../components/ui/Marquee.astro';
 import TrackIcon from '../components/ui/TrackIcon.astro';
 import { site } from '../site';
 import { tracks } from '../data/tracks';
@@ -20,11 +18,11 @@ const pulse = (await getPulse()).slice(0, 3);
 const trackTiles = tracks.map((t) => ({ ...t, count: lessons.filter((l) => l.data.track === t.id).length }));
 
 const gameColors: Record<string, { c: string; on: string; icon: string }> = {
-  blueprint: { c: '#4F6BFF', on: '#FFFFFF', icon: 'blueprint' },
-  'cost-crunch': { c: '#F25F5C', on: '#FFFFFF', icon: 'crunch' },
+  blueprint: { c: '#3B54E0', on: '#FFFFFF', icon: 'blueprint' },
+  'cost-crunch': { c: '#C93531', on: '#FFFFFF', icon: 'crunch' },
   'fit-the-model': { c: '#FF9F1C', on: '#2A1A00', icon: 'fit' },
   'rack-and-stack': { c: '#00B8D9', on: '#00222B', icon: 'infra' },
-  'incident-room': { c: '#FF4F8B', on: '#FFFFFF', icon: 'incident' },
+  'incident-room': { c: '#C92A63', on: '#FFFFFF', icon: 'incident' },
 };
 
 const tools = [
@@ -53,23 +51,21 @@ const heroTail = ['at', 'a', 'time'];
           {heroTail.map((w, i) => <><span style={`--i:${heroWords.length + 1 + i}`}>{w}</span>{' '}</>)}
         </h1>
         <p class="lede">
-          Animated lessons, system design games and calculators for everything between the GPU and the agent. Plain English first, depth when you want it.
+          Learn how AI really works, from your first question to running it in production. Plain-English lessons with interactive pictures, games that let you practise real decisions, and interview prep for both sides of the table.
         </p>
         <div class="hero-cta">
           <a class="btn" href={withBase('/start/')}>Find your starting point</a>
-          <a class="btn quiet" href={withBase('/play/')}>Play a game</a>
+          <a class="btn quiet" href={withBase('/learn/')}>Browse all lessons</a>
         </div>
         <ContinueCard client:load />
-        <p class="hero-hint">Open any layer to see what it replaced from classical machine learning.</p>
+        <p class="hero-hint">On the right: the parts of a modern AI product, from the app down to the hardware. Click one to see what it does and where to learn it.</p>
       </div>
       <div class="hero-card">
-        <p class="hero-card-title">The AI stack, top to bottom</p>
+        <p class="hero-card-title">The parts of an AI product, top to bottom</p>
         <StackExplorer client:load />
       </div>
     </div>
   </section>
-
-  <Marquee />
 
   <section class="band band-lilac" aria-labelledby="path-h">
     <div class="wrap">
@@ -82,11 +78,13 @@ const heroTail = ['at', 'a', 'time'];
           {
             pathIds.map((id) => {
               const p = paths[id];
+              const nl = p.steps.filter((x) => x.kind === 'lesson').length;
+              const ng = p.steps.length - nl;
               return (
                 <a class="tile" data-reveal href={withBase(`/start/#${id}`)} style={`--track:${p.color};--on-track:${p.on}`}>
                   <div class="tile-top">
                     <TrackIcon name={p.icon} />
-                    <span class="tile-badge">{p.steps.length} steps</span>
+                    <span class="tile-badge">{nl} lessons{ng > 0 ? ` + ${ng} game${ng > 1 ? 's' : ''}` : ''}</span>
                   </div>
                   <div>
                     <h3>{p.title}</h3>
@@ -113,30 +111,10 @@ const heroTail = ['at', 'a', 'time'];
     </div>
   </section>
 
-  <section class="section wrap" aria-labelledby="pulled-h" style="padding-top:clamp(2.5rem,6vw,4.5rem)">
-    <div class="pulled">
-      <div data-reveal>
-        <h2 id="pulled-h">Every AI feature is a <span class="squig" style="--squig:#5B3DFF">stack of layers</span></h2>
-        <p>
-          The model is one layer. Around it sit retrieval, serving, the cloud platform, the hardware and the checks that keep it honest. Move your pointer across the figure to pull the layers apart, then pick one to learn.
-        </p>
-        <ul>
-          <li><a href={withBase('/learn/rag-agents/')} style="--c:#12C2A4">Retrieval and agents</a></li>
-          <li><a href={withBase('/learn/serving/')} style="--c:#FF9F1C">Inference and serving</a></li>
-          <li><a href={withBase('/learn/cloud/')} style="--c:#5BC0FF">Cloud platforms</a></li>
-          <li><a href={withBase('/learn/evals/')} style="--c:#FF4F8B">Evals and quality</a></li>
-        </ul>
-      </div>
-      <div class="pulled-fig" data-reveal>
-        <HairFigure client:visible name="exploded" intensity={0.8} play label="An application drawn as four layers that pull apart as the pointer moves" />
-      </div>
-    </div>
-  </section>
-
   <section class="section wrap" aria-labelledby="tracks-h" style="padding-top:clamp(2.5rem,6vw,4.5rem)">
     <div class="section-head">
-      <h2 id="tracks-h">{tracks.length} tracks, <span class="squig" style="--squig:#12C2A4">basic to advanced</span></h2>
-      <p>Every lesson is marked basic, intermediate or advanced. Follow a path, or jump straight to a topic.</p>
+      <h2 id="tracks-h">Every lesson, <span class="squig" style="--squig:#12C2A4">by topic</span></h2>
+      <p>{lessons.length} lessons in {tracks.length} topics. Each is marked basic, intermediate or advanced. A path above puts them in order for you.</p>
     </div>
     <div class="tiles" data-stagger>
       {
@@ -160,8 +138,8 @@ const heroTail = ['at', 'a', 'time'];
     <div class="wrap">
       <div class="section">
         <div class="section-head">
-          <h2 id="play-h">Learn by <span class="squig" style="--squig:#FF4F8B">playing</span></h2>
-          <p>Five system design games. Real maths, honest scoring, and a lesson behind every mistake.</p>
+          <h2 id="play-h">Practise with <span class="squig" style="--squig:#FF4F8B">games</span></h2>
+          <p>Make the decisions an engineer makes and see what they cost. Real maths, honest scoring, and a lesson behind every mistake.</p>
         </div>
         <div class="tiles" data-stagger>
           {
@@ -186,12 +164,55 @@ const heroTail = ['at', 'a', 'time'];
     </div>
   </section>
 
+  <section class="band band-sun" aria-labelledby="iv-h">
+    <div class="wrap">
+      <div class="section">
+        <div class="section-head">
+          <h2 id="iv-h">Interview <span class="squig" style="--squig:#E69A00">prep</span>, both sides</h2>
+          <p>For candidates and for the people interviewing them.</p>
+        </div>
+        <div class="tiles" data-stagger>
+          <a class="tile" data-reveal href={withBase('/interview/practice/')} style="--track:#FFFFFF;--on-track:#15123D">
+            <div class="tile-top">
+              <TrackIcon name="llm" />
+              <span class="tile-badge">Candidates</span>
+            </div>
+            <div>
+              <h3>Practise answering</h3>
+              <p>Get a question for your role and level, answer against the clock, then check yourself against what a strong answer covers.</p>
+            </div>
+          </a>
+          <a class="tile" data-reveal href={withBase('/interview/run/')} style="--track:#15123D;--on-track:#FFFFFF">
+            <div class="tile-top">
+              <TrackIcon name="evals" />
+              <span class="tile-badge">Interviewers</span>
+            </div>
+            <div>
+              <h3>Run an interview</h3>
+              <p>Build a question set for a role and level, with strong-answer points, follow-ups, red flags and a scorecard you can export.</p>
+            </div>
+          </a>
+          <a class="tile" data-reveal href={withBase('/interview/')} style="--track:#FFC233;--on-track:#1A1440">
+            <div class="tile-top">
+              <TrackIcon name="systems" />
+              <span class="tile-badge">Guides</span>
+            </div>
+            <div>
+              <h3>How AI interviews work</h3>
+              <p>System design, estimation and behavioural rounds: what is being tested and how to structure an answer.</p>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="band band-mint" aria-labelledby="tools-h">
     <div class="wrap">
       <div class="section">
         <div class="section-head">
-          <h2 id="tools-h">Calculators you can <span class="squig" style="--squig:#0A8A67">change</span></h2>
-          <p>Every default is labelled as an example. Bring your own numbers.</p>
+          <h2 id="tools-h">Calculators for <span class="squig" style="--squig:#0A8A67">your own numbers</span></h2>
+          <p>Cost, memory, GPU fit and latency. Every default is a labelled example.</p>
         </div>
         <ul class="rows" data-stagger style="margin-top:0.6rem">
           {
@@ -211,7 +232,7 @@ const heroTail = ['at', 'a', 'time'];
 
   <section class="section wrap" aria-labelledby="pulse-h" style="padding-top:clamp(2.5rem,6vw,4.5rem)">
     <div class="section-head">
-      <h2 id="pulse-h">Pulse</h2>
+      <h2 id="pulse-h">News</h2>
       <p>Short notes on what changed in the market and why an engineer should care.</p>
     </div>
     <ul class="rows" style="margin-top:0.6rem">

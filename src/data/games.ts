@@ -29,7 +29,7 @@ export const games: GameMeta[] = [
     levelIds: scenarios.map((s) => s.id),
     minutes: '10 to 20 min',
     practises: 'System design trade-offs',
-    startHere: 'Anyone who has seen the Foundations track',
+    startHere: 'After the RAG and evals lessons',
   },
   {
     id: 'cost-crunch',
@@ -41,7 +41,7 @@ export const games: GameMeta[] = [
     levelIds: crunchScenarios.map((s) => s.id),
     minutes: '5 to 10 min',
     practises: 'Cost levers and evals',
-    startHere: 'Works from the first lesson on tokens',
+    startHere: 'After the lessons on tokens and cost levers',
   },
   {
     id: 'fit-the-model',

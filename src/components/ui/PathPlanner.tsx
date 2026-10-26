@@ -109,6 +109,25 @@ export default function PathPlanner({ lessons }: { lessons: LessonInfo }) {
             </div>
           </header>
 
+          {(path.after || path.assumes) && (
+            <p className="pp-assumes">
+              <b>This path assumes you know:</b>{' '}
+              {path.after && (
+                <a href={`#${path.after}`} onClick={() => setSel(path.after!)}>
+                  the “{paths[path.after].title}” path
+                </a>
+              )}
+              {path.after && path.assumes && ', and '}
+              {path.assumes?.map((k, n) => (
+                <span key={k}>
+                  {n > 0 && ', '}
+                  <a href={withBase(lessons[k]?.href ?? '/learn/')}>{lessons[k]?.title ?? k}</a>
+                </span>
+              ))}
+              . Skim them first if they are new to you.
+            </p>
+          )}
+
           <AnimatePresence mode="wait">
             <motion.ol key={sel} className="pp-steps" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.3, ease: EASE }}>
               {path.steps.map((s, n) => {
@@ -193,6 +212,10 @@ export default function PathPlanner({ lessons }: { lessons: LessonInfo }) {
                   <p className="pp-score num">{correct} / {placement.length}</p>
                   <h3>We suggest: {paths[rec].title}</h3>
                   <p className="pp-result-text">{paths[rec].who} {paths[rec].promise}</p>
+                  <p className="pp-result-alt">
+                    Studying on a course? The <a href="#student" onClick={() => showPath('student')}>student path</a> goes through the ideas in order. Work on GPUs and cloud platforms? Try the{' '}
+                    <a href="#infra" onClick={() => showPath('infra')}>infrastructure path</a>.
+                  </p>
                   <div className="pp-actions">
                     <button type="button" className="btn" onClick={() => showPath(rec)}>
                       Show me this path

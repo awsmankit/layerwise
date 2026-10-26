@@ -63,7 +63,7 @@ A rough guide, assuming the serving engine and quantization are mature. Work out
 | Model size | Typical starting point |
 |---|---|
 | Up to about 8B parameters | One 24 GB class GPU (L4, A10G), especially if quantized. An L40S for headroom. |
-| About 13B to 34B | One 48 GB L40S, or one 80 GB class GPU. |
+| About 13B to 34B | Quantized to 8 or 4 bits: one 48 GB L40S. At FP16 (a 34B model needs about 68 GB for weights alone): one 80 GB class GPU. |
 | About 70B | FP8 or INT4 on one H200-class or two 80 GB GPUs. FP16 needs 140 GB for weights alone, so at least two to four GPUs. |
 | Very large dense or mixture-of-experts models | A full 8-GPU H100, H200 or B200 node, and possibly several nodes. |
 
@@ -99,7 +99,7 @@ Instance names do not tell you everything. Confirm the GPU variant (SXM or PCIe,
 
 <Disclosure client:visible title="Managed alternatives to renting GPUs">
 
-If you do not want to run GPU servers, each cloud sells models per token: Amazon Bedrock, Microsoft Foundry and Google's Gemini Enterprise Agent Platform (the successor to Vertex AI). See [Bedrock, SageMaker, Foundry and Vertex compared](../../cloud/bedrock-sagemaker-foundry-vertex/). Renting raw GPUs makes sense when you need a specific open model, tight control or very high steady volume.
+If you do not want to run GPU servers, each cloud sells models per token: Amazon Bedrock, Microsoft Foundry and Google's Gemini Enterprise Agent Platform (the successor to Vertex AI). See [Choosing between AWS, Azure and Google AI platforms](../../cloud/bedrock-sagemaker-foundry-vertex/). Renting raw GPUs makes sense when you need a specific open model, tight control or very high steady volume.
 
 </Disclosure>
 

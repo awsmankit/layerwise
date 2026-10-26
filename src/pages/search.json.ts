@@ -4,6 +4,7 @@ import { glossary } from '../data/glossary';
 import { games } from '../data/games';
 import { tracks } from '../data/tracks';
 import type { SearchItem } from '../lib/search';
+import { questions, kinds } from '../data/interview';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const u = (path: string) => `${base}${path}`;
@@ -22,9 +23,13 @@ export const GET: APIRoute = async () => {
     { t: 'GPU explorer', u: u('/tools/gpu/'), k: 'Tool', s: 'Which accelerators hold a model, how many users fit and how fast each decodes.' },
     { t: 'API or your own GPUs?', u: u('/tools/breakeven/'), k: 'Tool', s: 'Break-even between API pricing and self-hosted GPUs.' },
     { t: 'Latency budget', u: u('/tools/latency/'), k: 'Tool', s: 'Cloud versus on-device inference against a time budget.' },
-    { t: 'Start here', u: u('/start/'), k: 'Page', s: 'Find your starting point and get a learning path.' },
+    { t: 'Choose a path', u: u('/start/'), k: 'Page', s: 'Find your starting point and get a learning path.' },
     { t: 'Glossary', u: u('/glossary/'), k: 'Page', s: 'Every term used on the site, in plain English.' },
-    ...pulse.map((p) => ({ t: p.data.title, u: u(`/pulse/${p.id}/`), k: 'Pulse', s: p.data.tags.join(', ') })),
+    ...pulse.map((p) => ({ t: p.data.title, u: u(`/pulse/${p.id}/`), k: 'News', s: p.data.tags.join(', ') })),
+    ...questions.map((q) => ({ t: q.prompt, u: u(`/interview/q/${q.id}/`), k: 'Interview', s: `${kinds[q.kind]}. ${q.topics.join(', ')}` })),
+    { t: 'Interview prep', u: u('/interview/'), k: 'Page', s: 'Practise AI interviews or run them with a shared rubric.' },
+    { t: 'Your progress', u: u('/progress/'), k: 'Page', s: 'Lessons done, quiz scores, revision and a mixed review.' },
+    { t: 'For teachers', u: u('/teach/'), k: 'Page', s: 'Course plans and classroom activities.' },
   ];
 
   return new Response(JSON.stringify(items), { headers: { 'Content-Type': 'application/json' } });

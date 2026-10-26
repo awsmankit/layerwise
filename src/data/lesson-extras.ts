@@ -7,6 +7,10 @@
 import { extrasCloud } from './extras/cloud';
 import { extrasLocal } from './extras/local';
 import { extrasInfra } from './extras/infra';
+import { extrasCore } from './extras/core';
+import { extrasRetrievalServing } from './extras/retrieval-serving';
+import { extrasOps } from './extras/ops';
+import { extrasModels } from './extras/models';
 
 export type QuizItem = {
   q: string;
@@ -421,4 +425,4 @@ const baseExtras: Record<string, Extra> = {
 };
 
 /** Core lessons plus the per-track files in ./extras. */
-export const extras: Record<string, Extra> = { ...baseExtras, ...extrasCloud, ...extrasInfra, ...extrasLocal };
+export const extras: Record<string, Extra> = { ...baseExtras, ...extrasCloud, ...extrasInfra, ...extrasLocal, ...extrasCore, ...extrasModels, ...extrasOps, ...extrasRetrievalServing };
