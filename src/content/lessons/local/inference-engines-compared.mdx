@@ -24,6 +24,7 @@ sources:
 
 import Callout from '../../../components/ui/Callout.astro';
 import Deep from '../../../components/ui/Deep.astro';
+import EngineTree from '../../../components/viz/EngineTree.tsx';
 
 An inference engine is the program that loads a model and turns prompts into tokens. The model is the same idea everywhere, but the engines differ a lot in what they are built for. Some are made for one person on a laptop. Others are made to serve hundreds of people at once on a rack of GPUs. Picking the wrong kind is the most common local-inference mistake.
 
@@ -72,12 +73,7 @@ See [Quantization](../../serving/quantization/) for how these methods differ.
 
 ## A decision guide
 
-- **"I am on a Mac, and it is for me."** Start with Ollama or LM Studio. For more control use llama.cpp. If you want Apple's own stack, look at MLX.
-- **"I have a gaming PC with one GPU, for myself."** Ollama or llama.cpp. Both use the GPU and can offload to the CPU.
-- **"One server GPU, many users."** vLLM or SGLang are natural first candidates. If you still run TGI, plan a move: Hugging Face put it into maintenance mode in December 2025 and points users to vLLM and SGLang.
-- **"A fleet of NVIDIA GPUs, and performance and cost per token really matter."** Consider TensorRT-LLM, possibly with a serving layer around it, and measure against vLLM or SGLang first.
-- **"An edge device or no GPU."** llama.cpp.
-- **"I am not sure."** Use the OpenAI-compatible API on whichever you start with, so you can switch later.
+<EngineTree client:visible />
 
 <Deep title="Why Ollama is not a production server">
 Ollama is built around the llama.cpp family of engines and a one-command experience. It can serve an API and handle a few concurrent requests, but it is designed for a single machine and personal use. When you need to serve dozens of users with predictable latency, an engine built around continuous batching and paged cache management, run behind a load balancer, is normally a better fit. Measure rather than assume: a modest load on a well-sized machine may be fine.
