@@ -1,0 +1,75 @@
+---
+title: Prompting and structured output
+track: llm
+level: basic
+order: 1
+summary: How to structure a prompt, how to get output your code can parse, and what to do when it does not.
+updated: 2026-10-26
+sources:
+  - label: "Anthropic prompt engineering overview"
+    url: https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview
+  - label: "Pydantic documentation"
+    url: https://docs.pydantic.dev
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+
+A prompt is the whole input to the model, not just the question. Treating it as a small piece of software, with parts, tests and versions, is the difference between a demo and something you can run in production.
+
+## The parts of a good prompt
+
+1. **Role and task.** Say what the model is doing and for whom, in plain terms.
+2. **Context.** The facts it needs: documents, user data, constraints. The model knows nothing about your situation unless you say so.
+3. **Rules.** What to do when information is missing, what never to do, the tone to use.
+4. **Examples.** Three to ten worked input and output pairs often fix more problems than another paragraph of instructions.
+5. **Output format.** The exact shape of the answer.
+6. **The input.** The user's request, clearly separated from everything above.
+
+Use delimiters, such as XML-style tags or fenced blocks, to separate instructions from data. It makes the prompt easier to read and reduces the chance that text inside a document is mistaken for an instruction.
+
+## Getting output your code can use
+
+Free text is hard to parse. There are three levels of control, from weakest to strongest.
+
+- **Ask in the prompt.** "Reply with JSON matching this schema." Works often, not always.
+- **Use the platform's structured output or tool-calling feature.** You supply a JSON schema, and the API steers the model to produce arguments that match it. Prefer this when it is available.
+- **Validate and retry.** Whatever you do upstream, parse the result and check it. If it fails, send the error back and ask for a correction, with a limit on attempts.
+
+```python
+from pydantic import BaseModel, ValidationError
+
+class Ticket(BaseModel):
+    category: str          # one of: billing, bug, question
+    urgency: int           # 1 to 5
+    summary: str
+
+def extract_ticket(call_model, text, max_tries=3):
+    prompt = f"Classify this message and reply with JSON only.\n<message>\n{text}\n</message>"
+    for _ in range(max_tries):
+        raw = call_model(prompt)
+        try:
+            return Ticket.model_validate_json(raw)
+        except ValidationError as err:
+            prompt += f"\nYour last reply was invalid: {err}. Reply with corrected JSON only."
+    raise RuntimeError("Model did not return valid output")
+```
+
+<Callout title="Temperature zero is not a guarantee">
+Setting temperature to zero makes output more repeatable, but not strictly identical. Differences in batching and hardware can still change a result, and a model update changes it for certain. Design for variation.
+</Callout>
+
+## Common failures and the usual fix
+
+| Symptom | Likely cause | First thing to try |
+|---|---|---|
+| Ignores a rule | Rule buried in a long prompt | Move it near the end and state it once, clearly |
+| Wrong format | Format described, not shown | Add an example of the exact output |
+| Invents facts | Missing context, no permission to say "unknown" | Provide the facts and allow "I don't know" |
+| Inconsistent labels | Vague categories | Define each category with an example |
+| Follows instructions in a document | Data and instructions mixed | Delimit the data and say it is not instructions |
+
+## Habits that pay off
+
+- Keep prompts in files under version control, not inside code strings.
+- Change one thing at a time and run your examples after each change.
+- Save real failures as test cases. They become the start of an evaluation set, which is covered in the Evals track.

@@ -1,0 +1,401 @@
+/* Page-level layout: home, curriculum, lessons, tools, pulse. */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- home ---------- */
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  gap: clamp(2rem, 6vw, 5rem);
+  padding-block: clamp(2.5rem, 7vw, 5.5rem) 3rem;
+  align-items: start;
+}
+.hero-copy {
+  position: sticky;
+  top: 6rem;
+}
+.hero-copy .lede {
+  margin-top: 1.5rem;
+  max-width: 34rem;
+  font-size: 1.25rem;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+.hero-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-top: 2rem;
+}
+.hero-hint {
+  margin-top: 1.6rem;
+  max-width: 30rem;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  color: var(--ink-3);
+}
+
+.section {
+  padding-block: clamp(2.5rem, 6vw, 4.5rem) 0;
+}
+.section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--ink);
+}
+.section-head p {
+  max-width: 44ch;
+  color: var(--ink-3);
+  font-family: var(--font-display);
+  font-size: 0.98rem;
+}
+
+/* hairline index rows, shared by tracks, tools and pulse */
+.rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.row {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr) auto;
+  gap: 0.4rem 2rem;
+  align-items: baseline;
+  padding: 1.15rem 0;
+  border-bottom: 1px solid var(--line-soft);
+  text-decoration: none;
+}
+.row::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: var(--signal);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.5s var(--ease);
+}
+.row:hover::after,
+.row:focus-visible::after {
+  transform: scaleX(1);
+}
+.row:hover {
+  color: inherit;
+}
+.row h3 {
+  font-size: 1.5rem;
+  transition: color 0.2s;
+}
+.row:hover h3 {
+  color: var(--signal-ink);
+}
+.row p {
+  color: var(--ink-2);
+  font-size: 1.02rem;
+  line-height: 1.5;
+}
+.row .meta {
+  font-family: var(--font-display);
+  font-size: 0.88rem;
+  color: var(--ink-3);
+  white-space: nowrap;
+  text-align: right;
+}
+
+/* ---------- curriculum ---------- */
+
+.track {
+  padding-block: 2.8rem 0;
+  scroll-margin-top: 5rem;
+}
+.track-head {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  gap: 0.5rem 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--ink);
+  align-items: end;
+}
+.track-head h2 a {
+  text-decoration: none;
+}
+.track-head p {
+  color: var(--ink-2);
+}
+.track-head .tp {
+  grid-column: 1 / -1;
+  margin-top: 0.7rem;
+}
+.lesson-row {
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr) 9.5rem;
+}
+.lesson-row h3 {
+  font-size: 1.2rem;
+}
+.lesson-row .meta {
+  text-align: left;
+}
+
+/* ---------- lesson ---------- */
+
+.wrap.lesson {
+  max-width: 1400px;
+}
+.lesson {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: clamp(1.5rem, 3.5vw, 3rem);
+  padding-block: 2.5rem 0;
+  align-items: start;
+}
+.lesson-nav {
+  position: sticky;
+  top: 5rem;
+  max-height: calc(100vh - 6rem);
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+.lesson-toc {
+  display: none;
+}
+.crumbs {
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  color: var(--ink-3);
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.crumbs a {
+  text-decoration: none;
+}
+.crumbs a:hover {
+  text-decoration: underline;
+}
+.lesson-head h1 {
+  margin-top: 0.8rem;
+  font-size: clamp(2.2rem, 4.4vw, 3.4rem);
+}
+.lesson-head .summary {
+  margin-top: 1rem;
+  max-width: 52ch;
+  font-size: 1.25rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.lesson-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.6rem;
+  margin-top: 1.4rem;
+  padding-block: 0.8rem;
+  border-block: 1px solid var(--line-soft);
+  font-family: var(--font-display);
+  font-size: 0.88rem;
+  color: var(--ink-3);
+}
+.lesson-body {
+  margin-top: 2rem;
+}
+.lesson-body .prose > :first-child {
+  margin-top: 0;
+}
+.lesson-body .viz {
+  max-width: none;
+}
+.lesson-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.6rem;
+  border-top: 1px solid var(--line);
+  max-width: var(--measure);
+}
+.lesson-foot h2 {
+  font-size: 1.2rem;
+}
+.sources {
+  margin: 0.8rem 0 0;
+  padding-left: 1.1rem;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+}
+.sources li + li {
+  margin-top: 0.3rem;
+}
+.lesson-done {
+  margin-top: 1.6rem;
+}
+.pager {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+.pager a {
+  display: block;
+  padding: 0.9rem 0;
+  border-top: 1px solid var(--ink);
+  text-decoration: none;
+  font-family: var(--font-display);
+}
+.pager a span {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--ink-3);
+}
+.pager a b {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 1.1rem;
+  font-weight: 620;
+  line-height: 1.25;
+  transition: color 0.2s;
+}
+.pager a:hover b {
+  color: var(--signal-ink);
+}
+.pager .next {
+  text-align: right;
+  grid-column: 2;
+}
+
+@media (min-width: 1240px) {
+  .lesson {
+    grid-template-columns: 240px minmax(0, 1fr) 180px;
+  }
+  .lesson-toc {
+    display: block;
+    position: sticky;
+    top: 5rem;
+    font-family: var(--font-display);
+    font-size: 0.88rem;
+  }
+  .lesson-toc p {
+    font-weight: 650;
+    margin-bottom: 0.6rem;
+  }
+  .lesson-toc ul {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0 0.9rem;
+    border-left: 1px solid var(--line-soft);
+  }
+  .lesson-toc li + li {
+    margin-top: 0.5rem;
+  }
+  .lesson-toc a {
+    display: block;
+    text-decoration: none;
+    color: var(--ink-3);
+    line-height: 1.3;
+    position: relative;
+  }
+  .lesson-toc a.is-active {
+    color: var(--signal-ink);
+    font-weight: 600;
+  }
+  .lesson-toc a.is-active::before {
+    content: '';
+    position: absolute;
+    left: calc(-0.9rem - 1px);
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--signal);
+  }
+}
+
+/* ---------- tools ---------- */
+
+.tool-body {
+  padding-block: 1rem 0;
+}
+.tool-body .viz {
+  border-top: 0;
+}
+.tool-notes {
+  margin-top: 2.5rem;
+}
+.tool-row {
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+}
+
+/* ---------- pulse ---------- */
+
+.pulse-row {
+  grid-template-columns: 8.5rem minmax(0, 1fr);
+}
+.pulse-row .meta {
+  text-align: left;
+}
+.tags {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.9rem;
+}
+.pulse-entry {
+  padding-block: 2.5rem 0;
+  max-width: var(--measure);
+}
+.pulse-entry h1 {
+  font-size: clamp(2rem, 4vw, 3rem);
+  margin-bottom: 1rem;
+}
+
+/* ---------- misc ---------- */
+
+.not-found {
+  padding-block: 6rem;
+  max-width: 36rem;
+}
+.not-found p {
+  margin-block: 1rem 2rem;
+  color: var(--ink-2);
+}
+
+@media (max-width: 960px) {
+  .hero {
+    grid-template-columns: 1fr;
+  }
+  .hero-copy {
+    position: static;
+  }
+  .lesson {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  .lesson-nav {
+    position: static;
+    max-height: none;
+    padding-right: 0;
+  }
+}
+
+@media (max-width: 720px) {
+  .row,
+  .track-head,
+  .lesson-row,
+  .tool-row {
+    grid-template-columns: 1fr;
+  }
+  .row .meta {
+    text-align: left;
+  }
+  .pulse-row {
+    grid-template-columns: 1fr;
+  }
+}

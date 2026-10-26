@@ -1,0 +1,69 @@
+---
+title: The context window and prompt caching
+track: llm
+level: intermediate
+order: 2
+summary: What fills the context window, why longer is not free, and how to order a prompt so the platform can cache it.
+updated: 2026-10-26
+sources:
+  - label: "Lost in the Middle: How Language Models Use Long Contexts (Liu et al., 2023)"
+    url: https://arxiv.org/abs/2307.03172
+  - label: "Amazon Bedrock prompt caching"
+    url: https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-caching.html
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Disclosure from '../../../components/viz/Disclosure.tsx';
+
+The **context window** is the maximum number of tokens a model can consider in one request. Input and output both count against it. A larger window lets you send more, but it does not mean the model uses everything equally well, and it does not make sending more cheap.
+
+## What fills the window
+
+In a real application the user's message is usually the smallest part. The rest is:
+
+- the system prompt and rules, resent every time
+- tool and function definitions
+- retrieved documents
+- conversation history, which grows with each turn
+- the output the model is about to write
+
+A chat that resends its entire history means cost per turn rises with each message, and total cost for a conversation rises faster than its length.
+
+## Longer context has real costs
+
+- **Money.** You pay for every input token on every request.
+- **Latency.** Longer prompts take longer to process before the first token appears.
+- **Quality.** Research on long contexts has found that models can use information in the middle of a long prompt less reliably than information at the start or end. Test with your own data rather than assuming a large window is fully usable.
+
+## Prompt caching
+
+If many requests begin with the same long prefix, such as a system prompt, a set of examples or a document, the platform can keep the processed form of that prefix and reuse it. Cached input tokens are typically billed at a discount and the first token arrives sooner. Details differ by provider: how a prefix is marked, how long it stays cached, whether writing to the cache costs extra, and the minimum prefix size. Check the current documentation for yours.
+
+The rule that matters everywhere is **the cache matches from the start of the prompt**, so order decides what can be reused.
+
+```text
+[ stable ]   system instructions, rules, tool definitions
+[ stable ]   few-shot examples, reference documents
+[ cache breakpoint ]
+[ changes ]  conversation so far
+[ changes ]  the user's new message
+```
+
+Putting a timestamp, a user name or any per-request value near the top silently defeats caching, because the prefix is different every time.
+
+<Callout kind="cost" title="Measure the hit rate">
+Look for cache read and cache write counts in the usage data that comes back with each response. A cache that is configured but never hit saves nothing and may cost extra to write.
+</Callout>
+
+## Keeping context under control
+
+- **Summarise old turns** and keep recent ones verbatim.
+- **Retrieve instead of stuffing.** Fetch the few passages that matter rather than sending the whole manual.
+- **Trim tool output.** A tool that returns a huge JSON blob fills the window for every later step. Return only what the model needs.
+- **Set a maximum output length** appropriate to the task.
+
+<Disclosure title="Rule of thumb for deciding between caching and retrieval">
+
+If the reference material is small enough to fit comfortably and is reused on most requests, caching it is simpler and often better. If it is large, changes often, or only a small part is relevant to each question, retrieve it.
+
+</Disclosure>

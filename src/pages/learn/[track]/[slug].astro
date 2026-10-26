@@ -1,0 +1,200 @@
+---
+import { render } from 'astro:content';
+import Base from '../../../layouts/Base.astro';
+import Level from '../../../components/ui/Level.astro';
+import HairFigure from '../../../components/viz/HairFigure.tsx';
+import { figureFor } from '../../../data/figures';
+import DepthToggle from '../../../components/ui/DepthToggle.astro';
+import GlossaryTips from '../../../components/ui/GlossaryTips.astro';
+import Quiz from '../../../components/ui/Quiz.tsx';
+import TrackTree from '../../../components/viz/TrackTree.tsx';
+import { DoneButton } from '../../../components/viz/Progress.tsx';
+import { tracks, trackById, levels } from '../../../data/tracks';
+import { extras } from '../../../data/lesson-extras';
+import { withBase } from '../../../lib/url';
+import { getLessons, lessonPath, slugOf, readingMinutes, formatDate } from '../../../lib/content';
+
+export async function getStaticPaths() {
+  const lessons = await getLessons();
+  return lessons.map((lesson) => ({
+    params: { track: lesson.data.track, slug: slugOf(lesson) },
+    props: { lesson },
+  }));
+}
+
+const { lesson } = Astro.props;
+const all = await getLessons();
+const { Content, headings } = await render(lesson);
+
+const track = trackById(lesson.data.track)!;
+const slug = slugOf(lesson);
+const key = `${track.id}/${slug}`;
+const extra = extras[key];
+const idx = all.findIndex((l) => l.id === lesson.id);
+const prev = all[idx - 1];
+const next = all[idx + 1];
+const toc = headings.filter((h) => h.depth === 2);
+const here = lessonPath(lesson);
+
+const byKey = Object.fromEntries(all.map((l) => [`${l.data.track}/${slugOf(l)}`, l]));
+const prereqs = (extra?.prereq ?? []).map((k) => byKey[k]).filter(Boolean);
+
+const groups = tracks.map((t) => ({
+  id: t.id,
+  title: t.title,
+  lessons: all
+    .filter((l) => l.data.track === t.id)
+    .map((l) => ({ slug: slugOf(l), title: l.data.title, level: levels[l.data.level].n })),
+}));
+---
+
+<Base title={lesson.data.title} description={lesson.data.summary} progress track={{ color: track.color, on: track.on }}>
+  <section class="lesson-hero">
+    <div class="wrap">
+      <div class="lesson-head">
+        <p class="crumbs">
+          <a href={withBase('/learn/')}>Curriculum</a> <span aria-hidden="true">/</span>
+          <a href={withBase(`/learn/${track.id}/`)}>{track.title}</a>
+        </p>
+        <h1>{lesson.data.title}</h1>
+        <p class="summary">{lesson.data.summary}</p>
+        <div class="lesson-meta">
+          <Level level={lesson.data.level} />
+          <span>{readingMinutes(lesson.body)} min read</span>
+          <span>Updated {formatDate(lesson.data.updated)}</span>
+        </div>
+        <DepthToggle />
+      </div>
+      <div class="lesson-hero-art"><HairFigure client:visible name={figureFor(track.id)} tone="track" intensity={0.7} play /></div>
+    </div>
+  </section>
+
+  <div class="wrap lesson">
+    <aside class="lesson-nav" aria-label="Lesson navigation">
+      <TrackTree client:load groups={groups} currentTrack={track.id} currentSlug={slug} />
+    </aside>
+
+    <article class="lesson-main">
+      {
+        extra && (
+          <aside class="takeaways" aria-label="In short" data-reveal>
+            <h2>In short</h2>
+            <ul>
+              {extra.takeaways.map((t) => <li>{t}</li>)}
+            </ul>
+            {prereqs.length > 0 && (
+              <p class="prereq">
+                <b>Before this:</b>{' '}
+                {prereqs.map((p) => <a href={withBase(lessonPath(p))}>{p.data.title}</a>)}
+              </p>
+            )}
+          </aside>
+        )
+      }
+
+      <div class="lesson-body">
+        <div class="prose">
+          <Content />
+        </div>
+      </div>
+
+      {
+        extra && (
+          <>
+            <div class="lesson-quiz">
+              <Quiz client:visible id={key} items={extra.quiz} />
+            </div>
+            {extra.play && extra.play.length > 0 && (
+              <p class="practise">
+                <b>Practise it:</b>{' '}
+                {extra.play.map((p) => <a class="btn quiet" href={withBase(p.href)}>{p.label}</a>)}
+              </p>
+            )}
+          </>
+        )
+      }
+
+      <footer class="lesson-foot">
+        {
+          lesson.data.sources.length > 0 && (
+            <>
+              <h2>Sources and further reading</h2>
+              <ul class="sources">
+                {lesson.data.sources.map((s) => (
+                  <li><a href={s.url} rel="noopener">{s.label}</a></li>
+                ))}
+              </ul>
+            </>
+          )
+        }
+        <div class="lesson-done">
+          <DoneButton client:load id={key} />
+        </div>
+        <nav class="pager" aria-label="Previous and next lesson">
+          {
+            prev ? (
+              <a class="prev" href={withBase(lessonPath(prev))} rel="prev">
+                <span>Previous</span>
+                <b>{prev.data.title}</b>
+              </a>
+            ) : (
+              <span />
+            )
+          }
+          {
+            next && (
+              <a class="next" href={withBase(lessonPath(next))} rel="next">
+                <span>Next</span>
+                <b>{next.data.title}</b>
+              </a>
+            )
+          }
+        </nav>
+      </footer>
+    </article>
+
+    {
+      toc.length > 1 && (
+        <aside class="lesson-toc" aria-label="On this page">
+          <p>On this page</p>
+          <ul>
+            {toc.map((h) => (
+              <li><a href={`#${h.slug}`} data-toc={h.slug}>{h.text}</a></li>
+            ))}
+          </ul>
+        </aside>
+      )
+    }
+  </div>
+
+  <GlossaryTips />
+
+  <script is:inline define:vars={{ href: here, title: lesson.data.title }}>
+    /* remember where the reader is, for "Continue where you left off" */
+    try {
+      localStorage.setItem('layerwise:last', JSON.stringify({ href: href, title: title }));
+    } catch (e) {}
+  </script>
+
+  <script is:inline>
+    (function () {
+      var links = [].slice.call(document.querySelectorAll('[data-toc]'));
+      if (!links.length || !('IntersectionObserver' in window)) return;
+      var map = {};
+      links.forEach(function (a) { map[a.getAttribute('data-toc')] = a; });
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) {
+            links.forEach(function (a) { a.classList.remove('is-active'); });
+            var a = map[e.target.id];
+            if (a) a.classList.add('is-active');
+          }
+        });
+      }, { rootMargin: '-15% 0px -70% 0px' });
+      Object.keys(map).forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) io.observe(el);
+      });
+    })();
+  </script>
+</Base>

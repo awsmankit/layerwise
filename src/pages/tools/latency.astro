@@ -1,0 +1,14 @@
+---
+import ToolPage from '../../layouts/ToolPage.astro';
+import LatencyBudget from '../../components/viz/LatencyBudget.tsx';
+import { withBase } from '../../lib/url';
+---
+
+<ToolPage figure="slow" title="Latency budget" lede="Compare cloud and on-device inference against the time your product can afford to spend.">
+  <LatencyBudget client:load />
+  <Fragment slot="notes">
+    <h2>Reading the bars</h2>
+    <p>Cloud latency is the network round trip plus compute. On-device latency is compute only, but compute on a small chip is slower and uses battery. Pick a scenario, then change the numbers to match your own measurements.</p>
+    <p>More in <a href={withBase('/learn/edge/edge-vs-cloud-inference/')}>Edge vs cloud inference</a>.</p>
+  </Fragment>
+</ToolPage>

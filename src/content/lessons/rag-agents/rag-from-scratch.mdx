@@ -1,0 +1,95 @@
+---
+title: RAG from scratch
+track: rag-agents
+level: basic
+order: 1
+summary: Retrieval-augmented generation in two pipelines and forty lines of code, plus what it does not fix.
+updated: 2026-10-26
+sources:
+  - label: "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks (Lewis et al., 2020)"
+    url: https://arxiv.org/abs/2005.11401
+---
+
+import PipelineFlow from '../../../components/viz/PipelineFlow.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+
+A language model only knows what it saw in training and what you put in the prompt. **Retrieval-augmented generation** (RAG) bridges that gap: find the passages that matter for this question, put them in the prompt, and ask the model to answer from them.
+
+It is really two pipelines. One runs ahead of time, to prepare your documents. The other runs on every question.
+
+## Pipeline 1: indexing (offline)
+
+<PipelineFlow
+  title="Indexing"
+  stages={[
+    { title: 'Load', detail: 'Read your sources: files, wikis, tickets, web pages. Keep the origin and any metadata such as title, date and permissions.' },
+    { title: 'Clean', detail: 'Strip navigation, boilerplate and duplicated text. Noise in the index becomes noise in the answers.' },
+    { title: 'Chunk', detail: 'Split documents into passages small enough to be specific and large enough to make sense alone.' },
+    { title: 'Embed', detail: 'Turn each chunk into a vector with an embedding model.' },
+    { title: 'Store', detail: 'Write vectors, text and metadata to an index that supports nearest-neighbour search.' },
+  ]}
+  client:visible
+/>
+
+## Pipeline 2: answering (online)
+
+<PipelineFlow
+  title="Answering"
+  stages={[
+    { title: 'Question', detail: 'The user asks something. Optionally rewrite it into a better search query, especially in a multi-turn chat.' },
+    { title: 'Retrieve', detail: 'Embed the question and fetch the nearest chunks. Many systems also run a keyword search and merge the results.' },
+    { title: 'Rerank', detail: 'A second, more careful model re-scores the candidates and keeps the best few.' },
+    { title: 'Augment', detail: 'Build the prompt: instructions, the retrieved passages with their sources, then the question.' },
+    { title: 'Generate', detail: 'The model answers using the passages and, ideally, cites them.' },
+  ]}
+  client:visible
+/>
+
+## The smallest working version
+
+`embed` and `generate` stand for whichever embedding and chat models you use.
+
+```python
+import numpy as np
+
+def build_index(chunks, embed):
+    vectors = np.array([embed(c["text"]) for c in chunks])
+    vectors /= np.linalg.norm(vectors, axis=1, keepdims=True)   # unit length
+    return vectors
+
+def retrieve(question, chunks, vectors, embed, k=4):
+    q = np.array(embed(question))
+    q /= np.linalg.norm(q)
+    scores = vectors @ q                       # cosine similarity
+    top = np.argsort(-scores)[:k]
+    return [chunks[i] for i in top]
+
+def answer(question, chunks, vectors, embed, generate):
+    hits = retrieve(question, chunks, vectors, embed)
+    context = "\n\n".join(f"[{h['source']}]\n{h['text']}" for h in hits)
+    prompt = (
+        "Answer using only the passages below. Cite the source in brackets. "
+        "If the passages do not contain the answer, say you do not know.\n\n"
+        f"<passages>\n{context}\n</passages>\n\nQuestion: {question}"
+    )
+    return generate(prompt)
+```
+
+For a few thousand chunks this is enough. Beyond that you use an approximate nearest-neighbour index in a vector database or a search engine with vector support.
+
+## Why teams choose RAG
+
+- Knowledge updates by re-indexing, with no training.
+- Answers can point to their sources, which builds trust and makes errors easier to find.
+- Access control can be enforced at retrieval time, so people only get passages they are allowed to see.
+
+<Callout title="What RAG does not fix">
+If retrieval misses the right passage, the model will either say it does not know or, worse, answer confidently from the wrong text. Quality is capped by retrieval, so measure retrieval separately from the final answer. The next lesson covers how.
+</Callout>
+
+## Build checklist
+
+1. Start with 20 to 50 real questions and the passages that answer them.
+2. Index a small slice of the data and check what comes back before scaling up.
+3. Instruct the model to say "I don't know" when the passages do not help.
+4. Return sources with every answer.

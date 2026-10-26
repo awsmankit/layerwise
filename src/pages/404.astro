@@ -1,0 +1,12 @@
+---
+import Base from '../layouts/Base.astro';
+import { withBase } from '../lib/url';
+---
+
+<Base title="Page not found">
+  <div class="wrap not-found">
+    <h1>Page not found</h1>
+    <p>That address does not match a lesson, tool or note. It may have moved when a track was reorganised.</p>
+    <a class="btn" href={withBase('/learn/')}>Browse the curriculum</a>
+  </div>
+</Base>

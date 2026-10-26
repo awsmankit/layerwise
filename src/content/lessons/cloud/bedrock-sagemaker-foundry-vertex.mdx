@@ -1,0 +1,55 @@
+---
+title: Bedrock, SageMaker, Foundry and Vertex
+track: cloud
+level: intermediate
+order: 2
+summary: What each cloud AI platform is for, how they map onto each other, and the questions that decide which to use.
+updated: 2026-10-26
+sources:
+  - label: "Amazon Bedrock"
+    url: https://aws.amazon.com/bedrock/
+  - label: "Amazon SageMaker AI"
+    url: https://aws.amazon.com/sagemaker/
+  - label: "Azure AI Foundry"
+    url: https://azure.microsoft.com/products/ai-foundry
+  - label: "Google Cloud Vertex AI"
+    url: https://cloud.google.com/vertex-ai
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+
+Each major cloud offers two kinds of AI service, and the names make it easy to mix them up. One kind is a **managed model API**: you call a model somebody else trained and hosts. The other is an **ML platform**: you bring data and code to train, tune and host models yourself.
+
+## The two families
+
+| | Managed model API | ML platform |
+|---|---|---|
+| You do | Prompt, retrieve, orchestrate, evaluate | Prepare data, train, tune, deploy, monitor |
+| You get | Access to hosted foundation models | Notebooks, training jobs, endpoints, pipelines |
+| Billing | Mostly per token, some reserved capacity | Instance time, storage, plus any managed features |
+| Control over the model | Limited to what the provider allows | Full, within your own compute |
+| AWS | Bedrock | SageMaker AI |
+| Microsoft | Azure AI Foundry, which includes Azure OpenAI models | Azure Machine Learning |
+| Google | Vertex AI model access (Gemini and Model Garden) | Vertex AI training and prediction |
+
+Boundaries blur. Foundry and Vertex bundle model access with tooling in one portal, and each platform has added agent, evaluation and guardrail features. Treat the table as a map of intent, not of product boundaries.
+
+## Questions that decide it
+
+1. **Which models do you need?** Availability differs by cloud and by region, and some models are exclusive to one platform. Start with the models whose quality you have measured on your task.
+2. **Where does your data live?** Data gravity matters. Moving data between clouds costs money, adds latency and often adds compliance questions.
+3. **What do your compliance rules require?** Check residency, logging, private networking and what each provider says about training on your data.
+4. **What do your teams already know?** Identity, networking and deployment pipelines you already run are a real advantage.
+5. **Do you need to train or only to call?** If you need custom training, you need the ML platform side regardless.
+6. **What will it cost at your volume?** Per-token versus reserved capacity switches over at some utilisation, which you can estimate with the cost calculator.
+7. **How locked in will you be?** Keep prompts, evals and orchestration code portable so that you can move models when pricing or quality shifts.
+
+## A practical stance
+
+- **Pick the model first and the platform second**, unless a constraint such as data residency forces the platform.
+- **Put a thin abstraction in your own code** around model calls: one function that takes messages and returns text plus usage. Switching platforms then touches one file, and your evals keep working.
+- **Evaluate on your own cases before deciding.** Public leaderboards are a starting point, not a verdict.
+
+<Callout title="Verify before you decide">
+Catalogs, regions, quotas and prices are the parts of this comparison that change fastest. Use the vendor pages in the sources for anything that would decide a purchase.
+</Callout>

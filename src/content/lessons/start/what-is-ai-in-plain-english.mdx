@@ -1,0 +1,85 @@
+---
+title: What AI actually is, in plain English
+track: start
+level: basic
+order: 1
+summary: A map of the terms people mix up, and a straight account of what these systems can and cannot do.
+updated: 2026-10-26
+sources:
+  - label: "Google's Machine Learning Crash Course"
+    url: https://developers.google.com/machine-learning/crash-course
+  - label: "Elements of AI (free introductory course)"
+    url: https://www.elementsofai.com
+---
+
+import Nesting from '../../../components/viz/Nesting.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+You hear "AI", "machine learning", "LLM" and "generative AI" used as if they meant one thing. They do not. This lesson sorts them out, explains what is going on inside, and says plainly what these systems are good and bad at. No background needed.
+
+## Start with a spam filter
+
+Suppose you want to catch spam email. There are two ways to do it.
+
+**Write the rules yourself.** If the subject has "WINNER" in capitals, mark it spam. If it mentions a prince, mark it spam. This works until spammers change their wording, and then you are rewriting rules forever.
+
+**Learn from examples.** Collect thousands of emails that people marked as spam or not spam, and let a program find the patterns that separate them. Nobody writes the rules. When spammers change tactics, you show it new examples.
+
+The second way is **machine learning**, and nearly everything called AI today works like that.
+
+| | Rules written by hand | Learned from examples |
+|---|---|---|
+| Who works out the logic | A person | The computer, from data |
+| Handles new situations | Only if someone thought of them | Often, if they resemble the examples |
+| Main weakness | Brittle, never finished | Needs good examples; can be wrong in ways that are hard to explain |
+
+## The map
+
+These terms are nested, like Russian dolls. Click each ring.
+
+<Nesting client:visible />
+
+## What a "model" is
+
+A **model** is the thing that has learned. Think of it as a very large formula with millions or billions of adjustable dials, called **parameters**. Before training, the dials are random and the model's answers are nonsense.
+
+**Training** means showing the model many examples and nudging the dials a little after each one so its answers get closer to the right ones. Repeat that billions of times and the dials settle into values that capture the patterns in the data.
+
+After training, the dials are fixed. **Using** the model, called **inference**, just means feeding it new input and reading what comes out. That is what happens when you type into a chatbot.
+
+<Deep>
+
+The dials are numbers stored in a file, which is why people talk about a model's "weights" and why a model can be copied and run on different computers. Training is expensive because it needs powerful chips running for weeks. Using a trained model is far cheaper, but it still adds up when millions of people do it.
+
+</Deep>
+
+## What a chatbot model does
+
+A large language model is trained on an enormous amount of text with one simple task: **given the text so far, predict what comes next.** That is all. Answering questions, writing emails and explaining code all come out of getting very good at that one task, because to predict well you have to pick up grammar, facts, styles and common sense along the way.
+
+The [next lesson](../how-a-chatbot-answers/) lets you play with this directly.
+
+## What it is good at, and what it is not
+
+| Usually good | Usually weak |
+|---|---|
+| Drafting, rewriting and summarising text | Knowing facts it was never shown, or that changed recently |
+| Explaining a concept in different ways | Exact arithmetic and long, careful logic without help |
+| Writing and explaining routine code | Telling you honestly when it does not know |
+| Sorting, labelling and extracting information | Anything where one wrong detail is costly, unless you check |
+| Brainstorming options | Remembering you between separate conversations on its own |
+
+<Callout title="Three things worth knowing from day one">
+
+1. **It can be confidently wrong.** Fluent writing is not evidence of truth.
+2. **It only knows what it learned in training, plus what is in the conversation.** It does not look things up unless the product around it is built to.
+3. **Quality depends heavily on how you ask.** A clear request with the right context beats a vague one.
+
+</Callout>
+
+## Where to go next
+
+- [How a chatbot decides what to say](../how-a-chatbot-answers/), with an interactive demo.
+- [Using AI without getting burned](../using-ai-without-getting-burned/), practical habits.
+- When you are ready to build with it, the **Foundations** and **Working with LLMs** tracks pick up from here.

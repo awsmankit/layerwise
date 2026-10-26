@@ -1,0 +1,67 @@
+---
+title: How a chatbot decides what to say
+track: start
+level: basic
+order: 2
+summary: Play with a toy language model to see why answers vary, why it sometimes makes things up, and what temperature means.
+updated: 2026-10-26
+sources:
+  - label: "The Illustrated Transformer (Jay Alammar)"
+    url: https://jalammar.github.io/illustrated-transformer/
+  - label: "Attention Is All You Need (Vaswani et al., 2017)"
+    url: https://arxiv.org/abs/1706.03762
+---
+
+import NextToken from '../../../components/viz/NextToken.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+When you press enter, the chatbot does not look up an answer. It writes one, a small piece at a time. Understanding that single fact explains most of the strange behaviour people notice.
+
+## What happens when you press enter
+
+1. Your message, and the conversation so far, is chopped into small pieces called **tokens**. A token is a word or part of a word.
+2. The model reads all of those tokens and works out **how likely each possible next token is**. For "The capital of France is", the token " Paris" gets a very high probability.
+3. One token is **chosen** from those probabilities.
+4. That token is added to the text.
+5. Go back to step 2 with the longer text. Stop when the model decides the answer is finished.
+
+That loop is the whole mechanism. Every sentence a chatbot has ever written came out of it, one token at a time.
+
+## Try it yourself
+
+Below is a toy version with a handful of hand-written probabilities. Click a word to choose it, or let chance pick. Then move the temperature slider and see what changes.
+
+<NextToken client:visible />
+
+## What you just saw
+
+**Why the same question gets different answers.** Choosing among likely words involves a bit of chance, like rolling a loaded die. Run it twice and you can get two different, equally reasonable sentences. In the factual example, " Paris" is so likely that it wins nearly every time. In the open-ended one, many words are plausible, so the results vary.
+
+**What temperature does.** It controls how boldly the model chooses. Low temperature makes it stick to the most likely word, which suits factual or precise work. High temperature gives unlikely words a real chance, which suits brainstorming but also produces more mistakes.
+
+<Deep title="The arithmetic">
+
+Temperature reshapes the probabilities. If a token has probability p, its new probability is proportional to p raised to the power 1/T, and then all the values are rescaled to add up to 1. At T below 1, the gap between likely and unlikely tokens widens. At T above 1, it narrows. The demo uses exactly this calculation. Real systems often add other controls too, such as only considering the top few likely tokens.
+
+</Deep>
+
+**Why it sometimes makes things up.** The model's job is to produce a *plausible* continuation, not to check facts. If you ask about something it learned well, the plausible answer is also the true one. If you ask for a detail it never saw, such as a specific court case, a statistic or a reference, it still produces something that *looks* right, because looking right is what it was trained to do. This is called a **hallucination**.
+
+**Why it can seem to know so much.** It was trained on a huge amount of text, and predicting that text well meant absorbing many patterns and facts. It is a compressed, imperfect record of what it read, not a database.
+
+**Why it forgets between chats.** It only sees the text in front of it, the current conversation. The amount of text it can see at once is called its **context window**. Anything outside that window, including an earlier conversation, simply is not there unless the product pastes it back in.
+
+<Callout title="The practical rule">
+
+Treat a chatbot like a fast, well-read colleague who writes fluently and sometimes bluffs. Great for drafts and ideas. Check anything that matters. The next lesson turns that into habits.
+
+</Callout>
+
+## Check your understanding
+
+- Why does the factual example nearly always give "Paris" but the weather example varies?
+- What would you set the temperature to for writing a legal clause, and why? What about for brainstorming product names?
+- A model gives you a perfect-looking citation. What is the right response?
+
+Next: [Using AI without getting burned](../using-ai-without-getting-burned/).

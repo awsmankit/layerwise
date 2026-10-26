@@ -1,0 +1,15 @@
+---
+/**
+ * Optional depth. Shown in "Full depth" mode, hidden in "Essentials" mode
+ * (the toggle in the lesson header sets html[data-depth]).
+ */
+interface Props {
+  title?: string;
+}
+const { title = 'Deeper detail' } = Astro.props;
+---
+
+<div class="deep">
+  <p class="deep-tag">{title}</p>
+  <slot />
+</div>

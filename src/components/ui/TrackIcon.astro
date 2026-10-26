@@ -1,0 +1,46 @@
+---
+/**
+ * One hairline icon per track. Every shape has pathLength="1" so CSS can draw
+ * it with stroke-dashoffset (see .ti in global.css).
+ */
+interface Props {
+  name: string;
+  size?: number;
+  class?: string;
+}
+const { name, size = 64, class: cls } = Astro.props;
+
+type Shape = { t: 'p'; d: string } | { t: 'c'; cx: number; cy: number; r: number };
+const p = (d: string): Shape => ({ t: 'p', d });
+const c = (cx: number, cy: number, r: number): Shape => ({ t: 'c', cx, cy, r });
+
+const icons: Record<string, Shape[]> = {
+  start: [p('M32 6 L38 26 L58 32 L38 38 L32 58 L26 38 L6 32 L26 26 Z'), c(52, 12, 3), c(10, 52, 2.5)],
+  foundations: [p('M32 10 L56 22 L32 34 L8 22 Z'), p('M8 32 L32 44 L56 32'), p('M8 42 L32 54 L56 42')],
+  llm: [p('M10 12 H54 V42 H34 L22 54 V42 H10 Z'), c(22, 27, 2.4), c(32, 27, 2.4), c(42, 27, 2.4)],
+  'rag-agents': [p('M12 6 H36 L46 16 V50 H12 Z'), p('M36 6 V16 H46'), c(36, 38, 10), p('M43.5 45.5 L56 58')],
+  evals: [p('M8 42 A24 24 0 0 1 56 42'), p('M32 42 L44 22'), c(32, 42, 3), p('M8 54 H56')],
+  serving: [p('M37 5 L13 37 H30 L26 59 L51 26 H34 Z')],
+  cloud: [p('M17 48 H47 A11 11 0 0 0 47 26 A15 15 0 0 0 19 30 A9 9 0 0 0 17 48 Z')],
+  systems: [c(32, 32, 7), c(12, 12, 5), c(52, 12, 5), c(12, 52, 5), c(52, 52, 5), p('M16 16 L26 26'), p('M48 16 L38 26'), p('M16 48 L26 38'), p('M48 48 L38 38')],
+  cost: [c(32, 32, 24), p('M32 14 V50'), p('M41 23 H28 A5.5 5.5 0 0 0 28 34 H36 A5.5 5.5 0 0 1 36 45 H23')],
+  blueprint: [p('M8 8 H56 V56 H8 Z'), p('M8 24 H56 M24 8 V56'), c(41, 41, 8)],
+  crunch: [c(32, 32, 23), p('M32 19 V45'), p('M23 37 L32 46 L41 37')],
+  fit: [p('M10 22 L32 10 L54 22 V42 L32 54 L10 42 Z'), p('M10 22 L32 34 L54 22'), p('M32 34 V54')],
+  incident: [p('M32 7 L58 54 H6 Z'), p('M32 25 V39'), c(32, 46, 1.6)],
+  edge: [p('M18 18 H46 V46 H18 Z'), p('M26 26 H38 V38 H26 Z'), p('M25 18 V9 M32 18 V9 M39 18 V9 M25 46 V55 M32 46 V55 M39 46 V55 M18 25 H9 M18 32 H9 M18 39 H9 M46 25 H55 M46 32 H55 M46 39 H55')],
+};
+const shapes = icons[name] ?? icons.start;
+---
+
+<svg class:list={['ti', cls]} width={size} height={size} viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  {
+    shapes.map((s, i) =>
+      s.t === 'p' ? (
+        <path class="p" pathLength="1" d={s.d} style={`--i:${i}`} />
+      ) : (
+        <circle class="p" pathLength="1" cx={s.cx} cy={s.cy} r={s.r} style={`--i:${i}`} />
+      ),
+    )
+  }
+</svg>

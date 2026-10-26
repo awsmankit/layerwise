@@ -1,0 +1,63 @@
+---
+title: Edge or cloud inference
+track: edge
+level: intermediate
+order: 1
+summary: When the model should run on the device, when it should run in the cloud, and the hybrid designs in between.
+updated: 2026-10-26
+sources:
+  - label: "LiteRT (formerly TensorFlow Lite)"
+    url: https://ai.google.dev/edge/litert
+  - label: "ONNX Runtime"
+    url: https://onnxruntime.ai/
+  - label: "ExecuTorch"
+    url: https://pytorch.org/executorch/
+---
+
+import LatencyBudget from '../../../components/viz/LatencyBudget.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+
+Most of this site is about models running in a data centre. Plenty of useful AI runs somewhere else: on a phone, in a car, in a camera, or in a device small enough to sit in your ear. Choosing where inference runs is a design decision with consequences for latency, privacy, cost and battery.
+
+## What pushes toward the device
+
+- **Latency you cannot spend.** Some tasks have budgets of milliseconds. A network round trip alone can exceed them, and it varies from one moment to the next.
+- **Connectivity.** The feature has to work in a tunnel, on a plane, or in a building with poor signal.
+- **Privacy.** Raw audio, images or health data never leave the device.
+- **Cost at scale.** Millions of devices each making frequent calls add up. On-device compute is paid for once, in hardware.
+- **Reliability.** No dependency on a service being up.
+
+## What pushes toward the cloud
+
+- **Model size.** Large models do not fit in a device's memory or power budget.
+- **Quality.** The biggest models are generally more capable, especially on open-ended tasks.
+- **Update speed.** You can change a cloud model today. A device model changes through a firmware or app update.
+- **Fleet visibility.** It is easier to monitor, log and A/B test a service than a million devices.
+- **Heterogeneous hardware.** One cloud target is easier than many chipsets.
+
+## Compare them against your budget
+
+<LatencyBudget client:visible />
+
+Pick the real-time audio scenario. The cloud path loses on network time alone, even with fast compute. Now pick the voice assistant scenario, where the budget is generous and the cloud's faster compute wins.
+
+## Hybrid designs
+
+| Pattern | Idea |
+|---|---|
+| **Device first, cloud fallback** | A small on-device model handles the common case; harder cases go to the cloud when a connection allows |
+| **Split by task** | Time-critical work (wake word, noise suppression, safety) on device; heavy work (summaries, search) in the cloud |
+| **Cloud-trained, device-deployed** | Train and evaluate in the cloud, compress the model, ship it to the device |
+| **Speculative or cascaded** | A device model answers right away and a larger model corrects it later if needed |
+
+## Constraints that are easy to underestimate
+
+- **Power.** Every inference costs battery, and sustained compute causes heat. Measure energy per inference, not only speed.
+- **Memory.** A device may have a few megabytes available for your model, not gigabytes.
+- **Operator support.** The chip's runtime may not support every operation your model uses, which can force a redesign.
+- **Update path.** Plan how models get updated safely in the field, and how to roll back.
+- **Worst case, not average.** Real-time features fail on the slow tail. Budget for p99.
+
+<Callout kind="edge" title="Same ideas, tighter limits">
+Quantization, memory bandwidth and latency budgets are the same ideas you have seen for cloud serving. On a small device they stop being optimisations and become requirements. The next lesson goes deeper on compressing a model to fit.
+</Callout>

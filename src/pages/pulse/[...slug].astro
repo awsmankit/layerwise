@@ -1,0 +1,27 @@
+---
+import { render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { withBase } from '../../lib/url';
+import { getPulse, formatDate } from '../../lib/content';
+
+export async function getStaticPaths() {
+  const entries = await getPulse();
+  return entries.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+---
+
+<Base title={entry.data.title} description={entry.data.title}>
+  <div class="wrap">
+    <article class="pulse-entry">
+      <p class="crumbs"><a href={withBase('/pulse/')}>Pulse</a> <span aria-hidden="true">/</span> <span>{formatDate(entry.data.date)}</span></p>
+      <h1>{entry.data.title}</h1>
+      <div class="prose">
+        <Content />
+        {entry.data.source && <p>Source: <a href={entry.data.source.url} rel="noopener">{entry.data.source.label}</a></p>}
+      </div>
+    </article>
+  </div>
+</Base>

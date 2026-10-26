@@ -1,0 +1,31 @@
+---
+import Base from '../../layouts/Base.astro';
+import { withBase } from '../../lib/url';
+
+const tools = [
+  { href: '/tools/cost/', title: 'Cost calculator', body: 'Traffic and token counts in, monthly spend out. Change the price, the cache hit rate or the batch share and see which lever matters.' },
+  { href: '/tools/memory/', title: 'Model memory calculator', body: 'Weights plus KV cache against real device memory. Try 4-bit weights, longer context, or more concurrent users.' },
+  { href: '/tools/latency/', title: 'Latency budget', body: 'Network and compute time for cloud versus on-device inference, against the budget your product has.' },
+];
+---
+
+<Base title="Tools" description="Calculators for AI cost, model memory and latency budgets.">
+  <div class="wrap">
+    <header class="page-head">
+      <h1>Tools</h1>
+      <p>Small calculators for the questions that come up in every design review. Defaults are examples, so replace them with your own numbers.</p>
+    </header>
+    <ul class="rows" style="margin-top:1rem">
+      {
+        tools.map((t) => (
+          <li>
+            <a class="row tool-row" href={withBase(t.href)}>
+              <h3>{t.title}</h3>
+              <p>{t.body}</p>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</Base>

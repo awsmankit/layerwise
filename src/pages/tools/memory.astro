@@ -1,0 +1,14 @@
+---
+import ToolPage from '../../layouts/ToolPage.astro';
+import ModelMemory from '../../components/viz/ModelMemory.tsx';
+import { withBase } from '../../lib/url';
+---
+
+<ToolPage figure="cabinet" title="Model memory calculator" lede="See how much memory a model needs for its weights and for the KV cache, and which devices it fits on.">
+  <ModelMemory client:load />
+  <Fragment slot="notes">
+    <h2>What to look for</h2>
+    <p>Weights are fixed once you pick a model and a precision. The KV cache grows with context length and with every concurrent user, so it is what makes a model that fits at one user stop fitting at sixty-four.</p>
+    <p>Background: <a href={withBase('/learn/serving/kv-cache-and-memory/')}>KV cache and memory</a> and <a href={withBase('/learn/serving/quantization/')}>Quantization</a>.</p>
+  </Fragment>
+</ToolPage>

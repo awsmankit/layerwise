@@ -1,0 +1,55 @@
+---
+import Base from '../../layouts/Base.astro';
+import GameBadge from '../../components/games/GameBadge.tsx';
+import { games } from '../../data/games';
+import { withBase } from '../../lib/url';
+---
+
+<Base title="Play" description="System design games for AI engineers: design to a brief, cut a bill, fit a model in memory, and debug production incidents.">
+  <div class="wrap">
+    <header class="page-head">
+      <h1>Play</h1>
+      <p>
+        Four games that teach system design by making you do it. Each has levels from easy to hard, scores you can check, and links back to the lesson behind every mistake. Your results stay in this browser.
+      </p>
+    </header>
+
+    <ul class="rows" style="margin-top:1rem">
+      {
+        games.map((g) => (
+          <li>
+            <a class="row game-row" href={withBase(g.href)}>
+              <div>
+                <h3>{g.title}</h3>
+                <p style="margin-top:0.25rem;font-family:var(--font-display);font-weight:550">{g.tagline}</p>
+              </div>
+              <div>
+                <p>{g.blurb}</p>
+                <p style="margin-top:0.5rem;font-family:var(--font-display);font-size:0.88rem;color:var(--ink-3)">
+                  Practises: {g.practises}. {g.minutes}.
+                </p>
+              </div>
+              <span class="meta">
+                <GameBadge client:load prefix={g.prefix} ids={g.levelIds} />
+              </span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+
+    <section class="section">
+      <div class="section-head">
+        <h2>How the games work</h2>
+      </div>
+      <div class="prose" style="margin-top:1.5rem">
+        <p>
+          The scoring is not a black box. Every game is built on a small model of the real system, with the arithmetic available on the page ("Show the arithmetic") and the logic covered by automated tests. The cost maths and the memory maths are the real formulas. The quality and reliability numbers are simplified, chosen so the trade-offs point the way they do in practice.
+        </p>
+        <p>
+          Use them to build judgment about which lever matters, and which mistake is expensive. Do not use them to size a real deployment: for that, measure your own system.
+        </p>
+      </div>
+    </section>
+  </div>
+</Base>

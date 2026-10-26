@@ -1,0 +1,20 @@
+---
+import { levels, type Level } from '../../data/tracks';
+
+interface Props {
+  level: Level;
+  /** Hide the word and show only the ticks. */
+  compact?: boolean;
+}
+const { level, compact = false } = Astro.props;
+const n = levels[level].n;
+---
+
+<span class="level" title={levels[level].label}>
+  <i aria-hidden="true">
+    <b class:list={{ on: n >= 1 }}></b>
+    <b class:list={{ on: n >= 2 }}></b>
+    <b class:list={{ on: n >= 3 }}></b>
+  </i>
+  {compact ? <span class="sr-only">{levels[level].label}</span> : levels[level].label}
+</span>

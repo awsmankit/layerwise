@@ -1,0 +1,116 @@
+---
+/**
+ * Progressive enhancement: on lesson pages, the first mention of each glossary
+ * term in the body text becomes a button that shows its definition. Without
+ * JavaScript the text is unchanged.
+ */
+import { glossaryForTooltips } from '../../data/glossary';
+import { withBase } from '../../lib/url';
+
+const data = { terms: glossaryForTooltips(), glossary: withBase('/glossary/') };
+---
+
+<script type="application/json" id="glossary-data" set:html={JSON.stringify(data)} />
+<div id="term-tip" role="tooltip" hidden></div>
+
+<script is:inline>
+  (function () {
+    var node = document.getElementById('glossary-data');
+    var root = document.querySelector('.lesson-body .prose');
+    if (!node || !root) return;
+    var data = JSON.parse(node.textContent);
+    var tip = document.getElementById('term-tip');
+
+    var SKIP = 'a,code,pre,h1,h2,h3,h4,button,astro-island,.viz,.term,summary,kbd,.deep-tag,table';
+    var done = {};
+
+    function esc(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+    var entries = [];
+    data.terms.forEach(function (t) {
+      t.match.forEach(function (m) {
+        entries.push({ t: t, text: m, re: new RegExp('(^|[^A-Za-z0-9-])(' + esc(m) + ')(?![A-Za-z0-9-])', t.exact ? '' : 'i') });
+      });
+    });
+    entries.sort(function (a, b) { return b.text.length - a.text.length; });
+
+    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: function (n) {
+        if (!n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        return n.parentElement && n.parentElement.closest(SKIP) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    var nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+
+    nodes.forEach(function (textNode) {
+      var guard = 0;
+      var current = textNode;
+      while (current && guard++ < 6) {
+        var hit = null;
+        for (var i = 0; i < entries.length; i++) {
+          var e = entries[i];
+          if (done[e.t.id]) continue;
+          var m = e.re.exec(current.nodeValue);
+          if (m && (!hit || m.index + m[1].length < hit.start)) hit = { e: e, start: m.index + m[1].length, len: m[2].length };
+        }
+        if (!hit) break;
+        done[hit.e.t.id] = true;
+        var mid = current.splitText(hit.start);
+        var after = mid.splitText(hit.len);
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'term';
+        btn.setAttribute('data-id', hit.e.t.id);
+        btn.textContent = mid.nodeValue;
+        mid.parentNode.replaceChild(btn, mid);
+        current = after;
+      }
+    });
+
+    var byId = {};
+    data.terms.forEach(function (t) { byId[t.id] = t; });
+    var hideTimer = null, active = null;
+
+    function show(btn) {
+      clearTimeout(hideTimer);
+      var t = byId[btn.getAttribute('data-id')];
+      if (!t) return;
+      active = btn;
+      tip.innerHTML = '';
+      var b = document.createElement('b'); b.textContent = t.match[0]; tip.appendChild(b);
+      var p = document.createElement('p'); p.textContent = t.short; tip.appendChild(p);
+      var a = document.createElement('a'); a.href = data.glossary + '#' + t.id; a.textContent = 'Full entry in the glossary'; tip.appendChild(a);
+      tip.hidden = false;
+      var r = btn.getBoundingClientRect();
+      var w = tip.offsetWidth, h = tip.offsetHeight;
+      var left = Math.max(10, Math.min(window.innerWidth - w - 10, r.left + r.width / 2 - w / 2));
+      var top = r.top - h - 12;
+      if (top < 8) top = r.bottom + 12;
+      tip.style.left = left + 'px';
+      tip.style.top = top + 'px';
+      btn.setAttribute('aria-describedby', 'term-tip');
+    }
+    function hide(delay) {
+      hideTimer = setTimeout(function () {
+        tip.hidden = true;
+        if (active) active.removeAttribute('aria-describedby');
+        active = null;
+      }, delay);
+    }
+
+    root.addEventListener('mouseover', function (e) { var b = e.target.closest && e.target.closest('.term'); if (b) show(b); });
+    root.addEventListener('mouseout', function (e) { if (e.target.closest && e.target.closest('.term')) hide(140); });
+    root.addEventListener('focusin', function (e) { var b = e.target.closest && e.target.closest('.term'); if (b) show(b); });
+    root.addEventListener('focusout', function (e) { if (e.target.closest && e.target.closest('.term')) hide(140); });
+    root.addEventListener('click', function (e) {
+      var b = e.target.closest && e.target.closest('.term');
+      if (!b) return;
+      if (!tip.hidden && active === b) { clearTimeout(hideTimer); tip.hidden = true; } else show(b);
+    });
+    tip.addEventListener('mouseenter', function () { clearTimeout(hideTimer); });
+    tip.addEventListener('mouseleave', function () { hide(140); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { tip.hidden = true; } });
+    document.addEventListener('click', function (e) { if (!tip.hidden && !e.target.closest('.term') && !e.target.closest('#term-tip')) tip.hidden = true; });
+    addEventListener('scroll', function () { tip.hidden = true; }, { passive: true });
+  })();
+</script>

@@ -1,0 +1,23 @@
+---
+import ToolPage from '../../layouts/ToolPage.astro';
+import BlueprintGame from '../../components/games/BlueprintGame.tsx';
+import { withBase } from '../../lib/url';
+---
+
+<ToolPage figure="hub" title="Blueprint" lede="Design an AI feature to a brief. Six decisions, five requirements, one honest verdict.">
+  <BlueprintGame client:load />
+  <Fragment slot="notes">
+    <h2>How to play</h2>
+    <p>Read the brief, then choose one option in each of the six areas. The estimates on the right update as you go. When you are happy, press <strong>Check my design</strong> to see which requirements you met, with a hint for each one you missed.</p>
+    <h2>What it teaches</h2>
+    <ul>
+      <li>There is rarely one right architecture, only one that fits these constraints. The shop and the retailer need opposite designs.</li>
+      <li>Over-building fails as surely as under-building: every component is something your team must run.</li>
+      <li>Permissions are enforced where data is fetched. A shared cache or a prompt cannot do it.</li>
+      <li>You cannot safely route between models or fall back to a second one without evals to tell you what you traded.</li>
+    </ul>
+    <h2>How scoring works</h2>
+    <p>Each requirement is a pass or a fail. Seventy points come from the share you meet. If you meet them all, up to thirty more come from headroom: money left under the budget and quality above the bar. A design that passes everything always outscores one that does not.</p>
+    <p>The model is deliberately simple. See the <a href={withBase('/learn/systems/rag-service-architecture/')}>RAG service architecture</a> and <a href={withBase('/learn/cost/cost-levers/')}>cost levers</a> lessons for the real-world version.</p>
+  </Fragment>
+</ToolPage>

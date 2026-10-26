@@ -1,0 +1,69 @@
+---
+title: Attention, without the mystique
+track: foundations
+level: intermediate
+order: 3
+summary: The one mechanism inside every transformer, built up from a lookup analogy to a dozen lines of code.
+updated: 2026-10-26
+sources:
+  - label: "Attention Is All You Need (Vaswani et al., 2017)"
+    url: https://arxiv.org/abs/1706.03762
+  - label: "Neural Machine Translation by Jointly Learning to Align and Translate (Bahdanau et al., 2014)"
+    url: https://arxiv.org/abs/1409.0473
+---
+
+import AttentionViz from '../../../components/viz/AttentionViz.tsx';
+import Disclosure from '../../../components/viz/Disclosure.tsx';
+
+Consider the sentence "The animal didn't cross the street because it was too tired." To understand "it" you have to connect it to "animal", not to "street". Attention is the mechanism that lets a model make that kind of connection: every token looks at the other tokens and decides how much each one matters for its own meaning.
+
+## A lookup, but soft
+
+Think of a dictionary lookup. You have a **query**, you compare it with the **keys** of all entries, and you get back the **value** of the matching one. Attention does the same, except that instead of picking one entry, it blends all of them, weighting each by how well its key matches the query.
+
+For each token the model computes three vectors from its current representation:
+
+- a **query**: what this token is looking for
+- a **key**: what this token offers to others
+- a **value**: the information this token passes on when it is attended to
+
+A token's new representation is the weighted sum of every token's value, where the weights come from comparing its query with every key.
+
+<AttentionViz client:visible />
+
+## The same thing in code
+
+```python
+import numpy as np
+
+def attention(Q, K, V, causal=True):
+    # Q, K, V have shape (tokens, d)
+    d = Q.shape[-1]
+    scores = Q @ K.T / np.sqrt(d)                 # how well each query matches each key
+    if causal:                                    # a token may not look at later tokens
+        mask = np.triu(np.ones_like(scores), k=1).astype(bool)
+        scores = np.where(mask, -np.inf, scores)
+    weights = np.exp(scores - scores.max(axis=-1, keepdims=True))
+    weights /= weights.sum(axis=-1, keepdims=True)  # softmax: each row sums to 1
+    return weights @ V                            # blend the values
+```
+
+<Disclosure title="The formula">
+
+The standard form is `softmax(Q Kᵀ / √d) V`. Dividing by the square root of the dimension keeps the scores from growing with the vector size, which would push the softmax into regions where gradients vanish.
+
+</Disclosure>
+
+## What a full transformer adds
+
+- **Many heads.** The model runs several attention computations in parallel, each with its own learned projections, so different heads can track different relationships such as grammar, reference or position.
+- **Many layers.** Attention is followed by a small feed-forward network, and the pair is stacked dozens of times. Early layers tend to capture local patterns and later layers more abstract ones.
+- **A causal mask for generation.** In a text-generating model, a token can only attend to tokens before it. That is what makes generation sequential: each new token depends on all the earlier ones.
+
+## Why this matters for engineering
+
+- **Cost grows with context.** Every token attends to every earlier token, so the work for a prompt grows roughly with the square of its length. This is one reason long context is expensive and slow to first token.
+- **Attention is what the KV cache stores.** During generation the keys and values of earlier tokens are kept so they are not recomputed, which is the subject of the KV cache lesson.
+- **Position in the prompt is not neutral.** Models often use information in the middle of a very long prompt less reliably than information at the start or end, which affects how you order context.
+
+Real attention weights are rarely as tidy as the picture above, and many heads do things people cannot easily interpret. Treat the diagram as a way to build intuition, not as an explanation of any specific model.

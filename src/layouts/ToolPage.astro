@@ -1,0 +1,30 @@
+---
+import Base from './Base.astro';
+import HairFigure from '../components/viz/HairFigure.tsx';
+import type { FigureName } from '../components/viz/HairFigure';
+
+interface Props {
+  title: string;
+  lede: string;
+  figure?: FigureName;
+}
+const { title, lede, figure } = Astro.props;
+---
+
+<Base title={title} description={lede}>
+  <div class="wrap">
+    <header class:list={['page-head', figure && 'page-head-fig']}>
+      <div>
+        <h1>{title}</h1>
+        <p>{lede}</p>
+      </div>
+      {figure && <div class="page-fig"><HairFigure client:visible name={figure} intensity={0.7} play /></div>}
+    </header>
+    <div class="tool-body">
+      <slot />
+    </div>
+    <div class="tool-notes prose">
+      <slot name="notes" />
+    </div>
+  </div>
+</Base>

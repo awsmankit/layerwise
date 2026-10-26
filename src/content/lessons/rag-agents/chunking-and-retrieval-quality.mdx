@@ -1,0 +1,70 @@
+---
+title: Chunking and retrieval quality
+track: rag-agents
+level: intermediate
+order: 2
+summary: Most RAG failures are retrieval failures. How to choose chunks, combine search methods, and measure what comes back.
+updated: 2026-10-26
+sources:
+  - label: "Okapi BM25 overview (Robertson and Zaragoza)"
+    url: https://www.staff.city.ac.uk/~sbrp622/papers/foundations_bm25_review.pdf
+  - label: "Lost in the Middle (Liu et al., 2023)"
+    url: https://arxiv.org/abs/2307.03172
+---
+
+import Disclosure from '../../../components/viz/Disclosure.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+
+When a RAG system gives a poor answer, people usually blame the model and reach for a bigger one. In practice the passage that contained the answer is often not in the prompt at all. Improving retrieval is usually the highest-value work.
+
+## Chunking
+
+A chunk is the unit that gets one vector and is returned as a whole. It has to be specific enough that its vector represents one idea, and complete enough to make sense alone.
+
+- **Too small:** a chunk loses its context. "It must be renewed annually" is useless without knowing what "it" is.
+- **Too large:** a vector averages many ideas, matches nothing well, and fills the prompt with irrelevant text.
+
+Practical rules:
+
+1. **Split on structure first.** Use headings, paragraphs, list items and code blocks as boundaries rather than a fixed number of characters.
+2. **Keep context with each chunk.** Prepend the document title and section heading to the text you embed.
+3. **Use some overlap** when a split has to fall in the middle of a thought.
+4. **Store metadata:** source, section, date, language, access group. You will want to filter on it.
+5. **Tables and code need their own handling.** Flattened tables lose their meaning.
+
+There is no universal best size. Try a few and compare them on your own questions.
+
+## Better search
+
+- **Hybrid search.** Vector search finds meaning but can miss exact terms such as product codes, names and error messages. Keyword search (such as BM25) is the opposite. Running both and merging the ranked lists works better than either alone for most corpora.
+- **Reranking.** Retrieve a generous set (say 30), then use a more accurate but slower model to reorder and keep the top 4 to 8.
+- **Query rewriting.** In a conversation, "what about the second one?" is not searchable. Rewrite it using the history into a standalone question.
+- **Metadata filters.** Restrict by product, version or permission before ranking.
+
+## Measure retrieval on its own
+
+Build a set of questions, each labelled with the chunk or document that answers it. Then compute, without involving the language model at all:
+
+- **Recall at k:** the share of questions whose answering chunk appears in the top k results.
+- **MRR (mean reciprocal rank):** how high up the first correct result tends to be.
+
+<Disclosure title="How to read recall at k">
+
+If recall at 5 is 0.7, then for 30 per cent of questions the right passage was not among the five returned, and no prompt can rescue those answers. Change chunking, search or reranking and watch that number, then look at end-to-end answer quality.
+
+</Disclosure>
+
+## Symptoms and where to look
+
+| Symptom | Where to look |
+|---|---|
+| Right document, wrong passage | Chunk size, overlap, section headings in the chunk |
+| Misses exact names or codes | Add keyword search |
+| Right passage is retrieved but ignored | Passage order and prompt length; place the best evidence at the start or end |
+| Follow-up questions fail | Query rewriting |
+| Outdated answers | Index refresh, document dates, filter on freshness |
+| People see things they should not | Apply permission filters at retrieval, not in the prompt |
+
+<Callout title="Keep a failure log">
+Every bad answer is a labelled test case. Record the question, what should have been retrieved, and what was. Within a few weeks that log is your retrieval eval set.
+</Callout>

@@ -1,0 +1,14 @@
+---
+import ToolPage from '../../layouts/ToolPage.astro';
+import CostCalculator from '../../components/viz/CostCalculator.tsx';
+import { withBase } from '../../lib/url';
+---
+
+<ToolPage figure="plot" title="Cost calculator" lede="Estimate what a GenAI feature costs per request, per day and per month, then test the levers that reduce it.">
+  <CostCalculator client:load />
+  <Fragment slot="notes">
+    <h2>How to use it</h2>
+    <p>Start with a real prompt: count its tokens, note the typical reply length, and estimate daily requests. Replace the example prices with the current ones from your provider’s pricing page.</p>
+    <p>Output tokens usually cost several times more than input tokens, so a long answer can cost more than a long prompt. Read <a href={withBase('/learn/cost/where-the-tokens-go/')}>Where the tokens go</a> and <a href={withBase('/learn/cost/cost-levers/')}>Cost levers</a> for the reasoning behind each lever.</p>
+  </Fragment>
+</ToolPage>

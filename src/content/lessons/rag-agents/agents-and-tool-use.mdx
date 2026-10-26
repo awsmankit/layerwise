@@ -1,0 +1,82 @@
+---
+title: Agents and tool use
+track: rag-agents
+level: intermediate
+order: 3
+summary: The loop that turns a model into a system that acts, the protocols around it, and the guardrails it needs.
+updated: 2026-10-26
+sources:
+  - label: "Building effective agents (Anthropic)"
+    url: https://www.anthropic.com/engineering/building-effective-agents
+  - label: "Model Context Protocol"
+    url: https://modelcontextprotocol.io
+---
+
+import PipelineFlow from '../../../components/viz/PipelineFlow.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+
+A plain model call takes text in and gives text out. An **agent** adds two things: the model can request actions through **tools**, and a loop feeds the results of those actions back to it until the task is done.
+
+## The loop
+
+<PipelineFlow
+  title="One agent loop"
+  loop
+  loopLabel="repeat until the model answers or a limit is hit"
+  stages={[
+    { title: 'Goal', detail: 'The user states a task. The prompt includes the available tools with names, descriptions and input schemas.' },
+    { title: 'Decide', detail: 'The model either answers directly or requests a tool call with arguments.' },
+    { title: 'Act', detail: 'Your code validates the request, checks permissions, runs the tool and captures the result or error.' },
+    { title: 'Observe', detail: 'The tool result is appended to the conversation so the model can use it in the next step.' },
+  ]}
+  client:visible
+/>
+
+The model never runs anything itself. It produces a structured request, and **your code** decides whether and how to run it. That boundary is where safety and reliability live.
+
+## Tools
+
+A tool is a function with a clear name, a description written for the model, and a typed input schema. The description is part of the prompt: the model chooses tools from it, so vague descriptions produce wrong calls.
+
+```python
+tools = [{
+    "name": "get_order_status",
+    "description": "Look up the shipping status of an order by its order number. "
+                   "Use when the customer asks where their order is.",
+    "input_schema": {
+        "type": "object",
+        "properties": {"order_number": {"type": "string", "description": "e.g. A-10293"}},
+        "required": ["order_number"],
+    },
+}]
+```
+
+The **Model Context Protocol** (MCP) standardises how tools and data sources are described and exposed, so a tool written once can be used by different applications. It does not change the loop. Your application is still responsible for what a model is allowed to do.
+
+## Workflows or agents
+
+A **workflow** is a fixed sequence of steps you design, with model calls inside some of them. An **agent** lets the model choose the steps. Workflows are more predictable, cheaper and easier to test. Reach for an agent when the path genuinely cannot be known in advance, and keep the loop as small as the task allows.
+
+## Guardrails that matter
+
+- **Step and time limits.** Cap the number of loop iterations, total tokens and wall-clock time. Without limits, a confused agent keeps going and keeps billing.
+- **Least privilege.** Give each tool only the access it needs. Read-only by default.
+- **Confirmation for consequential actions.** Sending email, spending money or deleting data should need approval from a person.
+- **Validate arguments** before running, exactly as you would for input from the internet.
+- **Treat tool output as untrusted.** A web page or document can contain text that tries to give the model new instructions. This is prompt injection, and the defence is the permission boundary, not a stern prompt.
+- **Make actions idempotent** where possible, so a retry does not do the thing twice.
+- **Log every step** with inputs, outputs and token counts, so a bad run can be replayed.
+
+<Callout kind="cost" title="Agents multiply cost">
+Each iteration is another model call that resends the growing conversation. A task that takes ten steps costs far more than ten times a single call. Track cost per completed task, not per request.
+</Callout>
+
+## Common failure modes
+
+| Failure | Typical cause |
+|---|---|
+| Calls the wrong tool | Overlapping or vague tool descriptions |
+| Loops without progress | No stopping rule; error messages that do not say what to change |
+| Gives up early | Tool errors returned as empty output |
+| Hallucinates a result | The prompt allowed answering without calling the tool |
+| Does something unsafe | Tools with too much access and no confirmation step |

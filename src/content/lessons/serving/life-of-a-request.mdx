@@ -1,0 +1,56 @@
+---
+title: Life of a request
+track: serving
+level: intermediate
+order: 1
+summary: Follow one API call through authentication, tokenization, prefill, decode and batching, and see where the latency and the bill come from.
+updated: 2026-10-26
+sources:
+  - label: "Efficient Memory Management for Large Language Model Serving with PagedAttention (Kwon et al., 2023)"
+    url: https://arxiv.org/abs/2309.06180
+  - label: "Orca: A Distributed Serving System for Transformer-Based Generative Models (Yu et al., 2022)"
+    url: https://www.usenix.org/conference/osdi22/presentation/yu
+---
+
+import RequestLifecycle from '../../../components/viz/RequestLifecycle.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+
+When you call a hosted model, a lot happens between your request and the first token of the reply. This lesson walks through it step by step, using Amazon Bedrock as the example of a managed service but describing a pattern that other platforms share. Press Play, or click any stage.
+
+<RequestLifecycle client:visible />
+
+## The two phases that matter
+
+**Prefill** processes the entire prompt in one parallel pass. It is limited by raw compute, so its duration grows with prompt length. When it ends, the first token can be sent, which is why this period is called **time to first token**.
+
+**Decode** then generates the reply one token at a time. Each step needs the model's weights and the stored keys and values for every earlier token. The arithmetic is small compared with the amount of data read from memory, so this phase is limited by **memory bandwidth**. Its duration grows with the length of the reply.
+
+That split gives you practical levers:
+
+| To reduce | Do this |
+|---|---|
+| Time to first token | Shorter prompts, prompt caching, a smaller model, streaming so the user sees output early |
+| Total time | Shorter outputs (clear instructions and a sensible maximum), a faster or smaller model |
+| Cost | Fewer input and output tokens, caching, batch mode for work that can wait |
+
+## Batching and why you get throttled
+
+A GPU serving one user would sit mostly idle during decode. So the server serves many users at once. **Continuous batching** adds new requests and removes finished ones at every decode step instead of waiting for a whole group to finish. That is why the price per token can be low.
+
+It also explains limits. A platform has finite capacity, so it applies **quotas** (requests and tokens per minute) and may return a throttling error when you exceed them or when demand is high.
+
+<Callout title="Handle throttling properly">
+Retry throttled calls with exponential backoff and jitter, put a cap on retries, and keep a fallback such as a second region or a smaller model for requests that cannot wait. Do not retry in a tight loop; it makes the overload worse.
+</Callout>
+
+## What you control from the client
+
+- **Prompt size.** The most direct lever on both time to first token and cost.
+- **Maximum output tokens.** Set it for the task. It also bounds your worst-case bill per call.
+- **Streaming.** It does not make generation faster, but it makes the experience feel faster and lets you stop early.
+- **Region and endpoint choice.** Distance adds network time and regions differ in capacity and model availability.
+- **Reading the usage fields** returned with each response: input tokens, output tokens and cache hits. These are your bill.
+
+## Something to try
+
+Set the prompt to 20,000 tokens and the output to 100 tokens in the calculator, then swap them. Notice that the same total number of tokens gives very different timelines, and that the long reply is dominated by generation time while the long prompt is dominated by the wait for the first token.

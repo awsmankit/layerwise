@@ -1,0 +1,54 @@
+---
+import Base from '../../../layouts/Base.astro';
+import Level from '../../../components/ui/Level.astro';
+import { TrackProgress } from '../../../components/viz/Progress.tsx';
+import { tracks, trackById, levelIds, levels } from '../../../data/tracks';
+import { withBase } from '../../../lib/url';
+import { getLessons, lessonPath, slugOf, readingMinutes } from '../../../lib/content';
+
+export function getStaticPaths() {
+  return tracks.map((t) => ({ params: { track: t.id } }));
+}
+
+const { track: trackId } = Astro.params;
+const track = trackById(trackId!)!;
+const own = (await getLessons()).filter((l) => l.data.track === track.id);
+const byLevel = levelIds
+  .map((lv) => ({ level: lv, items: own.filter((l) => l.data.level === lv) }))
+  .filter((g) => g.items.length > 0);
+---
+
+<Base title={track.title} description={track.blurb}>
+  <div class="wrap">
+    <header class="page-head">
+      <p class="crumbs"><a href={withBase('/learn/')}>Curriculum</a> <span aria-hidden="true">/</span> <span>{track.title}</span></p>
+      <h1>{track.title}</h1>
+      <p>{track.blurb}</p>
+      <div style="margin-top:1.4rem;max-width:26rem">
+        <TrackProgress client:load ids={own.map((l) => `${track.id}/${slugOf(l)}`)} />
+      </div>
+    </header>
+
+    {
+      byLevel.map((g) => (
+        <section class="track">
+          <div class="track-head">
+            <h2>{levels[g.level].label}</h2>
+            <p><Level level={g.level} compact /></p>
+          </div>
+          <ul class="rows">
+            {g.items.map((l) => (
+              <li>
+                <a class="row lesson-row" href={withBase(lessonPath(l))}>
+                  <h3>{l.data.title}</h3>
+                  <p>{l.data.summary}</p>
+                  <span class="meta">{readingMinutes(l.body)} min read</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))
+    }
+  </div>
+</Base>

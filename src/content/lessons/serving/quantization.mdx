@@ -1,0 +1,67 @@
+---
+title: Quantization
+track: serving
+level: advanced
+order: 3
+summary: Storing weights in fewer bits to save memory and speed up generation, and how to check what it costs you in quality.
+updated: 2026-10-26
+sources:
+  - label: "GPTQ: Accurate Post-Training Quantization for Generative Pre-trained Transformers (Frantar et al., 2022)"
+    url: https://arxiv.org/abs/2210.17323
+  - label: "AWQ: Activation-aware Weight Quantization (Lin et al., 2023)"
+    url: https://arxiv.org/abs/2306.00978
+  - label: "A Survey of Quantization Methods for Efficient Neural Network Inference (Gholami et al., 2021)"
+    url: https://arxiv.org/abs/2103.13630
+---
+
+import ModelMemory from '../../../components/viz/ModelMemory.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Disclosure from '../../../components/viz/Disclosure.tsx';
+
+A model's weights are numbers. Training usually keeps them in 16 or 32 bits each. **Quantization** stores them with fewer bits, such as 8 or 4, and maps them back to useful values during computation. The model gets smaller and, because generation is limited by memory bandwidth, usually faster. The cost is some loss of precision.
+
+## The memory arithmetic
+
+Weight memory is parameters times bytes per parameter. For an 8-billion-parameter model:
+
+| Format | Bytes per parameter | Approximate weights |
+|---|---|---|
+| FP32 | 4 | 32 GB |
+| BF16 or FP16 | 2 | 16 GB |
+| INT8 | 1 | 8 GB |
+| INT4 | 0.5 | 4 GB |
+
+Real files are slightly larger because of scales and other metadata. Change the precision below and compare with device memory.
+
+<ModelMemory initialModel="8B" client:visible />
+
+## What can be quantized
+
+- **Weights.** The most common choice, and the safest big win.
+- **Activations.** The intermediate values during computation. Harder, because their range varies with the input.
+- **The KV cache.** Storing keys and values in 8 bits cuts the cache in half. See the previous lesson.
+
+## How it is done
+
+**Post-training quantization (PTQ)** converts an already-trained model. Simple versions round each weight to the nearest level using a scale factor per group of weights. Methods such as GPTQ and AWQ are smarter about which weights matter most, and so lose less accuracy at 4 bits. A small calibration set of representative inputs is typically used.
+
+**Quantization-aware training (QAT)** simulates low precision during training so the model learns to be robust to it. It is more work and generally gives better quality at very low bit widths.
+
+<Disclosure title="Why scale factors per group?">
+
+A single scale for a whole tensor is thrown off by a few large values, which squashes everything else into too few levels. Using a separate scale for each small group of weights, commonly 32 to 128 of them, keeps precision where it is needed at the cost of storing a few extra numbers.
+
+</Disclosure>
+
+## What to check before you ship one
+
+1. **Run your own eval suite on both versions.** Public benchmark results do not tell you how your task behaves.
+2. **Look at the tails.** Averages can hide degradation on long contexts, rare languages, maths or code.
+3. **Measure speed on the target hardware.** Gains depend on the chip supporting the format with efficient kernels. A format the hardware cannot execute natively may run no faster.
+4. **Compare against a smaller model at higher precision.** Sometimes a smaller model in 8 bits beats a larger one in 3 or 4.
+
+<Callout title="A good default">
+8-bit weights usually cost very little quality. 4-bit weights are widely used and often fine, but test them. Below 4 bits, expect to need quantization-aware techniques and careful checking.
+</Callout>
+
+The same ideas apply, with tighter constraints, to models running on small devices. The edge track covers that case.

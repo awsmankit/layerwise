@@ -1,0 +1,227 @@
+---
+import Base from '../layouts/Base.astro';
+import StackExplorer from '../components/viz/StackExplorer.tsx';
+import HeroArt from '../components/viz/HeroArt.tsx';
+import HairFigure from '../components/viz/HairFigure.tsx';
+import ContinueCard from '../components/ui/ContinueCard.tsx';
+import GameBadge from '../components/games/GameBadge.tsx';
+import Marquee from '../components/ui/Marquee.astro';
+import TrackIcon from '../components/ui/TrackIcon.astro';
+import { site } from '../site';
+import { tracks } from '../data/tracks';
+import { paths, pathIds } from '../data/paths';
+import { games } from '../data/games';
+import { withBase } from '../lib/url';
+import { getLessons, getPulse, formatDate } from '../lib/content';
+
+const lessons = await getLessons();
+const pulse = (await getPulse()).slice(0, 3);
+
+const trackTiles = tracks.map((t) => ({ ...t, count: lessons.filter((l) => l.data.track === t.id).length }));
+
+const gameColors: Record<string, { c: string; on: string; icon: string }> = {
+  blueprint: { c: '#4F6BFF', on: '#FFFFFF', icon: 'blueprint' },
+  'cost-crunch': { c: '#F25F5C', on: '#FFFFFF', icon: 'crunch' },
+  'fit-the-model': { c: '#FF9F1C', on: '#2A1A00', icon: 'fit' },
+  'incident-room': { c: '#FF4F8B', on: '#FFFFFF', icon: 'incident' },
+};
+
+const tools = [
+  { href: '/tools/cost/', title: 'Cost calculator', body: 'Traffic and token counts in, monthly spend out. Then see which lever saves the most.' },
+  { href: '/tools/memory/', title: 'Model memory calculator', body: 'Will this model fit on that device? Weights, KV cache, precision and users.' },
+  { href: '/tools/latency/', title: 'Latency budget', body: 'Cloud against on-device inference, against the time your product can afford.' },
+];
+
+const heroWords = ['How', 'AI', 'systems', 'work,'];
+const heroTail = ['at', 'a', 'time'];
+---
+
+<Base>
+  <section class="hero-bright">
+    <HeroArt client:load />
+    <div class="wrap hero">
+      <div class="hero-copy">
+        <h1 class="words" aria-label={site.tagline}>
+          {heroWords.map((w, i) => <><span style={`--i:${i}`}>{w}</span>{' '}</>)}
+          <span class="hl" style={`--i:${heroWords.length}`}>
+            one layer
+            <svg viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M2 6 Q 12 0 22 6 T 42 6 T 62 6 T 82 6 T 98 5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"></path></svg>
+          </span>{' '}
+          {heroTail.map((w, i) => <><span style={`--i:${heroWords.length + 1 + i}`}>{w}</span>{' '}</>)}
+        </h1>
+        <p class="lede">
+          Animated lessons, system design games and calculators for everything between the GPU and the agent. Plain English first, depth when you want it.
+        </p>
+        <div class="hero-cta">
+          <a class="btn" href={withBase('/start/')}>Find your starting point</a>
+          <a class="btn quiet" href={withBase('/play/')}>Play a game</a>
+        </div>
+        <ContinueCard client:load />
+        <p class="hero-hint">Open a layer on the right to see what it replaced from classical machine learning.</p>
+      </div>
+      <div class="hero-card">
+        <p class="hero-card-title">The AI stack, top to bottom</p>
+        <StackExplorer client:load />
+      </div>
+    </div>
+  </section>
+
+  <Marquee />
+
+  <section class="band band-lilac" aria-labelledby="path-h">
+    <div class="wrap">
+      <div class="section">
+        <div class="section-head">
+          <h2 id="path-h"><span class="squig" style="--squig:#9B5CFF">Where</span> do you start?</h2>
+          <p>Pick the one that sounds like you. You can change your mind any time.</p>
+        </div>
+        <div class="tiles" data-stagger>
+          {
+            pathIds.map((id) => {
+              const p = paths[id];
+              return (
+                <a class="tile" data-reveal href={withBase(`/start/#${id}`)} style={`--track:${p.color};--on-track:${p.on}`}>
+                  <div class="tile-top">
+                    <TrackIcon name={p.icon} />
+                    <span class="tile-badge">{p.steps.length} steps</span>
+                  </div>
+                  <div>
+                    <h3>{p.title}</h3>
+                    <p>{p.who}</p>
+                  </div>
+                  <span class="tile-meta">{p.promise}</span>
+                </a>
+              );
+            })
+          }
+          <a class="tile" data-reveal href={withBase('/start/#check')} style="--track:#FFFFFF;--on-track:#15123D">
+            <div class="tile-top">
+              <TrackIcon name="evals" />
+              <span class="tile-badge">2 minutes</span>
+            </div>
+            <div>
+              <h3>Not sure?</h3>
+              <p>Six quick questions suggest where to begin. “I don’t know” is a fine answer.</p>
+            </div>
+            <span class="tile-meta">Take the check</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section wrap" aria-labelledby="pulled-h" style="padding-top:clamp(2.5rem,6vw,4.5rem)">
+    <div class="pulled">
+      <div data-reveal>
+        <h2 id="pulled-h">Every AI feature is a <span class="squig" style="--squig:#5B3DFF">stack of layers</span></h2>
+        <p>
+          The model is one layer. Around it sit retrieval, serving, the cloud platform, the hardware and the checks that keep it honest. Move your pointer across the figure to pull the layers apart, then pick one to learn.
+        </p>
+        <ul>
+          <li><a href={withBase('/learn/rag-agents/')} style="--c:#12C2A4">Retrieval and agents</a></li>
+          <li><a href={withBase('/learn/serving/')} style="--c:#FF9F1C">Inference and serving</a></li>
+          <li><a href={withBase('/learn/cloud/')} style="--c:#5BC0FF">Cloud platforms</a></li>
+          <li><a href={withBase('/learn/evals/')} style="--c:#FF4F8B">Evals and quality</a></li>
+        </ul>
+      </div>
+      <div class="pulled-fig" data-reveal>
+        <HairFigure client:visible name="exploded" intensity={0.8} play label="An application drawn as four layers that pull apart as the pointer moves" />
+      </div>
+    </div>
+  </section>
+
+  <section class="section wrap" aria-labelledby="tracks-h" style="padding-top:clamp(2.5rem,6vw,4.5rem)">
+    <div class="section-head">
+      <h2 id="tracks-h">Ten tracks, <span class="squig" style="--squig:#12C2A4">basic to advanced</span></h2>
+      <p>Every lesson is marked basic, intermediate or advanced. Follow a path, or jump straight to a topic.</p>
+    </div>
+    <div class="tiles" data-stagger>
+      {
+        trackTiles.map((t, i) => (
+          <a class:list={['tile', i === 0 && 'wide']} data-reveal href={withBase(`/learn/${t.id}/`)} style={`--track:${t.color};--on-track:${t.on}`}>
+            <div class="tile-top">
+              <TrackIcon name={t.id} />
+              <span class="tile-badge">{t.count} {t.count === 1 ? 'lesson' : 'lessons'}</span>
+            </div>
+            <div>
+              <h3>{t.title}</h3>
+              <p>{t.blurb}</p>
+            </div>
+          </a>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="band band-pink" aria-labelledby="play-h">
+    <div class="wrap">
+      <div class="section">
+        <div class="section-head">
+          <h2 id="play-h">Learn by <span class="squig" style="--squig:#FF4F8B">playing</span></h2>
+          <p>Four system design games. Real maths, honest scoring, and a lesson behind every mistake.</p>
+        </div>
+        <div class="tiles" data-stagger>
+          {
+            games.map((g) => {
+              const gc = gameColors[g.id];
+              return (
+                <a class="tile" data-reveal href={withBase(g.href)} style={`--track:${gc.c};--on-track:${gc.on}`}>
+                  <div class="tile-top">
+                    <TrackIcon name={gc.icon} />
+                    <span class="tile-badge"><GameBadge client:load prefix={g.prefix} ids={g.levelIds} /></span>
+                  </div>
+                  <div>
+                    <h3>{g.title}</h3>
+                    <p>{g.tagline}. {g.minutes}.</p>
+                  </div>
+                </a>
+              );
+            })
+          }
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band band-mint" aria-labelledby="tools-h">
+    <div class="wrap">
+      <div class="section">
+        <div class="section-head">
+          <h2 id="tools-h">Calculators you can <span class="squig" style="--squig:#0A8A67">change</span></h2>
+          <p>Every default is labelled as an example. Bring your own numbers.</p>
+        </div>
+        <ul class="rows" data-stagger style="margin-top:0.6rem">
+          {
+            tools.map((t) => (
+              <li data-reveal>
+                <a class="row tool-row" href={withBase(t.href)} style="--row:rgba(10,138,103,0.16)">
+                  <h3>{t.title}</h3>
+                  <p>{t.body}</p>
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section wrap" aria-labelledby="pulse-h" style="padding-top:clamp(2.5rem,6vw,4.5rem)">
+    <div class="section-head">
+      <h2 id="pulse-h">Pulse</h2>
+      <p>Short notes on what changed in the market and why an engineer should care.</p>
+    </div>
+    <ul class="rows" style="margin-top:0.6rem">
+      {
+        pulse.map((e) => (
+          <li>
+            <a class="row pulse-row" href={withBase(`/pulse/${e.id}/`)}>
+              <span class="meta">{formatDate(e.data.date)}</span>
+              <h3>{e.data.title}</h3>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</Base>

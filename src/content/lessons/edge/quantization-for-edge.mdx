@@ -1,0 +1,71 @@
+---
+title: Fitting a model onto a small device
+track: edge
+level: advanced
+order: 2
+summary: Quantization, pruning and distillation for devices with tight memory, power and latency, and how to validate the result on the real hardware.
+updated: 2026-10-26
+sources:
+  - label: "A Survey of Quantization Methods for Efficient Neural Network Inference (Gholami et al., 2021)"
+    url: https://arxiv.org/abs/2103.13630
+  - label: "Distilling the Knowledge in a Neural Network (Hinton et al., 2015)"
+    url: https://arxiv.org/abs/1503.02531
+  - label: "Learning both Weights and Connections for Efficient Neural Networks (Han et al., 2015)"
+    url: https://arxiv.org/abs/1506.02626
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Disclosure from '../../../components/viz/Disclosure.tsx';
+import PipelineFlow from '../../../components/viz/PipelineFlow.tsx';
+
+A model trained in a data centre in 32-bit floating point will usually not fit, or not run fast enough or cool enough, on a battery-powered device. Getting it there is a compression and validation workflow, and the validation is the harder half.
+
+## The toolbox
+
+**Quantization** stores weights, and ideally activations, in 8 bits or fewer. Many small-device processors are fastest, or only able to run, with **integer** arithmetic, so quantization is often a hardware requirement and not just a size saving. See the quantization lesson for the basic ideas.
+
+**Pruning** removes weights or whole structures that contribute little. Unstructured sparsity shrinks the stored model but only speeds things up if the hardware can exploit it. Structured pruning, removing whole channels or heads, gives a smaller dense model that any hardware runs faster.
+
+**Distillation** trains a small student model to mimic a larger teacher. It is often the best way to get a compact model with good quality, because the student learns from the teacher's outputs and not only from hard labels.
+
+**Architecture choice.** Design for the target from the start: efficient building blocks, small memory footprints and operations the chip supports natively.
+
+## A workflow that holds up
+
+<PipelineFlow
+  title="From cloud model to device"
+  stages={[
+    { title: 'Baseline', detail: 'Train and evaluate in full precision. Record accuracy on a test set that represents real conditions, not only clean data.' },
+    { title: 'Compress', detail: 'Distil, prune or choose a smaller architecture, then quantize. Use a calibration set drawn from real inputs.' },
+    { title: 'Export', detail: 'Convert to the format your runtime expects, such as LiteRT, ONNX Runtime, ExecuTorch or a vendor toolchain. Check every operator is supported.' },
+    { title: 'Validate', detail: 'Compare outputs with the baseline on the hard cases: noise, rare conditions, edge of range. Accuracy loss often hides in the tails.' },
+    { title: 'Profile on device', detail: 'Measure latency, memory and energy on the actual chip at realistic clock speed and temperature, not on a laptop.' },
+    { title: 'Iterate', detail: 'Adjust bit widths per layer, sensitive layers can stay higher precision, then repeat from validation.' },
+  ]}
+  caption="Most of the effort is in the last three steps."
+  client:visible
+/>
+
+## What goes wrong
+
+| Problem | Cause | Response |
+|---|---|---|
+| Accuracy fine on average, bad on some inputs | Calibration data missed those conditions | Add representative and difficult examples to calibration and tests |
+| Smaller but not faster | Hardware does not accelerate that format or operator | Check kernel support, pick a format the chip runs natively |
+| Fast in the benchmark, slow in the product | Cold starts, memory contention with other tasks, thermal throttling | Profile in the full application, under load |
+| Output differs between runs or devices | Fixed-point rounding and different kernels | Test across units and set tolerances |
+| Cannot update safely | No versioning or rollback | Design model delivery and fallback before the first release |
+
+<Disclosure title="Per-layer precision">
+
+Not all layers tolerate low precision equally. The first and last layers and layers with large activation ranges are often the most sensitive. Mixed-precision schemes keep these in higher precision and quantize the rest more aggressively, trading a little size for much better accuracy.
+
+</Disclosure>
+
+<Callout kind="edge" title="Measure on the target, in context">
+A latency number from a development board on a bench says little about the product. Measure on the real hardware, with the rest of the system running, and report the worst case, as well as the average. For real-time signal paths, a rare slow inference is a user-visible glitch.
+</Callout>
+
+## Data and evaluation
+
+The bigger risk on devices is usually the data, not the arithmetic. Build the evaluation set from the situations the device meets in daily use, including the awkward ones, and keep a way to learn from the field, with user consent and privacy protections, so that the next model improves on what the current one gets wrong.

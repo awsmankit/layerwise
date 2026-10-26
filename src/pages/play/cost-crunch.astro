@@ -1,0 +1,27 @@
+---
+import ToolPage from '../../layouts/ToolPage.astro';
+import CostCrunchGame from '../../components/games/CostCrunchGame.tsx';
+import { withBase } from '../../lib/url';
+---
+
+<ToolPage figure="plot" title="Cost Crunch" lede="The bill is too high. You have a few moves. Every saving carries a risk.">
+  <CostCrunchGame client:load />
+  <Fragment slot="notes">
+    <h2>How to play</h2>
+    <p>Switch levers on and off to reach the cost target without letting quality fall below the floor. You only have a few moves, so each one has to earn its place. Each applied lever shows what it saves and what it costs in quality, measured in the context of the others you have chosen.</p>
+    <h2>Stars</h2>
+    <ul>
+      <li><strong>One star:</strong> target met with quality at or above the floor.</li>
+      <li><strong>Two stars:</strong> also within the par number of moves.</li>
+      <li><strong>Three stars:</strong> also at least 10% under the target.</li>
+    </ul>
+    <h2>What it teaches</h2>
+    <ul>
+      <li>Measure before you optimise. An eval suite saves no money itself, and it makes the risky levers much safer.</li>
+      <li>Levers interact. Trim the prompt too far and prompt caching stops working, because there is no longer enough stable prefix to cache.</li>
+      <li>Some levers do nothing in some systems, such as batch for traffic nobody is waiting on.</li>
+      <li>Take the savings that cost no quality first.</li>
+    </ul>
+    <p>The cost arithmetic is the same as in the <a href={withBase('/tools/cost/')}>cost calculator</a>. The quality effects are illustrative. Read <a href={withBase('/learn/cost/cost-levers/')}>Cost levers, ranked</a> for the real-world trade-offs.</p>
+  </Fragment>
+</ToolPage>

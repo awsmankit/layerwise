@@ -1,0 +1,59 @@
+---
+title: How a model is trained, stage by stage
+track: foundations
+level: intermediate
+order: 4
+summary: Pretraining, instruction tuning and preference tuning, and what each stage does and does not change.
+updated: 2026-10-26
+sources:
+  - label: "Training language models to follow instructions with human feedback (Ouyang et al., 2022)"
+    url: https://arxiv.org/abs/2203.02155
+  - label: "Direct Preference Optimization (Rafailov et al., 2023)"
+    url: https://arxiv.org/abs/2305.18290
+  - label: "Training Compute-Optimal Large Language Models (Hoffmann et al., 2022)"
+    url: https://arxiv.org/abs/2203.15556
+---
+
+import PipelineFlow from '../../../components/viz/PipelineFlow.tsx';
+import Disclosure from '../../../components/viz/Disclosure.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+
+Most of the assistants you use are produced by a sequence of training stages. Knowing which stage does what tells you what a vendor can change in an update, what fine-tuning on your side can realistically achieve, and why a model has a knowledge cutoff.
+
+<PipelineFlow
+  title="The pipeline"
+  stages={[
+    { title: 'Data', detail: 'Text and code are collected, filtered for quality, deduplicated and often mixed in chosen proportions. Data quality decides a great deal about the final model.' },
+    { title: 'Pretraining', detail: 'The model learns to predict the next token across a huge corpus. This is the most expensive stage by far, and it is where nearly all of the model’s knowledge comes from.' },
+    { title: 'Instruction tuning', detail: 'Supervised training on examples of instructions paired with good responses. The model learns to follow requests instead of merely continuing text.' },
+    { title: 'Preference tuning', detail: 'Humans or models rank candidate responses and the model is trained to prefer the better ones, using methods such as RLHF or DPO. This shapes tone, helpfulness and refusals.' },
+    { title: 'Reasoning and safety', detail: 'Further training on tasks with checkable answers can teach a model to work through a problem before answering. Safety training and red-teaming happen here too.' },
+    { title: 'Packaging', detail: 'The model is evaluated, often compressed with quantization or distillation, and deployed behind an API.' },
+  ]}
+  caption="A simplified view. Real labs vary the order, repeat stages and add their own."
+  client:visible
+/>
+
+## What each stage changes
+
+**Pretraining sets what the model knows and how well it can learn in context.** Facts, writing styles, code ability and languages come from here. This is also why a model has a **knowledge cutoff**: it only saw data up to a certain date.
+
+**Instruction and preference tuning mostly change behaviour, not knowledge.** The same pretrained model can feel very different depending on how it was post-trained: terse or chatty, cautious or compliant, good at following a format or not.
+
+**Reasoning training changes how the model uses its output budget.** Some models produce a long chain of intermediate tokens before the final answer. Those tokens take time and are usually billed as output.
+
+<Callout kind="cost" title="Why training cost is not your cost">
+Training a frontier model is an enormous one-off expense for the lab. As a user you pay per token for inference instead, and that cost recurs for as long as the feature runs. Budget for the second one.
+</Callout>
+
+<Disclosure title="RLHF versus DPO, in one paragraph">
+
+Reinforcement learning from human feedback trains a separate reward model from human rankings, then optimises the language model against that reward. Direct preference optimisation skips the reward model and trains the language model directly on pairs of preferred and rejected responses, which is simpler to run. Both turn "people preferred this answer" into a training signal.
+
+</Disclosure>
+
+## What this means when you build
+
+- **A vendor update can change behaviour without changing facts.** A new post-training run can alter format, tone and refusals. That is why you pin model versions and keep an eval suite.
+- **Fine-tuning on your side is post-training in miniature.** It is good at style, format and narrow skills. It is a poor way to add large amounts of new knowledge.
+- **Scale is a trade-off.** Work on compute-optimal training showed that, for a fixed budget, many models had been trained on too little data for their size. It is one reason smaller models trained on more data can match larger ones.

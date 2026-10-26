@@ -1,0 +1,35 @@
+---
+import Base from '../../layouts/Base.astro';
+import { withBase } from '../../lib/url';
+import { getPulse, formatDate } from '../../lib/content';
+
+const entries = await getPulse();
+---
+
+<Base title="Pulse" description="Short notes on what changed in AI and why an engineer should care.">
+  <div class="wrap">
+    <header class="page-head">
+      <h1>Pulse</h1>
+      <p>What changed in models, cloud platforms and pricing, and what it means for the systems you build. Each note links to its source.</p>
+    </header>
+    {
+      entries.length === 0 ? (
+        <p style="margin-top:2rem">No notes yet. Add a Markdown file to <code>src/content/pulse</code> to publish the first one.</p>
+      ) : (
+        <ul class="rows" style="margin-top:1rem">
+          {entries.map((e) => (
+            <li>
+              <a class="row pulse-row" href={withBase(`/pulse/${e.id}/`)}>
+                <span class="meta">{formatDate(e.data.date)}</span>
+                <div>
+                  <h3>{e.data.title}</h3>
+                  {e.data.tags.length > 0 && <p class="tags">{e.data.tags.map((t) => <span>{t}</span>)}</p>}
+                </div>
+              </a>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+  </div>
+</Base>

@@ -1,0 +1,66 @@
+---
+title: Using AI without getting burned
+track: start
+level: basic
+order: 3
+summary: Seven habits that make AI tools useful and safe, and how to spot when an answer is probably invented.
+updated: 2026-10-26
+sources:
+  - label: "NIST AI Risk Management Framework"
+    url: https://www.nist.gov/itl/ai-risk-management-framework
+  - label: "Anthropic prompt engineering overview"
+    url: https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+You now know that a chatbot writes plausible text one piece at a time and cannot check itself. This lesson turns that into practical habits, whether you are using these tools at work or about to build with them.
+
+## Seven habits
+
+1. **Treat the output as a draft from a fast, well-read intern.** Often excellent, occasionally confidently wrong. You are the editor.
+2. **Verify what matters.** Names, numbers, dates, quotes, links, citations, legal and medical statements, and whether code actually does what it claims. The more costly a mistake, the more you check.
+3. **Give it the facts instead of asking it to recall them.** Paste the document and ask about *that*. Asking it to remember an obscure detail invites a guess.
+4. **Be specific.** Say who the audience is, what format you want, how long it should be, and what to avoid. Include an example of good output if you have one.
+5. **Protect private information.** Do not paste passwords, customer data, health records or confidential documents into a tool your organisation has not approved. Check how a tool stores and uses what you send.
+6. **Ask for its reasoning or sources, then check them.** This makes errors easier to spot. It does not make the answer trustworthy by itself, because the explanation can also be invented.
+7. **Write down prompts that work.** If you will do the task again, save the prompt and test it on ten varied examples before relying on it.
+
+## Good uses and risky uses
+
+| Good fit | Handle with care |
+|---|---|
+| First drafts, rewrites, tone changes | Anything published under your name without review |
+| Summarising a document you can skim to confirm | Facts about people, companies or events you cannot verify |
+| Explaining a concept or code you are learning | Medical, legal and financial decisions |
+| Brainstorming and generating options | Exact calculations (use a calculator or code) |
+| Extracting structured data you can spot-check | Decisions that affect people, made without human review |
+
+## How to spot an invented answer
+
+Warning signs, none of them proof:
+
+- **A reference you cannot find.** Citations, case names, links and quotes are the classic invention. Look them up yourself.
+- **Details that are too neat.** Very specific numbers or names with no source.
+- **Confidence without hedging** on something obscure.
+- **It changes when you re-ask.** Ask the same question twice. If the facts differ, at least one is wrong.
+- **It agrees with your mistake.** Models tend to go along with a false premise in the question. Ask neutrally, or ask it to challenge your assumption.
+
+<Callout title="A simple test before you rely on something">
+
+Ask yourself: *if this is wrong, what happens, and who finds out?* If the answer is "nothing much" you can move quickly. If the answer is "a customer, a patient or a court", slow down and verify.
+
+</Callout>
+
+<Deep title="Why builders care about all this">
+
+Every habit above is a human version of something engineers build into systems. Giving the model the facts is **retrieval**. Checking claims is **evaluation**. Protecting private data is **access control and guardrails**. Saving and testing prompts is **prompt versioning and evals**. The rest of this site covers how to build those protections properly.
+
+</Deep>
+
+## Where to go from here
+
+- Builders and engineers: start the **Foundations** track, then **Working with LLMs**.
+- Curious about the systems side: try the **Play** section, which teaches system design through games.
+- Looking something up: the **Glossary** explains every term used on the site.

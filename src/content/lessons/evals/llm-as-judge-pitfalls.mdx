@@ -1,0 +1,72 @@
+---
+title: LLM-as-judge and its pitfalls
+track: evals
+level: advanced
+order: 2
+summary: Using a model to grade a model scales well and fails in predictable ways. How to calibrate it and where not to trust it.
+updated: 2026-10-26
+sources:
+  - label: "Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena (Zheng et al., 2023)"
+    url: https://arxiv.org/abs/2306.05685
+  - label: "Cohen's kappa (overview)"
+    url: https://en.wikipedia.org/wiki/Cohen%27s_kappa
+---
+
+import Disclosure from '../../../components/viz/Disclosure.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+
+Open-ended output cannot be checked with string matching, and human review does not scale. The common answer is to have a second model grade the first one against a rubric. It works well enough to be useful, and badly enough that you must treat the judge as an instrument to be calibrated, not as an oracle.
+
+## Known biases
+
+Studies of model judges, including the MT-Bench work, found consistent patterns:
+
+- **Position bias.** In a side-by-side comparison, a judge can favour whichever answer comes first, regardless of quality.
+- **Verbosity bias.** Longer answers tend to score higher even when they say no more.
+- **Self-preference.** A model may rate output in its own style, or from its own family, higher.
+- **Leniency and drift.** Scores cluster at the high end, and the same rubric can be read differently from one run to the next.
+- **Weak on hard facts.** A judge can accept a fluent wrong answer, especially in a domain where it is itself unreliable.
+
+## Design the judge carefully
+
+1. **Use a specific rubric, not "rate the quality".** Break it into questions that can be answered yes or no: Is every claim supported by the passage? Does the answer address all parts of the question? Does it avoid unsupported advice?
+2. **Ask for reasoning before the verdict**, and keep the reasoning in your logs for review.
+3. **Prefer pairwise comparison for ranking, and binary checks for gating.** Absolute 1 to 10 scores are noisy.
+4. **Randomise order** in pairwise comparisons, or run both orders and keep only consistent results.
+5. **Give the judge the reference or the source** when you have one. Judging against evidence is much more reliable than judging from memory.
+6. **Use a different model family** from the one being judged where you can, to reduce self-preference.
+
+## Calibrate against people
+
+Take a sample of outputs, around 100, and have people grade them with the same rubric. Then compare:
+
+- **Agreement rate** between judge and humans.
+- **Chance-corrected agreement**, such as Cohen's kappa, which discounts agreement you would get by guessing.
+- **Where they disagree.** Read these cases. They usually point to an ambiguous rubric or a blind spot.
+
+<Disclosure title="Rough interpretation of kappa">
+
+Values near zero mean agreement is no better than chance. Values around 0.6 to 0.8 are generally read as substantial agreement, and higher is better. Treat these bands as a guide, not a rule, and decide what is acceptable based on the cost of a wrong grade in your use.
+
+</Disclosure>
+
+Repeat the calibration whenever you change the judge model, the rubric or the kind of content being graded.
+
+## Where not to use a judge
+
+- **Anything with a checkable answer.** Use code. A unit test is cheaper, faster and exact.
+- **High-stakes gating alone.** Combine with human review of a sample and with deterministic checks.
+- **Detecting subtle factual errors in specialist fields**, unless the judge has the reference.
+
+<Callout kind="cost" title="Judges cost tokens too">
+A rubric with several questions, reasoning and the full source text can cost as much as the original call, or more. Budget for it and run the expensive judge on samples or on changes, not on every production request.
+</Callout>
+
+## A checklist
+
+- [ ] Rubric written as specific questions
+- [ ] Judge sees the evidence, not just the answer
+- [ ] Order randomised for comparisons
+- [ ] Reasoning logged
+- [ ] Compared with human grades on a sample
+- [ ] Re-checked after any change to judge, rubric or content type

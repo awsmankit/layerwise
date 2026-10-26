@@ -1,0 +1,21 @@
+---
+import ToolPage from '../../layouts/ToolPage.astro';
+import FitModelGame from '../../components/games/FitModelGame.tsx';
+import { withBase } from '../../lib/url';
+---
+
+<ToolPage figure="cabinet" title="Fit the Model" lede="Choose a model, its precision and its cache so it fits the hardware and is still good enough.">
+  <FitModelGame client:load />
+  <Fragment slot="notes">
+    <h2>How to play</h2>
+    <p>Pick a model size, how many bits to store its weights in, and how many bits to store the KV cache in. The memory bar and the task score update live. When your answer both fits and meets the quality bar, lock it in to be scored against the best possible answer.</p>
+    <h2>What it teaches</h2>
+    <ul>
+      <li>Weights are a fixed cost. The KV cache grows with every user and every token of context, and often decides how many people fit.</li>
+      <li>Quantizing the cache can matter as much as quantizing the weights.</li>
+      <li>Lower precision buys memory and costs a little quality. The cheapest answer is not always the best one.</li>
+      <li>Several levels have exactly one answer. That is common in real capacity planning: the constraints are tight.</li>
+    </ul>
+    <p>The arithmetic is the real one, shown under "Show the arithmetic". Model shapes are approximate examples and the task scores are illustrative. Background: <a href={withBase('/learn/serving/kv-cache-and-memory/')}>KV cache and memory</a>, <a href={withBase('/learn/serving/quantization/')}>Quantization</a>, and the <a href={withBase('/tools/memory/')}>memory calculator</a>.</p>
+  </Fragment>
+</ToolPage>

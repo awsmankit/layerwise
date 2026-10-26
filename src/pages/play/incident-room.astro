@@ -1,0 +1,19 @@
+---
+import ToolPage from '../../layouts/ToolPage.astro';
+import IncidentRoom from '../../components/games/IncidentRoom.tsx';
+---
+
+<ToolPage figure="loupe" title="Incident Room" lede="Something is wrong in production. Read the evidence, find the root cause, choose the fix.">
+  <IncidentRoom client:load />
+  <Fragment slot="notes">
+    <h2>How to play</h2>
+    <p>Read the report, then open only the evidence you think will help. Every piece you open costs points. When you are ready, pick the root cause. A wrong guess costs points and tells you why it is wrong. After a correct diagnosis, choose the best fix.</p>
+    <h2>What it teaches</h2>
+    <ul>
+      <li>Most failures are not the model. The data, the pipeline, the cache, the limits and the tools are usually to blame first.</li>
+      <li>One decisive clue is worth more than ten logs. Learn where to look: the finish reason, the prompt breakdown, the retrieved passages, the operator report.</li>
+      <li>A good fix addresses the cause, makes the next failure visible and stops it spreading.</li>
+    </ul>
+    <p>The ten incidents are composites of failure patterns that recur in real systems. Names and numbers are invented.</p>
+  </Fragment>
+</ToolPage>

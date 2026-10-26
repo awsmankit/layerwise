@@ -1,0 +1,81 @@
+---
+import Base from '../layouts/Base.astro';
+import { glossary } from '../data/glossary';
+import { withBase } from '../lib/url';
+
+const sorted = [...glossary].sort((a, b) => a.term.localeCompare(b.term, 'en', { sensitivity: 'base' }));
+const letters = [...new Set(sorted.map((t) => t.term[0].toUpperCase()))];
+const byLetter = letters.map((l) => ({ l, terms: sorted.filter((t) => t.term[0].toUpperCase() === l) }));
+---
+
+<Base title="Glossary" description="Every term used on Layerwise, explained in plain English.">
+  <div class="wrap">
+    <header class="page-head">
+      <h1>Glossary</h1>
+      <p>{glossary.length} terms, in plain English. Inside lessons, the first mention of each term shows its definition when you hover or tap it.</p>
+      <div class="gl-tools">
+        <label class="gl-search">
+          <span class="sr-only">Filter terms</span>
+          <input id="gl-filter" type="search" placeholder="Filter terms" autocomplete="off" />
+        </label>
+        <nav class="gl-letters" aria-label="Jump to letter">
+          {letters.map((l) => <a href={`#letter-${l}`}>{l}</a>)}
+        </nav>
+      </div>
+    </header>
+
+    <div id="gl-list">
+      {
+        byLetter.map((g) => (
+          <section class="gl-group" id={`letter-${g.l}`} data-reveal>
+            <h2 class="gl-letter" aria-hidden="true">{g.l}</h2>
+            <dl>
+              {g.terms.map((t) => (
+                <div class="gl-term" id={t.id} data-text={`${t.term} ${(t.aka ?? []).join(' ')} ${t.short}`.toLowerCase()}>
+                  <dt>{t.term}{t.aka && t.aka.length > 0 && <small>also: {t.aka.join(', ')}</small>}</dt>
+                  <dd>
+                    {t.short}
+                    {t.lesson && <> <a href={withBase(t.lesson)}>Read the lesson</a></>}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        ))
+      }
+      <p id="gl-none" hidden>Nothing matches that. Try a shorter word.</p>
+    </div>
+  </div>
+
+  <script is:inline>
+    (function () {
+      var input = document.getElementById('gl-filter');
+      var items = [].slice.call(document.querySelectorAll('.gl-term'));
+      var groups = [].slice.call(document.querySelectorAll('.gl-group'));
+      var none = document.getElementById('gl-none');
+      if (!input) return;
+      input.addEventListener('input', function () {
+        var q = input.value.trim().toLowerCase();
+        var shown = 0;
+        items.forEach(function (el) {
+          var ok = !q || el.getAttribute('data-text').indexOf(q) !== -1;
+          el.style.display = ok ? '' : 'none';
+          if (ok) shown++;
+        });
+        groups.forEach(function (g) {
+          var any = [].some.call(g.querySelectorAll('.gl-term'), function (el) { return el.style.display !== 'none'; });
+          g.style.display = any ? '' : 'none';
+        });
+        none.hidden = shown !== 0;
+      });
+      /* highlight a term when linked to directly */
+      function flash() {
+        var id = location.hash.slice(1);
+        var el = id && document.getElementById(id);
+        if (el && el.classList.contains('gl-term')) { el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); }
+      }
+      addEventListener('hashchange', flash);
+      flash();
+    })();
+  </script>
+</Base>

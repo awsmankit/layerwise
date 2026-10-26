@@ -1,0 +1,17 @@
+---
+/** A decorative, slow-scrolling strip of terms. Hidden from assistive tech: the glossary is the real reference. */
+import { tracks } from '../../data/tracks';
+
+const words = [
+  'token', 'embedding', 'KV cache', 'RAG', 'agent', 'eval', 'hallucination', 'quantization',
+  'prefill', 'guardrails', 'context window', 'temperature', 'reranker', 'fine-tuning',
+  'throttling', 'batching', 'attention', 'routing',
+];
+const items = words.map((w, i) => ({ w, t: tracks[(i + 1) % tracks.length] }));
+---
+
+<div class="marquee" aria-hidden="true">
+  <div class="marquee-track">
+    {[0, 1].map(() => items.map((it) => <span style={`--c:${it.t.color};--on:${it.t.on}`}>{it.w}</span>))}
+  </div>
+</div>

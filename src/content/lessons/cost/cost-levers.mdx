@@ -1,0 +1,72 @@
+---
+title: Cost levers, ranked
+track: cost
+level: advanced
+order: 2
+summary: The ways to cut inference cost, roughly in the order to try them, with the trade-off each one carries.
+updated: 2026-10-26
+sources:
+  - label: "FrugalGPT (Chen et al., 2023)"
+    url: https://arxiv.org/abs/2305.05176
+  - label: "Amazon Bedrock pricing"
+    url: https://aws.amazon.com/bedrock/pricing/
+---
+
+import CostCalculator from '../../../components/viz/CostCalculator.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Disclosure from '../../../components/viz/Disclosure.tsx';
+
+Before cutting cost, you need two things: a per-feature view of spend (see the previous lesson) and an eval suite. Without the first you cannot tell where to look, and without the second you cannot tell whether a saving broke something.
+
+## The levers
+
+| # | Lever | How it saves | Trade-off |
+|---|---|---|---|
+| 1 | **Trim the prompt** | Fewer input tokens on every call | Removing context can hurt quality; test it |
+| 2 | **Shorten the output** | Output tokens cost the most per token | Instructions such as "answer in three sentences" and a sensible maximum; can cut useful detail |
+| 3 | **Prompt caching** | Discounted input for a repeated prefix, often faster too | Needs a stable prefix; cache lifetime and write costs vary |
+| 4 | **Right-size the model** | Smaller models cost a fraction per token | Needs an eval to prove quality holds |
+| 5 | **Route by difficulty** | Small model for easy requests, large for hard | Routing logic to build and monitor |
+| 6 | **Batch the work that can wait** | Lower price for asynchronous jobs | Results arrive later |
+| 7 | **Retrieve less, better** | Fewer, more relevant passages | Needs good retrieval so recall does not drop |
+| 8 | **Cache answers** | Skip the model entirely for repeats | Staleness and permission scoping |
+| 9 | **Distill or fine-tune a small model** | A narrow task on a cheap model | Upfront work and ongoing maintenance |
+| 10 | **Self-host** | Lower unit cost at high, steady volume | You now run GPUs, and utilisation decides everything |
+
+Try the levers the calculator models: output length, caching, batch share and routing. Set a baseline, then change one thing at a time and read the comparison bars.
+
+<CostCalculator client:visible />
+
+## Order of attack
+
+1. **Fix waste first.** Verbose prompts, unbounded outputs, history that is never trimmed, retries without limits. These are free wins.
+2. **Cache the stable prefix.** Often a large saving for little code.
+3. **Right-size and route.** Usually the biggest single lever, and the one that needs evals most.
+4. **Move non-urgent work to batch.**
+5. **Only then consider** distillation or self-hosting, because they add engineering and operational cost.
+
+## When self-hosting wins
+
+The cost per million tokens when you run your own GPUs is:
+
+```text
+cost per 1M tokens = GPU cost per hour / (tokens per second x utilisation x 3600) x 1,000,000
+```
+
+The number that surprises people is **utilisation**. A GPU that is busy 20 per cent of the time costs five times as much per token as one that is busy all the time. Managed APIs spread that risk across many customers. Self-hosting tends to pay off when volume is high, steady and predictable, and when you have people to operate it.
+
+<Disclosure title="What the formula leaves out">
+
+It ignores engineering time, on-call load, redundancy for failures, idle capacity for peaks, the cost of staying current with new models, and any discount you could get on API pricing at volume. Include them before concluding that self-hosting is cheaper.
+
+</Disclosure>
+
+<Callout kind="cost" title="Optimise the right denominator">
+A cheaper model that needs two attempts or a human fix can cost more per successful task. Always compare cost per completed task at equal quality, measured on your own evals.
+</Callout>
+
+## Habits that keep costs down
+
+- Per-feature budgets and alerts, with the model gateway enforcing hard caps.
+- A cost line in every eval run, so a prompt change that doubles spend is visible in review.
+- A periodic review of model choice, because newer small models often match what larger ones did a year earlier.

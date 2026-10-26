@@ -1,0 +1,31 @@
+---
+import Base from '../layouts/Base.astro';
+import { site } from '../site';
+import { withBase } from '../lib/url';
+---
+
+<Base title="About" description="How Layerwise is written, kept current and checked.">
+  <div class="wrap">
+    <header class="page-head">
+      <h1>About {site.name}</h1>
+      <p>A working engineer’s map of the AI stack, built to be read in order and checked against sources.</p>
+    </header>
+    <div class="prose" style="margin-top:2.5rem">
+      <h2>Who it is for</h2>
+      <p>Engineers who build with machine learning and generative AI and want the whole picture: how the models work, how the platforms sell them, and what they cost to run.</p>
+
+      <h2>How it stays current</h2>
+      <p>The lessons are written to last, so they explain mechanisms rather than product launches. Changes in the market go into <a href={withBase('/pulse/')}>Pulse</a> as short, dated notes that link to the original source. Anything that depends on a price or a feature list shows when it was last checked.</p>
+
+      <h2>How claims are handled</h2>
+      <ul>
+        <li>Numbers that come from a vendor are labelled as examples and link to the vendor’s page.</li>
+        <li>Visualisations built on made-up data say so in their caption.</li>
+        <li>Draft summaries produced with a language model are reviewed and edited by a person before they are published.</li>
+      </ul>
+
+      <h2>Adding a lesson</h2>
+      <p>Lessons are MDX files in <code>src/content/lessons/&lt;track&gt;/</code>. Each has a title, track, level, order and summary in its front matter, and can import any component from <code>src/components/viz</code>. Pushing to the main branch rebuilds and publishes the site.</p>
+    </div>
+  </div>
+</Base>

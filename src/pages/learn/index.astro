@@ -1,0 +1,53 @@
+---
+import Base from '../../layouts/Base.astro';
+import Level from '../../components/ui/Level.astro';
+import { TrackProgress } from '../../components/viz/Progress.tsx';
+import { tracks } from '../../data/tracks';
+import { withBase } from '../../lib/url';
+import { getLessons, lessonPath, slugOf, readingMinutes } from '../../lib/content';
+
+const lessons = await getLessons();
+---
+
+<Base title="Learn" description="The full curriculum, from machine learning basics to production AI systems.">
+  <div class="wrap">
+    <header class="page-head">
+      <h1>The curriculum</h1>
+      <p>
+        {lessons.length} lessons in {tracks.length} tracks. Start at the top for a path from basics to advanced, or jump to a track. Your progress is saved in this browser only.
+      </p>
+    </header>
+
+    {
+      tracks.map((t) => {
+        const own = lessons.filter((l) => l.data.track === t.id);
+        return (
+          <section class="track" id={t.id}>
+            <div class="track-head">
+              <h2>
+                <a href={withBase(`/learn/${t.id}/`)}>{t.title}</a>
+              </h2>
+              <p>{t.blurb}</p>
+              <TrackProgress client:load ids={own.map((l) => `${t.id}/${slugOf(l)}`)} />
+            </div>
+            <ul class="rows">
+              {own.map((l) => (
+                <li>
+                  <a class="row lesson-row" href={withBase(lessonPath(l))}>
+                    <h3>{l.data.title}</h3>
+                    <p>{l.data.summary}</p>
+                    <span class="meta">
+                      <Level level={l.data.level} />
+                      <br />
+                      {readingMinutes(l.body)} min read
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        );
+      })
+    }
+  </div>
+</Base>

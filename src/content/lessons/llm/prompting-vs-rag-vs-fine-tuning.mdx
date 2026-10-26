@@ -1,0 +1,49 @@
+---
+title: Prompting, retrieval or fine-tuning
+track: llm
+level: intermediate
+order: 3
+summary: Three ways to adapt a model, what each one actually changes, and a short chooser to pick between them.
+updated: 2026-10-26
+sources:
+  - label: "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks (Lewis et al., 2020)"
+    url: https://arxiv.org/abs/2005.11401
+  - label: "LoRA: Low-Rank Adaptation of Large Language Models (Hu et al., 2021)"
+    url: https://arxiv.org/abs/2106.09685
+---
+
+import DecisionTree from '../../../components/viz/DecisionTree.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+
+When a model does not do what you need, there are three standard moves. They fix different problems, and people often reach for the wrong one because the problem is described loosely as "the model is not good enough".
+
+## What each approach changes
+
+| | Prompting | Retrieval (RAG) | Fine-tuning |
+|---|---|---|---|
+| Changes | The instructions and examples for this request | The facts available for this request | The model's weights |
+| Best for | Format, tone, rules, simple tasks | Private, recent or changing knowledge, citations | Consistent style or format, narrow skills, smaller and cheaper models |
+| Time to change | Minutes | Re-index documents | Prepare data, train, evaluate |
+| Update knowledge | Edit the prompt | Update the index | Retrain |
+| Typical cost | Per-token only | Index, search and longer prompts | Training run, plus hosting a custom model |
+| Main risk | Brittle with long, complex rules | Retrieval misses the right passage | Overfits, forgets, locks you to a base model |
+
+## The most common mistake
+
+**Fine-tuning to add facts.** Training on documents does not reliably make a model able to recall them accurately, and it cannot be updated when the documents change. If the problem is "the model does not know our data", the answer is almost always retrieval. If the problem is "the model knows enough but answers in the wrong way", look at prompting first and fine-tuning second.
+
+## A sensible order
+
+1. **Measure.** Build a small set of real inputs with acceptable answers. Without it you cannot tell which approach helped.
+2. **Improve the prompt.** Clearer instructions, a schema, a few examples.
+3. **Add retrieval** if the missing piece is knowledge.
+4. **Try a stronger or different model** before adding complexity.
+5. **Fine-tune** when you have clean examples, a measurable gap, and a reason such as consistency or cost that a prompt cannot meet.
+
+These are not exclusive. A common production system uses a fine-tuned small model for format, retrieval for knowledge and a careful prompt to tie them together.
+
+<DecisionTree client:visible />
+
+<Callout title="Fine-tuning has become cheaper">
+Methods such as LoRA train a small number of extra parameters instead of the whole model, which cuts cost and lets one base model serve several adaptations. That makes fine-tuning more accessible, but it does not change what it is good at.
+</Callout>

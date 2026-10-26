@@ -1,0 +1,69 @@
+---
+title: Model routing and fallbacks
+track: systems
+level: advanced
+order: 2
+summary: Sending each request to the right model, and what to do when a model is slow, throttled or down.
+updated: 2026-10-26
+sources:
+  - label: "FrugalGPT: How to Use Large Language Models While Reducing Cost and Improving Performance (Chen et al., 2023)"
+    url: https://arxiv.org/abs/2305.05176
+  - label: "Exponential Backoff and Jitter (AWS Architecture Blog)"
+    url: https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Disclosure from '../../../components/viz/Disclosure.tsx';
+
+Using one model for everything is simple, and often the wrong trade-off. Easy requests do not need the most capable model, and one provider's outage should not take your product down. Routing and fallbacks handle both.
+
+## Routing: choosing the model
+
+| Pattern | How it works | Use when |
+|---|---|---|
+| Static by task | Each feature or prompt is pinned to a model chosen by evals | The default. Simple and predictable |
+| Cascade | Try a small model, accept its answer if a check passes, otherwise escalate to a larger one | Most requests are easy and you can detect a bad answer cheaply |
+| Classifier router | A small model or rule decides the difficulty or type up front | Request types differ a lot in difficulty |
+| Policy-based | Choose by user tier, data sensitivity, region or budget | Compliance or product tiers constrain the choice |
+
+The check in a cascade is the hard part. Options include schema validation, a confidence signal, a retrieval-support check, a unit test for generated code, or a cheap judge. A weak check either sends everything upward, which saves nothing, or lets bad answers through.
+
+```python
+def answer(request, small, large, accept):
+    first = small(request)
+    if accept(request, first):
+        return first, "small"
+    return large(request), "large"      # escalate only when the check fails
+```
+
+<Callout kind="cost" title="Escalations cost twice">
+A request that fails on the small model has paid for both calls and waited for both. If more than a modest share escalates, a cascade can cost and delay more than using the large model directly. Track the escalation rate.
+</Callout>
+
+## Fallbacks: when a model cannot answer
+
+Failures to plan for: throttling, timeouts, provider outages, a retired model, and responses that are empty or malformed.
+
+1. **Timeouts on every call**, set from your latency budget, not left at library defaults.
+2. **Retries with exponential backoff and jitter**, for errors that are likely to be temporary. Cap the attempts. Do not retry errors that will not change, such as invalid input.
+3. **A circuit breaker.** After repeated failures, stop calling the failing model for a short period instead of waiting on each request.
+4. **A fallback target:** another region, another model on the same platform, or another provider. Choose something already tested on your evals.
+5. **A graceful floor.** Decide what the product does if every option fails: a cached answer, a shorter degraded mode, or a clear message.
+
+<Disclosure title="Why jitter matters">
+
+If many clients all back off for exactly one second, two seconds, four seconds, they retry in lockstep and hit the service in waves. Adding randomness to each delay spreads the load, which gives an overloaded service room to recover.
+
+</Disclosure>
+
+## Pitfalls
+
+- **Prompts are not portable by default.** A prompt tuned for one model can perform worse on another. Test each model in the routing table, including the fallback, on your eval set.
+- **Silent quality loss.** If a fallback runs for a day unnoticed, quality may have dropped. Log which model answered each request and alert on fallback rate.
+- **Mixed behaviour.** Different models format and refuse differently, which can confuse downstream code. Validate output the same way regardless of who produced it.
+- **Data rules.** A fallback to another region or provider can break residency or contractual limits. Include those constraints in the policy.
+- **Complexity.** Every route is something to test and monitor. Add them when evals and cost data justify them.
+
+## What to measure
+
+Share of requests per route, escalation rate, fallback rate, p50 and p95 latency per route, cost per successful task, and eval score per route.

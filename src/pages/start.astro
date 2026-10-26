@@ -1,0 +1,22 @@
+---
+import Base from '../layouts/Base.astro';
+import PathPlanner from '../components/ui/PathPlanner.tsx';
+import { getLessons, lessonPath, slugOf } from '../lib/content';
+
+const lessons = await getLessons();
+const info = Object.fromEntries(
+  lessons.map((l) => [`${l.data.track}/${slugOf(l)}`, { title: l.data.title, href: lessonPath(l), level: l.data.level }]),
+);
+---
+
+<Base title="Start here" description="Choose a learning path for where you are today: new to AI, building with LLMs, or running AI in production.">
+  <div class="wrap">
+    <header class="page-head">
+      <h1>Start <span class="squig" style="--squig:#FFC233">here</span></h1>
+      <p>
+        Everyone starts somewhere different. Pick the path that sounds like you, or take the six-question check and we will suggest one. Each path is an ordered list of lessons and games, and your progress is saved in this browser.
+      </p>
+    </header>
+    <PathPlanner client:load lessons={info} />
+  </div>
+</Base>

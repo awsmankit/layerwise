@@ -1,0 +1,67 @@
+---
+title: Reference architecture for a RAG service
+track: systems
+level: advanced
+order: 1
+summary: The components of a production question-answering system, how they connect, and how each one fails.
+updated: 2026-10-26
+sources:
+  - label: "Building effective agents (Anthropic)"
+    url: https://www.anthropic.com/engineering/building-effective-agents
+  - label: "OpenTelemetry documentation"
+    url: https://opentelemetry.io/docs/
+---
+
+import NodeGraph from '../../../components/viz/NodeGraph.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+
+The demo version of a RAG system is a script. The production version is a service with caching, access control, fallbacks, tracing and a way to update its knowledge. This lesson lays out one reference design and, more usefully, how each part breaks.
+
+## The design
+
+Click any component. "What goes wrong" lists the failure modes and what to do about them.
+
+<NodeGraph
+  title="A production RAG service"
+  height={440}
+  initial="orch"
+  failuresLabel="What goes wrong"
+  nodes={[
+    { id: 'client', label: 'Client', x: 7, y: 50, detail: 'A web app, chat widget or API consumer. Streams the answer as it arrives and shows sources.', fails: ['Long waits with no feedback, so stream tokens and show progress', 'Users cannot tell when an answer is unsupported, so show citations'] },
+    { id: 'gw', label: 'Gateway and auth', x: 24, y: 50, detail: 'Authenticates the user, applies rate limits and quotas, and attaches the identity and permissions that downstream retrieval will use.', fails: ['Missing per-user limits let one client exhaust the model quota', 'Permissions not passed on to retrieval cause data leaks'] },
+    { id: 'orch', label: 'Orchestrator', x: 44, y: 50, kind: 'core', detail: 'The service that runs the flow for each question: rewrite the query, check the cache, retrieve, rerank, build the prompt, call the model, check the output, return the answer with sources. It is plain code with fixed steps, which keeps it testable.', fails: ['Timeouts are not set on each step, so one slow dependency stalls everything', 'Retries stack up across layers and multiply load'] },
+    { id: 'cache', label: 'Response cache', x: 44, y: 12, detail: 'Stores answers to repeated or near-identical questions, keyed by the normalised question plus the user’s permission scope. Saves cost and latency on common queries.', fails: ['Cached answers become stale when documents change, so invalidate on re-index', 'Keys that ignore permissions serve one person’s answer to another'] },
+    { id: 'retr', label: 'Retriever and reranker', x: 66, y: 27, detail: 'Runs vector and keyword search, applies metadata and permission filters, then reranks candidates and keeps the best few.', fails: ['Right passage not in the top results, so measure recall at k', 'Filters applied after ranking leave too few results', 'Reranker adds latency, so set a candidate cap'] },
+    { id: 'index', label: 'Search index', x: 88, y: 27, detail: 'Stores chunk text, vectors and metadata. Needs to support filtered nearest-neighbour search at your scale and be updated as sources change.', fails: ['Stale index after source updates', 'Changing the embedding model without re-embedding everything', 'Filtered search is slower or less accurate than unfiltered'] },
+    { id: 'ingest', label: 'Ingestion pipeline', x: 88, y: 6, detail: 'Offline job that loads sources, cleans, chunks, embeds and writes to the index. Runs on a schedule or on change events, and records which document version each chunk came from.', fails: ['Silent failures leave documents missing, so alert on counts', 'Deleted documents remain searchable', 'Parsing errors turn tables and PDFs into noise'] },
+    { id: 'llmgw', label: 'Model gateway', x: 66, y: 73, detail: 'A single place that calls models. Handles retries with backoff, timeouts, fallback to another model or region, token accounting and per-feature budgets.', fails: ['Retrying a throttled call in a tight loop makes overload worse', 'No fallback, so an outage at the primary model is your outage', 'Prompts tuned for one model degrade on the fallback'] },
+    { id: 'models', label: 'Models', x: 88, y: 73, detail: 'One or more hosted models. A small one for rewriting and classification, a larger one for the final answer, with the choice made by the gateway.', fails: ['Version change alters behaviour, so pin versions and keep evals running', 'Quota limits at peak times'] },
+    { id: 'guard', label: 'Guardrails', x: 44, y: 88, detail: 'Checks the input and output: sensitive data, disallowed topics, and whether the answer is supported by the retrieved passages.', fails: ['False positives block valid questions', 'Checks run after streaming has begun, so decide whether to buffer'] },
+    { id: 'obs', label: 'Tracing and eval store', x: 88, y: 50, detail: 'Records every request: question, retrieved chunks, prompt, model, tokens, latency, cost and user feedback. Feeds dashboards, alerts and the offline eval set.', fails: ['Logging raw prompts without a retention or access policy', 'No link from a bad answer back to the retrieved chunks, which makes debugging guesswork'] },
+  ]}
+  edges={[['client','gw'],['gw','orch'],['orch','cache'],['orch','retr'],['retr','index'],['ingest','index'],['orch','llmgw'],['llmgw','models'],['orch','guard'],['orch','obs']]}
+  client:visible
+/>
+
+## Design choices that pay off
+
+- **A fixed pipeline before an agent.** Retrieval, prompt and generation as a known sequence is easier to test and to cost. Add model-driven loops only where a fixed path fails.
+- **Permissions at retrieval time.** Filter by the caller's access before ranking. Telling the model "do not reveal confidential files" is not access control.
+- **One gateway for model calls.** It is the natural place for budgets, fallbacks and accounting, and it keeps provider details out of the rest of the code.
+- **Trace everything, keep it queryable.** When someone reports a wrong answer, you should be able to open the trace and see what was retrieved, what was sent and what came back.
+- **Evals in the loop.** Run the offline eval set on every change to prompts, chunking or models, and sample production traffic into it.
+
+## Non-functional checklist
+
+| Concern | Questions to answer |
+|---|---|
+| Latency | What is the budget for time to first token? Which steps can run in parallel? |
+| Cost | Cost per question, and which component dominates? |
+| Availability | What happens if the model, the index or the reranker is down? |
+| Security | Who can see which documents? What do the logs contain? |
+| Freshness | How soon after a document changes can it be found? |
+| Quality | Which metric would tell you it got worse, and who is alerted? |
+
+<Callout title="Start with the simple version">
+Orchestrator, one index, one model and tracing are enough to launch. Add the cache, reranker, fallback and guardrails when the traces show you need them.
+</Callout>

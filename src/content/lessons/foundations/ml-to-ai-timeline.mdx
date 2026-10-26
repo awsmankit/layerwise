@@ -1,0 +1,57 @@
+---
+title: From machine learning to generative AI
+track: foundations
+level: basic
+order: 1
+summary: Seventy years of ideas in one scrollable timeline, and what each shift changed about the work of an engineer.
+updated: 2026-10-26
+sources:
+  - label: "Attention Is All You Need (Vaswani et al., 2017)"
+    url: https://arxiv.org/abs/1706.03762
+  - label: "Scaling Laws for Neural Language Models (Kaplan et al., 2020)"
+    url: https://arxiv.org/abs/2001.08361
+  - label: "Training language models to follow instructions with human feedback (Ouyang et al., 2022)"
+    url: https://arxiv.org/abs/2203.02155
+---
+
+import Timeline from '../../../components/viz/Timeline.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+
+"AI" and "machine learning" are used as if they mean the same thing, and the generative AI of the last few years is often described as a break from everything before it. It is better understood as four steps, each of which kept the previous one's tools and changed what you spend your time on.
+
+## The four steps
+
+**Classical machine learning.** You decide which features describe the problem (word counts for a spam filter, age and balance for a credit model), then train a small model such as logistic regression or gradient-boosted trees to map features to a label. One model, one task, trained on labelled data you collected yourself.
+
+**Deep learning.** Neural networks learn the features themselves from raw pixels, audio or text. You stop hand-crafting features and start managing larger datasets, GPUs and architectures.
+
+**Transformers and pretraining.** One architecture that trains in parallel and scales. A model is trained once on a huge amount of unlabelled text by predicting the next token, and the result is a general-purpose asset rather than a single-task model.
+
+**The application era.** The model is now something you call. Your work moves to prompts, retrieval, tools, evaluation, cost and safety around it.
+
+## The timeline
+
+Open any event for the detail. The line fills in as you scroll.
+
+<Timeline client:visible />
+
+## What changed for engineers
+
+| | Classical ML | Generative AI |
+|---|---|---|
+| Where the effort goes | Features, training, tuning | Prompts, retrieval, orchestration, evals |
+| Output | A label or a number | Free text, different each time |
+| Where cost lives | Training runs | Inference tokens, on every request |
+| How you test | Accuracy on a held-out set | Eval suites, rubrics, judge models |
+| Ownership | You own the model | You rent it, and the vendor can update it |
+| Typical failure | A wrong prediction | A fluent, confident, wrong answer |
+
+<Callout title="Your ML background still matters">
+Distribution shift, data quality, leakage, latency budgets and honest evaluation are the hard parts of generative AI too. Engineers who know them from classical ML tend to build more reliable systems than people who only know the prompting.
+</Callout>
+
+## What to take forward
+
+- A model is a function trained on data. The newer ones are far more general, but they are still shaped by what they were trained on.
+- Capability improved as a result of scale, not only clever ideas, which is why the cost of training and serving became central.
+- Most of the rest of this site is about the layers built on top: how a request is served, how knowledge is added, how quality is measured and what it all costs.

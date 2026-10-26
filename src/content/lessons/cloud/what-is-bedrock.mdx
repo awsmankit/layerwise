@@ -1,0 +1,84 @@
+---
+title: What is AWS Bedrock?
+track: cloud
+level: basic
+order: 1
+summary: A managed API for foundation models, plus the building blocks around it. What each part does and where it fits next to the ML tools you already know.
+updated: 2026-10-26
+sources:
+  - label: "Amazon Bedrock user guide"
+    url: https://docs.aws.amazon.com/bedrock/latest/userguide/what-is-bedrock.html
+  - label: "Amazon Bedrock pricing"
+    url: https://aws.amazon.com/bedrock/pricing/
+  - label: "Amazon Bedrock Converse API"
+    url: https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference.html
+---
+
+import NodeGraph from '../../../components/viz/NodeGraph.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+
+**Amazon Bedrock is AWS's managed service for using foundation models through an API.** You send a request, AWS runs the model on its own accelerators, and you pay for what you use. You do not provision GPUs, load weights or patch a serving stack.
+
+If you know SageMaker, the contrast is useful. SageMaker is about building, training and hosting models that you control. Bedrock is about consuming models that already exist, from several providers, inside your AWS account's security and billing.
+
+## The parts
+
+Click a block. Use "Show flow" to see requests move through the system.
+
+<NodeGraph
+  title="Bedrock building blocks"
+  height={400}
+  initial="models"
+  failuresLabel="Watch out for"
+  nodes={[
+    { id: 'app', label: 'Your application', x: 50, y: 50, kind: 'core', detail: 'Your code calls Bedrock through the AWS SDK or an HTTPS endpoint, authenticated with IAM. Everything else on this map is something you can optionally use from there.' },
+    { id: 'security', label: 'Security and governance', x: 50, y: 9, detail: 'Access is controlled with IAM policies, so you can decide which roles may call which models. Traffic can stay on the AWS network through VPC endpoints, data can be encrypted with KMS keys, and CloudTrail and invocation logging give you an audit trail. AWS states that prompts and outputs are not used to train the underlying base models or shared with model providers. Confirm the current wording for your compliance needs.', fails: ['Overly broad IAM permissions on model access', 'Invocation logs can store sensitive prompts, so decide retention and access up front'] },
+    { id: 'models', label: 'Model APIs', x: 15, y: 17, detail: 'One authenticated API in front of models from several providers, including Amazon’s own. The Converse API gives a common request and response shape across models. InvokeModel uses each model’s native format. Streaming versions exist for both. Which models you can use depends on the region and changes over time, and some need access to be enabled first.', fails: ['Quotas and throttling at peak times', 'Models are retired on a schedule, so track versions and plan migrations', 'The same prompt behaves differently on different models'] },
+    { id: 'kb', label: 'Knowledge Bases', x: 85, y: 17, detail: 'Managed retrieval-augmented generation. You point it at a data source such as an S3 bucket, and it chunks the content, creates embeddings and stores them in a supported vector store. At query time it retrieves relevant passages, and can also generate an answer from them.', fails: ['Default chunking may not suit your documents', 'Retrieval quality still needs your own measurement', 'The vector store has its own cost and scaling behaviour'] },
+    { id: 'agents', label: 'Agents', x: 88, y: 50, detail: 'Lets a model plan steps and call your tools, often Lambda functions or APIs, in a loop with instructions and memory. AWS also offers services aimed at running agents at scale, with identity, memory and observability. Check the current documentation for what is available.', fails: ['Runaway loops, so cap steps and cost', 'Tools with more permission than the task needs'] },
+    { id: 'guard', label: 'Guardrails', x: 85, y: 83, detail: 'Configurable policies applied to inputs and outputs: harmful-content categories, denied topics, handling of sensitive information such as personal data, and checks that answers are grounded in provided sources.', fails: ['False positives can block legitimate requests, so test with your own traffic', 'Adds a little latency and cost per call'] },
+    { id: 'batch', label: 'Batch inference', x: 50, y: 91, detail: 'Submit a file of many requests and collect the results later, at a lower price than on-demand calls. Suits non-interactive work such as summarising a backlog or generating embeddings in bulk.', fails: ['Not for anything a user is waiting on', 'Handle partial failures record by record'] },
+    { id: 'eval', label: 'Model evaluation', x: 15, y: 83, detail: 'Compare models or prompts on a dataset using automatic metrics, a model acting as judge, or human review workflows. Useful for choosing a model before you commit to it.', fails: ['Judge models have biases, see the LLM-as-judge lesson', 'Generic datasets rarely match your task, so bring your own cases'] },
+    { id: 'custom', label: 'Model customization', x: 13, y: 50, detail: 'For supported models, you can adapt them with your data through fine-tuning, continued pretraining or distillation, producing a private version that you use through Bedrock. Support varies by model, and serving a customized model has typically needed reserved capacity, so check current terms.', fails: ['Small or noisy datasets overfit', 'Locked to the base model version you customized'] },
+  ]}
+  edges={[['app','security'],['app','models'],['app','kb'],['app','agents'],['app','guard'],['app','batch'],['app','eval'],['app','custom']]}
+  client:visible
+/>
+
+## How you pay
+
+| Mode | How it works | Good for |
+|---|---|---|
+| On-demand | Pay per input and output token, no commitment | Getting started, spiky or unpredictable traffic |
+| Provisioned throughput | Reserve capacity and pay by time | Steady, high volume where you need predictable latency, and for some customized models |
+| Batch | Asynchronous jobs at a reduced rate | Bulk work that can wait |
+
+Prompt caching and cross-region inference can also change your cost and availability. Prices vary by model and region, so work from the current pricing page rather than from memory, including this page.
+
+## A first call
+
+```python
+import boto3
+
+client = boto3.client("bedrock-runtime", region_name="us-east-1")
+
+response = client.converse(
+    modelId="<model id or inference profile from the console>",
+    system=[{"text": "You are a concise technical assistant."}],
+    messages=[{"role": "user", "content": [{"text": "Explain the KV cache in one paragraph."}]}],
+    inferenceConfig={"maxTokens": 300, "temperature": 0.2},
+)
+
+print(response["output"]["message"]["content"][0]["text"])
+print(response["usage"])   # input tokens, output tokens: this is what you are billed on
+```
+
+Switching models mostly means changing `modelId`, which is the main practical benefit of the Converse API. Behaviour, limits and prices still differ by model.
+
+<Callout title="This page ages quickly">
+Bedrock's model list, features and pricing change often. The structure above is stable enough to learn from, but check the documentation linked below for what is available today before you design around a specific feature.
+</Callout>
+
+## Where it sits in the stack
+
+In the stack on the home page, Bedrock is the **platform** layer: it sits above inference engineering, which AWS runs for you, and below your retrieval, agents and evals, some of which it also offers as managed pieces. The next lesson compares it with SageMaker and with the equivalents on other clouds.

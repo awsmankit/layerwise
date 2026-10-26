@@ -1,0 +1,61 @@
+---
+title: The KV cache and GPU memory
+track: serving
+level: advanced
+order: 2
+summary: Why generation needs a cache, how big it gets, and why it decides how many users fit on one GPU.
+updated: 2026-10-26
+sources:
+  - label: "Efficient Memory Management for Large Language Model Serving with PagedAttention (Kwon et al., 2023)"
+    url: https://arxiv.org/abs/2309.06180
+  - label: "GQA: Training Generalized Multi-Query Transformer Models (Ainslie et al., 2023)"
+    url: https://arxiv.org/abs/2305.13245
+  - label: "Fast Transformer Decoding: One Write-Head is All You Need (Shazeer, 2019)"
+    url: https://arxiv.org/abs/1911.02150
+---
+
+import ModelMemory from '../../../components/viz/ModelMemory.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+
+When a model generates the next token, attention needs the keys and values of every earlier token. Recomputing them at each step would waste most of the work, so they are computed once and stored. That store is the **KV cache**. It turns generation from quadratic redundant work into a steady one-token-at-a-time process, at the price of memory.
+
+## How big is it?
+
+For each token, each layer stores one key vector and one value vector per KV head:
+
+```text
+KV bytes per token = 2 x layers x KV heads x head dimension x bytes per value
+KV cache total     = KV bytes per token x context length x concurrent sequences
+```
+
+Try it. Pick a model, then change the context length and the number of users, and watch which part of the bar grows.
+
+<ModelMemory client:visible />
+
+Two things stand out. The **weights** are a fixed cost, paid once per copy of the model. The **KV cache** scales with context and with the number of users, so it is the part that decides how many requests one GPU can serve at the same time.
+
+## Why decode is limited by memory bandwidth
+
+In each decode step the chip must read all the weights and the whole KV cache from memory to produce a single token. The multiplications are cheap compared with that data movement. So generation speed is set mostly by how fast memory can be read, not by how many operations per second the chip can perform. This is why:
+
+- Smaller weights (quantization) speed generation up, not just shrink the model.
+- Batching helps: one read of the weights serves many users' tokens at once.
+- Long contexts slow decoding, because there is more cache to read at each step.
+
+## Ways the cache is made smaller
+
+- **Fewer KV heads.** Multi-query and grouped-query attention share keys and values across several query heads. Many recent models use grouped-query attention, which is why the example shapes above have far fewer KV heads than attention heads.
+- **Lower precision.** Storing the cache in 8 bits instead of 16 halves it, with some effect on quality that you should measure.
+- **Paged allocation.** Systems such as vLLM, which introduced PagedAttention, store the cache in fixed-size blocks instead of one contiguous region per request. This cuts the memory lost to fragmentation and over-reservation, so more requests fit.
+- **Prefix sharing.** Requests that begin with the same prompt can share the cache for it. This is the mechanism behind prompt caching.
+- **Eviction or windowing.** Some designs keep only part of the history, which trades memory for fidelity.
+
+<Callout kind="cost" title="What this means for price">
+A long-context, high-concurrency workload is expensive largely because of the KV cache: fewer requests fit per GPU, so each token carries a larger share of the hardware. When a provider charges more for long contexts, this is part of why.
+</Callout>
+
+## If you host models yourself
+
+- Size the GPU for weights plus the cache for your target concurrency and context length, with headroom for activations and runtime overhead.
+- Use a serving engine with paged cache management and continuous batching rather than writing your own loop.
+- Load-test with realistic prompt and output lengths. Averages hide the long tail that exhausts memory.

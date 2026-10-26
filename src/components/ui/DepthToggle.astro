@@ -1,0 +1,40 @@
+---
+/**
+ * Essentials hides optional deeper detail (<Deep> blocks) in a lesson. Full
+ * depth shows everything. The choice is remembered, and defaults to
+ * Essentials for people who chose the "new to AI" path.
+ */
+---
+
+<div class="depth" role="group" aria-label="Level of detail">
+  <button type="button" data-depth="essentials">Essentials</button>
+  <button type="button" data-depth="full">Full depth</button>
+</div>
+
+<script is:inline>
+  (function () {
+    var d = document.documentElement;
+    var group = document.currentScript.previousElementSibling;
+    function sync() {
+      var cur = d.getAttribute('data-depth') || 'full';
+      [].forEach.call(group.querySelectorAll('button'), function (b) {
+        b.setAttribute('aria-pressed', b.getAttribute('data-depth') === cur ? 'true' : 'false');
+      });
+      /* hide contents entries whose heading sits inside hidden depth */
+      [].forEach.call(document.querySelectorAll('[data-toc]'), function (a) {
+        var h = document.getElementById(a.getAttribute('data-toc'));
+        var hidden = cur === 'essentials' && h && h.closest('.deep');
+        if (a.parentElement) a.parentElement.style.display = hidden ? 'none' : '';
+      });
+    }
+    group.addEventListener('click', function (e) {
+      var b = e.target.closest('button[data-depth]');
+      if (!b) return;
+      var v = b.getAttribute('data-depth');
+      d.setAttribute('data-depth', v);
+      try { localStorage.setItem('layerwise:depth', JSON.stringify(v)); } catch (err) {}
+      sync();
+    });
+    sync();
+  })();
+</script>

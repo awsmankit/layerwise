@@ -1,0 +1,62 @@
+---
+title: Where the tokens go
+track: cost
+level: basic
+order: 1
+summary: How generative AI is priced, where the hidden multipliers are, and a calculator you can change.
+updated: 2026-10-26
+sources:
+  - label: "Amazon Bedrock pricing"
+    url: https://aws.amazon.com/bedrock/pricing/
+  - label: "Anthropic pricing"
+    url: https://www.anthropic.com/pricing
+---
+
+import CostCalculator from '../../../components/viz/CostCalculator.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+
+Hosted models are priced per token, with separate rates for **input** (what you send) and **output** (what the model writes). Output is usually several times more expensive per token than input, because generating a token costs more compute than reading one.
+
+## A worked example
+
+Suppose a support assistant handles 20,000 requests a day. Each sends about 3,000 input tokens (instructions, retrieved passages, history) and gets 400 tokens back. With example prices of $3 per million input tokens and $15 per million output tokens:
+
+- Input: 3,000 / 1,000,000 x $3 = **$0.009**
+- Output: 400 / 1,000,000 x $15 = **$0.006**
+- Per request: **$0.015**
+- Per day: 20,000 x $0.015 = **$300**
+- Per month: roughly **$9,000**
+
+The prompt is 88 per cent of the tokens but only 60 per cent of the cost, because each output token costs five times as much. These are example prices, not a quote.
+
+<CostCalculator client:visible />
+
+## Where tokens hide
+
+Your bill is rarely just "the question and the answer".
+
+- **The system prompt and tool definitions** are resent on every call.
+- **Retrieved context.** Four passages of 500 tokens each is 2,000 tokens before the user says anything.
+- **Conversation history.** Each turn resends the earlier turns, so a long chat gets more expensive per message as it goes.
+- **Agent loops.** Every step is another call that resends the growing context.
+- **Reasoning tokens.** Models that think before answering generate extra tokens, usually billed as output, that you may never see.
+- **Retries and failures.** A call that errors out or is retried still costs.
+- **Evals and judges.** Testing your system is also tokens.
+
+<Callout kind="cost" title="Measure from the usage field">
+Every response reports its input and output token counts. Log them with a feature name and a request ID from day one, and cost questions become queries instead of guesses.
+</Callout>
+
+## Three numbers to track
+
+1. **Cost per request**, by feature.
+2. **Cost per successful task.** This is the one that matters. If a task needs 2.3 attempts on average, the cost per task is 2.3 times the cost per request.
+3. **Output share of cost.** If it is high, look at answer length. If it is low, look at prompt size.
+
+## Try this in the calculator
+
+- Double the output tokens and see how much more the total rises than when you double the input tokens.
+- Switch the preset between a small, mid-tier and large model, and compare the spread. The price gap between model tiers is often the biggest lever, which the next lesson takes further.
+- Turn on caching for 80 per cent of the input and see the effect.
+
+Prices change often and differ by region and model, so always take current numbers from the provider's pricing page.

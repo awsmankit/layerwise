@@ -1,0 +1,86 @@
+---
+title: Evals 101
+track: evals
+level: intermediate
+order: 1
+summary: How to know whether a generative AI feature works, and how to keep knowing when prompts, data and models change.
+updated: 2026-10-26
+sources:
+  - label: "OpenAI Evals repository"
+    url: https://github.com/openai/evals
+  - label: "Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena (Zheng et al., 2023)"
+    url: https://arxiv.org/abs/2306.05685
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+
+An **eval** is a repeatable test for model behaviour. You cannot unit-test a model the way you test a function, because there is rarely one correct output. But you can still define what good looks like, score outputs against it, and notice when it gets worse.
+
+## Why you need one
+
+- You will change prompts, retrieval settings and models. Without a measure, every change is a guess.
+- Vendors update models, sometimes silently behind an alias. An eval suite is how you find out.
+- "It looked fine in the demo" is not evidence. A handful of hand-picked examples tells you little about real traffic.
+
+## Build the first set in an afternoon
+
+1. **Collect 30 to 50 real inputs.** Use actual user requests if you have them. Include the awkward ones: ambiguous, long, off-topic, adversarial.
+2. **Write down what a good answer is** for each. This might be a reference answer, a list of facts that must appear, or a rule such as "must refuse".
+3. **Choose how to score each one** (below).
+4. **Run it, save the results and the prompt version**, and read the failures by hand.
+
+Grow the set over time. Every production bug becomes a new test.
+
+## Ways to score
+
+| Method | Good for | Weakness |
+|---|---|---|
+| Exact or regex match | Classification, extraction, fixed formats | Too strict for free text |
+| Programmatic checks | Valid JSON, schema, length, required fields, code that compiles and passes tests | Only checks what you can code |
+| Reference comparison | Answers with a known correct content | Many correct phrasings |
+| Rubric scored by a model | Open-ended quality: helpfulness, tone, faithfulness | Judge has biases; needs calibration |
+| Human review | The ground truth that calibrates everything else | Slow and expensive |
+
+Use the cheapest method that is faithful to what you care about, and combine several. A response can be valid JSON and still wrong.
+
+## A minimal harness
+
+```python
+import json, statistics
+
+def run_eval(cases, call_model, score):
+    results = []
+    for case in cases:
+        output = call_model(case["input"])
+        results.append({"id": case["id"], "output": output, "score": score(case, output)})
+    return results
+
+def report(results, baseline=None):
+    mean = statistics.mean(r["score"] for r in results)
+    print(f"mean score {mean:.3f} over {len(results)} cases")
+    failures = [r for r in results if r["score"] < 1]
+    for r in failures[:10]:
+        print("FAIL", r["id"], r["output"][:80].replace("\n", " "))
+    if baseline is not None and mean < baseline - 0.02:
+        raise SystemExit("Regression: score dropped below baseline")
+```
+
+Run it in CI on changes to prompts or retrieval, and on a schedule against the production model to catch silent updates.
+
+## What to measure besides correctness
+
+- **Faithfulness** for RAG: is each claim supported by the retrieved text?
+- **Refusal behaviour:** does it decline what it should, and not decline what it should answer?
+- **Format validity rate.**
+- **Latency and cost per case.** A better answer that costs ten times as much is a trade-off to see, not to discover later.
+
+## Traps
+
+- **Tuning to the test.** If you iterate on the same 40 cases forever, you overfit to them. Keep a hidden set you rarely look at.
+- **Averaging away a disaster.** One harmful answer matters more than a point of average score. Track critical cases separately.
+- **One-off runs.** Output varies. For important comparisons, run each case several times.
+- **Unpinned models.** If the model version can change under you, record which one produced each result.
+
+<Callout title="Start small, but start">
+Thirty cases and a script you run before each change beats an elaborate platform you never set up. You can adopt tooling later, once you know what you need to measure.
+</Callout>

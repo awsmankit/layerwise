@@ -1,0 +1,720 @@
+/* Games: shared chrome for Blueprint, Cost Crunch, Fit the Model, Incident Room. */
+
+.gm {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  line-height: 1.45;
+}
+.gm button {
+  font-family: inherit;
+  color: inherit;
+}
+
+/* ---------- level picker ---------- */
+
+.gm-levels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--line-soft);
+}
+.gm-level {
+  position: relative;
+  display: grid;
+  gap: 0.15rem;
+  align-content: start;
+  padding: 0.85rem 1rem 0.85rem 0;
+  background: none;
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+}
+.gm-level::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 1rem;
+  bottom: -1px;
+  height: 2px;
+  background: var(--signal);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s var(--ease);
+}
+.gm-level.is-active::after,
+.gm-level:hover::after {
+  transform: scaleX(1);
+}
+.gm-level-n {
+  font-size: 0.82rem;
+  color: var(--ink-3);
+}
+.gm-level-t {
+  font-weight: 620;
+  font-size: 1.02rem;
+  line-height: 1.25;
+}
+.gm-level.is-active .gm-level-t {
+  color: var(--signal-ink);
+}
+.gm-level-best {
+  font-size: 0.82rem;
+  color: var(--ok);
+}
+
+.gm-stars {
+  display: inline-flex;
+  gap: 2px;
+  vertical-align: middle;
+}
+.gm-stars svg {
+  fill: none;
+  stroke: var(--ink-3);
+  stroke-width: 1.3;
+}
+.gm-stars svg.on {
+  fill: var(--cost);
+  stroke: var(--cost);
+}
+
+/* ---------- brief ---------- */
+
+.gm-brief {
+  padding-block: 1.6rem 1.2rem;
+  max-width: 62rem;
+}
+.gm-brief h2 {
+  font-size: 1.7rem;
+}
+.gm-brief p {
+  margin-top: 0.5rem;
+  max-width: 62ch;
+  font-family: var(--font-body);
+  font-size: 1.08rem;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+.gm-facts {
+  list-style: none;
+  margin: 0.9rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1.6rem;
+  font-size: 0.92rem;
+  color: var(--ink-2);
+}
+.gm-facts li::before {
+  content: '';
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-right: 0.5rem;
+  border-radius: 50%;
+  background: var(--signal);
+  vertical-align: middle;
+}
+.gm-report {
+  margin: 0.8rem 0 0;
+  padding-left: 1.1rem;
+  border-left: 2px solid var(--warn);
+  max-width: 62ch;
+  font-family: var(--font-body);
+  font-size: 1.12rem;
+  line-height: 1.55;
+  font-style: italic;
+  color: var(--ink);
+}
+
+/* ---------- layout ---------- */
+
+.gm-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 2.5rem;
+  align-items: start;
+  margin-top: 0.5rem;
+}
+.gm-main.inc {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+.gm-side {
+  position: sticky;
+  top: 5rem;
+  padding-left: 1.6rem;
+  border-left: 1px solid var(--line-soft);
+  display: grid;
+  gap: 0.9rem;
+}
+.gm-side .btn {
+  justify-self: start;
+}
+.gm-note {
+  font-size: 0.88rem;
+  color: var(--ink-3);
+  line-height: 1.45;
+}
+.gm-note b {
+  color: var(--ink);
+}
+
+/* ---------- option pickers ---------- */
+
+.gm-slot {
+  margin: 0 0 1.6rem;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.gm-slot legend {
+  padding: 0;
+  margin-bottom: 0.55rem;
+  font-size: 0.95rem;
+  color: var(--ink-3);
+}
+.gm-slot legend b {
+  margin-right: 0.4rem;
+  color: var(--ink);
+  font-size: 1.05rem;
+}
+.gm-options {
+  display: grid;
+  gap: 0.4rem;
+}
+.gm-opt,
+.gm-lever {
+  position: relative;
+  display: flex;
+  gap: 0.8rem;
+  align-items: flex-start;
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  background: none;
+  border: 1px solid var(--line-soft);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.gm-opt:hover:not(:disabled),
+.gm-lever:hover:not(:disabled) {
+  border-color: var(--signal);
+}
+.gm-opt.is-on,
+.gm-lever.is-on {
+  border-color: var(--signal);
+  background: var(--signal-wash);
+}
+.gm-opt.is-right {
+  border-color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 10%, transparent);
+}
+.gm-opt.is-wrong {
+  border-color: var(--line-soft);
+  opacity: 0.55;
+}
+.gm-opt:disabled,
+.gm-lever:disabled {
+  cursor: default;
+}
+.gm-lever:disabled:not(.is-on) {
+  opacity: 0.45;
+}
+.gm-opt-dot {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  margin-top: 0.2rem;
+  border-radius: 50%;
+  border: 1.5px solid var(--ink-3);
+  transition: all 0.2s;
+}
+.gm-opt.is-on .gm-opt-dot,
+.gm-lever.is-on .gm-opt-dot {
+  border-color: var(--signal);
+  background: radial-gradient(circle, var(--signal) 0 38%, transparent 42%);
+}
+.gm-opt.is-right .gm-opt-dot {
+  border-color: var(--ok);
+  background: radial-gradient(circle, var(--ok) 0 38%, transparent 42%);
+}
+.gm-opt-text {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+.gm-opt-text b {
+  font-weight: 600;
+  line-height: 1.3;
+}
+.gm-opt-text small {
+  font-size: 0.86rem;
+  color: var(--ink-3);
+  line-height: 1.35;
+}
+.gm-ruled {
+  overflow: hidden;
+  margin: 0.35rem 0 0.4rem 1.7rem;
+  font-family: var(--font-body);
+  font-size: 0.98rem;
+  line-height: 1.5;
+  color: var(--warn);
+}
+.gm-ruled.good {
+  color: var(--ok);
+}
+
+/* ---------- meters ---------- */
+
+.gm-meter {
+  display: grid;
+  gap: 0.3rem;
+}
+.gm-meter-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.92rem;
+  color: var(--ink-2);
+}
+.gm-meter-head b {
+  color: var(--ink);
+  transition: color 0.2s;
+}
+.gm-meter.bad .gm-meter-head b {
+  color: var(--warn);
+}
+.gm-meter.ok .gm-meter-head b {
+  color: var(--ok);
+}
+.gm-meter-track {
+  position: relative;
+  height: 8px;
+  background: var(--line-soft);
+}
+.gm-meter-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--ok);
+  transition: background 0.25s;
+}
+.gm-meter.bad .gm-meter-fill {
+  background: var(--warn);
+}
+.gm-meter-tick {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--ink);
+}
+.gm-meter-foot {
+  font-size: 0.78rem;
+  color: var(--ink-3);
+}
+
+/* ---------- result panels ---------- */
+
+.gm-result,
+.gm-reveal {
+  scroll-margin-top: 5rem;
+  margin-top: 2.2rem;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--ink);
+  max-width: 62rem;
+}
+.gm-reveal {
+  border-top-style: dashed;
+  border-top-color: var(--line);
+}
+.gm-result-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+}
+.gm-result-head h3 {
+  font-size: 1.5rem;
+}
+.gm-result-head p {
+  margin-top: 0.3rem;
+  color: var(--ink-2);
+}
+.gm-score {
+  font-size: 2.6rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--signal-ink);
+}
+.gm-score small {
+  margin-left: 0.2rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--ink-3);
+}
+.gm-checks {
+  list-style: none;
+  margin: 1.2rem 0 0;
+  padding: 0;
+  display: grid;
+}
+.gm-checks li {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 0.8rem;
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--line-soft);
+}
+.gm-checks li b {
+  font-weight: 620;
+}
+.gm-checks li p {
+  margin-top: 0.15rem;
+  font-family: var(--font-body);
+  font-size: 0.98rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.gm-checks li .gm-hint {
+  color: var(--ink);
+}
+.gm-check {
+  margin-top: 0.1rem;
+  stroke: currentColor;
+}
+.gm-check.ok {
+  color: var(--ok);
+}
+.gm-check.bad {
+  color: var(--warn);
+}
+.gm-notes {
+  margin: 0.8rem 0 0;
+  padding-left: 1.1rem;
+  font-family: var(--font-body);
+  font-size: 0.98rem;
+  color: var(--ink-2);
+}
+.gm-math {
+  margin-top: 1rem;
+  font-size: 0.92rem;
+  color: var(--ink-2);
+}
+.gm-math summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--ink);
+}
+.gm-math p {
+  margin-top: 0.5rem;
+  max-width: 70ch;
+  font-family: var(--font-body);
+  line-height: 1.55;
+}
+.gm-result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1.1rem;
+}
+.gm-design {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.8rem 1.6rem;
+  margin: 1rem 0 0;
+}
+.gm-design dt {
+  font-size: 0.82rem;
+  color: var(--ink-3);
+}
+.gm-design dd {
+  margin: 0.1rem 0 0;
+  font-weight: 600;
+}
+.gm-lessons {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.2rem;
+  font-size: 0.95rem;
+}
+.gm-lessons b {
+  font-weight: 650;
+}
+.gm-lessons a {
+  color: var(--signal-ink);
+  font-weight: 550;
+}
+.gm-debrief {
+  margin-top: 1.2rem;
+  font-size: 1rem;
+}
+.gm-result > p:not(.gm-note),
+.gm-reveal > p:not(.gm-note) {
+  margin-top: 0.4rem;
+  max-width: 66ch;
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+.gm-plan {
+  margin: 0.6rem 0 0;
+  padding-left: 1.3rem;
+  font-weight: 560;
+}
+
+/* ---------- cost crunch ---------- */
+
+.gm-pips {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: 0.6rem;
+  vertical-align: middle;
+}
+.gm-pips i {
+  width: 10px;
+  height: 10px;
+  border: 1.5px solid var(--ink-3);
+  border-radius: 50%;
+  transition: background 0.25s;
+}
+.gm-pips i.used {
+  background: var(--signal);
+  border-color: var(--signal);
+}
+.gm-levers {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+.gm-lever {
+  align-items: center;
+}
+.gm-lever .gm-opt-dot {
+  margin-top: 0;
+}
+.gm-delta {
+  margin-left: auto;
+  flex: none;
+  display: grid;
+  text-align: right;
+  font-weight: 650;
+  font-size: 0.95rem;
+  color: var(--ok);
+}
+.gm-delta em {
+  font-style: normal;
+  font-weight: 500;
+  font-size: 0.78rem;
+  color: var(--warn);
+}
+.gm-delta.none {
+  color: var(--ink-3);
+  font-weight: 500;
+}
+.gm-warn {
+  margin: 0.3rem 0 0.2rem 1.7rem;
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  color: var(--warn);
+}
+.gm-win {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--ok);
+  background: color-mix(in srgb, var(--ok) 9%, transparent);
+}
+.gm-win b {
+  color: var(--ok);
+  font-size: 1.1rem;
+}
+.gm-win p {
+  font-size: 0.92rem;
+  color: var(--ink-2);
+}
+
+/* ---------- fit the model ---------- */
+
+.gm-mem {
+  position: relative;
+  display: flex;
+  height: 26px;
+  background: var(--line-soft);
+  margin-top: 0.4rem;
+}
+.gm-mem > span {
+  display: block;
+  height: 100%;
+}
+.gm-mem-w {
+  background: var(--signal);
+}
+.gm-mem-k {
+  background: var(--cost);
+}
+.gm-mem-r {
+  background: repeating-linear-gradient(135deg, var(--ink-3) 0 2px, transparent 2px 6px);
+  opacity: 0.6;
+}
+.gm-mem-cap {
+  position: absolute !important;
+  top: -6px;
+  bottom: -6px;
+  width: 2px;
+  margin-left: -2px;
+  background: var(--ink);
+}
+.gm-mem-cap i {
+  position: absolute;
+  right: 6px;
+  top: -1.15rem;
+  font-style: normal;
+  font-size: 0.75rem;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+.gm-mem-legend {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0.3rem 0 0;
+  font-size: 0.9rem;
+}
+.gm-mem-legend > div {
+  display: flex;
+  justify-content: space-between;
+}
+.gm-mem-legend dt {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--ink-2);
+}
+.gm-mem-legend dd {
+  margin: 0;
+  font-weight: 650;
+}
+.gm-mem-legend i {
+  width: 10px;
+  height: 10px;
+}
+.gm-mem-legend i.w {
+  background: var(--signal);
+}
+.gm-mem-legend i.k {
+  background: var(--cost);
+}
+.gm-mem-legend i.r {
+  background: repeating-linear-gradient(135deg, var(--ink-3) 0 2px, transparent 2px 4px);
+}
+.gm-status {
+  font-weight: 600;
+}
+.gm-status.ok {
+  color: var(--ok);
+}
+.gm-status.bad {
+  color: var(--warn);
+}
+
+/* ---------- incident room ---------- */
+
+.gm-evidence {
+  display: grid;
+  gap: 0.4rem;
+}
+.gm-ev {
+  border: 1px solid var(--line-soft);
+}
+.gm-ev.is-open {
+  border-color: var(--signal);
+}
+.gm-ev-head {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.65rem 0.9rem;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  font-weight: 600;
+  text-align: left;
+}
+.gm-ev-head:hover:not(:disabled) {
+  background: var(--signal-wash);
+}
+.gm-ev-head:disabled {
+  cursor: default;
+}
+.gm-ev-cost {
+  font-weight: 500;
+  font-size: 0.85rem;
+  color: var(--ink-3);
+}
+.gm-ev-body {
+  margin: 0;
+  overflow: hidden;
+  padding: 0 0.9rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--ink-2);
+  border-top: 1px solid var(--line-soft);
+}
+.gm-ev-body::before,
+.gm-ev-body::after {
+  content: '';
+  display: block;
+  height: 0.7rem;
+}
+.gm-diag {
+  position: static;
+  border-left: 0;
+  padding-left: 0;
+}
+.gm-step {
+  margin-top: 1.4rem;
+}
+
+/* ---------- hub ---------- */
+
+.game-row {
+  grid-template-columns: minmax(0, 4fr) minmax(0, 6fr) 9rem;
+}
+.game-row .meta {
+  text-align: left;
+}
+
+@media (max-width: 960px) {
+  .gm-main,
+  .gm-main.inc {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  .gm-side {
+    position: static;
+    padding-left: 0;
+    border-left: 0;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--line-soft);
+  }
+  .gm-result-head {
+    flex-direction: column;
+  }
+}
+@media (max-width: 720px) {
+  .game-row {
+    grid-template-columns: 1fr;
+  }
+  .gm-levels {
+    grid-template-columns: 1fr;
+  }
+  .gm-level {
+    border-bottom: 1px solid var(--line-soft);
+  }
+}
