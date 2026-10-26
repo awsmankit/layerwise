@@ -1,0 +1,84 @@
+---
+title: "One question, all the way through"
+track: start
+level: basic
+order: 5
+summary: Follow "What is the capital of France?" from your keyboard to the answer, with real token counts, real token IDs and the real size of the memory the model keeps along the way.
+updated: 2026-10-26
+sources:
+  - label: "tiktoken: the tokenizer library used for the token counts and IDs (o200k_base encoding)"
+    url: https://github.com/openai/tiktoken
+  - label: "Llama 3 model card and configuration (8B: 32 layers, 8 KV heads, head size 128)"
+    url: https://huggingface.co/meta-llama/Meta-Llama-3-8B
+  - label: "Attention Is All You Need (Vaswani et al., 2017)"
+    url: https://arxiv.org/abs/1706.03762
+  - label: "Efficient Memory Management for LLM Serving with PagedAttention (Kwon et al., 2023)"
+    url: https://arxiv.org/abs/2309.06180
+---
+
+import OneQuestion from '../../../components/viz/OneQuestion.tsx';
+import NlpEras from '../../../components/viz/NlpEras.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+Other lessons explain each part on its own. This one follows a single, ordinary question through every part, with the real numbers at each step. Press **Next step** and watch the bar at the bottom: that is the memory the model keeps for this conversation.
+
+<OneQuestion client:visible />
+
+<Callout title="Where the numbers come from" kind="note">
+The token pieces and IDs are the real output of a widely used tokenizer, `o200k_base`. The sizes are those of a published 8-billion-parameter model. A real chat model uses its own tokenizer and adds a few special tokens around each message, so its exact counts differ slightly. The next-word probabilities are made up to show the idea.
+</Callout>
+
+## Count the tokens yourself
+
+Tokens are what you pay for and what fills the context window, so it helps to have a feel for them. These are real counts from the same tokenizer:
+
+| Text | Tokens | How it was split |
+| --- | --- | --- |
+| Hello | 1 | Hello |
+| Paris | 1 | Paris |
+| tokenization | 2 | token · ization |
+| unhappiness | 3 | un · h · appiness |
+| 1234567 | 3 | 123 · 456 · 7 |
+| नमस्ते (Hindi, "hello") | 4 | न · म · स्त · े |
+| What is the capital of France? | 7 | What · is · the · capital · of · France · ? |
+
+Three things to notice. Common words are one token each. Numbers are cut into groups of up to three digits, which is one reason models can stumble on arithmetic. Text in many languages other than English takes more tokens for the same meaning; an older tokenizer, `cl100k_base`, needs 6 tokens for the same Hindi word. More tokens means a higher bill and less room in the context window.
+
+## What the model keeps in memory
+
+After reading your question, the model has stored a **key** and a **value** for each of the 7 tokens in each of its 32 layers. That store is the **KV cache**. For this model it costs:
+
+- 128 KiB per token (2 for key and value × 32 layers × 8 KV heads × 128 numbers × 2 bytes each).
+- 7 tokens of question: 896 KiB.
+- 14 tokens after the answer: 1.75 MiB.
+
+That sounds small. Now scale it to real use:
+
+| Situation | Tokens in the cache | Cache size |
+| --- | --- | --- |
+| This question and answer | 14 | 1.75 MiB |
+| A long chat, about 6,000 words | 8,000 | about 1 GiB |
+| 32 users with long chats on one server | 256,000 | about 31 GiB |
+
+The model's weights for this 8B model take about 16 GB at 16-bit precision. So with 32 long conversations, the cache is about twice the size of the model itself. That is why long contexts cost more, and why servers work so hard to manage this memory. The [KV cache lesson](../../serving/kv-cache-and-memory/) shows how they do it.
+
+## Why the answer comes out word by word
+
+The question was read in one pass: all 7 tokens went through the layers together. The answer cannot be produced that way, because each new token depends on the ones before it. So the model makes one token, adds it to the cache, and runs again. Seven answer tokens means seven more passes. This is why you see a chatbot "typing", and why the time to the first word and the time per word are measured separately.
+
+<Deep title="How much arithmetic was that?">
+
+A common rule of thumb is about 2 operations per parameter per token. For an 8-billion-parameter model that is about 16 billion operations per token, so the 14 tokens here took roughly 220 billion operations. A modern data-centre GPU does that in a fraction of a second. In practice the limit for generating each new token is not the arithmetic but reading the 16 GB of weights from memory at every step.
+
+</Deep>
+
+## Where AI, machine learning and NLP fit
+
+You will meet these words together. **AI** is the broad goal of machines doing things that need intelligence. **Machine learning** is the approach of learning from examples instead of writing rules. **Natural language processing (NLP)** is the part of AI that works with human language: translation, search, spam filtering, summarising, chat. NLP is not a single technique, and the way it is done has changed several times:
+
+<NlpEras client:visible />
+
+A large language model is today's main tool for NLP. The question in this lesson went through exactly that kind of model.
+
+Next: [How a chatbot decides what to say](../how-a-chatbot-answers/) looks closer at the next-word choice, and [Tokens and embeddings](../../foundations/tokens-and-embeddings/) goes deeper into the first three steps.

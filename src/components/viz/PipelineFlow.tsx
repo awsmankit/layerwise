@@ -66,10 +66,18 @@ export default function PipelineFlow({
   }, [running, loop, stages.length]);
 
   const n = stages.length;
-  const W = n * STEP;
-  const H = loop ? 196 : 160;
-  const cx = (i: number) => i * STEP + STEP / 2;
-  const mid = TOP + CARD_H / 2;
+  // six or more stages wrap onto two rows so the text stays readable
+  const perRow = n > 5 ? Math.ceil(n / 2) : n;
+  const rows = Math.ceil(n / perRow);
+  const ROW_H = CARD_H + 46;
+  const W = perRow * STEP;
+  const H = TOP + rows * ROW_H - 46 + (loop ? 60 : 24);
+  const col = (i: number) => i % perRow;
+  const row = (i: number) => Math.floor(i / perRow);
+  const cx = (i: number) => col(i) * STEP + STEP / 2;
+  const top = (i: number) => TOP + row(i) * ROW_H;
+  const mid = (i: number) => top(i) + CARD_H / 2;
+  const bottom = TOP + (rows - 1) * ROW_H + CARD_H;
 
   return (
     <Root>
@@ -90,24 +98,45 @@ export default function PipelineFlow({
         </div>
 
         <div className="pf-scroll">
-          <svg viewBox={`0 0 ${W} ${H}`} className="pf-svg" style={{ minWidth: `${n * 118}px` }} role="group" aria-label={title ?? 'Pipeline'}>
+          <svg viewBox={`0 0 ${W} ${H}`} className="pf-svg" style={{ minWidth: `${perRow * 112}px`, maxWidth: `${W}px`, marginInline: 'auto' }} role="group" aria-label={title ?? 'Pipeline'}>
             {/* connectors between cards, with a small chevron for direction */}
             {stages.slice(1).map((_, k) => {
-              const x1 = cx(k) + CARD_W / 2;
-              const x2 = cx(k + 1) - CARD_W / 2;
               const lit = k < active;
+              if (row(k) === row(k + 1)) {
+                const x1 = cx(k) + CARD_W / 2;
+                const x2 = cx(k + 1) - CARD_W / 2;
+                const y = mid(k);
+                return (
+                  <g key={`c${k}`} className={`pf-conn${lit ? ' is-lit' : ''}`}>
+                    <line x1={x1} y1={y} x2={x2 - 2} y2={y} />
+                    <path d={`M ${x2 - 7} ${y - 4} L ${x2 - 2} ${y} L ${x2 - 7} ${y + 4}`} />
+                  </g>
+                );
+              }
+              // wrap to the next row: down from this card, back along the gap, down into the next
+              const yGap = top(k) + CARD_H + 23;
+              const yTo = top(k + 1) - 2;
               return (
                 <g key={`c${k}`} className={`pf-conn${lit ? ' is-lit' : ''}`}>
-                  <line x1={x1} y1={mid} x2={x2 - 2} y2={mid} />
-                  <path d={`M ${x2 - 7} ${mid - 4} L ${x2 - 2} ${mid} L ${x2 - 7} ${mid + 4}`} />
+                  <path d={`M ${cx(k)} ${top(k) + CARD_H} V ${yGap} H ${cx(k + 1)} V ${yTo}`} style={{ strokeDasharray: lit ? 'none' : '3 4' }} />
+                  <path d={`M ${cx(k + 1) - 4} ${yTo - 5} L ${cx(k + 1)} ${yTo} L ${cx(k + 1) + 4} ${yTo - 5}`} />
                 </g>
               );
             })}
 
             {loop && (
               <g className="pf-loopline">
-                <path d={`M ${cx(n - 1)} ${TOP + CARD_H} V ${H - 26} H ${cx(0)} V ${TOP + CARD_H + 6}`} />
-                <path d={`M ${cx(0) - 4} ${TOP + CARD_H + 12} L ${cx(0)} ${TOP + CARD_H + 5} L ${cx(0) + 4} ${TOP + CARD_H + 12}`} />
+                {rows === 1 ? (
+                  <>
+                    <path d={`M ${cx(n - 1)} ${bottom} V ${H - 26} H ${cx(0)} V ${TOP + CARD_H + 6}`} />
+                    <path d={`M ${cx(0) - 4} ${TOP + CARD_H + 12} L ${cx(0)} ${TOP + CARD_H + 5} L ${cx(0) + 4} ${TOP + CARD_H + 12}`} />
+                  </>
+                ) : (
+                  <>
+                    <path d={`M ${cx(n - 1)} ${bottom} V ${H - 26} H 8 V ${mid(0)} H ${cx(0) - CARD_W / 2 - 2}`} />
+                    <path d={`M ${cx(0) - CARD_W / 2 - 8} ${mid(0) - 4} L ${cx(0) - CARD_W / 2 - 2} ${mid(0)} L ${cx(0) - CARD_W / 2 - 8} ${mid(0) + 4}`} />
+                  </>
+                )}
                 <text x={W / 2} y={H - 10} textAnchor="middle" className="dx-small">
                   {loopLabel}
                 </text>
@@ -116,6 +145,7 @@ export default function PipelineFlow({
 
             {stages.map((s, i) => {
               const x = cx(i) - CARD_W / 2;
+              const y = top(i);
               const state = i === active ? 'is-active' : i < active ? 'is-past' : '';
               const glyph = s.glyph ?? glyphFor(s.title, s.detail.slice(0, 80));
               const ls = lines(s.title);
@@ -139,13 +169,13 @@ export default function PipelineFlow({
                     }
                   }}
                 >
-                  <rect x={x} y={TOP} width={CARD_W} height={CARD_H} rx="10" />
-                  <text x={x + 10} y={TOP + 17} className="pf-n">
+                  <rect x={x} y={y} width={CARD_W} height={CARD_H} rx="10" />
+                  <text x={x + 10} y={y + 17} className="pf-n">
                     {String(i + 1).padStart(2, '0')}
                   </text>
-                  <Glyph key={i === active ? `on-${active}` : 'off'} name={glyph} draw={i === active} size={34} x={cx(i) - 17} y={TOP + 20} className="pf-glyph" />
+                  <Glyph key={i === active ? `on-${active}` : 'off'} name={glyph} draw={i === active} size={34} x={cx(i) - 17} y={y + 20} className="pf-glyph" />
                   {ls.map((l, k) => (
-                    <text key={l} x={cx(i)} y={TOP + 76 + k * 16 - (ls.length - 1) * 4} textAnchor="middle" className="pf-label">
+                    <text key={l} x={cx(i)} y={y + 76 + k * 16 - (ls.length - 1) * 4} textAnchor="middle" className="pf-label">
                       {l}
                     </text>
                   ))}
@@ -155,10 +185,9 @@ export default function PipelineFlow({
 
             <motion.circle
               r="4.5"
-              cy={TOP + CARD_H}
               className="dx-packet"
               initial={false}
-              animate={{ cx: cx(active) }}
+              animate={{ cx: cx(active), cy: top(active) + CARD_H }}
               transition={{ duration: 0.7, ease: EASE }}
             />
           </svg>

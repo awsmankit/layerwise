@@ -3,7 +3,9 @@ import { motion } from 'motion/react';
 import { Root, EASE } from './shared';
 
 const STAGES = ['Text', 'Pieces', 'IDs', 'Vectors'];
-const PIECES = ['un', 'happi', 'ness'];
+/** The real split and IDs from the o200k_base tokenizer (tiktoken), checked October 2026. */
+const PIECES = ['un', 'h', 'appiness'];
+const IDS = [373, 71, 117779];
 /** Bar heights for a sketch of one embedding vector. Illustrative, not real values. */
 const SHAPE = [0.4, 0.7, 0.3, 0.9, 0.55, 0.2, 0.75, 0.5];
 
@@ -78,8 +80,8 @@ export default function TokenDissect() {
 
               <motion.g initial={false} animate={{ opacity: show(2) ? 1 : 0 }} transition={{ duration: 0.4, delay: 0.1 + i * 0.08 }}>
                 <path d={`M ${slot(i) + 100} 100 L ${slot(i) + 100} 124`} className="dx-link" />
-                <rect x={slot(i) + 70} y="124" width="60" height="26" className="dx-core" />
-                <text x={slot(i) + 100} y="142" textAnchor="middle" className="dx-small">id</text>
+                <rect x={slot(i) + 60} y="124" width="80" height="26" className="dx-core" />
+                <text x={slot(i) + 100} y="142" textAnchor="middle" className="dx-small">{IDS[i]}</text>
               </motion.g>
 
               <motion.g initial={false} animate={{ opacity: show(3) ? 1 : 0 }} transition={{ duration: 0.4, delay: 0.2 + i * 0.08 }}>
@@ -100,10 +102,10 @@ export default function TokenDissect() {
         </svg>
 
         <p className="viz-cap">
-          {stage === 0 && 'One word. Common words are a single token; rare ones are split into familiar pieces.'}
-          {stage === 1 && 'The tokenizer cuts the text into pieces from a fixed vocabulary.'}
-          {stage === 2 && 'Each piece is looked up as an ID number. The ID is just an index into a table.'}
-          {stage === 3 && 'The ID selects a row of the embedding table: a vector of a few thousand numbers.'}
+          {stage === 0 && 'One word, 11 characters. Common words such as "Hello" or "Paris" are a single token; rarer ones are split.'}
+          {stage === 1 && 'A real tokenizer (o200k_base) cuts it into 3 pieces: "un", "h" and "appiness". The pieces follow what was frequent in its training text, not grammar.'}
+          {stage === 2 && 'Each piece is an index into a vocabulary of about 200,000 entries. These are the real IDs. Another tokenizer gives different pieces and IDs.'}
+          {stage === 3 && 'Each ID selects one row of the embedding table: a vector of a few thousand numbers. The bars sketch the idea; the values here are not real.'}
         </p>
       </div>
     </Root>

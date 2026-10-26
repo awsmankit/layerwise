@@ -13,6 +13,7 @@ sources:
 ---
 
 import Callout from '../../../components/ui/Callout.astro';
+import EvalLoop from '../../../components/viz/EvalLoop.tsx';
 
 An **eval** is a repeatable test for model behaviour. You cannot unit-test a model the way you test a function, because there is rarely one correct output. But you can still define what good looks like, score outputs against it, and notice when it gets worse.
 
@@ -24,12 +25,9 @@ An **eval** is a repeatable test for model behaviour. You cannot unit-test a mod
 
 ## Build the first set in an afternoon
 
-1. **Collect 30 to 50 real inputs.** Use actual user requests if you have them. Include the awkward ones: ambiguous, long, off-topic, adversarial.
-2. **Write down what a good answer is** for each. This might be a reference answer, a list of facts that must appear, or a rule such as "must refuse".
-3. **Choose how to score each one** (below).
-4. **Run it, save the results and the prompt version**, and read the failures by hand.
+Use actual user requests if you have them. A rule such as "must refuse" counts as a definition of good.
 
-Grow the set over time. Every production bug becomes a new test.
+<EvalLoop client:visible />
 
 ## Ways to score
 

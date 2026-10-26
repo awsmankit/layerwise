@@ -16,6 +16,8 @@ sources:
 
 import Callout from '../../../components/ui/Callout.astro';
 import Deep from '../../../components/ui/Deep.astro';
+import MemoryKinds from '../../../components/viz/MemoryKinds.tsx';
+import SizeFit from '../../../components/viz/SizeFit.tsx';
 
 You do not need an API key to talk to a language model. Many open-weights models can run on a laptop, a desktop or a single GPU, and the tools for doing it are now friendly enough for a beginner. This lesson explains why you might want to, what to expect, and how to do a first run without guessing.
 
@@ -55,10 +57,9 @@ Ollama and LM Studio are wrappers: they handle downloading, picking a suitable f
 
 **Memory comes first.** The whole model has to sit in memory while it runs. If it does not fit, it will not run well, or at all. **Memory bandwidth comes second.** Generating each token means reading the model from memory, so a faster memory system gives more tokens per second. The next lesson, [the memory maths](../memory-math-for-local-models/), explains both.
 
-Two kinds of machine, in short:
+Apple silicon Macs use *unified memory*, one pool shared by the CPU and GPU. PCs with a discrete GPU have separate GPU memory, called VRAM.
 
-- **Apple silicon Macs** use *unified memory*: the CPU and GPU share one pool. A Mac with more memory can load bigger models.
-- **PCs with a discrete GPU** have separate GPU memory (VRAM). The model is fastest when it fits entirely in VRAM.
+<MemoryKinds client:visible />
 
 ## Model files and formats
 
@@ -73,14 +74,7 @@ Quantization is how an 8-billion-parameter model fits on a normal laptop. It cos
 
 These are rough starting points, assuming a typical 4-bit quantized model and a modest conversation length. The [next lesson](../memory-math-for-local-models/) shows the arithmetic.
 
-| Your memory | A sensible first choice |
-| --- | --- |
-| 8 GB | Models of about 1 to 4 billion parameters. Expect basic tasks only. |
-| 16 GB | Models of about 7 to 14 billion parameters. A good place to learn. |
-| 24 GB | Up to roughly 20 to 30 billion parameters, depending on context length. |
-| 64 GB or more | Models in the 70 billion class become possible, with tight limits. |
-
-On a shared-memory laptop, your operating system and apps also need memory, so leave headroom.
+<SizeFit client:visible />
 
 ## Your first run, step by step
 

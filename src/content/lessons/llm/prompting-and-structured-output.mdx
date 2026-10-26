@@ -13,27 +13,22 @@ sources:
 ---
 
 import Callout from '../../../components/ui/Callout.astro';
+import PromptLayers from '../../../components/viz/PromptLayers.tsx';
+import OutputLadder from '../../../components/viz/OutputLadder.tsx';
 
 A prompt is the whole input to the model, not just the question. Treating it as a small piece of software, with parts, tests and versions, is the difference between a demo and something you can run in production.
 
 ## The parts of a good prompt
 
-1. **Role and task.** Say what the model is doing and for whom, in plain terms.
-2. **Context.** The facts it needs: documents, user data, constraints. The model knows nothing about your situation unless you say so.
-3. **Rules.** What to do when information is missing, what never to do, the tone to use.
-4. **Examples.** Three to ten worked input and output pairs often fix more problems than another paragraph of instructions.
-5. **Output format.** The exact shape of the answer.
-6. **The input.** The user's request, clearly separated from everything above.
+<PromptLayers client:visible />
 
-Use delimiters, such as XML-style tags or fenced blocks, to separate instructions from data. It makes the prompt easier to read and reduces the chance that text inside a document is mistaken for an instruction.
+The model knows nothing about your situation unless you say so, so context carries constraints as well as facts. Use delimiters, such as XML-style tags or fenced blocks, to separate instructions from data: the prompt is easier to read, and text inside a document is less likely to be mistaken for an instruction.
 
 ## Getting output your code can use
 
-Free text is hard to parse. There are three levels of control, from weakest to strongest.
+Free text is hard to parse. There are three levels of control, from weakest to strongest. The middle one is the platform's structured output or tool-calling feature; prefer it when it is available.
 
-- **Ask in the prompt.** "Reply with JSON matching this schema." Works often, not always.
-- **Use the platform's structured output or tool-calling feature.** You supply a JSON schema, and the API steers the model to produce arguments that match it. Prefer this when it is available.
-- **Validate and retry.** Whatever you do upstream, parse the result and check it. If it fails, send the error back and ask for a correction, with a limit on attempts.
+<OutputLadder client:visible />
 
 ```python
 from pydantic import BaseModel, ValidationError

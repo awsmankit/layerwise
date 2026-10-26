@@ -415,3 +415,74 @@
 .dx-small.kv-on {
   fill: var(--on-signal);
 }
+
+/* One question walkthrough */
+.oq-steps {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  padding: 0;
+  margin: 0.9rem 0 0;
+}
+.oq-steps button {
+  font: 600 0.8rem var(--font-display);
+  padding: 0.3rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink-3);
+  cursor: pointer;
+}
+.oq-steps button.is-past {
+  color: var(--ink);
+  border-color: color-mix(in srgb, var(--signal) 45%, transparent);
+}
+.oq-steps button.is-on {
+  color: var(--on-signal);
+  background: var(--signal);
+  border-color: var(--signal);
+}
+.oq-steps .num {
+  font-family: var(--font-mono);
+  opacity: 0.75;
+}
+.oq-meter {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  margin-top: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--ink-3);
+}
+.oq-bar {
+  flex: 1 1 10rem;
+  height: 10px;
+  border: 1px solid var(--signal);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.oq-bar i {
+  display: block;
+  height: 100%;
+  background: var(--signal);
+}
+.oq-meter b {
+  color: var(--ink);
+  font-weight: 600;
+}
+.oq-note {
+  margin: 0.8rem 0 0;
+  min-height: 3.2rem;
+  font-family: var(--font-body);
+  font-size: 1.02rem;
+  line-height: 1.55;
+  color: var(--ink-2);
+  max-width: 68ch;
+}
+.oq-note b {
+  font-family: var(--font-display);
+  color: var(--ink);
+}

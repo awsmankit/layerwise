@@ -26,15 +26,16 @@ import Callout from '../../../components/ui/Callout.astro';
 import Deep from '../../../components/ui/Deep.astro';
 import Disclosure from '../../../components/viz/Disclosure.tsx';
 import PipelineFlow from '../../../components/viz/PipelineFlow.tsx';
+import ClusterNesting from '../../../components/viz/ClusterNesting.tsx';
+import ZeroStages from '../../../components/viz/ZeroStages.tsx';
 
 Most readers will fine-tune rather than pretrain, but the same machinery runs both, and knowing it explains the costs and the failure stories. This lesson covers what is in a training cluster, how sharding makes a big model fit, and how teams survive hardware that fails every few hours. For where training sits in the larger picture, see [The training pipeline](../../foundations/training-pipeline/).
 
 ## What a training cluster is
 
-- **Nodes.** Servers with typically 8 GPUs each, joined internally by NVLink. (Rack-scale systems such as GB200 NVL72 widen that group to 72 GPUs.)
-- **Fabric.** A fast network between nodes: InfiniBand, or Ethernet with RDMA such as AWS EFA. It carries gradient and parameter traffic, and it must be designed so that GPUs that talk a lot are close together.
-- **Shared storage.** A parallel file system or object store holds the training data and the checkpoints, and every node must be able to read it fast enough to keep the GPUs fed.
-- **Scheduler.** Slurm or Kubernetes decides which job gets which nodes, queues work, and restarts jobs.
+<ClusterNesting client:visible />
+
+Shared storage is usually a parallel file system or an object store. The scheduler decides which job gets which nodes, queues work and restarts jobs.
 
 ## The memory budget of training
 
@@ -53,11 +54,9 @@ A 7-billion-parameter model therefore needs about 112 GB for this state, more th
 
 ## Sharding: ZeRO and FSDP
 
-Plain data parallelism copies all 16 bytes per parameter to every GPU, which wastes memory. **ZeRO** shards it:
+Plain data parallelism copies all 16 bytes per parameter to every GPU, which wastes memory. **ZeRO** shards it in three stages: first the optimizer state, then the gradients, then the parameters themselves, which stage 3 gathers layer by layer just in time.
 
-- **Stage 1** shards optimizer state across GPUs.
-- **Stage 2** also shards gradients.
-- **Stage 3** also shards the parameters themselves, gathering each layer just in time.
+<ZeroStages client:visible />
 
 PyTorch's **FSDP** (fully sharded data parallel) does the equivalent of stage 3 by default. With N GPUs and full sharding, the per-GPU share of that 16-byte state falls to roughly 16 divided by N bytes per parameter, so the 70B model on 64 GPUs needs about 17.5 GB of state per GPU, leaving room for activations. The price is more communication, since parameters are gathered before use and gradients are scattered after, but it overlaps with compute and runs well over fast fabric.
 

@@ -33,6 +33,7 @@ export const paths: Record<PathId, LearningPath> = {
     steps: [
       { kind: 'lesson', key: 'start/what-is-ai-in-plain-english' },
       { kind: 'lesson', key: 'start/how-a-chatbot-answers' },
+      { kind: 'lesson', key: 'start/one-question-all-the-way-through' },
       { kind: 'lesson', key: 'start/using-ai-without-getting-burned' },
       { kind: 'lesson', key: 'start/how-apps-use-ai' },
       { kind: 'lesson', key: 'foundations/how-models-learn' },
