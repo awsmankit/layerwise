@@ -16,7 +16,7 @@ sources:
 
 import ModelMemory from '../../../components/viz/ModelMemory.tsx';
 import Callout from '../../../components/ui/Callout.astro';
-import Disclosure from '../../../components/viz/Disclosure.tsx';
+import QuantLevels from '../../../components/viz/QuantLevels.tsx';
 
 A model's weights are numbers. Training usually keeps them in 16 or 32 bits each. **Quantization** stores them with fewer bits, such as 8 or 4, and maps them back to useful values during computation. The model gets smaller and, because generation is limited by memory bandwidth, usually faster. The cost is some loss of precision.
 
@@ -43,15 +43,13 @@ Real files are slightly larger because of scales and other metadata. Change the 
 
 ## How it is done
 
-**Post-training quantization (PTQ)** converts an already-trained model. Simple versions round each weight to the nearest level using a scale factor per group of weights. Methods such as GPTQ and AWQ are smarter about which weights matter most, and so lose less accuracy at 4 bits. A small calibration set of representative inputs is typically used.
+**Post-training quantization (PTQ)** converts an already-trained model. Methods such as GPTQ and AWQ are smarter about which weights matter most, and so lose less accuracy at 4 bits. A small calibration set of representative inputs is typically used.
 
 **Quantization-aware training (QAT)** simulates low precision during training so the model learns to be robust to it. It is more work and generally gives better quality at very low bit widths.
 
-<Disclosure client:visible title="Why scale factors per group?">
+Simple rounding uses a **scale factor**: the largest weight sets how far apart the allowed levels are. Try it below with eight example weights, one of them unusually large.
 
-A single scale for a whole tensor is thrown off by a few large values, which squashes everything else into too few levels. Using a separate scale for each small group of weights, commonly 32 to 128 of them, keeps precision where it is needed at the cost of storing a few extra numbers.
-
-</Disclosure>
+<QuantLevels client:visible />
 
 ## What to check before you ship one
 
