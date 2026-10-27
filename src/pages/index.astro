@@ -1,7 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import StackExplorer from '../components/viz/StackExplorer.tsx';
-import HeroArt from '../components/viz/HeroArt.tsx';
+import HeroFlow from '../components/viz/HeroFlow.tsx';
 import ContinueCard from '../components/ui/ContinueCard.tsx';
 import GameBadge from '../components/games/GameBadge.tsx';
 import TrackIcon from '../components/ui/TrackIcon.astro';
@@ -26,216 +26,184 @@ const gameColors: Record<string, { c: string; on: string; icon: string }> = {
 };
 
 const tools = [
-  { href: '/tools/cost/', title: 'Cost calculator', body: 'Traffic and token counts in, monthly spend out. Then see which lever saves the most.' },
-  { href: '/tools/memory/', title: 'Model memory calculator', body: 'Will this model fit on that device? Weights, KV cache, precision and users.' },
-  { href: '/tools/gpu/', title: 'GPU explorer', body: 'Which accelerators hold your model, how many users fit, and how fast each decodes.' },
-  { href: '/tools/breakeven/', title: 'API or your own GPUs?', body: 'Find the volume where renting GPUs beats paying per token.' },
-  { href: '/tools/latency/', title: 'Latency budget', body: 'Cloud against on-device inference, against the time your product can afford.' },
+  { href: '/tools/cost/', title: 'Cost calculator', body: 'Monthly spend, and which lever saves most.', icon: 'cost', c: '#C93531' },
+  { href: '/tools/memory/', title: 'Model memory', body: 'Will this model fit on that device?', icon: 'fit', c: '#FF9F1C' },
+  { href: '/tools/gpu/', title: 'GPU explorer', body: 'Which GPUs hold it, and how fast.', icon: 'infra', c: '#00B8D9' },
+  { href: '/tools/breakeven/', title: 'API or own GPUs?', body: 'Where renting GPUs starts to win.', icon: 'systems', c: '#3B54E0' },
+  { href: '/tools/latency/', title: 'Latency budget', body: 'Cloud or on-device, for your time limit.', icon: 'serving', c: '#7B3FE4' },
+  { href: '/tools/sandbox/', title: 'Sandbox', body: 'Run tool commands and real Python.', icon: 'local', c: '#12C2A4' },
 ];
 
-const heroWords = ['How', 'AI', 'systems', 'work,'];
-const heroTail = ['at', 'a', 'time'];
 ---
 
 <Base>
-  <section class="hero-bright">
-    <HeroArt client:load />
-    <div class="wrap hero">
-      <div class="hero-copy">
-        <h1 class="words" aria-label={site.tagline}>
-          {heroWords.map((w, i) => <><span style={`--i:${i}`}>{w}</span>{' '}</>)}
-          <span class="hl" style={`--i:${heroWords.length}`}>
-            one layer
-            <svg viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M2 6 Q 12 0 22 6 T 42 6 T 62 6 T 82 6 T 98 5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"></path></svg>
-          </span>{' '}
-          {heroTail.map((w, i) => <><span style={`--i:${heroWords.length + 1 + i}`}>{w}</span>{' '}</>)}
-        </h1>
-        <p class="lede">
-          Learn how AI really works, from your first question to running it in production. Plain-English lessons with interactive pictures, games that let you practise real decisions, and interview prep for both sides of the table.
-        </p>
-        <div class="hero-cta">
-          <a class="btn" href={withBase('/start/')}>Find your starting point</a>
-          <a class="btn quiet" href={withBase('/learn/')}>Browse all lessons</a>
-        </div>
-        <ContinueCard client:load />
-        <p class="hero-hint">On the right: the parts of a modern AI product, from the app down to the hardware. Click one to see what it does and where to learn it.</p>
-      </div>
-      <div class="hero-card">
-        <p class="hero-card-title">The parts of an AI product, top to bottom</p>
-        <StackExplorer client:load />
-      </div>
-    </div>
-  </section>
-
-  <section class="band band-lilac" aria-labelledby="path-h">
+  <section class="lp-hero">
     <div class="wrap">
-      <div class="section">
-        <div class="section-head">
-          <h2 id="path-h"><span class="squig" style="--squig:#9B5CFF">Where</span> do you start?</h2>
-          <p>Pick the one that sounds like you. You can change your mind any time.</p>
-        </div>
-        <div class="tiles" data-stagger>
-          {
-            pathIds.map((id) => {
-              const p = paths[id];
-              const nl = p.steps.filter((x) => x.kind === 'lesson').length;
-              const ng = p.steps.length - nl;
-              return (
-                <a class="tile" data-reveal href={withBase(`/start/#${id}`)} style={`--track:${p.color};--on-track:${p.on}`}>
-                  <div class="tile-top">
-                    <TrackIcon name={p.icon} />
-                    <span class="tile-badge">{nl} lessons{ng > 0 ? ` + ${ng} game${ng > 1 ? 's' : ''}` : ''}</span>
-                  </div>
-                  <div>
-                    <h3>{p.title}</h3>
-                    <p>{p.who}</p>
-                  </div>
-                  <span class="tile-meta">{p.promise}</span>
-                </a>
-              );
-            })
-          }
-          <a class="tile" data-reveal href={withBase('/start/#check')} style="--track:#FFFFFF;--on-track:#15123D">
-            <div class="tile-top">
-              <TrackIcon name="evals" />
-              <span class="tile-badge">2 minutes</span>
-            </div>
-            <div>
-              <h3>Not sure?</h3>
-              <p>Six quick questions suggest where to begin. “I don’t know” is a fine answer.</p>
-            </div>
-            <span class="tile-meta">Take the check</span>
-          </a>
+      <h1 aria-label={site.tagline}>
+        <span>How AI systems work,</span>
+        <span class="lp-accent">one layer at a time</span>
+      </h1>
+      <div class="lp-hero-row">
+        <p>Interactive lessons, games and interview prep, from your first question to running AI in production.</p>
+        <div class="lp-hero-cta">
+          <a class="btn" href={withBase('/start/')}>Find your starting point</a>
+          <a class="btn quiet" href={withBase('/learn/')}>Browse lessons</a>
         </div>
       </div>
+      <ContinueCard client:load />
+      <HeroFlow client:load />
     </div>
   </section>
 
-  <section class="section wrap" aria-labelledby="tracks-h" style="padding-top:clamp(2.5rem,6vw,4.5rem)">
-    <div class="section-head">
-      <h2 id="tracks-h">Every lesson, <span class="squig" style="--squig:#12C2A4">by topic</span></h2>
-      <p>{lessons.length} lessons in {tracks.length} topics. Each is marked basic, intermediate or advanced. A path above puts them in order for you.</p>
+  <section class="lp-section wrap" aria-labelledby="path-h">
+    <div class="lp-head">
+      <h2 id="path-h">Where do you start?</h2>
+      <p>Pick the one that sounds like you.</p>
     </div>
-    <div class="tiles" data-stagger>
+    <div class="lp-grid lp-grid-3" data-stagger>
       {
-        trackTiles.map((t, i) => (
-          <a class:list={['tile', i === 0 && 'wide']} data-reveal href={withBase(`/learn/${t.id}/`)} style={`--track:${t.color};--on-track:${t.on}`}>
-            <div class="tile-top">
-              <TrackIcon name={t.id} />
-              <span class="tile-badge">{t.count} {t.count === 1 ? 'lesson' : 'lessons'}</span>
-            </div>
-            <div>
+        pathIds.map((id) => {
+          const p = paths[id];
+          const nl = p.steps.filter((x) => x.kind === 'lesson').length;
+          const ng = p.steps.length - nl;
+          return (
+            <a class="lp-card" data-reveal href={withBase(`/start/#${id}`)} style={`--c:${p.color}`}>
+              <span class="lp-plate"><TrackIcon name={p.icon} size={44} /></span>
+              <span class="lp-body">
+                <h3>{p.title}</h3>
+                <p>{p.short}</p>
+              </span>
+              <span class="lp-chip">{nl} lessons{ng > 0 ? ` + ${ng} game${ng > 1 ? 's' : ''}` : ''}</span>
+            </a>
+          );
+        })
+      }
+      <a class="lp-card lp-card-quiet" data-reveal href={withBase('/start/#check')} style="--c:#9B5CFF">
+        <span class="lp-plate"><TrackIcon name="evals" size={44} /></span>
+        <span class="lp-body">
+          <h3>Not sure?</h3>
+          <p>Six questions, two minutes.</p>
+        </span>
+        <span class="lp-chip">Take the check</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="lp-section wrap" aria-labelledby="tracks-h">
+    <div class="lp-head">
+      <h2 id="tracks-h">Every lesson, by topic</h2>
+      <p>{lessons.length} lessons in {tracks.length} topics.</p>
+    </div>
+    <div class="lp-grid lp-grid-4" data-stagger>
+      {
+        trackTiles.map((t) => (
+          <a class="lp-card lp-card-row" data-reveal href={withBase(`/learn/${t.id}/`)} style={`--c:${t.color}`} title={t.blurb}>
+            <span class="lp-plate"><TrackIcon name={t.id} size={40} /></span>
+            <span class="lp-body">
               <h3>{t.title}</h3>
-              <p>{t.blurb}</p>
-            </div>
+              <p>{t.count} {t.count === 1 ? 'lesson' : 'lessons'}</p>
+            </span>
           </a>
         ))
       }
     </div>
   </section>
 
-  <section class="band band-pink" aria-labelledby="play-h">
-    <div class="wrap">
-      <div class="section">
-        <div class="section-head">
-          <h2 id="play-h">Practise with <span class="squig" style="--squig:#FF4F8B">games</span></h2>
-          <p>Make the decisions an engineer makes and see what they cost. Real maths, honest scoring, and a lesson behind every mistake.</p>
-        </div>
-        <div class="tiles" data-stagger>
-          {
-            games.map((g) => {
-              const gc = gameColors[g.id];
-              return (
-                <a class="tile" data-reveal href={withBase(g.href)} style={`--track:${gc.c};--on-track:${gc.on}`}>
-                  <div class="tile-top">
-                    <TrackIcon name={gc.icon} />
-                    <span class="tile-badge"><GameBadge client:load prefix={g.prefix} ids={g.levelIds} /></span>
-                  </div>
-                  <div>
-                    <h3>{g.title}</h3>
-                    <p>{g.tagline}. {g.minutes}.</p>
-                  </div>
-                </a>
-              );
-            })
-          }
-        </div>
+  <section class="lp-section wrap" aria-labelledby="stack-h">
+    <div class="lp-head">
+      <h2 id="stack-h">The layers of an AI product</h2>
+      <p>From the app down to the hardware. Pick a layer.</p>
+    </div>
+    <StackExplorer client:load />
+  </section>
+
+  <section class="lp-tint lp-tint-pink" aria-labelledby="play-h">
+    <div class="lp-section wrap">
+      <div class="lp-head">
+        <h2 id="play-h">Practise with games</h2>
+        <p>Make an engineer's decisions and see what they cost.</p>
+      </div>
+      <div class="lp-grid lp-grid-5" data-stagger>
+        {
+          games.map((g) => {
+            const gc = gameColors[g.id];
+            return (
+              <a class="lp-card lp-card-col" data-reveal href={withBase(g.href)} style={`--c:${gc.c}`}>
+                <span class="lp-plate"><TrackIcon name={gc.icon} size={44} /></span>
+                <span class="lp-body">
+                  <h3>{g.title}</h3>
+                  <p>{g.tagline}</p>
+                </span>
+                <span class="lp-chip"><GameBadge client:load prefix={g.prefix} ids={g.levelIds} /></span>
+              </a>
+            );
+          })
+        }
       </div>
     </div>
   </section>
 
-  <section class="band band-sun" aria-labelledby="iv-h">
-    <div class="wrap">
-      <div class="section">
-        <div class="section-head">
-          <h2 id="iv-h">Interview <span class="squig" style="--squig:#E69A00">prep</span>, both sides</h2>
-          <p>For candidates and for the people interviewing them.</p>
-        </div>
-        <div class="tiles" data-stagger>
-          <a class="tile" data-reveal href={withBase('/interview/practice/')} style="--track:#FFFFFF;--on-track:#15123D">
-            <div class="tile-top">
-              <TrackIcon name="llm" />
-              <span class="tile-badge">Candidates</span>
-            </div>
-            <div>
-              <h3>Practise answering</h3>
-              <p>Get a question for your role and level, answer against the clock, then check yourself against what a strong answer covers.</p>
-            </div>
-          </a>
-          <a class="tile" data-reveal href={withBase('/interview/run/')} style="--track:#15123D;--on-track:#FFFFFF">
-            <div class="tile-top">
-              <TrackIcon name="evals" />
-              <span class="tile-badge">Interviewers</span>
-            </div>
-            <div>
-              <h3>Run an interview</h3>
-              <p>Build a question set for a role and level, with strong-answer points, follow-ups, red flags and a scorecard you can export.</p>
-            </div>
-          </a>
-          <a class="tile" data-reveal href={withBase('/interview/')} style="--track:#FFC233;--on-track:#1A1440">
-            <div class="tile-top">
-              <TrackIcon name="systems" />
-              <span class="tile-badge">Guides</span>
-            </div>
-            <div>
-              <h3>How AI interviews work</h3>
-              <p>System design, estimation and behavioural rounds: what is being tested and how to structure an answer.</p>
-            </div>
-          </a>
-        </div>
+  <section class="lp-section wrap" aria-labelledby="iv-h">
+    <div class="lp-head">
+      <h2 id="iv-h">Interview prep, both sides</h2>
+      <p>For candidates, and for the people interviewing them.</p>
+    </div>
+    <div class="lp-grid lp-grid-3" data-stagger>
+      <a class="lp-card" data-reveal href={withBase('/interview/practice/')} style="--c:#FFC233">
+        <span class="lp-plate"><TrackIcon name="llm" size={44} /></span>
+        <span class="lp-body">
+          <h3>Practise answering</h3>
+          <p>A question for your role, against the clock.</p>
+        </span>
+        <span class="lp-chip">Candidates</span>
+      </a>
+      <a class="lp-card" data-reveal href={withBase('/interview/run/')} style="--c:#C92A63">
+        <span class="lp-plate"><TrackIcon name="evals" size={44} /></span>
+        <span class="lp-body">
+          <h3>Run an interview</h3>
+          <p>A question set, follow-ups and a scorecard.</p>
+        </span>
+        <span class="lp-chip">Interviewers</span>
+      </a>
+      <a class="lp-card" data-reveal href={withBase('/interview/')} style="--c:#3B54E0">
+        <span class="lp-plate"><TrackIcon name="systems" size={44} /></span>
+        <span class="lp-body">
+          <h3>How AI interviews work</h3>
+          <p>What each round tests, and how to answer.</p>
+        </span>
+        <span class="lp-chip">Guides</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="lp-tint lp-tint-mint" aria-labelledby="tools-h">
+    <div class="lp-section wrap">
+      <div class="lp-head">
+        <h2 id="tools-h">Calculators and a sandbox</h2>
+        <p>Your own numbers. Every default is a labelled example.</p>
+      </div>
+      <div class="lp-grid lp-grid-3" data-stagger>
+        {
+          tools.map((t) => (
+            <a class="lp-card lp-card-row" data-reveal href={withBase(t.href)} style={`--c:${t.c}`}>
+              <span class="lp-plate"><TrackIcon name={t.icon} size={40} /></span>
+              <span class="lp-body">
+                <h3>{t.title}</h3>
+                <p>{t.body}</p>
+              </span>
+            </a>
+          ))
+        }
       </div>
     </div>
   </section>
 
-  <section class="band band-mint" aria-labelledby="tools-h">
-    <div class="wrap">
-      <div class="section">
-        <div class="section-head">
-          <h2 id="tools-h">Calculators for <span class="squig" style="--squig:#0A8A67">your own numbers</span></h2>
-          <p>Cost, memory, GPU fit and latency. Every default is a labelled example.</p>
-        </div>
-        <ul class="rows" data-stagger style="margin-top:0.6rem">
-          {
-            tools.map((t) => (
-              <li data-reveal>
-                <a class="row tool-row" href={withBase(t.href)} style="--row:rgba(10,138,103,0.16)">
-                  <h3>{t.title}</h3>
-                  <p>{t.body}</p>
-                </a>
-              </li>
-            ))
-          }
-        </ul>
-      </div>
-    </div>
-  </section>
-
-  <section class="section wrap" aria-labelledby="pulse-h" style="padding-top:clamp(2.5rem,6vw,4.5rem)">
-    <div class="section-head">
+  <section class="lp-section wrap" aria-labelledby="pulse-h">
+    <div class="lp-head">
       <h2 id="pulse-h">News</h2>
-      <p>Short notes on what changed in the market and why an engineer should care.</p>
+      <p>What changed in the market, and why an engineer should care.</p>
     </div>
-    <ul class="rows" style="margin-top:0.6rem">
+    <ul class="rows">
       {
         pulse.map((e) => (
           <li>

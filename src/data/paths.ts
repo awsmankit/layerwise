@@ -8,6 +8,8 @@ export type LearningPath = {
   id: PathId;
   title: string;
   who: string;
+  /** Five words or fewer, for the cards on the home page. */
+  short: string;
   promise: string;
   color: string;
   on: string;
@@ -26,6 +28,7 @@ export const paths: Record<PathId, LearningPath> = {
     id: 'newcomer',
     title: 'I’m new to AI',
     who: 'You have heard the terms and want them to make sense. No technical background needed.',
+    short: 'No background needed',
     promise: 'Plain English only, no code: what AI is, how apps use it, how models learn.',
     color: '#FFC233',
     on: '#1A1440',
@@ -45,6 +48,7 @@ export const paths: Record<PathId, LearningPath> = {
     id: 'student',
     title: 'I’m studying ML and AI',
     who: 'You are on a course or teaching yourself, and want the ideas in a sensible order with ways to check yourself.',
+    short: 'Ideas in a sensible order',
     promise: 'How models learn and work inside, classical ML that is still tested, then modern LLMs.',
     color: '#0A9F85',
     on: '#03221D',
@@ -72,6 +76,7 @@ export const paths: Record<PathId, LearningPath> = {
     id: 'builder',
     title: 'I build with LLMs',
     who: 'You can call a model API and want to build features that work reliably.',
+    short: 'Prompts, retrieval, agents',
     promise: 'Prompts, retrieval, agents and how to measure them.',
     color: '#7B3FE4',
     on: '#FFFFFF',
@@ -100,6 +105,7 @@ export const paths: Record<PathId, LearningPath> = {
     id: 'practitioner',
     title: 'I run AI in production',
     who: 'You own systems that serve real traffic and care about cost, latency and failure modes.',
+    short: 'Serving, cost, failure modes',
     promise: 'Serving internals, architecture, cost levers and the hard games.',
     color: '#C93531',
     on: '#FFFFFF',
@@ -136,6 +142,7 @@ export const paths: Record<PathId, LearningPath> = {
     id: 'infra',
     title: 'I run GPUs and the platform',
     who: 'You provision, scale or pay for the hardware and cloud services behind AI workloads, on AWS, Azure or Google Cloud.',
+    short: 'GPUs, clusters, cloud',
     promise: 'GPU hardware, instances, clusters, Kubernetes, capacity and the cloud services around them.',
     color: '#00B8D9',
     on: '#00222B',

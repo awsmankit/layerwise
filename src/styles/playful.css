@@ -105,40 +105,6 @@ body {
 
 /* ---------- bands: full-bleed sections of colour ---------- */
 
-.band {
-  --band: var(--tint-lilac);
-  background: var(--band);
-  border-block: 2px solid var(--ink);
-  margin-top: clamp(2.5rem, 6vw, 4.5rem);
-  padding-block: clamp(2.2rem, 5vw, 3.6rem);
-  position: relative;
-}
-.band + .band {
-  border-top: 0;
-  margin-top: 0;
-}
-.band-lilac {
-  --band: var(--tint-lilac);
-}
-.band-mint {
-  --band: var(--tint-mint);
-}
-.band-pink {
-  --band: var(--tint-pink);
-}
-.band-sun {
-  --band: var(--tint-sun);
-}
-.band-sky {
-  --band: var(--tint-sky);
-}
-.band .section {
-  padding-top: 0;
-}
-.band .section-head {
-  border-bottom-color: var(--ink);
-}
-
 /* dark sections re-point the tokens so everything inside just works */
 .on-dark {
   --ink: #f1eeff;
@@ -161,89 +127,19 @@ body {
 
 /* ---------- hero ---------- */
 
-.hero-night {
-  position: relative;
-  overflow: hidden;
-  border-bottom: 2px solid #000;
-  isolation: isolate;
-}
-.hero-night::before,
-.hero-night::after {
-  content: '';
-  position: absolute;
-  z-index: -2;
-  width: 52vmax;
-  height: 52vmax;
-  border-radius: 50%;
-  filter: blur(70px);
-  opacity: 0.55;
-  animation: drift 26s ease-in-out infinite alternate;
-}
-.hero-night::before {
-  left: -14vmax;
-  top: -18vmax;
-  background: radial-gradient(circle, #5b3dff, transparent 65%);
-}
-.hero-night::after {
-  right: -16vmax;
-  bottom: -22vmax;
-  background: radial-gradient(circle, #ff4f8b, transparent 62%);
-  animation-duration: 32s;
-  animation-direction: alternate-reverse;
-}
 @keyframes drift {
   to {
     transform: translate(6vmax, 4vmax) scale(1.12);
   }
 }
-.hero-art {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-}
-.hero-night .hero {
-  padding-block: clamp(3rem, 8vw, 6rem) clamp(3rem, 6vw, 4.5rem);
-}
-.hero-night h1 {
-  font-size: clamp(2.8rem, 6.4vw, 5.4rem);
-  font-weight: 800;
-  line-height: 1;
-}
-.hero-night .lede {
-  color: var(--ink-2);
-}
-.words > span {
-  display: inline-block;
-  opacity: 0;
-  transform: translateY(0.55em) rotate(5deg);
-  animation: wordin 0.5s var(--pop) forwards;
-  animation-delay: calc(var(--i) * 45ms + 120ms);
-}
+
 @keyframes wordin {
   to {
     opacity: 1;
     transform: none;
   }
 }
-.hl {
-  position: relative;
-  color: var(--sun, #ffc233);
-  white-space: nowrap;
-}
-.hl svg {
-  position: absolute;
-  left: 0;
-  bottom: -0.18em;
-  width: 100%;
-  height: 0.32em;
-  overflow: visible;
-}
-.hl svg path {
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-  animation: draw 0.9s 0.9s var(--ease) forwards;
-}
+
 @keyframes draw {
   to {
     stroke-dashoffset: 0;
@@ -252,36 +148,6 @@ body {
 
 /* ---------- marquee ---------- */
 
-.marquee {
-  background: var(--sun, #ffc233);
-  border-block: 2px solid #000;
-  overflow: hidden;
-  padding-block: 0.85rem;
-  color: #1a1440;
-}
-.marquee-track {
-  display: flex;
-  width: max-content;
-  gap: 0.7rem;
-  animation: marquee 48s linear infinite;
-}
-.marquee:hover .marquee-track {
-  animation-play-state: paused;
-}
-.marquee-track span {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  padding: 0.35rem 1rem;
-  border: 2px solid #1a1440;
-  border-radius: 999px;
-  background: var(--c, #fff);
-  font-family: var(--font-display);
-  font-weight: 650;
-  font-size: 1rem;
-  white-space: nowrap;
-  color: var(--on, #1a1440);
-}
 @keyframes marquee {
   to {
     transform: translateX(-50%);
@@ -289,117 +155,6 @@ body {
 }
 
 /* ---------- track tiles ---------- */
-
-.tiles {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr));
-  gap: 1.1rem;
-  margin-top: 1.6rem;
-}
-.tile {
-  --r: 0deg;
-  position: relative;
-  display: grid;
-  align-content: space-between;
-  gap: 1.4rem;
-  min-height: 210px;
-  padding: 1.25rem 1.3rem 1.2rem;
-  background: var(--track);
-  color: var(--on-track);
-  border: 2px solid #000;
-  border-radius: var(--r-md);
-  box-shadow: 4px 4px 0 #000;
-  text-decoration: none;
-  transform: rotate(var(--r));
-  transition: transform 0.35s var(--pop), box-shadow 0.35s var(--pop);
-  overflow: hidden;
-}
-.tile:nth-child(3n + 1) {
-  --r: -0.7deg;
-}
-.tile:nth-child(3n + 2) {
-  --r: 0.6deg;
-}
-.tile:hover,
-.tile:focus-visible {
-  --r: 0deg;
-  transform: translateY(-6px) scale(1.015);
-  box-shadow: 8px 10px 0 #000;
-  color: var(--on-track);
-}
-.tile:active {
-  transform: translateY(1px) scale(1.02, 0.97);
-  box-shadow: 2px 2px 0 #000;
-  transition-duration: 0.08s;
-}
-.tile h3 {
-  font-size: 1.55rem;
-  font-weight: 750;
-  line-height: 1.05;
-  color: inherit;
-}
-.tile p {
-  margin-top: 0.4rem;
-  font-family: var(--font-display);
-  font-size: 0.95rem;
-  line-height: 1.35;
-  opacity: 0.88;
-}
-.tile .tile-meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.6rem;
-  font-family: var(--font-display);
-  font-size: 0.88rem;
-  font-weight: 600;
-}
-.tile .ti {
-  width: 58px;
-  height: 58px;
-  transition: transform 0.5s var(--pop);
-}
-.tile:hover .ti {
-  transform: rotate(-8deg) scale(1.12);
-}
-.tile .tile-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
-}
-.tile .tile-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.2rem 0.65rem;
-  border: 2px solid currentColor;
-  border-radius: 999px;
-  font-family: var(--font-display);
-  font-size: 0.8rem;
-  font-weight: 650;
-}
-.tile::after {
-  content: '';
-  position: absolute;
-  right: -46px;
-  top: -46px;
-  width: 140px;
-  height: 140px;
-  border-radius: 50%;
-  border: 2px solid currentColor;
-  opacity: 0.16;
-  pointer-events: none;
-  transition: transform 0.6s var(--pop);
-}
-.tile:hover::after {
-  transform: scale(1.35);
-}
-@media (min-width: 900px) {
-  .tile.wide {
-    grid-column: span 2;
-  }
-}
 
 /* icons draw themselves */
 .ti .p {
@@ -414,9 +169,7 @@ html.js [data-reveal].is-in .ti .p,
 html.js .ti.draw.is-in .p {
   animation: draw 0.9s calc(var(--i) * 90ms + 200ms) var(--ease) forwards;
 }
-.tile:hover .ti .p {
-  animation: redraw 0.8s calc(var(--i) * 60ms) var(--ease) both;
-}
+
 @keyframes redraw {
   from {
     stroke-dashoffset: 1;
@@ -798,21 +551,12 @@ main + .site-footer {
 /* ---------- reduced motion ---------- */
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-night::before,
-  .hero-night::after,
-  .marquee-track,
+  
   .lesson-hero-art {
     animation: none;
   }
-  .words > span {
-    opacity: 1;
-    transform: none;
-    animation: none;
-  }
-  .hl svg path {
-    stroke-dashoffset: 0;
-    animation: none;
-  }
+  
+  
   html.js [data-reveal],
   html.js [data-reveal].is-in {
     opacity: 1;
@@ -835,149 +579,11 @@ main + .site-footer {
 
 /* ---------- stack explorer: every layer has its own colour ---------- */
 
-.sx-spine {
-  /* centre the 3px spine on the node centres (9px from the left) */
-  width: 3px;
-  left: 7.5px;
-  border-radius: 3px;
-  opacity: 1;
-  background: linear-gradient(to bottom, #f25f5c, #12c2a4, #ff4f8b, #5bc0ff, #ff9f1c, #9c8cff, #b6e43a, #ffc233);
-}
-.sx-layer {
-  border-bottom-color: var(--line-soft);
-}
-.sx-node {
-  width: 18px;
-  height: 18px;
-  margin-top: 0.22rem;
-  margin-left: 0;
-  border: 3px solid var(--c);
-  background: var(--paper);
-  transition: transform 0.3s var(--pop), background 0.2s;
-}
-.sx-node-fill {
-  width: 8px;
-  height: 8px;
-  background: var(--c);
-}
-.sx-head:hover .sx-node {
-  transform: scale(1.25);
-  border-color: var(--c);
-}
-.is-open .sx-node {
-  border-color: var(--c);
-}
-.sx-head:hover .sx-title,
-.is-open .sx-title {
-  color: var(--c);
-}
-.sx-title {
-  font-weight: 700;
-  font-size: 1.35rem;
-}
-.sx-branch {
-  background: var(--c);
-  width: 2px;
-}
-.sx-links a {
-  color: var(--c);
-  background: none;
-  border-bottom: 2px solid var(--c);
-  text-decoration: none;
-}
 .sx-plus {
   color: var(--c);
 }
 
-.sx-head {
-  color: inherit;
-}
-
 /* ---------- bright hero: light canvas, strong ink, content first ---------- */
-
-.hero-bright {
-  position: relative;
-  overflow: hidden;
-  isolation: isolate;
-  border-bottom: 2px solid var(--ink);
-  background:
-    radial-gradient(60vmax 40vmax at 12% -10%, color-mix(in srgb, #ffc233 55%, transparent), transparent 70%),
-    radial-gradient(55vmax 40vmax at 100% 10%, color-mix(in srgb, #ff4f8b 30%, transparent), transparent 70%),
-    radial-gradient(60vmax 45vmax at 70% 110%, color-mix(in srgb, #5b3dff 28%, transparent), transparent 70%),
-    var(--paper);
-}
-.hero-bright .hero {
-  padding-block: clamp(2.5rem, 7vw, 5rem) clamp(2.5rem, 6vw, 4rem);
-  gap: clamp(1.5rem, 4vw, 3.5rem);
-}
-.hero-bright h1 {
-  font-size: clamp(2.7rem, 6vw, 5rem);
-  font-weight: 800;
-  line-height: 1;
-  color: var(--ink);
-}
-.hero-bright .hl {
-  color: var(--signal);
-}
-.hero-bright .hl svg {
-  color: #ff4f8b;
-}
-.hero-bright .lede {
-  color: var(--ink-2);
-  font-size: 1.28rem;
-}
-.hero-bright .hero-art {
-  z-index: -1;
-  opacity: 0.9;
-}
-.hero-card {
-  padding: 1.2rem 1.5rem 0.6rem;
-  background: var(--surface);
-  border: 2px solid var(--ink);
-  border-radius: var(--r-lg);
-  box-shadow: 6px 6px 0 var(--shadow-ink);
-}
-.hero-card-title {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 0.95rem;
-  color: var(--ink-3);
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--line-soft);
-}
-.hero-card .sx-title {
-  color: var(--ink);
-}
-.hero-card .sx-head:hover .sx-title,
-.hero-card .is-open .sx-title {
-  color: color-mix(in srgb, var(--c) 58%, var(--ink));
-}
-.hero-card .sx-links a {
-  color: color-mix(in srgb, var(--c) 55%, var(--ink));
-  border-bottom-color: var(--c);
-}
-.hero-card .sx-plus {
-  color: var(--ink-3);
-}
-.hero-card .sx-node {
-  background: var(--surface);
-}
-.hero-card .sx-line,
-.hero-card .sx-before {
-  color: var(--ink-3);
-}
-.hero-card .sx-inner {
-  color: var(--ink-2);
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) .hero-bright {
-    background:
-      radial-gradient(60vmax 40vmax at 12% -10%, color-mix(in srgb, #ffc233 16%, transparent), transparent 70%),
-      radial-gradient(55vmax 40vmax at 100% 10%, color-mix(in srgb, #ff4f8b 16%, transparent), transparent 70%),
-      radial-gradient(60vmax 45vmax at 70% 110%, color-mix(in srgb, #5b3dff 30%, transparent), transparent 70%),
-      var(--paper);
-  }
-}
 
 /* ---------- hairline figures (@lucasmarkes/hairline) ---------- */
 

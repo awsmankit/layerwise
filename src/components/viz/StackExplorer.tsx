@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Root, EASE } from './shared';
 import { withBase } from '../../lib/url';
+import { Glyph, type GlyphName } from './glyphs';
 
 type Layer = {
   id: string;
+  glyph: GlyphName;
   color: string;
   title: string;
   line: string;
@@ -16,6 +18,7 @@ type Layer = {
 const layers: Layer[] = [
   {
     id: 'agents',
+    glyph: 'wrench',
     color: '#F25F5C',
     title: 'Agents and applications',
     line: 'Where users meet the model',
@@ -29,6 +32,7 @@ const layers: Layer[] = [
   },
   {
     id: 'retrieval',
+    glyph: 'search',
     color: '#12C2A4',
     title: 'Retrieval (RAG)',
     line: 'Giving the model facts it was not trained on',
@@ -45,6 +49,7 @@ const layers: Layer[] = [
   },
   {
     id: 'evals',
+    glyph: 'check',
     color: '#FF4F8B',
     title: 'Evals and observability',
     line: 'How you know it works',
@@ -58,6 +63,7 @@ const layers: Layer[] = [
   },
   {
     id: 'platforms',
+    glyph: 'cloud',
     color: '#5BC0FF',
     title: 'Model platforms',
     line: 'AWS, Azure and Google Cloud',
@@ -75,6 +81,7 @@ const layers: Layer[] = [
   },
   {
     id: 'inference',
+    glyph: 'bolt',
     color: '#FF9F1C',
     title: 'Inference engineering',
     line: 'Tokens, KV cache, batching',
@@ -92,6 +99,7 @@ const layers: Layer[] = [
   },
   {
     id: 'posttraining',
+    glyph: 'thumb',
     color: '#9C8CFF',
     title: 'Post-training',
     line: 'From text predictor to assistant',
@@ -105,6 +113,7 @@ const layers: Layer[] = [
   },
   {
     id: 'pretraining',
+    glyph: 'layers',
     color: '#B6E43A',
     title: 'Pretraining and architecture',
     line: 'Transformers learn language from text',
@@ -121,6 +130,7 @@ const layers: Layer[] = [
   },
   {
     id: 'hardware',
+    glyph: 'chip',
     color: '#FFC233',
     title: 'Hardware and infrastructure',
     line: 'GPUs, instances, clusters, networking',
@@ -139,90 +149,105 @@ const layers: Layer[] = [
   },
 ];
 
+/**
+ * The layers of an AI product as a stack of outlined slabs, top (what users
+ * touch) to bottom (the hardware). Pick a slab to read what changed at that
+ * layer and where to learn it. Arrow keys move between slabs.
+ */
 export default function StackExplorer({ initialOpen = 'platforms' }: { initialOpen?: string }) {
-  const [open, setOpen] = useState<string | null>(initialOpen);
+  const [sel, setSel] = useState<string>(initialOpen);
+  const panel = useRef<HTMLDivElement>(null);
+  const tabs = useRef<(HTMLButtonElement | null)[]>([]);
+  const layer = layers.find((l) => l.id === sel) ?? layers[0];
+
+  const pick = (i: number, focus = false) => {
+    setSel(layers[i].id);
+    if (focus) tabs.current[i]?.focus();
+    // on narrow screens the panel sits below the list, so bring it into view
+    if (window.matchMedia('(max-width: 860px)').matches) {
+      window.setTimeout(() => panel.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 60);
+    }
+  };
+
+  const onKey = (e: React.KeyboardEvent, i: number) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      pick((i + (e.key === 'ArrowDown' ? 1 : layers.length - 1)) % layers.length, true);
+    }
+  };
 
   return (
     <Root>
-      <div className="sx" role="list" aria-label="The AI stack, from applications down to hardware">
-        <motion.span
-          className="sx-spine"
-          aria-hidden="true"
-          initial={{ scaleY: 0 }}
-          animate={{ scaleY: 1 }}
-          transition={{ duration: 1.6, ease: EASE }}
-        />
-        {layers.map((layer, i) => {
-          const isOpen = open === layer.id;
-          return (
-            <motion.div
-              key={layer.id}
-              role="listitem"
-              className={`sx-layer${isOpen ? ' is-open' : ''}`}
-              style={{ '--c': layer.color } as React.CSSProperties}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 + i * 0.11, duration: 0.55, ease: EASE }}
-            >
+      <div className="sx2" style={{ '--c': layer.color } as React.CSSProperties}>
+        <div className="sx2-tabs" role="tablist" aria-orientation="vertical" aria-label="The AI stack, from applications down to hardware">
+          {layers.map((l, i) => {
+            const on = l.id === sel;
+            return (
               <button
+                key={l.id}
+                ref={(el) => {
+                  tabs.current[i] = el;
+                }}
                 type="button"
-                className="sx-head"
-                aria-expanded={isOpen}
-                aria-controls={`sx-${layer.id}`}
-                onClick={() => setOpen(isOpen ? null : layer.id)}
+                role="tab"
+                id={`sx2-tab-${l.id}`}
+                aria-selected={on}
+                aria-controls="sx2-panel"
+                tabIndex={on ? 0 : -1}
+                className={`sx2-tab${on ? ' is-on' : ''}`}
+                style={{ '--c': l.color } as React.CSSProperties}
+                onClick={() => pick(i)}
+                onKeyDown={(e) => onKey(e, i)}
               >
-                <span className="sx-node" aria-hidden="true">
-                  <motion.span
-                    className="sx-node-fill"
-                    initial={false}
-                    animate={{ scale: isOpen ? 1 : 0 }}
-                    transition={{ duration: 0.3, ease: EASE }}
-                  />
+                {on && <motion.span layoutId="sx2-ring" className="sx2-ring" transition={{ duration: 0.4, ease: EASE }} />}
+                <span className="sx2-plate">
+                  <Glyph key={on ? `on-${l.id}` : 'off'} name={l.glyph} draw={on} size={24} />
                 </span>
-                <span className="sx-title">{layer.title}</span>
-                <span className="sx-line">{layer.line}</span>
-                <span className="sx-plus" aria-hidden="true" />
+                <span className="sx2-name">
+                  <b>{l.title}</b>
+                  <small>{l.line}</small>
+                </span>
               </button>
-              <AnimatePresence initial={false}>
-                {isOpen && (
-                  <motion.div
-                    id={`sx-${layer.id}`}
-                    className="sx-body"
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.42, ease: EASE }}
-                  >
-                    <div className="sx-inner">
-                      <motion.span
-                        className="sx-branch"
-                        aria-hidden="true"
-                        initial={{ scaleY: 0 }}
-                        animate={{ scaleY: 1 }}
-                        transition={{ duration: 0.5, ease: EASE }}
-                      />
-                      <p className="sx-before">
-                        <b>Before:</b> {layer.before}
-                      </p>
-                      <ul>
-                        {layer.points.map((p) => (
-                          <li key={p}>{p}</li>
-                        ))}
-                      </ul>
-                      <p className="sx-links">
-                        {layer.links.map((l) => (
-                          <a key={l.href} href={withBase(l.href)}>
-                            {l.label}
-                          </a>
-                        ))}
-                      </p>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+            );
+          })}
+        </div>
+
+        <div className="sx2-panel" id="sx2-panel" role="tabpanel" aria-labelledby={`sx2-tab-${layer.id}`} ref={panel}>
+          <AnimatePresence mode="wait">
+            <motion.div key={layer.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.25, ease: EASE }}>
+              <h3 className="sx2-title">
+                <span className="sx2-plate sx2-plate-lg">
+                  <Glyph name={layer.glyph} draw size={32} />
+                </span>
+                {layer.title}
+              </h3>
+              <div className="sx2-compare">
+                <div className="sx2-before">
+                  <small>Before</small>
+                  <p>{layer.before}</p>
+                </div>
+                <svg className="sx2-arrow" viewBox="0 0 40 24" aria-hidden="true">
+                  <path d="M2 12 H34 M27 5 L35 12 L27 19" />
+                </svg>
+                <div className="sx2-now">
+                  <small>With LLMs</small>
+                  <ul>
+                    {layer.points.map((p) => (
+                      <li key={p}>{p}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+              <p className="sx2-links">
+                {layer.links.map((l) => (
+                  <a key={l.href} href={withBase(l.href)}>
+                    {l.label}
+                  </a>
+                ))}
+              </p>
             </motion.div>
-          );
-        })}
+          </AnimatePresence>
+        </div>
       </div>
     </Root>
   );
