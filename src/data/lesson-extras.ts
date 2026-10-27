@@ -12,6 +12,9 @@ import { extrasRetrievalServing } from './extras/retrieval-serving';
 import { extrasOps } from './extras/ops';
 import { extrasModels } from './extras/models';
 import { extrasEcosystem } from './extras/ecosystem';
+import { extras_frameworks } from './extras/frameworks';
+import { extras_mcp } from './extras/mcp';
+import { extras_promptpatterns } from './extras/promptpatterns';
 
 export type QuizItem = {
   q: string;
@@ -426,4 +429,4 @@ const baseExtras: Record<string, Extra> = {
 };
 
 /** Core lessons plus the per-track files in ./extras. */
-export const extras: Record<string, Extra> = { ...baseExtras, ...extrasCloud, ...extrasInfra, ...extrasLocal, ...extrasCore, ...extrasModels, ...extrasEcosystem, ...extrasOps, ...extrasRetrievalServing };
+export const extras: Record<string, Extra> = { ...baseExtras, ...extrasCloud, ...extrasInfra, ...extrasLocal, ...extrasCore, ...extrasModels, ...extrasEcosystem, ...extras_frameworks, ...extras_mcp, ...extras_promptpatterns, ...extrasOps, ...extrasRetrievalServing };
