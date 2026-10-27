@@ -1,0 +1,15 @@
+---
+import ToolPage from '../layouts/ToolPage.astro';
+import CaseList from '../components/ui/CaseList.tsx';
+import { casesChecked } from '../data/cases';
+import { withBase } from '../lib/url';
+---
+
+<ToolPage figure="hub" title="How big companies build it" lede="Engineering write-ups from the companies that run these systems: how they retrieve, serve, evaluate and protect LLM products, and what it cost them.">
+  <CaseList client:load />
+  <Fragment slot="notes">
+    <h2>How to read these</h2>
+    <p>These are other organisations' own words, and the numbers are their own claims, measured on their own workloads. Treat them as ideas to test, not benchmarks to copy. Each card says only what the page states.</p>
+    <p>Links last checked on {casesChecked}. Posts get moved, renamed and updated, so a link may change. Each card points to a <a href={withBase('/learn/')}>lesson</a> that teaches the background when there is one.</p>
+  </Fragment>
+</ToolPage>

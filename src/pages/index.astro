@@ -11,6 +11,8 @@ import { paths, pathIds } from '../data/paths';
 import { games } from '../data/games';
 import { withBase } from '../lib/url';
 import { cardStyle } from '../lib/color';
+import { cases } from '../data/cases';
+import { watch } from '../data/watch';
 import { getLessons, getPulse, formatDate } from '../lib/content';
 
 const lessons = await getLessons();
@@ -196,6 +198,39 @@ const tools = [
           ))
         }
       </div>
+    </div>
+  </section>
+
+  <section class="lp-section wrap" aria-labelledby="more-h">
+    <div class="lp-head">
+      <h2 id="more-h">Go further</h2>
+      <p>Learn from other people's work.</p>
+    </div>
+    <div class="lp-grid lp-grid-3" data-stagger>
+      <a class="lp-card" data-reveal href={withBase('/cases/')} style={cardStyle('#12C2A4')}>
+        <span class="lp-plate"><TrackIcon name="systems" size={44} /></span>
+        <span class="lp-body">
+          <h3>How big companies build it</h3>
+          <p>Engineering write-ups on RAG, agents, serving and evals.</p>
+        </span>
+        <span class="lp-chip">{cases.length} write-ups</span>
+      </a>
+      <a class="lp-card" data-reveal href={withBase('/watch/')} style={cardStyle('#FF9F1C')}>
+        <span class="lp-plate"><TrackIcon name="llm" size={44} /></span>
+        <span class="lp-body">
+          <h3>Further watching</h3>
+          <p>Video courses by other creators, by topic.</p>
+        </span>
+        <span class="lp-chip">{watch.length} videos and courses</span>
+      </a>
+      <a class="lp-card" data-reveal href={withBase('/teach/')} style={cardStyle('#7B3FE4')}>
+        <span class="lp-plate"><TrackIcon name="start" size={44} /></span>
+        <span class="lp-body">
+          <h3>Teaching this?</h3>
+          <p>Course plans, handouts and printable lessons.</p>
+        </span>
+        <span class="lp-chip">For teachers</span>
+      </a>
     </div>
   </section>
 

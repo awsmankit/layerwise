@@ -17,4 +17,4 @@ export const nav = [
   { href: '/pulse/', label: 'News' },
 ];
 
-export const footerNav = [...nav, { href: '/progress/', label: 'Your progress' }, { href: '/teach/', label: 'For teachers' }, { href: '/about/', label: 'About' }];
+export const footerNav = [...nav, { href: '/cases/', label: 'Case studies' }, { href: '/watch/', label: 'Further watching' }, { href: '/progress/', label: 'Your progress' }, { href: '/teach/', label: 'For teachers' }, { href: '/about/', label: 'About' }];

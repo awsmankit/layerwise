@@ -1,0 +1,15 @@
+---
+import ToolPage from '../layouts/ToolPage.astro';
+import WatchList from '../components/ui/WatchList.tsx';
+import { watchChecked } from '../data/watch';
+import { withBase } from '../lib/url';
+---
+
+<ToolPage figure="terminal" title="Further watching" lede="Video courses and playlists by other creators, on the topics in the lessons, for when you would rather watch than read.">
+  <WatchList client:load />
+  <Fragment slot="notes">
+    <h2>About these</h2>
+    <p>These are other people's work, not part of Layerwise. Each card names who made it and what kind of thing it is. They are free to watch unless the card says a sign-in is needed. Links were last checked on {watchChecked}, and channels move or remove videos, so a link may stop working.</p>
+    <p>Looking for how companies build these systems instead? See <a href={withBase('/cases/')}>How big companies build it</a>.</p>
+  </Fragment>
+</ToolPage>
