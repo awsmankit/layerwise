@@ -151,103 +151,91 @@ const layers: Layer[] = [
 
 /**
  * The layers of an AI product as a stack of outlined slabs, top (what users
- * touch) to bottom (the hardware). Pick a slab to read what changed at that
- * layer and where to learn it. Arrow keys move between slabs.
+ * touch) to bottom (the hardware). Open a slab and its detail unfolds right
+ * under it, between that layer and the next, so it scrolls with the page.
+ * Arrow keys move between slabs.
  */
 export default function StackExplorer({ initialOpen = 'platforms' }: { initialOpen?: string }) {
-  const [sel, setSel] = useState<string>(initialOpen);
-  const panel = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState<string | null>(initialOpen);
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
-  const layer = layers.find((l) => l.id === sel) ?? layers[0];
-
-  const pick = (i: number, focus = false) => {
-    setSel(layers[i].id);
-    if (focus) tabs.current[i]?.focus();
-    // on narrow screens the panel sits below the list, so bring it into view
-    if (window.matchMedia('(max-width: 860px)').matches) {
-      window.setTimeout(() => panel.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 60);
-    }
-  };
 
   const onKey = (e: React.KeyboardEvent, i: number) => {
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault();
-      pick((i + (e.key === 'ArrowDown' ? 1 : layers.length - 1)) % layers.length, true);
+      tabs.current[(i + (e.key === 'ArrowDown' ? 1 : layers.length - 1)) % layers.length]?.focus();
     }
   };
 
   return (
     <Root>
-      <div className="sx2" style={{ '--c': layer.color } as React.CSSProperties}>
-        <div className="sx2-tabs" role="tablist" aria-orientation="vertical" aria-label="The AI stack, from applications down to hardware">
-          {layers.map((l, i) => {
-            const on = l.id === sel;
-            return (
+      <div className="sx2" role="list" aria-label="The AI stack, from applications down to hardware">
+        {layers.map((l, i) => {
+          const on = l.id === open;
+          return (
+            <div key={l.id} role="listitem" className={`sx2-item${on ? ' is-on' : ''}`} style={{ '--c': l.color } as React.CSSProperties}>
               <button
-                key={l.id}
                 ref={(el) => {
                   tabs.current[i] = el;
                 }}
                 type="button"
-                role="tab"
-                id={`sx2-tab-${l.id}`}
-                aria-selected={on}
-                aria-controls="sx2-panel"
-                tabIndex={on ? 0 : -1}
-                className={`sx2-tab${on ? ' is-on' : ''}`}
-                style={{ '--c': l.color } as React.CSSProperties}
-                onClick={() => pick(i)}
+                className="sx2-tab"
+                aria-expanded={on}
+                aria-controls={`sx2-${l.id}`}
+                onClick={() => setOpen(on ? null : l.id)}
                 onKeyDown={(e) => onKey(e, i)}
               >
-                {on && <motion.span layoutId="sx2-ring" className="sx2-ring" transition={{ duration: 0.4, ease: EASE }} />}
                 <span className="sx2-plate">
-                  <Glyph key={on ? `on-${l.id}` : 'off'} name={l.glyph} draw={on} size={24} />
+                  <Glyph key={on ? `on-${l.id}` : 'off'} name={l.glyph} draw={on} size={26} />
                 </span>
                 <span className="sx2-name">
                   <b>{l.title}</b>
                   <small>{l.line}</small>
                 </span>
+                <span className="sx-plus" aria-hidden="true" />
               </button>
-            );
-          })}
-        </div>
 
-        <div className="sx2-panel" id="sx2-panel" role="tabpanel" aria-labelledby={`sx2-tab-${layer.id}`} ref={panel}>
-          <AnimatePresence mode="wait">
-            <motion.div key={layer.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.25, ease: EASE }}>
-              <h3 className="sx2-title">
-                <span className="sx2-plate sx2-plate-lg">
-                  <Glyph name={layer.glyph} draw size={32} />
-                </span>
-                {layer.title}
-              </h3>
-              <div className="sx2-compare">
-                <div className="sx2-before">
-                  <small>Before</small>
-                  <p>{layer.before}</p>
-                </div>
-                <svg className="sx2-arrow" viewBox="0 0 40 24" aria-hidden="true">
-                  <path d="M2 12 H34 M27 5 L35 12 L27 19" />
-                </svg>
-                <div className="sx2-now">
-                  <small>With LLMs</small>
-                  <ul>
-                    {layer.points.map((p) => (
-                      <li key={p}>{p}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-              <p className="sx2-links">
-                {layer.links.map((l) => (
-                  <a key={l.href} href={withBase(l.href)}>
-                    {l.label}
-                  </a>
-                ))}
-              </p>
-            </motion.div>
-          </AnimatePresence>
-        </div>
+              <AnimatePresence initial={false}>
+                {on && (
+                  <motion.div
+                    id={`sx2-${l.id}`}
+                    role="region"
+                    aria-label={l.title}
+                    className="sx2-panel"
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.4, ease: EASE }}
+                  >
+                    <div className="sx2-compare">
+                      <div className="sx2-before">
+                        <small>Before</small>
+                        <p>{l.before}</p>
+                      </div>
+                      <svg className="sx2-arrow" viewBox="0 0 40 24" aria-hidden="true">
+                        <path d="M2 12 H34 M27 5 L35 12 L27 19" />
+                      </svg>
+                      <div className="sx2-now">
+                        <small>With LLMs</small>
+                        <ul>
+                          {l.points.map((p) => (
+                            <li key={p}>{p}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                    <p className="sx2-links">
+                      {l.links.map((k) => (
+                        <a key={k.href} href={withBase(k.href)}>
+                          {k.label}
+                        </a>
+                      ))}
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          );
+        })}
       </div>
     </Root>
   );
