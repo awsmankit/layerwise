@@ -1,0 +1,152 @@
+---
+title: "LangChain and LangGraph"
+track: rag-agents
+level: intermediate
+order: 6
+summary: What the two libraries are, how LangChain's agents sit on LangGraph's graph runtime, and how state, memory, human approval and multiple agents work. Plus when plain code is the better choice.
+updated: 2026-10-27
+sources:
+  - label: "LangChain and LangGraph reach 1.0 (LangChain blog, October 2025)"
+    url: https://www.langchain.com/blog/langchain-langgraph-1dot0
+  - label: "LangChain overview: create_agent (LangChain docs)"
+    url: https://docs.langchain.com/oss/python/langchain/overview
+  - label: "LangGraph overview (LangChain docs)"
+    url: https://docs.langchain.com/oss/python/langgraph/overview
+  - label: "Graph API: state, nodes, edges (LangGraph docs)"
+    url: https://docs.langchain.com/oss/python/langgraph/graph-api
+  - label: "Interrupts: human-in-the-loop (LangGraph docs)"
+    url: https://docs.langchain.com/oss/python/langgraph/interrupts
+  - label: "Persistence: checkpointers and threads (LangGraph docs)"
+    url: https://docs.langchain.com/oss/python/langgraph/persistence
+  - label: "Structured output (LangChain docs)"
+    url: https://docs.langchain.com/oss/python/langchain/structured-output
+  - label: "Multi-agent patterns (LangChain docs)"
+    url: https://docs.langchain.com/oss/python/langchain/multi-agent
+  - label: "Release policy (LangChain docs)"
+    url: https://docs.langchain.com/oss/python/release-policy
+  - label: "OpenAI Agents SDK"
+    url: https://openai.github.io/openai-agents-python/
+  - label: "Agent Development Kit (Google)"
+    url: https://adk.dev/
+  - label: "Microsoft Agent Framework overview"
+    url: https://learn.microsoft.com/en-us/agent-framework/overview/
+---
+
+import SupportGraph from '../../../components/viz/SupportGraph.tsx';
+import InterruptFlow from '../../../components/viz/InterruptFlow.tsx';
+import FrameworkChoice from '../../../components/viz/FrameworkChoice.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+[Agents and tool use](../agents-and-tool-use/) showed the loop: the model proposes a tool call, your code checks and runs it, the result goes back. A framework is a toolkit for that loop. This lesson follows one example through two of them: a support bot that looks up an order, asks a person to approve a refund, then replies.
+
+## Two libraries, one stack
+
+- **LangChain** is the high-level layer. It gives you model connections, tools, structured output and a ready-made agent: `create_agent`.
+- **LangGraph** is the runtime underneath. You describe the work as a graph, and it handles state, saving, pausing and streaming.
+
+LangChain's agents are built on LangGraph. As of October 2026 both are at version 1.x (1.0 shipped on 22 October 2025), and the release policy says breaking changes only come with a new major version. Pin your versions and check the docs: both libraries add features often.
+
+## LangChain: the quick agent
+
+A tool-calling agent is a few lines. The model string is `provider:model-name`.
+
+```python
+from langchain.agents import create_agent
+
+agent = create_agent(model="provider:model-name", tools=[get_order_status])
+agent.invoke({"messages": [{"role": "user", "content": "Where is order 1042?"}]})
+```
+
+Three things come with it:
+
+- **Structured output.** Pass `response_format` and the parsed object comes back under `structured_response`. `ProviderStrategy` uses the provider's native schema support; `ToolStrategy` works through tool calling.
+- **Middleware.** Hooks around the model and tool calls. Built-in ones include `HumanInTheLoopMiddleware`, `PIIMiddleware` and `SummarizationMiddleware`.
+- **One API across providers.** Switching models is mostly a change to the model string.
+
+`create_agent` replaced the older `create_react_agent` from `langgraph.prebuilt`, which is deprecated.
+
+## LangGraph: the graph
+
+Switch to LangGraph when you want to decide the steps yourself. Four ideas:
+
+- **State.** One shared record, usually a `TypedDict`. Every node reads it and returns an update.
+- **Nodes.** Plain functions. One may call a model; another may be ordinary code.
+- **Edges.** Which node runs next. A conditional edge uses a function to choose between several.
+- **Reducers.** Rules for merging an update into a key. Without one, an update replaces the value. A reducer such as `add_messages` appends instead.
+
+<SupportGraph client:visible />
+
+The same graph as a sketch, following the current LangGraph docs. It is untested here, so check the docs for your version.
+
+```python
+from typing import TypedDict
+from langgraph.graph import StateGraph, START, END
+from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.types import interrupt
+class State(TypedDict):
+    order: str
+    wants_refund: bool
+    approved: bool
+
+def look_up(state): return {"order": "#1042 shipped"}
+def ask_person(state): return {"approved": interrupt("Refund this order?")}
+def reply(state): return {}
+
+graph = StateGraph(State)
+for fn in (look_up, ask_person, reply): graph.add_node(fn)
+graph.add_edge(START, "look_up")
+graph.add_conditional_edges("look_up", lambda s: s["wants_refund"], {True: "ask_person", False: "reply"})
+graph.add_edge("ask_person", "reply")
+graph.add_edge("reply", END)
+app = graph.compile(checkpointer=InMemorySaver())
+```
+
+You must `compile` the graph before you can run it. That is also where the checkpointer goes.
+
+## Pausing for a person
+
+`interrupt()` stops the run at that point. The checkpointer saves the state under a **thread id**, and your app can shut down. Later, a person decides, and you run the graph again with `Command(resume=...)` and the same thread id. The decision becomes the return value of `interrupt()`.
+
+```python
+from langgraph.types import Command
+
+cfg = {"configurable": {"thread_id": "order-1042"}}
+app.invoke({"wants_refund": True}, cfg)   # runs, then pauses at interrupt()
+app.invoke(Command(resume=True), cfg)     # a person approved; same thread id
+```
+
+<InterruptFlow client:visible />
+
+<Callout title="Resuming reruns the node" kind="note">
+When a run resumes, the node that called `interrupt()` starts again from its first line. Anything before the interrupt runs twice, so keep that code safe to repeat, or put it after the interrupt.
+</Callout>
+
+If you build with `create_agent`, you do not need to write the graph for this: `HumanInTheLoopMiddleware` pauses on the tools you name, and a person can approve, edit or reject the call.
+
+## Memory
+
+- **Short-term memory** is the checkpointer. It is saved per thread, so a conversation can continue and a paused run can resume. `InMemorySaver` is for development and forgets everything on restart. The docs recommend a database-backed saver such as `PostgresSaver` for production.
+- **Long-term memory** is the store. It is shared across threads and holds things like a customer's preferences.
+
+## More than one agent
+
+The docs name five patterns: **subagents** (a main agent calls others as tools), **handoffs** (agents pass control through tool calls), **skills** (one agent loads specialist prompts on demand), **router** (a step sends input to specialists) and a **custom workflow** in LangGraph. They also say a single agent with the right tools "can often achieve similar results". Add agents when one has too many tools and chooses badly, or when steps must run in a set order.
+
+## Do you need a framework?
+
+<FrameworkChoice client:visible />
+
+A framework pays off when you need saved state, human approval, long runs or several providers. It costs you another layer to learn, debug and upgrade. Microsoft's own agent docs say it plainly: "If you can write a function to handle the task, do that instead of using an AI agent."
+
+LangChain is not the only choice. Others whose docs I checked in October 2026: the **OpenAI Agents SDK** (agents, handoffs, guardrails), Google's **Agent Development Kit** (open source, several languages), and **Microsoft Agent Framework**, the successor to Semantic Kernel and AutoGen. They differ in language support and in how much they assume about the model provider, so compare them on your own task.
+
+<Deep title="Workflow patterns and streaming">
+
+LangGraph's docs list five workflow patterns, all of which you can build as graphs: **prompt chaining** (each call uses the last output), **parallelization**, **routing**, **orchestrator-worker** and **evaluator-optimizer** (one call writes, another checks, repeat). The difference from an agent is that a workflow follows code paths you set in advance.
+
+You can stream a run in several modes: `values` (full state after each step), `updates` (only what each node changed), `messages` (tokens from the model), `custom` (data your nodes emit), plus `checkpoints`, `tasks` and `debug`.
+
+</Deep>
+
+Next: [The tools and the ecosystem](../the-tools-and-ecosystem/) shows where MCP servers and skills fit, and [Evals 101](../../evals/evals-101/) shows how to test an agent like this one.

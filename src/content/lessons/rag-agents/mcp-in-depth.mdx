@@ -1,0 +1,143 @@
+---
+title: "MCP in depth: hosts, servers, transports and trust"
+track: rag-agents
+level: advanced
+order: 7
+summary: How the Model Context Protocol is put together, with one running example. The three roles, what a server can offer, stdio versus Streamable HTTP, what the 2026-07-28 revision changed, how sign-in works, and the security risks with a limit for each.
+updated: 2026-10-27
+sources:
+  - label: "MCP specification, 2026-07-28 revision: overview"
+    url: https://modelcontextprotocol.io/specification/2026-07-28
+  - label: "MCP specification: architecture"
+    url: https://modelcontextprotocol.io/specification/2026-07-28/architecture
+  - label: "MCP specification: transports (stdio and Streamable HTTP)"
+    url: https://modelcontextprotocol.io/specification/2026-07-28/basic/transports
+  - label: "MCP specification: authorization"
+    url: https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization
+  - label: "MCP security best practices"
+    url: https://modelcontextprotocol.io/docs/2026-07-28/tutorials/security/security_best_practices
+  - label: "The 2026-07-28 specification release (MCP blog)"
+    url: https://blog.modelcontextprotocol.io/posts/2026-07-28/
+  - label: "Build an MCP server (official tutorial, Python SDK)"
+    url: https://modelcontextprotocol.io/docs/develop/build-server
+---
+
+import McpTopology from '../../../components/viz/McpTopology.tsx';
+import McpTransports from '../../../components/viz/McpTransports.tsx';
+import McpToolCall from '../../../components/viz/McpToolCall.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+[The tools and the ecosystem](../the-tools-and-ecosystem/) placed MCP next to function calling and skills. This lesson opens it up. One example runs through it: a **work assistant** that reads your company's issue tracker and a notes folder on your laptop, and can file an issue when you ask.
+
+## Three roles
+
+<McpTopology client:visible />
+
+- The **host** is the app you talk to. It owns the conversation, the model, and every decision about what you must approve.
+- A **client** lives inside the host. Each client talks to exactly one server.
+- A **server** is a small program that offers things to the model. It can be a local process or a remote service.
+
+The design keeps servers apart: a server should not read the whole conversation or see into another server.
+
+## What a server can offer
+
+| It offers | Who decides to use it | In the example |
+| --- | --- | --- |
+| **Tools** | The model | `create_issue`, `search_issues` |
+| **Resources** | The application | The text of a note, attached as context |
+| **Prompts** | You | A `/triage` template you pick from a menu |
+
+A server can also ask you for a missing detail mid-task. It replies "input required", and the client retries with your answer.
+
+## Two ways to connect
+
+<McpTransports client:visible />
+
+- **stdio.** The client launches the server as a subprocess. Messages go over stdin and stdout, one per line. The server must write nothing else to stdout, so logs go to stderr.
+- **Streamable HTTP.** The server has one URL. Each message is an HTTP POST, and the reply is either JSON or a stream of events.
+
+The older **HTTP+SSE** transport is deprecated. New servers should not adopt it. A server on Streamable HTTP must check the `Origin` header to stop DNS-rebinding attacks, and a local one should bind to `127.0.0.1`, not every network interface.
+
+Pick stdio for a tool that runs on one person's machine. Pick Streamable HTTP for a shared service.
+
+## What changed in the 2026-07-28 revision
+
+As of October 2026, this is the newest revision. The release notes list these changes:
+
+- **No handshake, no sessions.** The `initialize` step and the `Mcp-Session-Id` header are gone. Each request carries its own protocol version and capabilities, so any server instance behind a load balancer can answer it. A `server/discover` call is optional.
+- **State is explicit.** If a server needs to remember something, such as a basket, a tool returns a handle and the model passes it back. Holding a handle must never count as proof of who you are.
+- **Gateway-friendly headers.** Streamable HTTP requests carry `Mcp-Method` and `Mcp-Name`, so a gateway can route without reading the body.
+- **Deprecations.** Roots, sampling and logging, and the HTTP+SSE transport, still work for at least twelve months. Do not start new work on them. Tasks moved to an extension.
+
+<Callout title="Older software still shipping" kind="note">
+Many clients and servers still use the earlier handshake. The spec says to probe with `server/discover` first and fall back to `initialize` if that fails. Check your SDK's migration notes before you upgrade.
+</Callout>
+
+## One tool call
+
+<McpToolCall client:visible />
+
+## Signing in
+
+Authorization is optional, and it depends on the transport.
+
+- **stdio servers** should not use the HTTP flow. They read credentials from the environment.
+- **HTTP servers** use an OAuth 2.1 based flow. The server acts as a resource server. Without a token it answers `401` and points to its metadata. The client finds the authorization server, identifies itself, and sends you to a browser to approve. The token then travels in an `Authorization: Bearer` header on every request, never in the URL.
+
+Three rules matter most. The client names the server it wants the token for (the `resource` parameter). The server must check the token was issued for it. And where the response carries an `iss` value, the client must check it against the server it recorded before it uses the code. Dynamic Client Registration is deprecated in favour of Client ID Metadata Documents.
+
+Scopes should start small. A server can answer `403 insufficient_scope` when a call needs more, and the client asks again for just that.
+
+## What can go wrong, and the limit for each
+
+| Risk | What happens | The limit |
+| --- | --- | --- |
+| **Confused deputy** | A proxy server with one fixed OAuth client ID lets an attacker skip your consent | Ask for consent per client, and match the redirect URI exactly |
+| **Token passthrough** | A server accepts a token meant for another service and forwards it | A server must not accept tokens not issued for it |
+| **Untrusted descriptions** | A server's tool descriptions or annotations steer the model | Treat them as untrusted unless the server is trusted |
+| **Instructions in results** | Text in a tool result tries to give the model orders | A human in the loop, and validate results before the model sees them |
+| **A local server is code** | It runs with your privileges | Show the exact command first, and sandbox it |
+| **SSRF** | A malicious server sends the client to internal addresses, such as cloud metadata | Require HTTPS, block private ranges, use an egress proxy |
+| **Guessable handles** | Someone else's basket ID works for you | Bind each handle to the signed-in user |
+| **Wide scopes** | A stolen token opens everything | Start with minimal scopes |
+
+One idea covers most rows: give each server the least access that still does the job. The [LLM security lesson](../../evals/llm-security/) covers prompt injection in more depth.
+
+## Connecting the assistant to a real system
+
+A short checklist for the issue tracker:
+
+1. Start with read-only tools. Add `create_issue` only when you need it, and keep the confirmation.
+2. One server per system, each with its own token and scopes.
+3. Log every tool call, with who asked and what came back.
+4. Rate limit the tools, and validate their inputs.
+5. Read what a third-party server's tools do before you install it, and pin its version.
+6. Add the server's tools to your [eval set](../../evals/evals-101/) so a change to it shows up.
+
+<Deep title="A server in a few lines">
+
+A sketch with the official Python SDK, as its docs show it in October 2026. Names change between SDK versions, so check the current docs.
+
+```python
+from mcp.server import MCPServer
+
+mcp = MCPServer("notes")
+
+@mcp.tool()
+def search_notes(query: str) -> str:
+    """Search the notes folder for a phrase."""
+    ...  # read-only: look in the folder, return matches
+
+@mcp.resource("notes://{name}")
+def read_note(name: str) -> str:
+    """Return the text of one note."""
+    ...
+
+if __name__ == "__main__":
+    mcp.run(transport="stdio")
+```
+
+On stdio, never `print()` in a server: it writes to stdout and corrupts the messages.
+
+</Deep>

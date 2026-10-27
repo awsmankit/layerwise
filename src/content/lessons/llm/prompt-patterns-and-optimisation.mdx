@@ -1,0 +1,82 @@
+---
+title: "Prompt patterns and optimisation"
+track: llm
+level: intermediate
+order: 6
+summary: Few-shot prompting done well, the five ways to wire model calls together, and a loop for improving a prompt without fooling yourself.
+updated: 2026-10-27
+sources:
+  - label: "Claude prompting best practices: use examples effectively"
+    url: https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices
+  - label: "Building effective agents (Anthropic, December 2024)"
+    url: https://www.anthropic.com/engineering/building-effective-agents
+  - label: "Effective context engineering for AI agents (Anthropic, September 2025)"
+    url: https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
+  - label: "DSPy optimizers (DSPy documentation)"
+    url: https://dspy.ai/learn/optimization/optimizers/
+  - label: "Optimization in DSPy (DSPy documentation)"
+    url: https://dspy.ai/learn/optimization/overview/
+---
+
+import FewShotDemo from '../../../components/viz/FewShotDemo.tsx';
+import WorkflowPatterns from '../../../components/viz/WorkflowPatterns.tsx';
+import PromptLoop from '../../../components/viz/PromptLoop.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+[Prompting and structured output](../prompting-and-structured-output/) covered the parts of a prompt and how to get output your code can parse. This lesson goes one step further, with one running example: a support email that must become a ticket with a category and an urgency.
+
+## Few-shot: show, do not describe
+
+A **few-shot** prompt puts worked examples before the new input. Try zero, two and five.
+
+<FewShotDemo client:visible />
+
+The schema fixes the shape of the reply. If your platform has native structured output, use it for the shape and keep the examples for judgement: what counts as urgent, where billing ends and a question begins. Format every example the same way, so the pattern is the one you meant.
+
+Anthropic's current prompting guide asks for examples that are **relevant** (they mirror the real task), **diverse** (they cover edge cases and vary enough that the model does not pick up unintended patterns) and **structured** (wrapped in `<example>` tags so they are not read as instructions). It suggests 3 to 5 examples for best results. Its context-engineering post adds: curate a small set of diverse, canonical examples instead of stuffing in a laundry list of edge cases.
+
+What goes wrong:
+
+- **Examples that look alike.** Five billing emails teach "everything is billing".
+- **A wrong label.** The model copies the rule your mistake implies.
+- **Cost.** In the drawing the same prompt is 52, 129 and 233 tokens, and you pay for every example on every call. [Prompt caching](../context-window-and-caching/) can soften that.
+- **Leaking into your test.** If an example also sits in your eval set, the score is flattered.
+
+Shuffle the example order and re-run your evals. If the score moves, the examples are doing more than you think.
+
+## Five ways to wire model calls together
+
+Most LLM products are not one prompt. Anthropic's "Building effective agents" names five **workflows**, where your code decides the shape of the flow.
+
+<WorkflowPatterns client:visible />
+
+For the support email: **chain** extract, classify, reply. **Route** by category, each with its own prompt. Run the urgency check three times in **parallel** and take the majority. Use **orchestrator-workers** when you cannot know the subtasks in advance. Use **evaluator-optimizer** when a second pass against clear criteria measurably improves the reply.
+
+An **agent** is different: the model directs its own steps and tool use. The same post advises finding the simplest solution possible, adding complexity only when needed, and starting with the model API directly, because wrong assumptions about what is under the hood are a common source of error. More on agents in [Agents and tool use](../../rag-agents/agents-and-tool-use/).
+
+<Callout title="A pattern is a cost" kind="cost">
+Every extra call adds latency and tokens. Three votes cost roughly three calls, and a chain adds a call per step. Add a pattern when your evals show a single prompt falls short, not before.
+</Callout>
+
+## Improve a prompt without fooling yourself
+
+Prompt changes feel like progress. The loop below keeps them honest.
+
+<PromptLoop client:visible />
+
+It starts from an [eval set](../../evals/evals-101/). Change one thing, run the same cases, keep the change only if the score rises. When scores stop rising, check once on a **held-out set**: cases you never looked at while editing.
+
+The DSPy documentation recommends a training set plus a held-out test set, and notes that prompt optimisers often overfit small training sets. It says 30 examples can give substantial value, but aim for at least 300.
+
+## Letting software search for the prompt
+
+**DSPy** is a framework where you write your program and a metric, and an **optimizer** tunes the prompts and few-shot examples against that metric. According to its documentation (as of October 2026), an optimizer needs three things: the program, the metric, and a few training inputs, possibly only 5 or 10.
+
+<Deep title="Which DSPy optimizer, according to its docs">
+
+The docs suggest `BootstrapFewShot` when you have very few examples (around 10), and `BootstrapFewShotWithRandomSearch` with 50 or more. `MIPROv2` proposes instructions and few-shot examples together; the docs suggest it for longer runs (about 40 trials or more) with about 200 examples or more to prevent overfitting. `GEPA` has a language model reflect on what worked and what did not, then propose better prompts. The docs say finding the right optimizer still takes experimentation.
+
+</Deep>
+
+An optimiser searches many candidate prompts against your metric, so the held-out set matters more, not less. The metric is your eval set in code: if it rewards the wrong thing, the optimiser will find the wrong prompt, quickly.
