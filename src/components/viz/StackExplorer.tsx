@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { Root, EASE } from './shared';
 import { withBase } from '../../lib/url';
 import { Glyph, type GlyphName } from './glyphs';
+import { cardColors } from '../../lib/color';
 
 type Layer = {
   id: string;
@@ -172,7 +173,7 @@ export default function StackExplorer({ initialOpen = 'platforms' }: { initialOp
         {layers.map((l, i) => {
           const on = l.id === open;
           return (
-            <div key={l.id} role="listitem" className={`sx2-item${on ? ' is-on' : ''}`} style={{ '--c': l.color } as React.CSSProperties}>
+            <div key={l.id} role="listitem" className={`sx2-item${on ? ' is-on' : ''}`} style={{ '--c': l.color, '--fill': cardColors(l.color).fill, '--on': cardColors(l.color).on } as React.CSSProperties}>
               <button
                 ref={(el) => {
                   tabs.current[i] = el;

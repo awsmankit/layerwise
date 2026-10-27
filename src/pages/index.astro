@@ -10,6 +10,7 @@ import { tracks } from '../data/tracks';
 import { paths, pathIds } from '../data/paths';
 import { games } from '../data/games';
 import { withBase } from '../lib/url';
+import { cardStyle } from '../lib/color';
 import { getLessons, getPulse, formatDate } from '../lib/content';
 
 const lessons = await getLessons();
@@ -67,7 +68,7 @@ const tools = [
           const nl = p.steps.filter((x) => x.kind === 'lesson').length;
           const ng = p.steps.length - nl;
           return (
-            <a class="lp-card" data-reveal href={withBase(`/start/#${id}`)} style={`--c:${p.color}`}>
+            <a class="lp-card" data-reveal href={withBase(`/start/#${id}`)} style={cardStyle(p.color)}>
               <span class="lp-plate"><TrackIcon name={p.icon} size={44} /></span>
               <span class="lp-body">
                 <h3>{p.title}</h3>
@@ -78,7 +79,7 @@ const tools = [
           );
         })
       }
-      <a class="lp-card lp-card-quiet" data-reveal href={withBase('/start/#check')} style="--c:#9B5CFF">
+      <a class="lp-card lp-card-quiet" data-reveal href={withBase('/start/#check')} style="--c:#FFFFFF;--fill:#FFFFFF;--on:#15123D">
         <span class="lp-plate"><TrackIcon name="evals" size={44} /></span>
         <span class="lp-body">
           <h3>Not sure?</h3>
@@ -97,7 +98,7 @@ const tools = [
     <div class="lp-grid lp-grid-4" data-stagger>
       {
         trackTiles.map((t) => (
-          <a class="lp-card lp-card-row" data-reveal href={withBase(`/learn/${t.id}/`)} style={`--c:${t.color}`} title={t.blurb}>
+          <a class="lp-card lp-card-row" data-reveal href={withBase(`/learn/${t.id}/`)} style={cardStyle(t.color)} title={t.blurb}>
             <span class="lp-plate"><TrackIcon name={t.id} size={40} /></span>
             <span class="lp-body">
               <h3>{t.title}</h3>
@@ -128,7 +129,7 @@ const tools = [
           games.map((g) => {
             const gc = gameColors[g.id];
             return (
-              <a class="lp-card lp-card-col" data-reveal href={withBase(g.href)} style={`--c:${gc.c}`}>
+              <a class="lp-card lp-card-col" data-reveal href={withBase(g.href)} style={cardStyle(gc.c)}>
                 <span class="lp-plate"><TrackIcon name={gc.icon} size={44} /></span>
                 <span class="lp-body">
                   <h3>{g.title}</h3>
@@ -149,7 +150,7 @@ const tools = [
       <p>For candidates, and for the people interviewing them.</p>
     </div>
     <div class="lp-grid lp-grid-3" data-stagger>
-      <a class="lp-card" data-reveal href={withBase('/interview/practice/')} style="--c:#FFC233">
+      <a class="lp-card" data-reveal href={withBase('/interview/practice/')} style={cardStyle('#FFC233')}>
         <span class="lp-plate"><TrackIcon name="llm" size={44} /></span>
         <span class="lp-body">
           <h3>Practise answering</h3>
@@ -157,7 +158,7 @@ const tools = [
         </span>
         <span class="lp-chip">Candidates</span>
       </a>
-      <a class="lp-card" data-reveal href={withBase('/interview/run/')} style="--c:#C92A63">
+      <a class="lp-card" data-reveal href={withBase('/interview/run/')} style={cardStyle('#C92A63')}>
         <span class="lp-plate"><TrackIcon name="evals" size={44} /></span>
         <span class="lp-body">
           <h3>Run an interview</h3>
@@ -165,7 +166,7 @@ const tools = [
         </span>
         <span class="lp-chip">Interviewers</span>
       </a>
-      <a class="lp-card" data-reveal href={withBase('/interview/')} style="--c:#3B54E0">
+      <a class="lp-card" data-reveal href={withBase('/interview/')} style={cardStyle('#3B54E0')}>
         <span class="lp-plate"><TrackIcon name="systems" size={44} /></span>
         <span class="lp-body">
           <h3>How AI interviews work</h3>
@@ -185,7 +186,7 @@ const tools = [
       <div class="lp-grid lp-grid-3" data-stagger>
         {
           tools.map((t) => (
-            <a class="lp-card lp-card-row" data-reveal href={withBase(t.href)} style={`--c:${t.c}`}>
+            <a class="lp-card lp-card-row" data-reveal href={withBase(t.href)} style={cardStyle(t.c)}>
               <span class="lp-plate"><TrackIcon name={t.icon} size={40} /></span>
               <span class="lp-body">
                 <h3>{t.title}</h3>
