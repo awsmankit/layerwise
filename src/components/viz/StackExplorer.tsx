@@ -4,6 +4,7 @@ import { Root, EASE } from './shared';
 import { withBase } from '../../lib/url';
 import { Glyph, type GlyphName } from './glyphs';
 import { cardColors } from '../../lib/color';
+import { swatch, layerSwatch } from '../../lib/palette';
 
 type Layer = {
   id: string;
@@ -20,7 +21,7 @@ const layers: Layer[] = [
   {
     id: 'agents',
     glyph: 'wrench',
-    color: '#F25F5C',
+    color: swatch[layerSwatch[0]],
     title: 'Agents and applications',
     line: 'Where users meet the model',
     before: 'A classical ML model sat behind one endpoint and returned a label or a score.',
@@ -34,7 +35,7 @@ const layers: Layer[] = [
   {
     id: 'retrieval',
     glyph: 'search',
-    color: '#12C2A4',
+    color: swatch[layerSwatch[1]],
     title: 'Retrieval (RAG)',
     line: 'Giving the model facts it was not trained on',
     before: 'Features came from a feature store; the model never read documents at request time.',
@@ -51,7 +52,7 @@ const layers: Layer[] = [
   {
     id: 'evals',
     glyph: 'check',
-    color: '#FF4F8B',
+    color: swatch[layerSwatch[2]],
     title: 'Evals and observability',
     line: 'How you know it works',
     before: 'A held-out test set and one accuracy number were usually enough.',
@@ -65,7 +66,7 @@ const layers: Layer[] = [
   {
     id: 'platforms',
     glyph: 'cloud',
-    color: '#5BC0FF',
+    color: swatch[layerSwatch[3]],
     title: 'Model platforms',
     line: 'AWS, Azure and Google Cloud',
     before: 'You trained, packaged and hosted your own model on your own instances.',
@@ -83,7 +84,7 @@ const layers: Layer[] = [
   {
     id: 'inference',
     glyph: 'bolt',
-    color: '#FF9F1C',
+    color: swatch[layerSwatch[4]],
     title: 'Inference engineering',
     line: 'Tokens, KV cache, batching',
     before: 'Inference was one forward pass: fixed input size, fixed latency.',
@@ -101,7 +102,7 @@ const layers: Layer[] = [
   {
     id: 'posttraining',
     glyph: 'thumb',
-    color: '#9C8CFF',
+    color: swatch[layerSwatch[5]],
     title: 'Post-training',
     line: 'From text predictor to assistant',
     before: 'Supervised learning on labelled data was the whole training story.',
@@ -115,7 +116,7 @@ const layers: Layer[] = [
   {
     id: 'pretraining',
     glyph: 'layers',
-    color: '#B6E43A',
+    color: swatch[layerSwatch[6]],
     title: 'Pretraining and architecture',
     line: 'Transformers learn language from text',
     before: 'Small task-specific models, trained from scratch on labelled data.',
@@ -132,7 +133,7 @@ const layers: Layer[] = [
   {
     id: 'hardware',
     glyph: 'chip',
-    color: '#FFC233',
+    color: swatch[layerSwatch[7]],
     title: 'Hardware and infrastructure',
     line: 'GPUs, instances, clusters, networking',
     before: 'CPUs were often enough; GPUs were for training deep nets.',

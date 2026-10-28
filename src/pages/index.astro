@@ -11,6 +11,7 @@ import { paths, pathIds } from '../data/paths';
 import { games } from '../data/games';
 import { withBase } from '../lib/url';
 import { cardStyle } from '../lib/color';
+import { swatch, gameSwatch } from '../lib/palette';
 import { cases } from '../data/cases';
 import { watch } from '../data/watch';
 import { getLessons, getPulse, formatDate } from '../lib/content';
@@ -20,21 +21,21 @@ const pulse = (await getPulse()).slice(0, 3);
 
 const trackTiles = tracks.map((t) => ({ ...t, count: lessons.filter((l) => l.data.track === t.id).length }));
 
-const gameColors: Record<string, { c: string; on: string; icon: string }> = {
-  blueprint: { c: '#3B54E0', on: '#FFFFFF', icon: 'blueprint' },
-  'cost-crunch': { c: '#C93531', on: '#FFFFFF', icon: 'crunch' },
-  'fit-the-model': { c: '#FF9F1C', on: '#2A1A00', icon: 'fit' },
-  'rack-and-stack': { c: '#00B8D9', on: '#00222B', icon: 'infra' },
-  'incident-room': { c: '#C92A63', on: '#FFFFFF', icon: 'incident' },
+const gameColors: Record<string, { c: string; icon: string }> = {
+  blueprint: { c: swatch[gameSwatch.blueprint], icon: 'blueprint' },
+  'cost-crunch': { c: swatch[gameSwatch['cost-crunch']], icon: 'crunch' },
+  'fit-the-model': { c: swatch[gameSwatch['fit-the-model']], icon: 'fit' },
+  'rack-and-stack': { c: swatch[gameSwatch['rack-and-stack']], icon: 'infra' },
+  'incident-room': { c: swatch[gameSwatch['incident-room']], icon: 'incident' },
 };
 
 const tools = [
-  { href: '/tools/cost/', title: 'Cost calculator', body: 'Monthly spend, and which lever saves most.', icon: 'cost', c: '#C93531' },
-  { href: '/tools/memory/', title: 'Model memory', body: 'Will this model fit on that device?', icon: 'fit', c: '#FF9F1C' },
-  { href: '/tools/gpu/', title: 'GPU explorer', body: 'Which GPUs hold it, and how fast.', icon: 'infra', c: '#00B8D9' },
-  { href: '/tools/breakeven/', title: 'API or own GPUs?', body: 'Where renting GPUs starts to win.', icon: 'systems', c: '#3B54E0' },
-  { href: '/tools/latency/', title: 'Latency budget', body: 'Cloud or on-device, for your time limit.', icon: 'serving', c: '#7B3FE4' },
-  { href: '/tools/sandbox/', title: 'Sandbox', body: 'Run tool commands and real Python.', icon: 'local', c: '#12C2A4' },
+  { href: '/tools/cost/', title: 'Cost calculator', body: 'Monthly spend, and which lever saves most.', icon: 'cost', c: swatch.navy },
+  { href: '/tools/memory/', title: 'Model memory', body: 'Will this model fit on that device?', icon: 'fit', c: swatch.yellow },
+  { href: '/tools/gpu/', title: 'GPU explorer', body: 'Which GPUs hold it, and how fast.', icon: 'infra', c: swatch.magenta },
+  { href: '/tools/breakeven/', title: 'API or own GPUs?', body: 'Where renting GPUs starts to win.', icon: 'systems', c: swatch.lime },
+  { href: '/tools/latency/', title: 'Latency budget', body: 'Cloud or on-device, for your time limit.', icon: 'serving', c: swatch.purple },
+  { href: '/tools/sandbox/', title: 'Sandbox', body: 'Run tool commands and real Python.', icon: 'local', c: swatch.forest },
 ];
 
 ---
@@ -152,7 +153,7 @@ const tools = [
       <p>For candidates, and for the people interviewing them.</p>
     </div>
     <div class="lp-grid lp-grid-3" data-stagger>
-      <a class="lp-card" data-reveal href={withBase('/interview/practice/')} style={cardStyle('#FFC233')}>
+      <a class="lp-card" data-reveal href={withBase('/interview/practice/')} style={cardStyle(swatch.purple)}>
         <span class="lp-plate"><TrackIcon name="llm" size={44} /></span>
         <span class="lp-body">
           <h3>Practise answering</h3>
@@ -160,7 +161,7 @@ const tools = [
         </span>
         <span class="lp-chip">Candidates</span>
       </a>
-      <a class="lp-card" data-reveal href={withBase('/interview/run/')} style={cardStyle('#C92A63')}>
+      <a class="lp-card" data-reveal href={withBase('/interview/run/')} style={cardStyle(swatch.lime)}>
         <span class="lp-plate"><TrackIcon name="evals" size={44} /></span>
         <span class="lp-body">
           <h3>Run an interview</h3>
@@ -168,7 +169,7 @@ const tools = [
         </span>
         <span class="lp-chip">Interviewers</span>
       </a>
-      <a class="lp-card" data-reveal href={withBase('/interview/')} style={cardStyle('#3B54E0')}>
+      <a class="lp-card" data-reveal href={withBase('/interview/')} style={cardStyle(swatch.magenta)}>
         <span class="lp-plate"><TrackIcon name="systems" size={44} /></span>
         <span class="lp-body">
           <h3>How AI interviews work</h3>
@@ -207,7 +208,7 @@ const tools = [
       <p>Learn from other people's work.</p>
     </div>
     <div class="lp-grid lp-grid-3" data-stagger>
-      <a class="lp-card" data-reveal href={withBase('/cases/')} style={cardStyle('#12C2A4')}>
+      <a class="lp-card" data-reveal href={withBase('/cases/')} style={cardStyle(swatch.turquoise)}>
         <span class="lp-plate"><TrackIcon name="systems" size={44} /></span>
         <span class="lp-body">
           <h3>How big companies build it</h3>
@@ -215,7 +216,7 @@ const tools = [
         </span>
         <span class="lp-chip">{cases.length} write-ups</span>
       </a>
-      <a class="lp-card" data-reveal href={withBase('/watch/')} style={cardStyle('#FF9F1C')}>
+      <a class="lp-card" data-reveal href={withBase('/watch/')} style={cardStyle(swatch.tangerine)}>
         <span class="lp-plate"><TrackIcon name="llm" size={44} /></span>
         <span class="lp-body">
           <h3>Further watching</h3>
@@ -223,7 +224,7 @@ const tools = [
         </span>
         <span class="lp-chip">{watch.length} videos and courses</span>
       </a>
-      <a class="lp-card" data-reveal href={withBase('/teach/')} style={cardStyle('#7B3FE4')}>
+      <a class="lp-card" data-reveal href={withBase('/teach/')} style={cardStyle(swatch.purple)}>
         <span class="lp-plate"><TrackIcon name="start" size={44} /></span>
         <span class="lp-body">
           <h3>Teaching this?</h3>

@@ -3,19 +3,20 @@ import { Root } from '../viz/shared';
 import { Glyph, type GlyphName } from '../viz/glyphs';
 import { cardStyle } from '../../lib/color';
 import { watch, topicLabels } from '../../data/watch';
+import { cycleSwatch } from '../../lib/palette';
 
-/** One colour and one hairline glyph per topic. */
-const look: Record<string, { color: string; glyph: GlyphName }> = {
-  transformers: { color: '#3B54E0', glyph: 'eye' },
-  embeddings: { color: '#00B8D9', glyph: 'vector' },
-  prompting: { color: '#FFC233', glyph: 'pen' },
-  rag: { color: '#12C2A4', glyph: 'search' },
-  langchain: { color: '#7B3FE4', glyph: 'wrench' },
-  langgraph: { color: '#C92A63', glyph: 'route' },
-  cloud: { color: '#FF9F1C', glyph: 'cloud' },
-  evals: { color: '#C93531', glyph: 'check' },
-  security: { color: '#7B3FE4', glyph: 'shield' },
-  mcp: { color: '#3B54E0', glyph: 'network' },
+/** One hairline glyph per topic. Colour comes from the palette cycle, so neighbouring cards always differ. */
+const glyphs: Record<string, GlyphName> = {
+  transformers: 'eye',
+  embeddings: 'vector',
+  prompting: 'pen',
+  rag: 'search',
+  langchain: 'wrench',
+  langgraph: 'route',
+  cloud: 'cloud',
+  evals: 'check',
+  security: 'shield',
+  mcp: 'network',
 };
 
 const kindLabel = { video: 'Video', playlist: 'Playlist', course: 'Course' } as const;
@@ -48,8 +49,9 @@ export default function WatchList() {
       </div>
 
       <div className="lp-grid lp-grid-3">
-        {shown.map((w) => {
-          const { color, glyph } = look[w.topic] ?? look.rag;
+        {shown.map((w, i) => {
+          const glyph = glyphs[w.topic] ?? 'doc';
+          const color = cycleSwatch(i);
           return (
             <article key={w.url} className="lp-card lp-card-col" style={styleObject(cardStyle(color))}>
               <span className="lp-plate">

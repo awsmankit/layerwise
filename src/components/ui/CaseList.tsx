@@ -4,17 +4,18 @@ import { Glyph, type GlyphName } from '../viz/glyphs';
 import { cardStyle } from '../../lib/color';
 import { withBase } from '../../lib/url';
 import { cases, topicLabels, type CaseTopic } from '../../data/cases';
+import { cycleSwatch } from '../../lib/palette';
 
-/** One colour and one hairline glyph per topic. */
-const look: Record<CaseTopic, { color: string; glyph: GlyphName }> = {
-  rag: { color: '#12C2A4', glyph: 'search' },
-  agents: { color: '#7B3FE4', glyph: 'wrench' },
-  serving: { color: '#FF9F1C', glyph: 'bolt' },
-  evals: { color: '#C92A63', glyph: 'check' },
-  platform: { color: '#3B54E0', glyph: 'server' },
-  cost: { color: '#C93531', glyph: 'coin' },
-  safety: { color: '#FFC233', glyph: 'shield' },
-  search: { color: '#00B8D9', glyph: 'vector' },
+/** One hairline glyph per topic. Colour comes from the palette cycle, so neighbouring cards always differ. */
+const glyphs: Record<CaseTopic, GlyphName> = {
+  rag: 'search',
+  agents: 'wrench',
+  serving: 'bolt',
+  evals: 'check',
+  platform: 'server',
+  cost: 'coin',
+  safety: 'shield',
+  search: 'vector',
 };
 
 /** cardStyle() gives a style attribute string; React wants an object. */
@@ -56,8 +57,9 @@ export default function CaseList() {
       </p>
 
       <div className="lp-grid lp-grid-3">
-        {shown.map((c) => {
-          const { color, glyph } = look[c.topic];
+        {shown.map((c, i) => {
+          const glyph = glyphs[c.topic];
+          const color = cycleSwatch(i);
           return (
             <article key={c.url} className="lp-card lp-card-col" style={styleObject(cardStyle(color))}>
               <span className="lp-plate">
