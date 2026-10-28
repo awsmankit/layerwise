@@ -15,6 +15,10 @@ import { extrasEcosystem } from './extras/ecosystem';
 import { extras_frameworks } from './extras/frameworks';
 import { extras_mcp } from './extras/mcp';
 import { extras_promptpatterns } from './extras/promptpatterns';
+import { extras_libraries } from './extras/libraries';
+import { extras_reasoning } from './extras/reasoning';
+import { extras_agenteval } from './extras/agenteval';
+import { extras_euai } from './extras/euai';
 
 export type QuizItem = {
   q: string;
@@ -429,4 +433,4 @@ const baseExtras: Record<string, Extra> = {
 };
 
 /** Core lessons plus the per-track files in ./extras. */
-export const extras: Record<string, Extra> = { ...baseExtras, ...extrasCloud, ...extrasInfra, ...extrasLocal, ...extrasCore, ...extrasModels, ...extrasEcosystem, ...extras_frameworks, ...extras_mcp, ...extras_promptpatterns, ...extrasOps, ...extrasRetrievalServing };
+export const extras: Record<string, Extra> = { ...baseExtras, ...extrasCloud, ...extrasInfra, ...extrasLocal, ...extrasCore, ...extrasModels, ...extrasEcosystem, ...extras_frameworks, ...extras_mcp, ...extras_promptpatterns, ...extras_libraries, ...extras_reasoning, ...extras_agenteval, ...extras_euai, ...extrasOps, ...extrasRetrievalServing };
