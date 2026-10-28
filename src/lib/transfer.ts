@@ -32,7 +32,7 @@ export async function encodeSnapshot(data: Snapshot): Promise<string> {
 export async function decodeSnapshot(code: string): Promise<Snapshot> {
   const [kind, body] = [code.slice(0, 2), code.slice(2)];
   if (kind !== 'g.' && kind !== 'p.') throw new Error('unknown code');
-  let bytes = fromB64(body);
+  let bytes: Uint8Array = fromB64(body);
   if (kind === 'g.') bytes = await pipe(bytes, new DecompressionStream('gzip'));
   const data = JSON.parse(new TextDecoder().decode(bytes));
   if (!data || typeof data !== 'object' || data.site !== 'Layerwise') throw new Error('not a Layerwise snapshot');
