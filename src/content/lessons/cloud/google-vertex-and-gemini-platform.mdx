@@ -3,8 +3,8 @@ title: "Google Cloud: Vertex AI and the Gemini Enterprise Agent Platform"
 track: cloud
 level: intermediate
 order: 4
-summary: What Google's AI platform contains, what the 2026 rebrand changes and does not change, and how TPUs and GPUs fit.
-updated: 2026-10-26
+summary: What Google's AI platform contains, what the 2026 rename changes, and how TPUs and GPUs fit.
+updated: 2026-10-28
 sources:
   - label: "Gemini Enterprise Agent Platform overview"
     url: https://docs.cloud.google.com/gemini-enterprise-agent-platform/overview
@@ -12,8 +12,12 @@ sources:
     url: https://docs.cloud.google.com/compute/docs/accelerator-optimized-machines
   - label: "Compute Engine TPU machines"
     url: https://docs.cloud.google.com/compute/docs/tpus/tpu-machines
-  - label: "Zero data retention on the Gemini Enterprise Agent Platform"
-    url: https://docs.cloud.google.com/vertex-ai/generative-ai/docs/data-governance
+  - label: "Gemini Enterprise Agent Platform name changes"
+    url: https://docs.cloud.google.com/gemini-enterprise-agent-platform/vertex-ai-name-changes
+  - label: "Cloud TPU release notes (TPU7x preview and general availability dates)"
+    url: https://docs.cloud.google.com/tpu/docs/release-notes
+  - label: "Gemini Enterprise Agent Platform and zero data retention"
+    url: https://docs.cloud.google.com/gemini-enterprise-agent-platform/resources/zero-data-retention
 ---
 
 import Callout from '../../../components/ui/Callout.astro';
@@ -24,14 +28,14 @@ Google Cloud keeps its model access, training tools and agent tooling in one pla
 
 ## What the rebrand means in practice
 
-Google's stated position, as of October 2026:
+What Google states, as of October 2026:
 
-- The services did not change.
-- Existing customers do not need to migrate.
-- The `aiplatform.googleapis.com` API name is unchanged.
-- Both names appear in documentation, consoles and invoices.
+- The Gemini Enterprise Agent Platform is "the evolution of Vertex AI", and Vertex AI services and roadmap will now be delivered through it rather than as a standalone service.
+- A name-changes page lists the renames, for example Vertex AI Agent Engine became Agent Runtime and the Vertex AI API is now the Gemini Enterprise Agent Platform API.
+- The `aiplatform.googleapis.com` endpoint still appears in Google's own release notes, but the Python SDK has a separate breaking change (2.0.1) that moves the agent surface out of `google-cloud-aiplatform`.
+- Both names appear in documentation, consoles and invoices. Google's pages I read do not say whether existing customers must migrate, so check the notice for each service you use.
 
-So in practice: search for both names, expect old tutorials and Terraform modules to say Vertex AI, and do not rewrite working code only because of the name. The new name signals where Google is investing, which is agents. Check the current overview page for the exact scope.
+So in practice: search for both names, expect old tutorials and Terraform modules to say Vertex AI, and do not rewrite working code only because of the name, but do read the release notes for the SDK and for each service you depend on. The new name signals where Google is investing, which is agents. Check the current overview page for the exact scope.
 
 <Callout title="Same pattern on other clouds" kind="note">
 Microsoft did the same with Azure AI Foundry, which became Microsoft Foundry (announced November 2025). When a vendor renames a platform, check the API names, SDK package names and IAM role names before assuming anything changed. See [the service map](../cloud-ai-service-map/).
@@ -43,7 +47,7 @@ Microsoft did the same with Azure AI Foundry, which became Microsoft Foundry (an
 
 ## Gemini API: on-demand versus provisioned
 
-By default you share capacity with other customers and are billed per token. If you hit throttling at peak, or need steady latency, **Provisioned Throughput** reserves a slice for you. The trade is the same as on every cloud: a commitment in return for predictability. Work out your steady baseline first, and let on-demand traffic handle spikes. See [Quotas, capacity and regions](../quotas-capacity-and-regions/).
+By default you share capacity with other customers and are billed per token. If you hit throttling at peak, or need steady latency, **Provisioned Throughput**, a fixed-cost, fixed-term subscription sized in generative AI scale units (GSUs), reserves a slice for you. The trade is the same as on every cloud: a commitment in return for predictability. Work out your steady baseline first, and let on-demand traffic handle spikes. See [Quotas, capacity and regions](../quotas-capacity-and-regions/).
 
 ## Agents on Google
 
@@ -53,8 +57,8 @@ Agent Runtime hosts agents. ADK is the code you write. You can write an agent in
 
 Google offers its own chips, **TPUs**, next to NVIDIA GPUs.
 
-- **GPUs** on Compute Engine are the familiar CUDA path. Families as of October 2026 include A4X (GB200), A4 (8x B200), A3 Ultra (H200), A3 Mega, High and Edge (H100), A2 (A100), G2 (L4) and G4. A3 Ultra and A4 cannot be created as ordinary on-demand VMs: they need a capacity reservation, Spot or Flex-start.
-- **TPUs** include v5e (cost-efficient), v5p, v6e (Trillium) and Ironwood, which was generally available from late 2025. They run frameworks such as JAX, and PyTorch support exists but check the current docs for your model.
+- **GPUs** on Compute Engine are the familiar CUDA path. Families as of October 2026 include A4X Max (GB300), A4X (GB200), A4 (8x B200), A3 Ultra (H200), A3 Mega, High and Edge (H100), A2 (A100), G4 (RTX PRO 6000) and G2 (L4). A3 Ultra and A4 cannot be created as ordinary on-demand VMs: they need a capacity reservation, Spot or Flex-start. A4X and A4X Max need reserved capacity and do not support Spot or Flex-start.
+- **TPUs** include v5e (cost-efficient), v5p, v6e (Trillium, generally available December 2024) and TPU7x (Ironwood), which entered preview on 24 November 2025 and became generally available on 31 March 2026. They run frameworks such as JAX, and PyTorch support exists but check the current docs for your model.
 
 A rough rule: if your team already depends on CUDA libraries or custom kernels, use GPUs. If you train or serve large models on frameworks with good TPU support, and the price-performance matters, evaluate TPUs. Measure both on your workload, because vendor figures do not transfer.
 
@@ -64,11 +68,11 @@ CUDA code does not run on a TPU, and Trainium and Inferentia on AWS need the Neu
 
 ## Data handling
 
-Google says it will not use your data to train or fine-tune models without your prior permission or instruction, per the data governance page opened on 26 October 2026. It also documents caching defaults, abuse-monitoring logging for some customers and endpoint location rules, so read that page for your contract. More in [Security and networking for AI](../cloud-security-and-networking-for-ai/).
+Google says it will not use your data to train or fine-tune models without your prior permission or instruction, per its zero-data-retention page opened on 28 October 2026. The page also says published Gemini models cache customer data by default to reduce latency (you can turn caching off per project), that prompts may be logged for abuse monitoring for customers on the standard Google Cloud terms, and that the global endpoint can serve requests from any region, so read it for your contract. More in [Security and networking for AI](../cloud-security-and-networking-for-ai/).
 
 ## What to take forward
 
-- Vertex AI and Gemini Enterprise Agent Platform refer to the same platform in 2026. Expect both names.
+- Vertex AI is now part of the Gemini Enterprise Agent Platform. Expect both names, and read each service's notice.
 - Idle Vector Search nodes and provisioned capacity keep billing.
 - A3 Ultra and A4 GPUs need reservations, Spot or Flex-start.
 - Choose TPUs only after checking framework support and measuring your workload.

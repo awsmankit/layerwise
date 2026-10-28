@@ -4,7 +4,7 @@ track: cloud
 level: intermediate
 order: 3
 summary: How Microsoft's model platform is organised, what the deployment types mean, and why holding PTU quota does not mean you hold capacity.
-updated: 2026-10-26
+updated: 2026-10-28
 sources:
   - label: "Deployment types for Microsoft Foundry Models"
     url: https://learn.microsoft.com/en-us/azure/foundry/foundry-models/concepts/deployment-types
@@ -29,7 +29,7 @@ You create a deployment of a model, and you choose a type. There are two choices
 
 <DeploymentGrid client:visible />
 
-A "Developer" tier also exists, but only for evaluating fine-tuned models. It has no SLA and its deployments are deleted after 24 hours, so it is not for production.
+Batch is offered at Global and Data Zone scope, with no regional option. A "Developer" tier also exists, but only for evaluating fine-tuned models. It has no SLA and its deployments are deleted after 24 hours, so it is not for production. Standard deployments can also use Flex (cheaper, slower) or Priority (faster, pay as you go) processing for individual requests, where a model supports them.
 
 ## Quota is not capacity
 

@@ -4,7 +4,7 @@ track: cloud
 level: basic
 order: 2
 summary: A managed API for foundation models, plus the building blocks around it. What each part does and where it fits next to the ML tools you already know.
-updated: 2026-10-26
+updated: 2026-10-28
 sources:
   - label: "Amazon Bedrock user guide"
     url: https://docs.aws.amazon.com/bedrock/latest/userguide/what-is-bedrock.html
@@ -12,6 +12,22 @@ sources:
     url: https://aws.amazon.com/bedrock/pricing/
   - label: "Amazon Bedrock Converse API"
     url: https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference.html
+  - label: "Amazon Bedrock Knowledge Bases"
+    url: https://docs.aws.amazon.com/bedrock/latest/userguide/knowledge-base.html
+  - label: "Amazon Bedrock Agents (now Agents Classic) and the move to AgentCore"
+    url: https://docs.aws.amazon.com/bedrock/latest/userguide/agents.html
+  - label: "Amazon Bedrock Guardrails"
+    url: https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails.html
+  - label: "Customize a model in Amazon Bedrock"
+    url: https://docs.aws.amazon.com/bedrock/latest/userguide/custom-models.html
+  - label: "Deploy a custom model for on-demand inference"
+    url: https://docs.aws.amazon.com/bedrock/latest/userguide/deploy-custom-model-on-demand.html
+  - label: "Service tiers for inference"
+    url: https://docs.aws.amazon.com/bedrock/latest/userguide/service-tiers-inference.html
+  - label: "Data protection in Amazon Bedrock"
+    url: https://docs.aws.amazon.com/bedrock/latest/userguide/data-protection.html
+  - label: "Data retention in Amazon Bedrock"
+    url: https://docs.aws.amazon.com/bedrock/latest/userguide/data-retention.html
 ---
 
 import NodeGraph from '../../../components/viz/NodeGraph.tsx';
@@ -36,14 +52,14 @@ Click a block. Use "Show flow" to see requests move through the system.
   failuresLabel="Watch out for"
   nodes={[
     { id: 'app', label: 'Your application', x: 50, y: 50, kind: 'core', detail: 'Your code calls Bedrock through the AWS SDK or an HTTPS endpoint, authenticated with IAM. Everything else on this map is something you can optionally use from there.' },
-    { id: 'security', label: 'Security and governance', x: 50, y: 9, detail: 'Access is controlled with IAM policies, so you can decide which roles may call which models. Traffic can stay on the AWS network through VPC endpoints, data can be encrypted with KMS keys, and CloudTrail and invocation logging give you an audit trail. AWS states that prompts and outputs are not used to train the underlying base models or shared with model providers. Confirm the current wording for your compliance needs.', fails: ['Overly broad IAM permissions on model access', 'Invocation logs can store sensitive prompts, so decide retention and access up front'] },
+    { id: 'security', label: 'Security and governance', x: 50, y: 9, detail: 'Access is controlled with IAM policies, so you can decide which roles may call which models. Traffic can stay on the AWS network through VPC endpoints, data can be encrypted with KMS keys, and CloudTrail and invocation logging give you an audit trail. AWS states that prompts and outputs are not shared with model providers and are not used to train Amazon or third-party models. It also documents a data-retention setting and an abuse-detection process that can keep some flagged traffic for a limited time, so read the data retention page and confirm the current wording for your compliance needs.', fails: ['Overly broad IAM permissions on model access', 'Invocation logs can store sensitive prompts, so decide retention and access up front'] },
     { id: 'models', label: 'Model APIs', x: 15, y: 17, detail: 'One authenticated API in front of models from several providers, including Amazon’s own. The Converse API gives a common request and response shape across models. InvokeModel uses each model’s native format. Streaming versions exist for both. Which models you can use depends on the region and changes over time, and some need access to be enabled first.', fails: ['Quotas and throttling at peak times', 'Models are retired on a schedule, so track versions and plan migrations', 'The same prompt behaves differently on different models'] },
-    { id: 'kb', label: 'Knowledge Bases', x: 85, y: 17, detail: 'Managed retrieval-augmented generation. You point it at a data source such as an S3 bucket, and it chunks the content, creates embeddings and stores them in a supported vector store. At query time it retrieves relevant passages, and can also generate an answer from them.', fails: ['Default chunking may not suit your documents', 'Retrieval quality still needs your own measurement', 'The vector store has its own cost and scaling behaviour'] },
-    { id: 'agents', label: 'Agents', x: 88, y: 50, detail: 'Lets a model plan steps and call your tools, often Lambda functions or APIs, in a loop with instructions and memory. AWS also offers services aimed at running agents at scale, with identity, memory and observability. Check the current documentation for what is available.', fails: ['Runaway loops, so cap steps and cost', 'Tools with more permission than the task needs'] },
-    { id: 'guard', label: 'Guardrails', x: 85, y: 83, detail: 'Configurable policies applied to inputs and outputs: harmful-content categories, denied topics, handling of sensitive information such as personal data, and checks that answers are grounded in provided sources.', fails: ['False positives can block legitimate requests, so test with your own traffic', 'Adds a little latency and cost per call'] },
+    { id: 'kb', label: 'Knowledge Bases', x: 85, y: 17, detail: 'Managed retrieval-augmented generation. As of October 2026 there are two kinds. A managed knowledge base, which AWS recommends, handles ingestion, indexing and storage for you, with connectors such as S3, SharePoint and Confluence. A customer-managed one lets you choose the vector store (for example OpenSearch Serverless or Aurora) and control chunking. At query time it retrieves relevant passages, and can also generate an answer with citations.', fails: ['Default chunking may not suit your documents', 'Retrieval quality still needs your own measurement', 'The vector store has its own cost and scaling behaviour'] },
+    { id: 'agents', label: 'Agents', x: 88, y: 50, detail: 'Bedrock Agents, now called Agents Classic, lets a model plan steps and call your tools through action groups, often Lambda functions or APIs. As of October 2026 it is in maintenance mode and no longer open to new customers; AWS points new work to Amazon Bedrock AgentCore, its services for running agents at scale with identity, memory, tool gateway and observability.', fails: ['Runaway loops, so cap steps and cost', 'Tools with more permission than the task needs'] },
+    { id: 'guard', label: 'Guardrails', x: 85, y: 83, detail: 'Configurable policies applied to inputs and outputs: harmful-content and prompt-attack filters, denied topics, word filters, handling of sensitive information such as personal data, checks that answers are grounded in provided sources, and Automated Reasoning checks against logical rules. The ApplyGuardrail API can check text without calling a Bedrock model.', fails: ['False positives can block legitimate requests, so test with your own traffic', 'Adds a little latency and cost per call'] },
     { id: 'batch', label: 'Batch inference', x: 50, y: 91, detail: 'Submit a file of many requests and collect the results later, at a lower price than on-demand calls. Suits non-interactive work such as summarising a backlog or generating embeddings in bulk.', fails: ['Not for anything a user is waiting on', 'Handle partial failures record by record'] },
-    { id: 'eval', label: 'Model evaluation', x: 15, y: 83, detail: 'Compare models or prompts on a dataset using automatic metrics, a model acting as judge, or human review workflows. Useful for choosing a model before you commit to it.', fails: ['Judge models have biases, see the LLM-as-judge lesson', 'Generic datasets rarely match your task, so bring your own cases'] },
-    { id: 'custom', label: 'Model customization', x: 13, y: 50, detail: 'For supported models, you can adapt them with your data through fine-tuning, continued pretraining or distillation, producing a private version that you use through Bedrock. Support varies by model, and serving a customized model has typically needed reserved capacity, so check current terms.', fails: ['Small or noisy datasets overfit', 'Locked to the base model version you customized'] },
+    { id: 'eval', label: 'Model evaluation', x: 15, y: 83, detail: 'Compare models or prompts on a dataset using automatic metrics, a model acting as judge, or human review workflows, and evaluate a knowledge base or other RAG source. Useful for choosing a model before you commit to it.', fails: ['Judge models have biases, see the LLM-as-judge lesson', 'Generic datasets rarely match your task, so bring your own cases'] },
+    { id: 'custom', label: 'Model customization', x: 13, y: 50, detail: 'For supported models, you can adapt them with your data through supervised fine-tuning, reinforcement fine-tuning or distillation, producing a private version that you use through Bedrock; Custom Model Import brings in open-weight models you trained elsewhere. Support varies by model. A customized model is served either with Provisioned Throughput or, for a few models and US regions as of October 2026, with an on-demand deployment billed per token.', fails: ['Small or noisy datasets overfit', 'Locked to the base model version you customized'] },
   ]}
   edges={[['app','security'],['app','models'],['app','kb'],['app','agents'],['app','guard'],['app','batch'],['app','eval'],['app','custom']]}
   client:visible
@@ -54,8 +70,9 @@ Click a block. Use "Show flow" to see requests move through the system.
 | Mode | How it works | Good for |
 |---|---|---|
 | On-demand | Pay per input and output token, no commitment | Getting started, spiky or unpredictable traffic |
+| Service tiers | For supported models, a request can ask for Standard, Priority (fastest, costs more), Flex (slower, costs less) or a Reserved tier of tokens-per-minute capacity booked through your account team | Matching price and speed to how urgent the request is |
 | Provisioned throughput | Reserve capacity and pay by time | Steady, high volume where you need predictable latency, and for some customized models |
-| Batch | Asynchronous jobs at a reduced rate | Bulk work that can wait |
+| Batch | Asynchronous jobs at a reduced rate: the pricing page says 50% lower than on-demand, for select models | Bulk work that can wait |
 
 Prompt caching and cross-region inference can also change your cost and availability. Prices vary by model and region, so work from the current pricing page rather than from memory, including this page.
 
@@ -77,7 +94,7 @@ print(response["output"]["message"]["content"][0]["text"])
 print(response["usage"])   # input tokens, output tokens: this is what you are billed on
 ```
 
-Switching models mostly means changing `modelId`, which is the main practical benefit of the Converse API. Behaviour, limits and prices still differ by model.
+Switching models mostly means changing `modelId`, which is the main practical benefit of the Converse API. Behaviour, limits and prices still differ by model. The current docs also show the Anthropic Messages, OpenAI Responses and Chat Completions request shapes against the same `bedrock-runtime` endpoint for some models.
 
 <Callout title="This page ages quickly">
 Bedrock's model list, features and pricing change often. The structure above is stable enough to learn from, but check the documentation linked below for what is available today before you design around a specific feature.

@@ -4,14 +4,14 @@ track: cloud
 level: intermediate
 order: 7
 summary: How identity, private connectivity, encryption keys, residency and logging map across the three clouds, and what to confirm about training on your data.
-updated: 2026-10-26
+updated: 2026-10-28
 sources:
   - label: "Amazon Bedrock data protection"
     url: https://docs.aws.amazon.com/bedrock/latest/userguide/data-protection.html
   - label: "Data, privacy and security for Foundry Models sold by Azure"
     url: https://learn.microsoft.com/en-us/azure/foundry/responsible-ai/openai/data-privacy
   - label: "Zero data retention on the Gemini Enterprise Agent Platform"
-    url: https://docs.cloud.google.com/vertex-ai/generative-ai/docs/data-governance
+    url: https://docs.cloud.google.com/gemini-enterprise-agent-platform/resources/zero-data-retention
   - label: "Deployment types for Microsoft Foundry Models"
     url: https://learn.microsoft.com/en-us/azure/foundry/foundry-models/concepts/deployment-types
 ---
@@ -80,7 +80,7 @@ Each provider publishes a statement, and each has caveats such as abuse monitori
 - **Microsoft** states that prompts, completions, embeddings and training data for models sold by Azure are not used to train foundation models without your permission, and are not available to other customers or to the model providers. It also describes abuse monitoring, with a process to apply for modified monitoring.
 - **Google** states it will not use your data to train or fine-tune models without your prior permission or instruction, and documents caching and logging behaviour that may affect zero data retention.
 
-These were read on 26 October 2026. **Confirm against the current terms and your contract** before relying on any of them, particularly for models from third-party providers, preview features and fine-tuned models. This lesson is not legal advice.
+These were read on 28 October 2026. **Confirm against the current terms and your contract** before relying on any of them, particularly for models from third-party providers, preview features and fine-tuned models. This lesson is not legal advice.
 
 <Deep title="Zero data retention is not one switch">
 Features can retain data even when the base model does not: caching, stored conversation state for agents, grounding with search, abuse-monitoring stores and your own logs. For a strict policy, list each feature you use and look up what it stores, for how long, and where. Disable what you cannot justify.

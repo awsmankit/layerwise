@@ -7,8 +7,8 @@ source:
   url: https://docs.cloud.google.com/gemini-enterprise-agent-platform/overview
 ---
 
-**What changed.** At Google Cloud Next on 22 April 2026, Google announced the Gemini Enterprise Agent Platform as the successor to the Vertex AI brand. The services did not change, existing customers did not need to migrate, and the `aiplatform.googleapis.com` API name stayed the same. Agent Engine is now called Agent Runtime.
+**What changed.** At Google Cloud Next on 22 April 2026, Google announced the Gemini Enterprise Agent Platform as the successor to the Vertex AI brand. Google's name-changes page lists which services and features were renamed, and the release notes flag a breaking change in the Python SDK 2.0.1. Agent Engine is now called Agent Runtime.
 
-**Why it matters.** Tutorials, invoices and job descriptions will use both names for a long time. Nothing breaks, but searches can miss half the documentation.
+**Why it matters.** Tutorials, invoices and job descriptions will use both names for a long time. Searches can miss half the documentation.
 
-**What to do.** Nothing in your code. Search for both names when you look things up. See the [Google Cloud lesson](../../learn/cloud/google-vertex-and-gemini-platform/).
+**What to do.** Read the notice for each Google service and SDK you use, and check your pinned SDK versions. Search for both names when you look things up. As of October 2026, the [name-changes page](https://docs.cloud.google.com/gemini-enterprise-agent-platform/vertex-ai-name-changes) is the list to check. See the [Google Cloud lesson](../../learn/cloud/google-vertex-and-gemini-platform/).

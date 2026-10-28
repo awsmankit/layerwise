@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from 'react';
+import { useMemo, useState, type CSSProperties } from 'react';
 import { Root } from '../viz/shared';
 import { Glyph, type GlyphName } from '../viz/glyphs';
 import { cardStyle } from '../../lib/color';
@@ -26,6 +26,7 @@ function styleObject(css: string): CSSProperties {
 }
 
 const topics = Object.keys(topicLabels).filter((t) => watch.some((w) => w.topic === t));
+const creators = [...new Set(watch.map((w) => w.creator))].sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' }));
 
 /**
  * Video courses, grouped by topic. These are other people's work: each card names
@@ -33,7 +34,8 @@ const topics = Object.keys(topicLabels).filter((t) => watch.some((w) => w.topic 
  */
 export default function WatchList() {
   const [topic, setTopic] = useState<string>('all');
-  const shown = topic === 'all' ? watch : watch.filter((w) => w.topic === topic);
+  const [creator, setCreator] = useState<string>('all');
+  const shown = useMemo(() => watch.filter((w) => (topic === 'all' || w.topic === topic) && (creator === 'all' || w.creator === creator)), [topic, creator]);
 
   return (
     <Root>
@@ -47,6 +49,29 @@ export default function WatchList() {
           </button>
         ))}
       </div>
+
+      <div className="viz-controls" style={{ marginBottom: '1.2rem' }}>
+        <label className="field">
+          <span>Creator</span>
+          <select value={creator} onChange={(e) => setCreator(e.target.value)}>
+            <option value="all">All {creators.length} creators</option>
+            {creators.map((c) => (
+              <option key={c} value={c}>
+                {c} ({watch.filter((w) => w.creator === c).length})
+              </option>
+            ))}
+          </select>
+        </label>
+        {creator !== 'all' && (
+          <button type="button" className="btn quiet" style={{ alignSelf: 'end' }} onClick={() => setCreator('all')}>
+            Clear creator
+          </button>
+        )}
+      </div>
+
+      <p aria-live="polite" style={{ margin: '0 0 1rem', color: 'var(--ink-3)' }}>
+        Showing {shown.length} of {watch.length}.
+      </p>
 
       <div className="lp-grid lp-grid-3">
         {shown.map((w, i) => {

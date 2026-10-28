@@ -4,12 +4,16 @@ track: cloud
 level: intermediate
 order: 8
 summary: Why GPUs and model throughput are scarce, the three capacity models every cloud offers, and how to plan for throttling before it hits production.
-updated: 2026-10-26
+updated: 2026-10-28
 sources:
   - label: "Provisioned throughput for Foundry Models"
     url: https://learn.microsoft.com/en-us/azure/foundry/openai/concepts/provisioned-throughput
   - label: "Azure virtual machine sizes overview"
     url: https://learn.microsoft.com/en-us/azure/virtual-machines/sizes/overview
+  - label: "NC_A100_v4 size series"
+    url: https://learn.microsoft.com/en-us/azure/virtual-machines/sizes/gpu-accelerated/nca100v4-series
+  - label: "Manage resources and quotas (Azure Machine Learning)"
+    url: https://learn.microsoft.com/en-us/azure/machine-learning/how-to-manage-quotas?view=azureml-api-2
   - label: "Compute Engine accelerator-optimized machines"
     url: https://docs.cloud.google.com/compute/docs/accelerator-optimized-machines
   - label: "EC2 accelerated computing instance types"
@@ -43,7 +47,7 @@ On Bedrock, Azure and Gemini, the on-demand option is per-token billing with rat
 
 ### GPU virtual machines
 
-- **Azure:** every subscription starts with zero vCPU quota for GPU VM series per region. You must request an increase before you can create an ND or NC machine. Microsoft says net new capacity for the NC A100 v4 series is only going to NCads H100 v5, so check which sizes are still being sold.
+- **Azure:** GPU VM families such as NC_A100_v4 and NDv2 start with a default of zero cores, and quota is set per VM family and region, so request an increase before you create an ND or NC machine. Quota is a credit limit, not a capacity guarantee. As of October 2026, Microsoft's NC A100 v4 page says it is only deploying net new capacity for the NCads H100 v5 series, so check which sizes are still being added.
 - **Google Cloud:** A3 Ultra (H200) and A4 (B200) cannot be provisioned as ordinary on-demand VMs. They need a capacity reservation, Spot, or Flex-start. Older types such as A3 Mega and A2 may be easier to obtain, but check per zone.
 - **AWS:** **EC2 Capacity Blocks for ML** let you reserve GPU instances for a defined time window. P6-B200 instances were launched through Capacity Blocks. P5 and P6 families are also available through other purchase options, so check the instance page.
 

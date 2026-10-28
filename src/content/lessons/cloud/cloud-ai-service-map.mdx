@@ -4,7 +4,7 @@ track: cloud
 level: basic
 order: 1
 summary: The same dozen jobs exist on every major cloud under different names. Learn to translate between them, and which 2026 renames to expect.
-updated: 2026-10-26
+updated: 2026-10-28
 sources:
   - label: "Amazon Bedrock or Amazon SageMaker AI? (AWS decision guide)"
     url: https://docs.aws.amazon.com/decision-guides/latest/decision-guides/bedrock-or-sagemaker.html
@@ -14,6 +14,14 @@ sources:
     url: https://learn.microsoft.com/en-us/azure/foundry/foundry-models/concepts/deployment-types
   - label: "Gemini Enterprise Agent Platform overview"
     url: https://docs.cloud.google.com/gemini-enterprise-agent-platform/overview
+  - label: "Gemini Enterprise Agent Platform name changes (Google Cloud docs)"
+    url: https://docs.cloud.google.com/gemini-enterprise-agent-platform/vertex-ai-name-changes
+  - label: "Introducing Gemini Enterprise Agent Platform (Google Cloud blog, 22 April 2026)"
+    url: https://cloud.google.com/blog/products/ai-machine-learning/introducing-gemini-enterprise-agent-platform
+  - label: "Amazon Bedrock AgentCore is now generally available (AWS, 13 October 2025)"
+    url: https://aws.amazon.com/about-aws/whats-new/2025/10/amazon-bedrock-agentcore-available/
+  - label: "What is Microsoft Foundry Agent Service?"
+    url: https://learn.microsoft.com/en-us/azure/foundry/agents/overview
 ---
 
 import Callout from '../../../components/ui/Callout.astro';
@@ -55,14 +63,14 @@ As of October 2026:
 |---|---|---|---|
 | Managed model API | Amazon Bedrock | Foundry Models in Microsoft Foundry, which includes Azure OpenAI models | Gemini and Model Garden models on Vertex AI, now part of the Gemini Enterprise Agent Platform |
 | ML platform | Amazon SageMaker AI | Azure Machine Learning | Vertex AI training and prediction, same platform |
-| Agent runtime | Bedrock AgentCore Runtime | Agent features in Microsoft Foundry (check the docs for the current service name) | Agent Runtime, built with the Agent Development Kit (ADK) |
+| Agent runtime | Bedrock AgentCore Runtime | Foundry Agent Service in Microsoft Foundry | Agent Runtime, often built with the Agent Development Kit (ADK) |
 
 <Callout title="2026 renames to know" kind="note">
 **Microsoft:** "Azure AI Foundry" is now **Microsoft Foundry**. "Foundry Models" is the term for models sold by Azure, including Azure OpenAI models. Older articles, forum answers and some code still use the old names.
 
-**Google:** Vertex AI is being succeeded by the **Gemini Enterprise Agent Platform**, announced on 22 April 2026 at Google Cloud Next. Google says the services did not change, existing customers do not need to migrate, and the `aiplatform.googleapis.com` API name is unchanged. Both names appear in docs and on invoices. Agent Runtime was previously called Agent Engine.
+**Google:** Vertex AI is now part of the **Gemini Enterprise Agent Platform**, introduced on 22 April 2026 at Google Cloud Next. Google lists the renames on a name-changes page: for example Vertex AI Agent Engine became Agent Runtime, and the Vertex AI API is now called the Gemini Enterprise Agent Platform API. Google says Vertex AI services will now be delivered through the new platform rather than as a standalone service. Both names still appear in docs, in older articles and on some invoices. The `aiplatform.googleapis.com` endpoint still appears in Google's own release notes as of October 2026, and the Python SDK has a separate breaking change (2.0.1), so check the notice for each service you use.
 
-**AWS:** Amazon SageMaker is now documented as SageMaker AI, and Bedrock AgentCore became generally available on 20 October 2025.
+**AWS:** Amazon SageMaker is now documented as SageMaker AI, and Bedrock AgentCore became generally available on 13 October 2025.
 </Callout>
 
 ## Where the clouds really differ

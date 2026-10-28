@@ -4,12 +4,14 @@ track: cloud
 level: intermediate
 order: 5
 summary: The SageMaker AI endpoint types, inference components, training jobs and HyperPod, and the criteria AWS gives for choosing Bedrock or SageMaker AI.
-updated: 2026-10-26
+updated: 2026-10-28
 sources:
   - label: "Amazon Bedrock or Amazon SageMaker AI? (AWS decision guide)"
     url: https://docs.aws.amazon.com/decision-guides/latest/decision-guides/bedrock-or-sagemaker.html
   - label: "Amazon SageMaker inference: 2026 year-to-date launches in review"
     url: https://aws.amazon.com/blogs/machine-learning/amazon-sagemaker-inference-2026-year-to-date-launches-in-review/
+  - label: "Deploy models with Amazon SageMaker Serverless Inference (feature exclusions and memory limits)"
+    url: https://docs.aws.amazon.com/sagemaker/latest/dg/serverless-endpoints.html
   - label: "EC2 accelerated computing instance types"
     url: https://docs.aws.amazon.com/ec2/latest/instancetypes/ac.html
 ---
@@ -23,7 +25,7 @@ Bedrock lets you call models someone else hosts. **Amazon SageMaker AI** (former
 
 ## Ways to host a model
 
-SageMaker AI offers several inference options. The four below are the stable core as of October 2026.
+SageMaker AI offers several inference options. The four below are the stable core as of October 2026. Serverless endpoints scale to zero but, per the docs, do not support GPUs and top out at 6 GB of memory.
 
 <EndpointShapes client:visible />
 
