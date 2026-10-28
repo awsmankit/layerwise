@@ -6,6 +6,8 @@
  *
  * Adding an NVIDIA part here also adds it to the Rack and Stack game, which needs an
  * example price for every NVIDIA entry (see examplePrice in src/games/rackstack.ts).
+ * A part with `game: false` stays out of the game, so it needs no invented price.
+ * Whole machines (DGX, HGX, NVL72 racks) are in src/data/systems.ts.
  */
 
 /** The date the figures were last read from the vendor's own pages. */
@@ -26,6 +28,8 @@ export type Gpu = {
   clouds: string;
   approx: boolean;
   note?: string;
+  /** Set to false to leave this part out of the Rack and Stack game. */
+  game?: false;
 };
 
 export const gpus: Gpu[] = [
@@ -38,6 +42,8 @@ export const gpus: Gpu[] = [
   { id: 'h100', name: 'NVIDIA H100 80 GB', vendor: 'NVIDIA', memGB: 80, bwGBs: 3350, memType: 'HBM3', link: 'NVLink + NVSwitch', clouds: 'AWS P5, Azure ND H100 v5, Google A3', approx: false },
   { id: 'h200', name: 'NVIDIA H200 141 GB', vendor: 'NVIDIA', memGB: 141, bwGBs: 4800, memType: 'HBM3e', link: 'NVLink + NVSwitch', clouds: 'AWS P5e/P5en, Azure ND H200 v5, Google A3 Ultra', approx: false },
   { id: 'b200', name: 'NVIDIA B200', vendor: 'NVIDIA', memGB: 180, bwGBs: 8000, memType: 'HBM3e', link: 'NVLink 5 + NVSwitch', clouds: 'AWS P6-B200, Google A4', approx: false, note: 'Sources quote 180 GB (what an 8-GPU DGX B200 exposes per GPU) and 192 GB (the full-die figure).' },
+  { id: 'b300', name: 'NVIDIA B300 (Blackwell Ultra)', vendor: 'NVIDIA', memGB: 288, bwGBs: 8000, memType: 'HBM3E', link: 'NVLink 5 + NVSwitch', clouds: 'AWS P6-B300 (listed in the EC2 docs)', approx: true, game: false, note: 'NVIDIA’s technical blog gives up to 288 GB and 8 TB/s per Blackwell Ultra GPU and says capacity varies by SKU. NVIDIA’s DGX B300 and HGX B300 pages list 2.1 TB across 8 GPUs, which is 262.5 GB each, so check the figure for the system you will use.' },
+  { id: 'gb200', name: 'NVIDIA GB200 (Blackwell GPU in the superchip)', vendor: 'NVIDIA', memGB: 186, bwGBs: 8000, memType: 'HBM3E', link: 'NVLink 5 (72-GPU NVLink domain in NVL72)', clouds: 'AWS P6e-GB200, Azure ND GB200 v6, Google A4X', approx: false, game: false, note: 'Per GPU by division from NVIDIA’s GB200 NVL72 page: one superchip has 2 Blackwell GPUs and 372 GB HBM3E at 16 TB/s, so 186 GB and 8 TB/s each. The rack total, 13.4 TB across 72 GPUs, gives the same 186 GB.' },
   { id: 'mi300x', name: 'AMD MI300X', vendor: 'AMD', memGB: 192, bwGBs: 5300, memType: 'HBM3', link: 'Infinity Fabric', clouds: 'Azure ND MI300X v5', approx: true },
   { id: 'mi325x', name: 'AMD MI325X', vendor: 'AMD', memGB: 256, bwGBs: 6000, memType: 'HBM3E', link: 'Infinity Fabric', clouds: 'No AWS, Azure or Google VM verified: check your provider', approx: false, note: 'AMD lists 256 GB and 6 TB/s peak for the OAM accelerator.' },
   { id: 'mi355x', name: 'AMD MI355X', vendor: 'AMD', memGB: 288, bwGBs: 8000, memType: 'HBM3E', link: 'Infinity Fabric', clouds: 'No AWS, Azure or Google VM verified: check your provider', approx: false, note: 'AMD lists 288 GB and 8 TB/s peak for the OAM accelerator.' },

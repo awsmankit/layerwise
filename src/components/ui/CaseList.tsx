@@ -149,12 +149,21 @@ export default function CaseList() {
                   <span className="sr-only"> (opens {c.company}&rsquo;s site in a new tab)</span>
                 </a>
               </h3>
-              <p>{c.learn}</p>
+              {c.linkOnly ? (
+                <p style={{ opacity: 0.8, fontStyle: 'italic' }}>We could not read this page automatically, so there is no summary. Open it to read the original.</p>
+              ) : (
+                <p>{c.learn}</p>
+              )}
             </span>
             <span style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem 1rem', alignItems: 'center', marginTop: 'auto' }}>
               <span className="lp-chip" style={{ marginTop: 0 }}>
                 <Glyph name={glyphs[c.topic]} size={14} /> {topicLabels[c.topic]}
               </span>
+              {c.linkOnly && (
+                <span className="lp-chip" style={{ marginTop: 0, borderStyle: 'dashed' }}>
+                  Link only
+                </span>
+              )}
               {c.lesson && (
                 <a href={withBase(`/learn/${c.lesson}/`)} style={{ color: 'inherit', fontFamily: 'var(--font-display)', fontWeight: 650, fontSize: '0.9rem' }}>
                   Background lesson

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { gpus, gpuById } from '../data/gpus';
+import { rackGpus, examplePrice } from '../games/rackstack';
 import { estimate, usableGB, PARALLEL_EFFICIENCY } from './gpu';
 
 const h100 = gpuById('h100');
@@ -32,6 +33,26 @@ describe('gpu data', () => {
     // the Trn2 instance page lists 1.5 TB and 46 TB/s across 16 chips
     expect(gpuById('trainium2').memGB * 16).toBeCloseTo(1536, -1);
     expect(gpuById('trainium2').bwGBs * 16).toBeCloseTo(46400, -3);
+  });
+
+  it('keeps the Blackwell figures NVIDIA states, or that follow from its totals by division', () => {
+    // GB200: a superchip has 2 GPUs and 372 GB at 16 TB/s; the NVL72 rack has 72 GPUs, 13.4 TB and 576 TB/s
+    expect(gpuById('gb200')).toMatchObject({ memGB: 186, bwGBs: 8000 });
+    expect(gpuById('gb200').memGB * 2).toBe(372);
+    expect(gpuById('gb200').memGB * 72).toBeCloseTo(13400, -2);
+    expect(gpuById('gb200').bwGBs * 72).toBe(576000);
+    // B300: NVIDIA's technical blog gives 288 GB and 8 TB/s per GPU
+    expect(gpuById('b300')).toMatchObject({ memGB: 288, bwGBs: 8000, approx: true });
+    expect(gpuById('b300').memGB).toBeGreaterThan(gpuById('b200').memGB);
+  });
+
+  it('leaves parts flagged game: false out of Rack and Stack, so they need no example price', () => {
+    for (const id of ['b300', 'gb200']) {
+      expect(gpuById(id).game, id).toBe(false);
+      expect(rackGpus.some((g) => g.id === id), id).toBe(false);
+      expect(examplePrice[id], id).toBeUndefined();
+    }
+    expect(rackGpus.some((g) => g.id === 'b200')).toBe(true);
   });
 
   it('MI355X has more memory and bandwidth than MI325X, which beats MI300X', () => {

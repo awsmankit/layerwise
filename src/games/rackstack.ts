@@ -162,7 +162,7 @@ export function evaluate(s: RackScenario, p: Pick): Result {
 }
 
 /** The accelerators this game offers. */
-export const rackGpus: Gpu[] = gpus.filter((g) => g.vendor === 'NVIDIA');
+export const rackGpus: Gpu[] = gpus.filter((g) => g.vendor === 'NVIDIA' && g.game !== false);
 
 export function allPicks(): Pick[] {
   const out: Pick[] = [];

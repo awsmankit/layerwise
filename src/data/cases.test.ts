@@ -5,9 +5,12 @@ import { cases, casesChecked, topicLabels, type CaseTopic } from './cases';
 
 const topics = Object.keys(topicLabels) as CaseTopic[];
 
+const read = cases.filter((c) => !c.linkOnly);
+const linkOnly = cases.filter((c) => c.linkOnly);
+
 describe('case studies', () => {
   it('has a spread of entries across companies and topics', () => {
-    expect(cases.length).toBeGreaterThanOrEqual(25);
+    expect(read.length).toBeGreaterThanOrEqual(25);
     expect(new Set(cases.map((c) => c.company)).size).toBeGreaterThanOrEqual(6);
     for (const t of topics) expect(cases.filter((c) => c.topic === t).length, t).toBeGreaterThanOrEqual(2);
   });
@@ -18,12 +21,23 @@ describe('case studies', () => {
     expect(new Set(urls).size).toBe(urls.length);
   });
 
-  it('uses valid topics and short factual lines', () => {
+  it('uses valid topics and short factual lines on entries we read', () => {
     for (const c of cases) {
       expect(topics, c.title).toContain(c.topic);
-      expect(c.learn.length, c.title).toBeLessThan(160);
-      expect(c.learn.length, c.title).toBeGreaterThan(30);
       expect(c.title.length, c.url).toBeGreaterThan(5);
+    }
+    for (const c of read) {
+      expect(c.learn, c.title).toBeTruthy();
+      expect(c.learn!.length, c.title).toBeLessThan(160);
+      expect(c.learn!.length, c.title).toBeGreaterThan(30);
+    }
+  });
+
+  it('keeps link-only entries to a title and a link, with no claim about the page', () => {
+    expect(linkOnly.length).toBeGreaterThan(0);
+    for (const c of linkOnly) {
+      expect(c.learn, c.title).toBeUndefined();
+      expect(c.lesson, c.title).toBeUndefined();
     }
   });
 

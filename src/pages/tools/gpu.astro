@@ -1,13 +1,27 @@
 ---
 import ToolPage from '../../layouts/ToolPage.astro';
 import GpuExplorer from '../../components/viz/GpuExplorer.tsx';
+import SystemsTable from '../../components/viz/SystemsTable.tsx';
+import { gpusChecked } from '../../data/gpus';
 import { withBase } from '../../lib/url';
 ---
 
 <ToolPage figure="cabinet" title="GPU explorer" lede="Pick a model and see which accelerators can hold it, how many users fit, and how fast each can decode.">
   <GpuExplorer client:load />
+
+  <section aria-labelledby="machines-h" style="margin-top:clamp(2.5rem,6vw,4rem)">
+    <h2 id="machines-h" style="margin-bottom:0.8rem">Whole machines: DGX and racks</h2>
+    <p style="max-width:62ch;color:var(--ink-3)">
+      A DGX is NVIDIA’s name for a complete system built around its GPUs: a desktop box, an eight-GPU server, or a rack of 72 GPUs that behaves like one machine. The table above is about single GPUs. These cards show the total memory of a whole machine, and each links to NVIDIA’s own page.
+    </p>
+    <p style="max-width:62ch;color:var(--ink-3);margin-bottom:1.4rem">
+      <strong>Total memory is not one GPU’s memory.</strong> A model larger than one GPU has to be split across several, and the links between them decide how fast it runs. A rack with 20 TB of GPU memory does not hold a 20 TB model at full speed. See <a href={withBase('/learn/infra/multi-gpu-parallelism-and-interconnect/')}>Splitting a model across GPUs</a>.
+    </p>
+    <SystemsTable client:visible />
+  </section>
+
   <Fragment slot="notes">
-    <p class="gm-note"><strong>Specs checked October 2026.</strong> Figures are rounded vendor numbers; ones marked with a tilde were not re-verified. The table includes AMD MI325X and MI355X, Google TPU v6e and AWS Trainium2. Newer NVIDIA parts such as Blackwell Ultra are covered in the lessons but not yet in this table. Always check the current datasheet before you buy.</p>
+    <p class="gm-note"><strong>Specs checked {gpusChecked}.</strong> Figures are rounded vendor numbers; ones marked with a tilde were not re-verified. The table covers NVIDIA parts up to Blackwell Ultra (B300) and the GB200, plus AMD MI325X and MI355X, Google TPU v6e and AWS Trainium2. B300 and GB200 are in this table but not in the Rack and Stack game, which needs an example price for each part. GB300 and Rubin are not listed as single GPUs because NVIDIA’s own pages give figures that differ by system; the cards below link to NVIDIA’s page for each machine. Always check the current datasheet before you buy.</p>
     <h2>How to read it</h2>
     <p>Memory decides <strong>whether</strong> a model runs: the weights plus every user’s KV cache must fit. Memory bandwidth decides <strong>how fast</strong>, because each generated token reads all of it. That is why the high-bandwidth data-centre parts are several times quicker than cheaper cards that hold the same model.</p>
     <p>Background: <a href={withBase('/learn/infra/gpu-basics/')}>What a GPU is</a>, <a href={withBase('/learn/infra/reading-a-gpu-spec-sheet/')}>Reading a GPU spec sheet</a> and <a href={withBase('/learn/serving/kv-cache-and-memory/')}>KV cache and memory</a>.</p>

@@ -3,6 +3,8 @@
 //
 // Some sites refuse automated requests (403, 406, 429) even though the page opens
 // fine in a browser. Those are listed apart, to check by hand, not counted as broken.
+// Entries marked `linkOnly` in cases.ts are the ones known to refuse automated reading;
+// they are checked here like the rest, and a 403 on them is expected.
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';

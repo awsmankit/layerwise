@@ -1,8 +1,11 @@
 /**
  * "How big companies build it": other organisations' own engineering write-ups.
- * Every entry was opened and read on casesChecked. The one-line `learn` is taken
+ * Most entries were opened and read on casesChecked. The one-line `learn` is taken
  * from what the page itself states; the numbers are the company's own claims,
- * measured on its own workloads. Run `npm run check-links` to see which links
+ * measured on its own workloads. Entries marked `linkOnly` are posts whose sites
+ * refuse automated reading (HTTP 403 behind an anti-bot wall): the title and link
+ * were confirmed from search results on casesChecked, but we could not read the
+ * page, so they carry no summary. Run `npm run check-links` to see which links
  * have moved.
  */
 export type CaseTopic = 'rag' | 'agents' | 'serving' | 'evals' | 'platform' | 'cost' | 'safety' | 'search';
@@ -14,13 +17,15 @@ export type Case = {
   topic: CaseTopic;
   /** Published date shown on the page, as YYYY-MM-DD. Left out when the page shows none. */
   date?: string;
-  /** One factual sentence from the page, under 160 characters. */
-  learn: string;
+  /** One factual sentence from the page, under 160 characters. Absent on link-only entries. */
+  learn?: string;
+  /** True when the page could not be read automatically: shown with its title and link only. */
+  linkOnly?: true;
   /** A lesson here that teaches the background. */
   lesson?: string;
 };
 
-export const casesChecked = '2026-10-27';
+export const casesChecked = '2026-10-28';
 
 export const topicLabels: Record<CaseTopic, string> = {
   rag: 'Retrieval and RAG',
@@ -387,5 +392,72 @@ export const cases: Case[] = [
     date: '2025-11-21',
     learn: 'Caching handles most traffic, so only 2% of queries need real-time inference; merging LoRA adapters and H100s cut latency from about 700 to 300 ms.',
     lesson: 'cost/cost-levers',
+  },
+
+  // ---- link only: the site refuses automated reading, so no summary ----
+  {
+    company: 'OpenAI',
+    title: 'Scaling PostgreSQL to power 800 million ChatGPT users',
+    url: 'https://openai.com/index/scaling-postgresql/',
+    topic: 'platform',
+    date: '2026-01-22',
+    linkOnly: true,
+  },
+  {
+    company: 'Netflix',
+    title: 'Foundation Model for Personalized Recommendation',
+    url: 'https://netflixtechblog.com/foundation-model-for-personalized-recommendation-1a0bd8e02d39',
+    topic: 'search',
+    date: '2025-03-21',
+    linkOnly: true,
+  },
+  {
+    company: 'Netflix',
+    title: 'Integrating Netflix’s Foundation Model into Personalization applications',
+    url: 'https://netflixtechblog.com/integrating-netflixs-foundation-model-into-personalization-applications-cf176b5860eb',
+    topic: 'search',
+    linkOnly: true,
+  },
+  {
+    company: 'Pinterest',
+    title: 'How we built Text-to-SQL at Pinterest',
+    url: 'https://medium.com/pinterest-engineering/how-we-built-text-to-sql-at-pinterest-30bad30dabff',
+    topic: 'rag',
+    linkOnly: true,
+  },
+  {
+    company: 'Airbnb',
+    title: 'Automation Platform v2: Improving conversational AI at Airbnb',
+    url: 'https://medium.com/airbnb-engineering/automation-platform-v2-improving-conversational-ai-at-airbnb-d86c9386e0cb',
+    topic: 'agents',
+    linkOnly: true,
+  },
+  {
+    company: 'DoorDash',
+    title: 'Path to high-quality LLM-based Dasher support automation',
+    url: 'https://careersatdoordash.com/blog/large-language-modules-based-dasher-support-automation/',
+    topic: 'rag',
+    linkOnly: true,
+  },
+  {
+    company: 'DoorDash',
+    title: 'A Simulation and Evaluation Flywheel to Develop LLM Chatbots',
+    url: 'https://careersatdoordash.com/blog/doordash-simulation-evaluation-flywheel-to-develop-llm-chatbots-at-scale/',
+    topic: 'evals',
+    linkOnly: true,
+  },
+  {
+    company: 'DoorDash',
+    title: 'LLM-as-a-Judge: Evaluating natural language search',
+    url: 'https://careersatdoordash.com/blog/doordash-llm-as-a-judge-evaluating-natural-language-search/',
+    topic: 'evals',
+    linkOnly: true,
+  },
+  {
+    company: 'Etsy',
+    title: 'How Etsy Uses LLMs to Improve Search Relevance',
+    url: 'https://www.etsy.com/codeascraft/how-etsy-uses-llms-to-improve-search-relevance',
+    topic: 'search',
+    linkOnly: true,
   },
 ];

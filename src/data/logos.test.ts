@@ -7,7 +7,7 @@ describe('company marks', () => {
     const companies = new Set(cases.map((c) => c.company));
     for (const [name, path] of Object.entries(logos)) {
       expect(companies.has(name), name).toBe(true);
-      expect(path.startsWith('M')).toBe(true);
+      expect(/^[Mm]/.test(path)).toBe(true);
     }
   });
 
