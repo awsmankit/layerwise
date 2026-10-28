@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { decodeSnapshot, encodeSnapshot, mergeSnapshots } from './transfer';
+import { decodeSnapshot, encodeSnapshot, mergeSnapshots, perItemKeys } from './transfer';
 
 const snap = {
   site: 'Layerwise',
@@ -37,5 +37,15 @@ describe('moving progress between browsers', () => {
     expect(m['layerwise:games']).toEqual({ blueprint: { best: 90, plays: 5 }, 'cost-crunch': { best: 40, plays: 1 } });
     expect(m['layerwise:path']).toBe('infra'); // a setting already chosen here wins
     expect(m['layerwise:theme']).toBe('dark'); // one not chosen here is taken
+  });
+});
+
+describe('per-lab and per-project keys', () => {
+  const fake = (keys: string[]) => ({ length: keys.length, key: (i: number) => keys[i] ?? null });
+  const keys = ['layerwise:done', 'layerwise:lab-code:cosine-search', 'layerwise:project:rag-notes', 'unrelated'];
+
+  it('lists project ticks always and lab code only on request', () => {
+    expect(perItemKeys(fake(keys), true)).toEqual(['layerwise:lab-code:cosine-search', 'layerwise:project:rag-notes']);
+    expect(perItemKeys(fake(keys), false)).toEqual(['layerwise:project:rag-notes']);
   });
 });

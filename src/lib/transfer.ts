@@ -70,3 +70,18 @@ export function mergeSnapshots(local: Snapshot, incoming: Snapshot): Snapshot {
   }
   return out;
 }
+
+/**
+ * Keys a learner creates per lab or project: the code they wrote in a lab and the
+ * ticks on a project checklist. They go in the downloaded file, but not in a restore
+ * link, because the code of thirteen labs would make the link far too long.
+ */
+export function perItemKeys(storage: Pick<Storage, 'length' | 'key'>, withCode: boolean): string[] {
+  const out: string[] = [];
+  for (let i = 0; i < storage.length; i++) {
+    const k = storage.key(i);
+    if (!k) continue;
+    if (k.startsWith('layerwise:project:') || (withCode && k.startsWith('layerwise:lab-code:'))) out.push(k);
+  }
+  return out;
+}

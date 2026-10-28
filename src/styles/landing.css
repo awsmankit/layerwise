@@ -309,7 +309,6 @@
   font-size: 0.95rem;
   line-height: 1.4;
   color: var(--on);
-  opacity: 0.92;
 }
 .lp-chip {
   align-self: flex-start;

@@ -63,6 +63,11 @@
   outline-offset: 3px;
   border-radius: 4px;
 }
+.foot-base a,
+.foot-privacy a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 .foot-base {
   display: flex;
   flex-wrap: wrap;

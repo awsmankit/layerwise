@@ -453,6 +453,9 @@ select option {
 }
 .viz button {
   font-family: inherit;
+}
+/* a plain button inherits its colour; a .btn keeps the colour its own rule gives it */
+.viz button:not(.btn) {
   color: inherit;
 }
 .viz-controls {
@@ -549,11 +552,34 @@ select option {
   /* dual-theme output from Shiki: pick the variable that matches the scheme */
   color: var(--shiki-light);
 }
+/* four of the light theme's colours fall below 4.5:1 on the code background, so darken them */
+.astro-code span[style*='#D73A49'] {
+  color: #b31d28 !important;
+}
+.astro-code span[style*='#E36209'] {
+  color: #a84300 !important;
+}
+.astro-code span[style*='#6A737D'] {
+  color: #57606a !important;
+}
+.astro-code span[style*='#22863A'] {
+  color: #1a7430 !important;
+}
+/* the dark theme's grey for comments is too dim on the code background */
+.astro-code span[style*='--shiki-dark:#6A737D'] {
+  --shiki-dark: #9ba3ab !important;
+}
+/* dark: the inline colour is the light theme's, so use Shiki's dark variable, whether the
+   dark scheme comes from the system or from the theme toggle */
 @media (prefers-color-scheme: dark) {
-  .astro-code,
-  .astro-code span {
-    color: var(--shiki-dark);
+  :root:not([data-theme='light']) .astro-code,
+  :root:not([data-theme='light']) .astro-code span {
+    color: var(--shiki-dark) !important;
   }
+}
+:root[data-theme='dark'] .astro-code,
+:root[data-theme='dark'] .astro-code span {
+  color: var(--shiki-dark) !important;
 }
 .prose blockquote {
   margin-inline: 0;

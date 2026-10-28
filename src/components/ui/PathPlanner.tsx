@@ -176,7 +176,7 @@ export default function PathPlanner({ lessons }: { lessons: LessonInfo }) {
             <AnimatePresence mode="wait">
               {!finished ? (
                 <motion.div key={`q${i}`} initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.25, ease: EASE }}>
-                  <div className="pp-dots" aria-label={`Question ${i + 1} of ${placement.length}`}>
+                  <div className="pp-dots" role="img" aria-label={`Question ${i + 1} of ${placement.length}`}>
                     {placement.map((_, k) => (
                       <i key={k} className={k < i ? 'done' : k === i ? 'now' : ''} />
                     ))}

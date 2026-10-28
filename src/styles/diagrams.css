@@ -108,7 +108,7 @@
   max-height: 22rem;
   overflow-y: auto;
   background: var(--night);
-  color: var(--paper);
+  color: #f6f3ff;
   border-radius: var(--r-sm);
   font-family: var(--font-mono);
   font-size: 0.85rem;
@@ -119,18 +119,18 @@
   margin: 0;
 }
 .cs-in {
-  color: var(--paper);
+  color: #f6f3ff;
 }
 .cs-out {
-  color: var(--sun);
+  color: #ffc233;
 }
 .cs-note {
-  color: var(--tint-sky);
+  color: #b9dcff;
   font-style: italic;
   margin-bottom: 0.4rem;
 }
 .cs-prompt {
-  color: var(--tint-mint);
+  color: #bff0df;
 }
 .cs-form {
   display: flex;
@@ -172,7 +172,7 @@
   padding: 0.8rem 1rem;
   min-height: 4rem;
   background: var(--night);
-  color: var(--paper);
+  color: #f6f3ff;
   border-radius: var(--r-sm);
   font-family: var(--font-mono);
   font-size: 0.85rem;

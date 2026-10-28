@@ -54,3 +54,19 @@ Lessons changed carry `updated: 2026-10-28`.
 - rag-agents/mcp-in-depth: the build-server link now lives under /docs/2026-07-28/ (still resolves).
 - rag-agents/agents-and-tool-use: the root modelcontextprotocol.io source redirects to the current docs intro (kept as is, it resolves).
 - start/what-is-ai-in-plain-english: the checker reports the Google Machine Learning Crash Course as "moved" only because Google appends a locale (?hl=); the original URL resolves, so it was kept.
+
+## OWASP reconciliation (2026-10-28)
+
+Two earlier checks disagreed about the OWASP LLM Top 10 2026. Reconciled against OWASP's own pages and repository (`GenAI-Security-Project/GenAI-LLM-Top10`, folder `2026/final`).
+
+Established:
+- The edition exists and is titled "OWASP GenAI LLM Top 10 2026"; OWASP's resource page shows the date "August 3, 2026" and says it "introduces updated rankings, expanded threat coverage" (https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/).
+- The repository's `2026/final` folder has LLM01 to LLM10 with exactly the names in the lesson's table: Prompt Injection, Sensitive Information Disclosure, Excessive Agency, Supply Chain, Data and Model Poisoning, Unbounded Consumption, Misinformation, Hidden Context Exposure, Vector and Embedding Weaknesses, Improper Output Handling.
+- OWASP's rank chart in the same repository (`2026/final/report/images/OWASP LLM Top10 2025-2026 Bump Chart.png`) shows the 2025 order (LLM07 System Prompt Leakage, LLM05 Improper Output Handling, LLM06 Excessive Agency, LLM10 Unbounded Consumption, LLM09 Misinformation) and marks "System Prompt Leakage (2025) evolves into Hidden Context Exposure (2026)" as renamed / re-scoped. The preface text confirms Excessive Agency "climbed to third" and Unbounded Consumption "rose four places", and that the vote carries three quarters of the weight and incident data one quarter.
+- The Top 10 for Agentic Applications for 2026 is dated "December 9, 2025" on OWASP's page.
+- "Insecure Output Handling" is the 2023/24 name (LLM02 in the 2023/24 list, on OWASP's 2023-24 page).
+
+Result: the first helper's claims were right, and the cloud helper's trimmed news note was more cautious than the evidence requires. Changes made:
+- `evals/llm-security.mdx`: edition title and date (3 August 2026); LLM08 and LLM10 notes now say which list used the old names; added the rank moves from OWASP's chart; agentic list dated 9 December 2025; the quoted "require human approval for high-risk actions" was not OWASP's 2026 wording, so it now cites LLM03:2026 "Require user approval"; added the preface as a source.
+- `pulse/owasp-llm-top-10-2026.md`: restored the specifics OWASP's chart and preface support (rank moves, rename, vote and incident-data weighting) and the 2025-to-2026 ID change example.
+- No quiz, takeaway or interview text names an OWASP item or rank (grepped `src/data/extras`, `lesson-extras.ts` and `src/data/interview`), so none changed.

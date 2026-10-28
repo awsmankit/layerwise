@@ -685,4 +685,87 @@ export const questionsPlatform: Question[] = [
     ],
     lessons: ['evals/evals-101', 'evals/llm-as-judge-pitfalls', 'evals/llmops-in-production'],
   },
+  {
+    id: 'choosing-an-ai-library-without-lock-in',
+    prompt:
+      'Your team wants to adopt an agent framework for a support assistant that makes three model calls and one tool call. How do you decide whether to use a framework at all, how do you compare candidates, and how do you avoid over-committing to one?',
+    roles: ['ai-eng', 'ml-platform'],
+    level: 'mid',
+    kind: 'design',
+    topics: ['frameworks', 'libraries', 'maintenance', 'licensing'],
+    minutes: 12,
+    strong: [
+      'Starts from the job: does the team have this problem today? Three model calls and one tool need a function or a short loop, not a framework. Plain code costs writing and testing the loop, which for one model, a few tools and a clear flow is often the cheaper side.',
+      'Checks maintenance from the repository, not star counts: the latest release and last push, whether recent issues get replies, and an “archived” notice. Gives a real example, such as AutoGen’s README saying it is archived with Microsoft Agent Framework as the successor, or Text Generation Inference in maintenance mode pointing to vLLM and SGLang.',
+      'Asks how much it hides: built-in prompts, retries and parsing are still the app’s behaviour. Can they be seen and changed? An error three layers deep is harder to debug than a short loop you wrote.',
+      'Asks “can I leave?”: keeps the library at the edge of the code. If rewriting to plain calls would take a day, the risk is low; a month means lock-in. Checks the escape hatch: can the provider SDK still be called directly, and does the library own the data model?',
+      'Reads the LICENSE file, not the badge. Some projects keep directories under a separate enterprise licence, and some use source-available terms such as the Elastic License 2.0 rather than an OSI-approved licence. That decides whether it can be used for this case.',
+      'Checks what data is sent out (telemetry on by default), that the docs match the installed major version, and that the install command comes from the project’s own docs, not a script nobody read.',
+      'Tries the smallest candidate for an afternoon before committing, pins the version, and plans upgrades from the project’s release policy.',
+      'Treats any statement about a project’s status as dated and re-checks it, because names, owners and repositories change.',
+    ],
+    followUps: [
+      {
+        q: 'The prototype already uses the framework heavily. What would have made leaving a one-day job?',
+        lookFor: 'Own thin interfaces around it, the team’s own message and tool types, prompts kept in versioned files rather than framework templates, and evals that run at the app boundary so a rewrite can be checked against the same cases.',
+      },
+      {
+        q: 'You find that a library you depend on has been archived. What do you do?',
+        lookFor: 'Looks for the named successor and migration notes, checks which parts of the library the app actually uses, pins the current version, and plans the move instead of rushing. Re-runs the evals after any change.',
+      },
+      {
+        q: 'Legal asks whether you can use an open-source observability tool in a commercial product. How do you answer?',
+        lookFor: 'Reads the actual LICENSE file, separates OSI-approved licences from source-available ones, notes directories under another licence, and takes hosting or resale cases to legal.',
+      },
+    ],
+    redFlags: [
+      'Chooses by star count, a blog post or what is popular this month.',
+      'Adopts a framework for a three-call flow “in case it grows”.',
+      'Has never looked at the library’s default prompts or retry rules.',
+      'Cannot say how long it would take to remove the library.',
+      'Trusts a licence badge, or installs from a script without reading it.',
+    ],
+    lessons: ['rag-agents/choosing-ai-libraries', 'rag-agents/langchain-and-langgraph', 'rag-agents/agents-and-tool-use'],
+  },
+  {
+    id: 'provider-update-regression-communication',
+    prompt:
+      'Tell me about a time an AI feature got worse after a model or prompt change that you did not fully control or did not expect to matter, such as a provider moving a model alias to a new snapshot, or a colleague’s prompt edit. How did you prove what had changed, what did you tell people while you were still finding out, and what did you put in place afterwards?',
+    roles: ['ai-eng', 'ml-platform'],
+    level: 'senior',
+    kind: 'behavioural',
+    topics: ['behavioural', 'llmops', 'incident response', 'communication'],
+    minutes: 12,
+    strong: [
+      'Situation: names the feature, the symptom and the numbers (quality, cost or latency), who noticed it first, and how long it ran before it was caught.',
+      'Proof: compares the version record (model ID or snapshot, prompt, retrieval settings, index, tools) between the good and bad periods, and re-runs the eval set on the old and new configurations. Rules out other causes, such as input drift or a stale index, with evidence.',
+      'Containment first: rolled back the release manifest, re-pinned the previous snapshot or used a kill switch, rather than editing the prompt live. Notes that this only works if the old version is still deployable.',
+      'Communication: told stakeholders early what was known and unknown, how many users were affected, and when the next update would come. Checked the provider’s status and deprecation pages and contacted them if needed. Did not blame people.',
+      'Impact: quantified the affected requests and the metric drop and recovery.',
+      'Prevention: pinned exact model IDs, versioned model, prompt and index together, scheduled evals against the live model, a shadow or canary stage compared with a control group, alerts on quality and cost per version, and a named owner.',
+      'Reflection: held a blameless review, named the gap in their own process, and shows the change was adopted.',
+    ],
+    followUps: [
+      {
+        q: 'How long was it between the change and the detection, and what would have shortened it?',
+        lookFor: 'An honest number, and a specific answer such as scheduled evals on the live model, quality broken down per version, a canary with automatic comparison, or alerts, tied to the failure in the story.',
+      },
+      {
+        q: 'The provider will not roll back, and the old model is being retired. Now what?',
+        lookFor: 'Pins the old model until its retirement date, runs the eval set on the new one, fixes the prompt against a held-out set, considers routing or a fallback model, and tells stakeholders the deadline.',
+      },
+      {
+        q: 'A stakeholder asks whether this can happen again. What do you say?',
+        lookFor: 'Honest about what is now detected and what is not, and about the remaining risk, instead of promising it will not happen.',
+      },
+    ],
+    redFlags: [
+      'Blames the provider or a teammate with no change to their own process.',
+      'Edited the live prompt as the first response, with no versions to compare.',
+      'Cannot say what changed or how they know.',
+      'Gives no numbers for impact.',
+      'Says the lesson was to “be more careful”.',
+    ],
+    lessons: ['evals/llmops-in-production', 'systems/model-routing-and-fallbacks', 'evals/evals-101'],
+  },
 ];

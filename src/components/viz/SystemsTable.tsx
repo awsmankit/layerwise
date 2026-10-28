@@ -82,7 +82,7 @@ export default function SystemsTable() {
                 NVIDIA’s page
                 <span className="sr-only"> for {s.name} (opens in a new tab)</span>
               </a>
-              <span style={{ fontSize: '0.8rem', opacity: 0.85 }}>Read {s.checked}</span>
+              <span style={{ fontSize: '0.8rem' }}>Read {s.checked}</span>
             </span>
           </article>
         ))}

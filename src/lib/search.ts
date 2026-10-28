@@ -3,13 +3,13 @@ export type SearchItem = {
   t: string;
   /** URL, already including the site's base path */
   u: string;
-  /** Kind shown as a badge: Lesson, Game, Tool, Term, Pulse, Page */
+  /** Kind shown as a badge: Lesson, Game, Lab, Tool, Term, Library, Case study, News, Interview, Page */
   k: string;
   /** Short description or definition */
   s: string;
 };
 
-const KIND_BOOST: Record<string, number> = { Lesson: 0.6, Game: 0.5, Tool: 0.4, Term: 0.3, Page: 0.2, Interview: 0.15, News: 0.1 };
+const KIND_BOOST: Record<string, number> = { Lesson: 0.6, Game: 0.5, Lab: 0.45, Tool: 0.4, Term: 0.3, Library: 0.3, Page: 0.2, Interview: 0.15, 'Case study': 0.1, News: 0.1 };
 
 /**
  * Tiny, dependency-free ranking. Title starts and whole-word title matches

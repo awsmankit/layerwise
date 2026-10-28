@@ -150,7 +150,7 @@ export default function CaseList() {
                 </a>
               </h3>
               {c.linkOnly ? (
-                <p style={{ opacity: 0.8, fontStyle: 'italic' }}>We could not read this page automatically, so there is no summary. Open it to read the original.</p>
+                <p style={{ fontStyle: 'italic' }}>We could not read this page automatically, so there is no summary. Open it to read the original.</p>
               ) : (
                 <p>{c.learn}</p>
               )}

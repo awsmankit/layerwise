@@ -4,7 +4,7 @@ import { Root, EASE, useDone } from '../viz/shared';
 import { useStore, KEYS, readStore, type GameScores } from '../../lib/store';
 import { withBase } from '../../lib/url';
 import { shuffle } from '../../lib/interview';
-import { decodeSnapshot, encodeSnapshot, mergeSnapshots, type Snapshot } from '../../lib/transfer';
+import { decodeSnapshot, encodeSnapshot, mergeSnapshots, perItemKeys, type Snapshot } from '../../lib/transfer';
 import type { QuizItem } from '../../data/lesson-extras';
 import { paths, type PathId } from '../../data/paths';
 import { labs } from '../../data/labs';
@@ -69,6 +69,7 @@ export default function ProgressPage({ tracks, quizzes }: { tracks: TrackInfo[];
     const data: Record<string, unknown> = { exportedAt: new Date().toISOString(), site: 'Layerwise' };
     for (const k of ALL_KEYS) data[k] = readStore(k, null);
     data['layerwise:interview'] = readStore('layerwise:interview', null);
+    for (const k of perItemKeys(localStorage, true)) data[k] = readStore(k, null);
     const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
     const a = document.createElement('a');
     a.href = url;
@@ -94,6 +95,7 @@ export default function ProgressPage({ tracks, quizzes }: { tracks: TrackInfo[];
     const data: Snapshot = { exportedAt: new Date().toISOString(), site: 'Layerwise' };
     for (const k of ALL_KEYS) data[k] = readStore(k, null);
     data['layerwise:interview'] = readStore('layerwise:interview', null);
+    for (const k of perItemKeys(localStorage, false)) data[k] = readStore(k, null);
     return data;
   };
   const copyLink = async () => {
@@ -303,7 +305,7 @@ export default function ProgressPage({ tracks, quizzes }: { tracks: TrackInfo[];
 
         <section aria-labelledby="pg-move" className="viz">
           <h2 id="pg-move">Move or share your progress</h2>
-          <p className="gm-note">Progress lives only in this browser. Copy a link or download a file to move it to another device, keep a backup, or send it to a teacher. Nothing is uploaded anywhere.</p>
+          <p className="gm-note">Progress lives only in this browser. Copy a link or download a file to move it to another device, keep a backup, or send it to a teacher. The file also carries the code you wrote in the labs. Nothing is uploaded anywhere.</p>
           {incoming && (
             <div className="gm-note" role="alert" style={{ border: '2px solid var(--signal)', borderRadius: 14, padding: '0.8rem 1rem', margin: '0.8rem 0' }}>
               <p style={{ margin: 0 }}>

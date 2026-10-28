@@ -11,7 +11,13 @@ npm run build      # static site in dist/
 npm run preview    # serve the built site
 npm test           # vitest: game engines, data integrity, lesson guards
 npm run check      # astro check: types
+npm run headlines  # refresh the News headlines from official feeds (also runs daily in CI)
+npm run check-sources    # do every lesson's source link still resolve?
+npm run check-links      # same for the case studies
+npm run check-libraries  # same for the libraries map, and archived repos
 ```
+
+The deploy workflow also runs every morning to refresh the headlines, and a weekly workflow runs the three link checks and opens an issue if any link is broken. Practice labs are tested under real Python (`python3` must be on your path for `npm test`).
 
 Requires Node 22.23 or newer.
 

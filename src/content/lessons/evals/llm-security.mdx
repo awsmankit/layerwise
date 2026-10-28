@@ -10,6 +10,8 @@ sources:
     url: https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/
   - label: "OWASP LLM Top 10 2026, final text of each entry (GitHub)"
     url: https://github.com/GenAI-Security-Project/GenAI-LLM-Top10/tree/main/2026/final
+  - label: "OWASP LLM Top 10 2026 preface and rank changes from 2025 (GitHub)"
+    url: https://github.com/GenAI-Security-Project/GenAI-LLM-Top10/blob/main/2026/final/LLM00_Preface.md
   - label: "OWASP Top 10 for LLM Applications 2025 list"
     url: https://genai.owasp.org/llm-top-10/
   - label: "LLM01:2025 Prompt Injection (OWASP)"
@@ -27,7 +29,7 @@ A language model reads instructions and data in the same stream of tokens. It ha
 
 ## The frame: OWASP Top 10 for LLM Applications
 
-OWASP (the Open Worldwide Application Security Project) publishes a ranked list of risks for applications that use language models. As of October 2026 the current edition is the **2026** list, dated August 2026 on OWASP's site. Some pages and tools still show the 2025 numbering, so check which edition a reference uses.
+OWASP (the Open Worldwide Application Security Project) publishes a ranked list of risks for applications that use language models. As of October 2026 the current edition is the **2026** list, "OWASP GenAI LLM Top 10 2026", dated 3 August 2026 on OWASP's site. Some pages and tools still show the 2025 numbering, so check which edition a reference uses.
 
 | 2026 ID | Risk | In one line |
 |---|---|---|
@@ -38,11 +40,13 @@ OWASP (the Open Worldwide Application Security Project) publishes a ranked list 
 | LLM05 | Data and Model Poisoning | Training, fine-tuning or embedding data is corrupted to change behaviour |
 | LLM06 | Unbounded Consumption | Uncontrolled use causes outages, runaway cost or model cloning |
 | LLM07 | Misinformation | Confident, wrong output that people or systems rely on |
-| LLM08 | Hidden Context Exposure | System prompts, tool schemas and other hidden context are extracted (formerly System Prompt Leakage) |
+| LLM08 | Hidden Context Exposure | System prompts, tool schemas and other hidden context are extracted (System Prompt Leakage in the 2025 list) |
 | LLM09 | Vector and Embedding Weaknesses | Flaws in how vectors are created, stored or retrieved |
-| LLM10 | Improper Output Handling | Model output is passed downstream without validation (once called Insecure Output Handling) |
+| LLM10 | Improper Output Handling | Model output is passed downstream without validation (Insecure Output Handling in the 2023/24 list) |
 
-OWASP draws a line: this list covers the model as a component inside your app. Once the model acts with tools and memory, it points you to the separate **OWASP Top 10 for Agentic Applications**, published in December 2025. Read both if you build agents.
+Compared with 2025, OWASP's own rank chart shows Excessive Agency moving from sixth to third, Unbounded Consumption from tenth to sixth and Misinformation from ninth to seventh, while Improper Output Handling falls from fifth to tenth. Prompt Injection stays first. OWASP marks System Prompt Leakage as renamed and re-scoped into Hidden Context Exposure.
+
+OWASP draws a line: this list covers the model as a component inside your app. Once the model acts with tools and memory, it points you to the separate **OWASP Top 10 for Agentic Applications**, dated 9 December 2025 on OWASP's site. Read both if you build agents.
 
 ## Prompt injection, direct and indirect
 
@@ -85,7 +89,7 @@ So assume injection will sometimes succeed, and ask: **what can the model do onc
 The model sits outside the trust boundary; your orchestrator code sits inside. Controls in code hold even when the model is fooled.
 
 - **Least-privilege tools.** Give each tool the narrowest scope: read-only where possible, one table not the whole database, a fixed recipient list not any address. Run tools with the end user's permissions, not a shared admin account, so the model can never reach data the user could not.
-- **Human confirmation for consequential actions.** Sending money, emailing outside the company, deleting, publishing, changing access. Show the user exactly what will happen and require a click. This is OWASP's "require human approval for high-risk actions".
+- **Human confirmation for consequential actions.** Sending money, emailing outside the company, deleting, publishing, changing access. Show the user exactly what will happen and require a click. OWASP's Excessive Agency entry (LLM03:2026) lists this as "Require user approval": a human approves high-impact actions before they run.
 - **Separate untrusted content.** Mark retrieved text clearly as data. Consider a design where the model that reads untrusted content cannot call action tools, and only passes structured, validated results back.
 - **Excessive agency is a design smell.** If a summariser has a "send email" tool, remove it. Fewer tools means fewer things an injection can trigger.
 

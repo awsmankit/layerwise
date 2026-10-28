@@ -1265,8 +1265,12 @@
   font-size: 0.82rem;
   color: var(--ink-3);
 }
-.gx-row.no {
-  opacity: 0.55;
+.gx-row.no .gx-name b,
+.gx-row.no [role='cell'] {
+  color: var(--ink-3);
+}
+.gx-row.no .gx-name small {
+  color: var(--ink-3);
 }
 .gx-row.best {
   background: color-mix(in srgb, var(--ok) 11%, transparent);

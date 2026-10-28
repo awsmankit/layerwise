@@ -671,4 +671,88 @@ export const questionsFoundations: Question[] = [
     ],
     lessons: ['llm/prompt-patterns-and-optimisation', 'evals/evals-101', 'llm/prompting-and-structured-output'],
   },
+  {
+    id: 'reasoning-model-cost-vs-quality',
+    prompt:
+      'A support bot call has 400 input tokens and a 150-token answer, at $2 per million input tokens and $10 per million output tokens. Turning on a reasoning model’s thinking adds about 600 thinking tokens per call. On 10 test cases (example numbers), the bot solves 5 without thinking and 8 with it. Work out the cost per request and per solved task for each setting. Would you turn thinking on for every request, and how would you decide?',
+    roles: ['ai-eng', 'ml-platform'],
+    level: 'mid',
+    kind: 'estimation',
+    topics: ['reasoning models', 'cost', 'evals', 'latency'],
+    minutes: 12,
+    strong: [
+      'Knows thinking tokens are billed as output tokens, for the full thinking and not the short summary you may be shown, and that they also use space in the context window.',
+      'Computes the request cost: about $0.0023 without thinking (400 × $2 + 150 × $10 per million) and about $0.0083 with 600 thinking tokens, roughly 3.6 times as much.',
+      'Compares cost per solved task, not per request: $0.023 over 10 cases for 5 solved is about $0.0046 each; $0.083 for 8 solved is about $0.0104 each. Thinking costs about twice as much per solved task here and solves three more cases, so whether it is worth it depends on what a wrong answer costs.',
+      'Notes the wait: thinking comes before the answer, so latency rises too, and the output limit must leave room for thinking plus the answer or the response can stop before any visible answer.',
+      'Does not use it for every request: a one-fact lookup or a classification rarely needs it, while multi-step problems, coding and planning might. Routes by difficulty, or uses the provider’s effort setting (OpenAI reasoning.effort, Anthropic effort with adaptive thinking, Google thinking_level) per request.',
+      'Decides with an eval: runs the same cases at two or more effort levels, more than once each because thinking length varies, and compares pass rate, output tokens and time. Treats 5 against 8 on 10 cases as a hint, not proof.',
+      'Reads the thinking-token usage the provider reports on real traffic instead of trusting an estimate, and keeps one effort setting per conversation because changing it can invalidate prompt-cache breakpoints.',
+      'Prompts for the goal, constraints and output format rather than dictating every step, and treats effort as a tuning knob rather than the main way to recover quality.',
+    ],
+    followUps: [
+      {
+        q: 'Ten cases is small. What do you do before changing production?',
+        lookFor: 'Adds cases drawn from real failures, runs each case several times, looks at results by category and on a held-out set, and reports the difference cautiously.',
+      },
+      {
+        q: 'The answer must start within two seconds. How does that change your choice?',
+        lookFor: 'Knows time to the first visible token includes the thinking. Uses low or no thinking for simple requests, sends only the hard ones to a higher effort, and does not cap output so tightly that thinking is cut off.',
+      },
+      {
+        q: 'Finance says the output-token bill tripled, but the dashboard shows only a short thinking summary. How do you explain and track it?',
+        lookFor: 'Explains that providers bill for the full thinking, not the summary. Tracks the reported thinking tokens and cost per solved task per release version, and alerts on them.',
+      },
+    ],
+    redFlags: [
+      'Treats thinking tokens as free, or as input tokens.',
+      'Assumes higher effort is always better.',
+      'Compares only cost per request and ignores how many tasks were solved.',
+      'Sets a small output limit with thinking turned on and does not expect empty answers.',
+      'Writes the numbered steps for the model to follow instead of the goal.',
+    ],
+    lessons: ['llm/reasoning-models', 'cost/where-the-tokens-go', 'evals/evals-101'],
+  },
+  {
+    id: 'eu-ai-act-chatbot-and-hiring-screen',
+    prompt:
+      'Your company is building two products on the same LLM: a customer-service chatbot and a tool that screens job applicants’ CVs. For an engineer, what does the EU AI Act mean for each? Cover how the tiers work, what you must tell users, and what you would build or document. Say what you would leave to a lawyer.',
+    roles: ['ai-eng', 'ml-eng'],
+    level: 'mid',
+    kind: 'concept',
+    topics: ['regulation', 'eu ai act', 'transparency', 'logging'],
+    minutes: 12,
+    strong: [
+      'Says the Act classifies by what an AI system is used for, not by the model underneath: the same model can sit in different tiers. The four tiers are prohibited, high-risk, transparency and minimal.',
+      'Chatbot: it is in the transparency tier. Article 50 asks providers of systems that talk to people to make clear they are dealing with AI, unless that is obvious to a reasonably well-informed person. Article 50 started to apply on 2 August 2026.',
+      'Text the system generates: providers must mark generated output in a machine-readable way, with exceptions, and some systems already on the market before 2 August 2026 have until 2 December 2026. Deployers have disclosure duties for deepfakes and for AI-written text published to inform the public.',
+      'Hiring screen: employment is one of the high-risk areas in Annex III. As of October 2026, after the AI Omnibus (in force 27 July 2026), high-risk rules for Annex III systems apply from 2 December 2027; AI built into regulated products from 2 August 2028. Pushed back, not dropped, and worth checking again.',
+      'Checks the banned practices (Article 5, in force since 2 February 2025) first, and keeps an inventory of every AI system, including bought ones.',
+      'What an engineer builds: Article 12 asks high-risk systems to allow automatic recording of events (logs) over their lifetime. Article 14 asks for effective human oversight: people who can understand, monitor and override the output. Keep evaluation records (test results, datasets, versions) as evidence.',
+      'Knows provider and deployer: building a product on a model and releasing it under your own name makes you the provider of that product. The model vendor has its own duties for the model, but you still classify your system, and you ask suppliers for their documentation.',
+      'Knows fines are “whichever is higher” of an amount or a share of worldwide turnover: up to EUR 35 million or 7% for banned practices, EUR 15 million or 3% for most other duties including Article 50, and EUR 7.5 million or 1% for incorrect information. The lower figure applies to small and medium companies. Says this is general information, not legal advice, and that tier decisions go to a lawyer.',
+    ],
+    followUps: [
+      {
+        q: 'The chatbot calls a third-party model through an API. Whose duties are those?',
+        lookFor: 'The model provider carries the duties for the general-purpose model. The team still classifies and is responsible for its own system, including disclosing that it is AI, and asks the supplier for documentation.',
+      },
+      {
+        q: 'A colleague says high-risk rules do not apply until December 2027, so the hiring tool can wait. What do you say?',
+        lookFor: 'The date is right as of October 2026 but not the whole picture: the bans and AI literacy have applied since February 2025 and Article 50 since August 2026. Logs, oversight and eval records are cheap to build now, and the dates have already changed once, so they are re-checked.',
+      },
+      {
+        q: 'What would you want in place before a recruiter relies on the screen’s ranking?',
+        lookFor: 'Evaluation records on representative data, logs of inputs, versions and outputs, a way for the recruiter to see why and to override, and a named owner. Leaves the formal classification to legal.',
+      },
+    ],
+    redFlags: [
+      'Says the Act depends on the size or technology of the model rather than its use.',
+      'States dates confidently from memory, with no mention that they changed or should be checked.',
+      'Believes the model vendor’s compliance covers the whole product.',
+      'Hides that users are talking to AI, or relies on a line in the terms of service.',
+      'Claims the product is compliant, with no lawyer involved.',
+    ],
+    lessons: ['evals/eu-ai-act-for-engineers', 'evals/llm-security', 'evals/evals-101'],
+  },
 ];
