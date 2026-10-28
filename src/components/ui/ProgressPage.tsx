@@ -1,9 +1,10 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import { Root, EASE, useDone } from '../viz/shared';
 import { useStore, KEYS, readStore, type GameScores } from '../../lib/store';
 import { withBase } from '../../lib/url';
 import { shuffle } from '../../lib/interview';
+import { decodeSnapshot, encodeSnapshot, mergeSnapshots, type Snapshot } from '../../lib/transfer';
 import type { QuizItem } from '../../data/lesson-extras';
 import { paths, type PathId } from '../../data/paths';
 
@@ -24,6 +25,15 @@ export default function ProgressPage({ tracks, quizzes }: { tracks: TrackInfo[];
   const [path] = useStore<PathId | null>(KEYS.path, null);
   const [msg, setMsg] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
+  const [incoming, setIncoming] = useState<Snapshot | null>(null);
+  const [kept, setKept] = useState<boolean | null>(null);
+
+  // a link made on another device carries its progress after the #; offer to add it, never apply it silently
+  useEffect(() => {
+    const m = window.location.hash.match(/^#restore=(.+)$/);
+    if (m) decodeSnapshot(m[1]).then(setIncoming, () => setMsg('That restore link could not be read. Make a new one on the other device.'));
+    navigator.storage?.persisted?.().then(setKept, () => setKept(null));
+  }, []);
 
   const allLessons = tracks.flatMap((t) => t.lessons);
   const total = allLessons.length;
@@ -74,6 +84,43 @@ export default function ProgressPage({ tracks, quizzes }: { tracks: TrackInfo[];
       window.setTimeout(() => window.location.reload(), 600);
     } catch {
       setMsg('That file could not be read. Choose a file exported from this page.');
+    }
+  };
+
+  const snapshot = (): Snapshot => {
+    const data: Snapshot = { exportedAt: new Date().toISOString(), site: 'Layerwise' };
+    for (const k of ALL_KEYS) data[k] = readStore(k, null);
+    data['layerwise:interview'] = readStore('layerwise:interview', null);
+    return data;
+  };
+  const copyLink = async () => {
+    const url = `${window.location.origin}${window.location.pathname}#restore=${await encodeSnapshot(snapshot())}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setMsg('Link copied. Open it on your other device and choose “Add it to this browser”. The link contains your progress, so share it only with yourself or a teacher.');
+    } catch {
+      setMsg('Your browser blocked copying. Use “Download my progress” instead.');
+    }
+  };
+  const applyIncoming = () => {
+    if (!incoming) return;
+    const merged = mergeSnapshots(snapshot(), incoming);
+    for (const [k, v] of Object.entries(merged)) if (k.startsWith('layerwise:') && v !== null) localStorage.setItem(k, JSON.stringify(v));
+    window.history.replaceState(null, '', window.location.pathname);
+    setMsg('Added. Reloading…');
+    window.setTimeout(() => window.location.reload(), 500);
+  };
+  const dismissIncoming = () => {
+    window.history.replaceState(null, '', window.location.pathname);
+    setIncoming(null);
+  };
+  const keepData = async () => {
+    try {
+      const ok = (await navigator.storage?.persist?.()) ?? false;
+      setKept(ok);
+      setMsg(ok ? 'Your browser has agreed to keep your progress.' : 'Your browser declined. Download a backup now and then.');
+    } catch {
+      setMsg('This browser cannot do that. Download a backup now and then.');
     }
   };
 
@@ -235,9 +282,27 @@ export default function ProgressPage({ tracks, quizzes }: { tracks: TrackInfo[];
 
         <section aria-labelledby="pg-move" className="viz">
           <h2 id="pg-move">Move or share your progress</h2>
-          <p className="gm-note">Progress lives only in this browser. Download it to move to another device, keep a backup, or send it to a teacher. Nothing is uploaded anywhere.</p>
+          <p className="gm-note">Progress lives only in this browser. Copy a link or download a file to move it to another device, keep a backup, or send it to a teacher. Nothing is uploaded anywhere.</p>
+          {incoming && (
+            <div className="gm-note" role="alert" style={{ border: '2px solid var(--signal)', borderRadius: 14, padding: '0.8rem 1rem', margin: '0.8rem 0' }}>
+              <p style={{ margin: 0 }}>
+                <b>This link carries progress from another browser</b>: {Array.isArray(incoming['layerwise:done']) ? (incoming['layerwise:done'] as unknown[]).length : 0} lessons done. Adding it keeps everything you have here and takes the best score for each quiz and game.
+              </p>
+              <div className="gm-result-actions" style={{ marginTop: '0.6rem' }}>
+                <button type="button" className="btn" onClick={applyIncoming}>
+                  Add it to this browser
+                </button>
+                <button type="button" className="btn quiet" onClick={dismissIncoming}>
+                  Ignore it
+                </button>
+              </div>
+            </div>
+          )}
           <div className="gm-result-actions">
-            <button type="button" className="btn" onClick={exportData}>
+            <button type="button" className="btn" onClick={copyLink}>
+              Copy a link to my progress
+            </button>
+            <button type="button" className="btn quiet" onClick={exportData}>
               Download my progress
             </button>
             <button type="button" className="btn quiet" onClick={() => fileRef.current?.click()}>
@@ -246,8 +311,14 @@ export default function ProgressPage({ tracks, quizzes }: { tracks: TrackInfo[];
             <button type="button" className="btn quiet" onClick={() => window.print()}>
               Print a summary
             </button>
+            {kept === false && (
+              <button type="button" className="btn quiet" onClick={keepData}>
+                Ask my browser to keep it
+              </button>
+            )}
             <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={(e) => e.target.files?.[0] && importData(e.target.files[0])} />
           </div>
+          {kept === true && <p className="gm-note">Your browser has agreed to keep this data, so it will not be cleared when storage runs low. Clearing site data by hand still removes it.</p>}
           {msg && (
             <p className="gm-note" role="status">
               {msg}

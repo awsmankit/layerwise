@@ -14,10 +14,11 @@ import { cardStyle } from '../lib/color';
 import { swatch, gameSwatch } from '../lib/palette';
 import { cases } from '../data/cases';
 import { watch } from '../data/watch';
-import { getLessons, getPulse, formatDate } from '../lib/content';
+import { getLessons, formatDate } from '../lib/content';
+import headlines from '../data/headlines.json';
 
 const lessons = await getLessons();
-const pulse = (await getPulse()).slice(0, 3);
+const latest = headlines.items.slice(0, 5);
 
 const trackTiles = tracks.map((t) => ({ ...t, count: lessons.filter((l) => l.data.track === t.id).length }));
 
@@ -238,15 +239,21 @@ const tools = [
   <section class="lp-section wrap" aria-labelledby="pulse-h">
     <div class="lp-head">
       <h2 id="pulse-h">News</h2>
-      <p>What changed in the market, and why an engineer should care.</p>
+      <p>The latest from official sources, refreshed daily. <a href={withBase('/pulse/')}>All news</a></p>
     </div>
     <ul class="rows">
       {
-        pulse.map((e) => (
+        latest.map((h) => (
           <li>
-            <a class="row pulse-row" href={withBase(`/pulse/${e.id}/`)}>
-              <span class="meta">{formatDate(e.data.date)}</span>
-              <h3>{e.data.title}</h3>
+            <a class="row pulse-row" href={h.url} target="_blank" rel="noopener noreferrer">
+              <span class="meta">{formatDate(new Date(h.date))}</span>
+              <div>
+                <h3>
+                  {h.title}
+                  <span class="sr-only"> (opens {h.org} in a new tab)</span>
+                </h3>
+                <p class="tags"><span>{h.org}</span></p>
+              </div>
             </a>
           </li>
         ))

@@ -3,6 +3,9 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
+  # rebuild every morning so the News page picks up fresh headlines; no commit is needed
+  schedule:
+    - cron: '17 5 * * *'
   workflow_dispatch:
 
 permissions:
@@ -43,6 +46,11 @@ jobs:
           else
             echo "BASE_PATH=/${REPO}" >> "$GITHUB_ENV"
           fi
+
+      # a failed feed keeps its last entries, so this step never fails the build
+      - name: Fetch the latest headlines
+        run: node scripts/fetch-headlines.mjs
+        continue-on-error: true
 
       - run: npm run build
 

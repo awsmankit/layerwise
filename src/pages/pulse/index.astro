@@ -2,33 +2,28 @@
 import Base from '../../layouts/Base.astro';
 import { withBase } from '../../lib/url';
 import { getPulse, formatDate } from '../../lib/content';
+import Headlines from '../../components/ui/Headlines.tsx';
+import headlines from '../../data/headlines.json';
+import { topics } from '../../../scripts/feed-sources.mjs';
 
-const entries = await getPulse();
+const notes = await getPulse();
 ---
 
-<Base title="News" description="Short notes on what changed in AI and why an engineer should care.">
+<Base title="News" description="The latest from cloud providers, model labs, serving projects and security groups, refreshed daily.">
   <div class="wrap">
     <header class="page-head">
       <h1>News</h1>
-      <p>Short, dated notes on what changed in models, cloud platforms and tools, and what it means for the systems you build. Each note links to its source. Follow along with the <a href={withBase('/rss.xml')}>RSS feed</a>, which also announces new lessons.</p>
+      <p>
+        The last month from official sources: cloud platforms, model labs, serving projects and security groups, plus the latest release of the tools in the lessons. The list refreshes by itself every morning
+        (last run {formatDate(new Date(headlines.generatedAt))}). Nobody here has read these yet: each is a title, a date and a link, so open the source before you rely on it.
+      </p>
     </header>
+    <Headlines client:load items={headlines.items} topics={topics} />
     {
-      entries.length === 0 ? (
-        <p style="margin-top:2rem">No notes yet. Add a Markdown file to <code>src/content/pulse</code> to publish the first one.</p>
-      ) : (
-        <ul class="rows" style="margin-top:1rem">
-          {entries.map((e) => (
-            <li>
-              <a class="row pulse-row" href={withBase(`/pulse/${e.id}/`)}>
-                <span class="meta">{formatDate(e.data.date)}</span>
-                <div>
-                  <h3>{e.data.title}</h3>
-                  {e.data.tags.length > 0 && <p class="tags">{e.data.tags.map((t) => <span>{t}</span>)}</p>}
-                </div>
-              </a>
-            </li>
-          ))}
-        </ul>
+      notes.length > 0 && (
+        <p style="margin-top:2.2rem">
+          Looking for a note that explains a change and what to do about it? <a href={withBase('/pulse/notes/')}>Notes we explain ({notes.length})</a>, or the <a href={withBase('/rss.xml')}>RSS feed</a>, which also announces new lessons.
+        </p>
       )
     }
   </div>
