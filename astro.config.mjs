@@ -3,6 +3,7 @@ import { defineConfig } from 'astro/config';
 
 import react from '@astrojs/react';
 import mdx from '@astrojs/mdx';
+import sitemap from '@astrojs/sitemap';
 
 // GitHub Pages serves project sites from /<repo>/, so the deploy workflow
 // passes SITE_URL and BASE_PATH. Locally both fall back to the defaults.
@@ -13,7 +14,8 @@ const base = process.env.BASE_PATH || '/';
 export default defineConfig({
   site,
   base,
-  integrations: [react(), mdx()],
+  // the sitemap writes sitemap-index.xml and sitemap-0.xml, with URLs built from `site` plus `base`
+  integrations: [react(), mdx(), sitemap()],
   markdown: {
     shikiConfig: {
       themes: { light: 'github-light', dark: 'github-dark' },

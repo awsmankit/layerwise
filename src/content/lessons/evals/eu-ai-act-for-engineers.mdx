@@ -1,0 +1,85 @@
+---
+title: "The EU AI Act for engineers"
+track: evals
+level: intermediate
+order: 6
+summary: The four risk tiers, the dates that apply now and the ones that were pushed back, who is a provider and who a deployer, what Article 50 asks of a chatbot, and a short list of what an engineer does. Not legal advice.
+updated: 2026-10-28
+sources:
+  - label: "European Commission: AI Act (risk tiers and application dates)"
+    url: https://digital-strategy.ec.europa.eu/en/policies/regulatory-framework-ai
+  - label: "AI Act Service Desk: implementation timeline"
+    url: https://ai-act-service-desk.ec.europa.eu/en/ai-act/timeline/timeline-implementation-eu-ai-act
+  - label: "AI Act Article 5: prohibited AI practices"
+    url: https://ai-act-service-desk.ec.europa.eu/en/ai-act/article-5
+  - label: "AI Act Article 12: record-keeping"
+    url: https://ai-act-service-desk.ec.europa.eu/en/ai-act/article-12
+  - label: "AI Act Article 14: human oversight"
+    url: https://ai-act-service-desk.ec.europa.eu/en/ai-act/article-14
+  - label: "AI Act Article 50: transparency obligations"
+    url: https://ai-act-service-desk.ec.europa.eu/en/ai-act/article-50
+  - label: "AI Act Article 99: penalties"
+    url: https://ai-act-service-desk.ec.europa.eu/en/ai-act/article-99
+  - label: "European Commission: guidelines for providers of general-purpose AI models"
+    url: https://digital-strategy.ec.europa.eu/en/policies/guidelines-gpai-providers
+  - label: "European Commission: code of practice on AI-generated content"
+    url: https://digital-strategy.ec.europa.eu/en/policies/code-practice-ai-generated-content
+---
+
+import AiActTiers from '../../../components/viz/AiActTiers.tsx';
+import AiActTimeline from '../../../components/viz/AiActTimeline.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+
+<Callout title="Not legal advice" kind="note">
+This lesson explains what the law says, in plain words, as the European Commission's own pages describe it in October 2026. It does not tell you what your product must do. For that, ask a lawyer. Dates and rules have already changed once since the Act was passed.
+</Callout>
+
+The EU AI Act is a law about **what an AI system is used for**, not about how it was built. A chatbot, a CV screener and a spam filter can all run on the same model and fall under three different sets of rules. Engineers meet it as requirements: tell users it is AI, keep logs, let a person step in, keep records.
+
+## Four tiers
+
+<AiActTiers client:visible />
+
+The Commission gives critical infrastructure, education, employment and law enforcement as examples of high-risk areas. The Act's Annex III names eight: biometrics, critical infrastructure, education and training, employment and worker management, essential private and public services and benefits, law enforcement, migration and border control, and the administration of justice.
+
+## Which dates apply now
+
+<AiActTimeline client:visible />
+
+Three things to take from the dates.
+
+- **The bans and the general-purpose AI rules already apply.** Prohibitions and AI literacy since 2 February 2025. Obligations for providers of general-purpose AI models since 2 August 2025.
+- **2 August 2026 was a big day.** Transparency rules under Article 50 started to apply, and enforcement began for general-purpose AI models, the prohibitions and transparency. The Commission says it will enforce the model providers' duties, including with fines.
+- **The high-risk rules were pushed back, not dropped.** A 2026 change to the Act, the AI Omnibus, entered into force on 27 July 2026. High-risk systems in the Annex III areas now apply from 2 December 2027, and high-risk AI built into regulated products from 2 August 2028. The Commission's page and the Service Desk timeline both give these dates. Check them again before you plan around them.
+
+## Provider or deployer
+
+The Act defines a **provider** as whoever develops an AI system, or has one developed and releases it under their own name. A **deployer** is whoever uses an AI system under their own authority. A company can be both: if you build a product on a model and release it as yours, you are a provider of that product.
+
+A **general-purpose AI model** is one that shows significant generality and can competently do a wide range of tasks. Its providers have their own duties, including a public summary of the training content and, for models with systemic risk, telling the AI Office. Models placed on the market before 2 August 2025 have until 2 August 2027. If you call such a model through an API, those model duties sit with its provider. The system you build on top of it is still yours to classify.
+
+## What Article 50 asks of a chatbot
+
+Article 50 is the part most teams meet first.
+
+- **Providers of systems that talk to people** must design them so people know they are dealing with AI, unless that is obvious to a reasonably well-informed person.
+- **Providers of systems that generate audio, image, video or text** must mark the output in a machine-readable way, with exceptions for assistive editing and for systems that do not substantially change the input. Systems already on the market before 2 August 2026 have until 2 December 2026 in certain cases.
+- **Deployers** must disclose deepfakes. They must also disclose AI-generated text published to inform the public on matters of public interest, unless a person reviewed it and holds editorial responsibility.
+
+A voluntary code of practice on marking and labelling was published on 10 June 2026. It is not the law, but it shows what regulators are looking at.
+
+## What an engineer does on Monday
+
+1. **List your AI systems**, including the ones you buy. You cannot classify what you have not counted.
+2. **Work out the tier of each** from its use. Check the banned practices first (Article 5).
+3. **Show people it is AI** wherever a user talks to it or sees its output.
+4. **Keep logs.** For high-risk systems, Article 12 requires that they "technically allow for the automatic recording of events (logs)" over their lifetime.
+5. **Design for a person to step in.** Article 14 says high-risk systems must be effectively overseen by people: they can understand, monitor and override the output.
+6. **Keep your evaluation records.** Test results, datasets and versions are the evidence. The [evals](../evals-101/) lessons are the habit to build.
+7. **Ask your suppliers** for their documentation and what they will and will not cover.
+
+## Penalties
+
+Fines are set per type of breach, "whichever is higher" of an amount or a share of worldwide annual turnover. For banned practices: up to EUR 35 million or 7%. For most other duties, including Article 50: up to EUR 15 million or 3%. For giving authorities incorrect information: up to EUR 7.5 million or 1%. For small and medium companies the lower of the two figures applies.
+
+The Act and [LLM security](../llm-security/) overlap in practice: logging, oversight and testing serve both.

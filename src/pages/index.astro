@@ -14,11 +14,14 @@ import { cardStyle } from '../lib/color';
 import { swatch, gameSwatch } from '../lib/palette';
 import { cases } from '../data/cases';
 import { watch } from '../data/watch';
+import { labs, labById } from '../data/labs';
+import { libraries } from '../data/libraries';
 import { getLessons, formatDate } from '../lib/content';
 import headlines from '../data/headlines.json';
 
 const lessons = await getLessons();
 const latest = headlines.items.slice(0, 5);
+const featuredLabs = ['cosine-search', 'chunk-overlap', 'tool-loop'].map((id) => labById(id)).filter((l) => l !== undefined);
 
 const trackTiles = tracks.map((t) => ({ ...t, count: lessons.filter((l) => l.data.track === t.id).length }));
 
@@ -90,6 +93,35 @@ const tools = [
           <p>Six questions, two minutes.</p>
         </span>
         <span class="lp-chip">Take the check</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="lp-section wrap" aria-labelledby="lab-h">
+    <div class="lp-head">
+      <h2 id="lab-h">Write code, see what passes</h2>
+      <p>Short labs that run in your browser. Nothing is uploaded.</p>
+    </div>
+    <div class="lp-grid lp-grid-4" data-stagger>
+      {
+        featuredLabs.map((l, i) => (
+          <a class="lp-card lp-card-col" data-reveal href={withBase(`/practice/${l.id}/`)} style={cardStyle([swatch.turquoise, swatch.tangerine, swatch.purple][i])}>
+            <span class="lp-plate"><TrackIcon name="local" size={44} /></span>
+            <span class="lp-body">
+              <h3>{l.title}</h3>
+              <p>{l.goal.split('. ')[0].replace(/\.$/, '')}.</p>
+            </span>
+            <span class="lp-chip">{l.minutes} min, {l.level}</span>
+          </a>
+        ))
+      }
+      <a class="lp-card lp-card-col" data-reveal href={withBase('/practice/')} style={cardStyle(swatch.navy)}>
+        <span class="lp-plate"><TrackIcon name="systems" size={44} /></span>
+        <span class="lp-body">
+          <h3>All {labs.length} labs</h3>
+          <p>Plus projects to build and free places to practise.</p>
+        </span>
+        <span class="lp-chip">Practice</span>
       </a>
     </div>
   </section>
@@ -208,7 +240,7 @@ const tools = [
       <h2 id="more-h">Go further</h2>
       <p>Learn from other people's work.</p>
     </div>
-    <div class="lp-grid lp-grid-3" data-stagger>
+    <div class="lp-grid lp-grid-4" data-stagger>
       <a class="lp-card" data-reveal href={withBase('/cases/')} style={cardStyle(swatch.turquoise)}>
         <span class="lp-plate"><TrackIcon name="systems" size={44} /></span>
         <span class="lp-body">
@@ -216,6 +248,14 @@ const tools = [
           <p>Engineering write-ups on RAG, agents, serving and evals.</p>
         </span>
         <span class="lp-chip">{cases.length} write-ups</span>
+      </a>
+      <a class="lp-card" data-reveal href={withBase('/libraries/')} style={cardStyle(swatch.navy)}>
+        <span class="lp-plate"><TrackIcon name="infra" size={44} /></span>
+        <span class="lp-body">
+          <h3>AI libraries map</h3>
+          <p>Agents, RAG, vector stores, evals and more, with status and licence.</p>
+        </span>
+        <span class="lp-chip">{libraries.length} libraries</span>
       </a>
       <a class="lp-card" data-reveal href={withBase('/watch/')} style={cardStyle(swatch.tangerine)}>
         <span class="lp-plate"><TrackIcon name="llm" size={44} /></span>

@@ -10,6 +10,7 @@ export const site = {
 export const nav = [
   { href: '/start/', label: 'Start' },
   { href: '/learn/', label: 'Learn' },
+  { href: '/practice/', label: 'Practice' },
   { href: '/play/', label: 'Games' },
   { href: '/tools/', label: 'Calculators' },
   { href: '/interview/', label: 'Interviews' },
@@ -18,3 +19,43 @@ export const nav = [
 ];
 
 export const footerNav = [...nav, { href: '/cases/', label: 'Case studies' }, { href: '/watch/', label: 'Further watching' }, { href: '/progress/', label: 'Your progress' }, { href: '/teach/', label: 'For teachers' }, { href: '/about/', label: 'About' }];
+
+/** Link groups for the footer, with the page each one opens. */
+export const footerGroups = [
+  {
+    title: 'Learn',
+    links: [
+      { href: '/start/', label: 'Start here' },
+      { href: '/learn/', label: 'All lessons' },
+      { href: '/glossary/', label: 'Glossary' },
+      { href: '/teach/', label: 'For teachers' },
+    ],
+  },
+  {
+    title: 'Practise',
+    links: [
+      { href: '/practice/', label: 'Practice labs' },
+      { href: '/play/', label: 'Games' },
+      { href: '/tools/', label: 'Calculators' },
+      { href: '/tools/sandbox/', label: 'Sandbox' },
+      { href: '/interview/', label: 'Interview prep' },
+    ],
+  },
+  {
+    title: 'Go further',
+    links: [
+      { href: '/pulse/', label: 'News' },
+      { href: '/cases/', label: 'Case studies' },
+      { href: '/libraries/', label: 'AI libraries map' },
+      { href: '/watch/', label: 'Further watching' },
+      { href: '/rss.xml', label: 'RSS feed' },
+    ],
+  },
+  {
+    title: 'This site',
+    links: [
+      { href: '/about/', label: 'About' },
+      { href: '/progress/', label: 'Your progress' },
+    ],
+  },
+];

@@ -4,7 +4,7 @@ track: foundations
 level: basic
 order: 3
 summary: How text becomes numbers a model can use, why you are billed in tokens, and how meaning turns into distance.
-updated: 2026-10-26
+updated: 2026-10-28
 sources:
   - label: "Neural Machine Translation of Rare Words with Subword Units (Sennrich et al., 2015)"
     url: https://arxiv.org/abs/1508.07909
@@ -21,7 +21,7 @@ A language model never sees letters or words. Computers only work with numbers, 
 
 ## Tokens
 
-A **tokenizer** splits text into pieces called tokens and gives each piece an ID number from a fixed list, the vocabulary. Common words get a single token. Rarer words are split into pieces that were frequent in the tokenizer's training text, which do not always match grammar: one widely used tokenizer splits "unhappiness" into "un", "h" and "appiness". Anything unusual falls back to smaller pieces, down to single characters. That keeps the vocabulary to a manageable size, typically tens of thousands of pieces, while still being able to write any text. (The most common way of building such a vocabulary is called byte-pair encoding, if you want to look it up.)
+A **tokenizer** splits text into pieces called tokens and gives each piece an ID number from a fixed list, the vocabulary. Common words get a single token. Rarer words are split into pieces that were frequent in the tokenizer's training text, which do not always match grammar: one widely used tokenizer splits "unhappiness" into "un", "h" and "appiness". Anything unusual falls back to smaller pieces, down to single characters. That keeps the vocabulary to a manageable size, from tens of thousands of pieces in older models to a few hundred thousand in some recent ones, while still being able to write any text. (The most common way of building such a vocabulary is called byte-pair encoding, if you want to look it up.)
 
 <TokenChips client:visible />
 

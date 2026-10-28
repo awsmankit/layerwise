@@ -536,4 +536,123 @@ export const questionsApplied: Question[] = [
     ],
     lessons: ['evals/evals-101', 'evals/llmops-in-production'],
   },
+
+  {
+    id: 'langgraph-approval-and-checkpoints',
+    prompt:
+      'You are building a support bot that can issue refunds, and a person must approve each one. The approval can take minutes or days, and your service restarts during deploys. Using a graph-based agent framework such as LangGraph, how do you design the state, the pause and the resume? What breaks if you get it wrong?',
+    roles: ['ai-eng'],
+    level: 'senior',
+    kind: 'design',
+    topics: ['agents', 'langgraph', 'human-in-the-loop', 'state'],
+    minutes: 20,
+    strong: [
+      'Models the work as explicit steps around one shared state record (the order, whether a refund is wanted, whether it was approved), where each step returns an update to that state instead of keeping hidden variables.',
+      'Pauses at the approval step with the framework’s interrupt, so the run stops there instead of blocking a worker or polling.',
+      'Saves the state with a checkpointer under a thread id, so the run survives a restart, and resumes later with the same thread id and the person’s decision as the input.',
+      'Uses a database-backed checkpointer in production, because the in-memory one forgets everything on restart (the LangGraph docs recommend a database-backed saver such as PostgresSaver).',
+      'Knows the node that paused starts again from its first line when the run resumes, so code before the interrupt must be safe to run twice, or sit after it. For example, nothing that charges or sends goes before the interrupt.',
+      'Separates short-term memory (the checkpointer, kept per thread) from long-term memory (a store shared across threads, such as a customer’s preferences).',
+      'Makes the person’s options explicit (approve, edit, reject), validates the refund amount in code, and logs who decided what and when.',
+      'Adds the paused cases to the eval set: approve, reject, abandoned for days, and a duplicate resume.',
+    ],
+    followUps: [
+      {
+        q: 'A reviewer approves once, but the refund is issued twice. What happened and how do you prevent it?',
+        lookFor: 'Spots the replay of a node after resume or a retried call. Makes the refund call idempotent with an idempotency key, and keeps side effects after the interrupt or in a separate step.',
+      },
+      {
+        q: 'The approval request sits for six days. What should the system do?',
+        lookFor: 'A reminder or timeout policy outside the graph, expiry of the pending run with a clear message to the customer, and re-checking the state on resume because the order may have changed.',
+      },
+      {
+        q: 'When would you skip the explicit graph and use the framework’s ready-made agent with approval middleware?',
+        lookFor: 'When the flow is the standard tool loop and only a few tools need a pause. Moves to an explicit graph when steps must run in a set order or branch in ways you want to control.',
+      },
+    ],
+    redFlags: [
+      'Holds the pending run in memory or in a variable, so a deploy loses it.',
+      'Polls, or blocks a worker, while waiting for the person.',
+      'Does side effects before the pause and assumes the code runs once.',
+      'Lets the model decide whether approval is needed, instead of a rule in code.',
+    ],
+    lessons: ['rag-agents/langchain-and-langgraph', 'rag-agents/agents-and-tool-use'],
+  },
+  {
+    id: 'workflow-or-agent-five-patterns',
+    prompt:
+      'A product manager wants "an AI agent" that turns inbound support emails into tickets, drafts a reply and, for billing issues, looks up the order. Would you build a workflow or an agent? Name the workflow patterns you know and say when you would use each.',
+    roles: ['ai-eng'],
+    level: 'mid',
+    kind: 'concept',
+    topics: ['agents', 'workflows', 'prompting', 'patterns'],
+    minutes: 12,
+    strong: [
+      'Defines a workflow as code that decides the order of model calls, and an agent as a model that decides its own next steps and tool use.',
+      'Defaults to the simplest design that passes the evals. Here a fixed flow of extract, classify and reply is more predictable, cheaper and easier to test than an open-ended agent.',
+      'Names the five patterns from Anthropic’s “Building effective agents”: prompt chaining, routing, parallelization, orchestrator-workers and evaluator-optimizer.',
+      'Gives a use for each: chaining when the steps are fixed and ordered; routing when inputs fall into clear categories; parallelization when parts are independent or voting adds confidence; orchestrator-workers when the subtasks cannot be listed in advance; evaluator-optimizer when the criteria are clear and a second pass measurably helps.',
+      'Applies them to the example: route by category (billing, bug, question), look up the order only on the billing branch, and use a plain function for the lookup rather than a model decision.',
+      'States the cost of each pattern in latency and tokens, and adds one only when an eval shows that a single prompt falls short.',
+      'Says when an agent is justified: the path cannot be known in advance, with step limits, permissions and a human check for risky actions.',
+    ],
+    followUps: [
+      {
+        q: 'The routing step sends 8% of emails to the wrong branch. How do you find out, and how do you improve it?',
+        lookFor: 'A labelled eval set with a confusion matrix per category, reading the failures by hand, adding an example or an “other” branch, and measuring the effect on held-out cases.',
+      },
+      {
+        q: 'Your evaluator-optimizer loop never seems to stop improving the draft. What do you do?',
+        lookFor: 'Caps the number of rounds, sets a pass threshold on explicit criteria, and checks that each extra round measurably helps and is worth its latency and cost.',
+      },
+    ],
+    redFlags: [
+      'Reaches for an agent when the task has a fixed, known sequence.',
+      'Cannot name any workflow pattern beyond “chain the prompts”.',
+      'Adds loops with no step limit or cost cap.',
+      'Passes arguments from the email straight into the order lookup without validation.',
+    ],
+    lessons: ['llm/prompt-patterns-and-optimisation', 'rag-agents/agents-and-tool-use', 'rag-agents/langchain-and-langgraph'],
+  },
+  {
+    id: 'code-validate-and-retry-structured-output',
+    prompt:
+      'Write a function get_ticket(model, email) that asks an LLM for a JSON ticket with a category (billing, bug or question) and an urgency from 1 to 5. The model sometimes returns text that is not JSON, or values that are out of range. Validate the result and retry, at most three attempts, then fail clearly. Talk me through the design and the tests.',
+    roles: ['ai-eng'],
+    level: 'mid',
+    kind: 'coding',
+    topics: ['structured output', 'validation', 'retries', 'python'],
+    minutes: 20,
+    strong: [
+      'Parses with json.loads inside a try block, then validates against the schema in code: the category is in an allowed set, the urgency is an integer from 1 to 5, and no field is missing or extra.',
+      'Loops for a fixed maximum of three attempts, counting them so the loop cannot run forever.',
+      'On failure, sends the validation error back in the next prompt (“your last answer failed because urgency was 7; urgency must be 1 to 5”) instead of repeating the same prompt.',
+      'After the last attempt raises a clear, specific error that carries the last raw output, rather than returning an empty or default ticket silently.',
+      'Does not parse with eval, and strips code fences or surrounding prose before parsing only if it needs to.',
+      'Checks types carefully: in Python, True is an int, so a boolean must not pass as an urgency, and a float such as 3.5 must be rejected.',
+      'Tests with a fake model that fails once then succeeds, fails every time, returns an out-of-range value, and returns valid JSON the first time (exactly one call).',
+      'Mentions native structured output where the platform has it, and still validates, because valid JSON can hold wrong values.',
+    ],
+    followUps: [
+      {
+        q: 'The failures are almost all finish reason max tokens, on long emails. What changes?',
+        lookFor: 'Recognises truncation rather than a formatting problem, raises the token limit or shortens the input, and tracks the parse-failure rate as a metric.',
+      },
+      {
+        q: 'Some emails really do not fit any category. How should the function behave?',
+        lookFor: 'Adds an explicit “other” or null option and a human queue, rather than forcing a wrong label or retrying forever.',
+      },
+      {
+        q: 'How do you stop retries from doubling your bill during a provider outage?',
+        lookFor: 'Separates invalid-output retries from provider errors, uses backoff and a circuit breaker for the provider, and caps total spend per request.',
+      },
+    ],
+    redFlags: [
+      'Retries with no cap, or catches every exception and returns a default.',
+      'Resends the identical prompt each time.',
+      'Trusts valid JSON without checking the values.',
+      'Uses eval or a regular expression to pull the JSON out.',
+    ],
+    lessons: ['llm/prompting-and-structured-output', 'llm/prompt-patterns-and-optimisation'],
+  },
 ];

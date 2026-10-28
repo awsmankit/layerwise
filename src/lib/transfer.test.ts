@@ -17,6 +17,12 @@ describe('moving progress between browsers', () => {
     expect(await decodeSnapshot(code)).toEqual(many);
   });
 
+  it('joins the labs done on both sides', () => {
+    const m = mergeSnapshots({ site: 'Layerwise', 'layerwise:labs': ['cosine-search'] }, { site: 'Layerwise', 'layerwise:labs': ['cosine-search', 'chunking'] });
+    expect(m['layerwise:labs']).toEqual(['cosine-search', 'chunking']);
+    expect(mergeSnapshots({ site: 'Layerwise' }, { site: 'Layerwise', 'layerwise:labs': ['x'] })['layerwise:labs']).toEqual(['x']);
+  });
+
   it('refuses a code that is not a Layerwise snapshot', async () => {
     await expect(decodeSnapshot('x.abc')).rejects.toThrow();
     await expect(decodeSnapshot('p.' + btoa('{"site":"other"}'))).rejects.toThrow();

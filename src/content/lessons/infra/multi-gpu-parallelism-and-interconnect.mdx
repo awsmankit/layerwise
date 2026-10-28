@@ -4,7 +4,7 @@ track: infra
 level: advanced
 order: 4
 summary: Understand data, tensor, pipeline and expert parallelism, why each needs a different kind of network, and how to choose a split when one GPU is not enough.
-updated: 2026-10-26
+updated: 2026-10-28
 sources:
   - label: "Megatron-LM: Training Multi-Billion Parameter Language Models Using Model Parallelism (Shoeybi et al., 2019)"
     url: https://arxiv.org/abs/1909.08053
@@ -29,7 +29,7 @@ import Deep from '../../../components/ui/Deep.astro';
 import Disclosure from '../../../components/viz/Disclosure.tsx';
 import ParallelismViz from '../../../components/viz/ParallelismViz.tsx';
 
-Sooner or later a model stops fitting on one GPU, or one GPU stops being fast enough. A 70-billion-parameter model in 16-bit form needs 140 GB for weights alone, and the largest single GPUs hold 80 to roughly 190 GB. The answer is to spread the work over several GPUs. There are four main ways to do it, and the way you choose depends mostly on how fast the GPUs can talk to each other.
+Sooner or later a model stops fitting on one GPU, or one GPU stops being fast enough. A 70-billion-parameter model in 16-bit form needs 140 GB for weights alone, and single GPUs hold from 80 GB up to more than 250 GB (AMD's MI355X has 288 GB). The answer is to spread the work over several GPUs. There are four main ways to do it, and the way you choose depends mostly on how fast the GPUs can talk to each other.
 
 ## Four ways to split the work
 
@@ -54,7 +54,7 @@ The methods differ in how much data they move, and how often.
 | Data (training) | All-reduce of gradients | Once per step, can overlap with compute | Good: fast between nodes |
 | Expert | All-to-all of tokens | Each MoE layer | Fast, and sensitive to imbalance |
 
-Inside one server, GPUs connect with **NVLink** through **NVSwitch**. On an H100 server that is about 900 GB/s per GPU (AWS lists 900 GB/s NVSwitch for P5). Between servers, traffic crosses **InfiniBand** or Ethernet with RDMA, such as AWS EFA, which is slower. A P5 instance has up to 3,200 Gbps of EFA for all 8 GPUs, and Azure ND H100 v5 has 400 Gbps of InfiniBand per GPU. Per GPU that is about 50 GB/s, roughly an order of magnitude below NVLink. Google quotes up to 3,600 Gbps over RDMA for A3 Ultra and A4 nodes.
+Inside one server, GPUs connect with **NVLink** through **NVSwitch**. On an H100 server that is about 900 GB/s per GPU (AWS lists 900 GB/s NVSwitch for P5). Between servers, traffic crosses **InfiniBand** or Ethernet with RDMA, such as AWS EFA, which is slower. A P5 instance has up to 3,200 Gbps of EFA for all 8 GPUs, and Azure ND H100 v5 has 400 Gbps of InfiniBand per GPU. Per GPU that is about 50 GB/s, roughly an order of magnitude below NVLink. Google lists up to 3,600 Gbps of network bandwidth for A3 Ultra and A4 nodes.
 
 That gap is why tensor parallelism stays inside a node, while pipeline and data parallelism are the ones stretched across nodes. Newer rack-scale systems such as the GB200 NVL72 (offered on Azure as ND GB200 v6, where 18 VMs form a 72-GPU NVLink domain with 13.5 TB of shared HBM) widen the fast domain so that larger tensor-parallel groups become practical.
 

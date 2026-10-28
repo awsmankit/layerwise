@@ -65,6 +65,7 @@ export const KEYS = {
   depth: 'layerwise:depth',
   theme: 'layerwise:theme',
   quiz: 'layerwise:quiz',
+  labs: 'layerwise:labs',
 } as const;
 
 export type GameRecord = { best: number; plays: number; stars?: number };

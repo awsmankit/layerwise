@@ -4,16 +4,16 @@ track: infra
 level: advanced
 order: 6
 summary: Learn how GPUs are scheduled on Kubernetes, why LLM servers cold-start slowly, and which autoscaling signals work when CPU use does not.
-updated: 2026-10-26
+updated: 2026-10-28
 sources:
   - label: "Kubernetes: Schedule GPUs"
     url: https://kubernetes.io/docs/tasks/manage-gpus/scheduling-gpus/
   - label: "vLLM documentation"
-    url: https://docs.vllm.ai
+    url: https://docs.vllm.ai/en/latest/
   - label: "NVIDIA DCGM documentation"
     url: https://docs.nvidia.com/datacenter/dcgm/latest/index.html
   - label: "Hugging Face safetensors"
-    url: https://huggingface.co/docs/safetensors
+    url: https://huggingface.co/docs/safetensors/index
   - label: "Efficient Memory Management for Large Language Model Serving with PagedAttention (Kwon et al., 2023)"
     url: https://arxiv.org/abs/2309.06180
   - label: "Amazon SageMaker inference: 2026 year-to-date launches in review"
@@ -69,7 +69,7 @@ spec:
           nvidia.com/gpu: 2   # whole GPUs; they cannot be fractionally requested by default
 ```
 
-By default GPUs are whole units and are not shared between pods. Put GPU nodes in their own **node pool** with a **taint**, so ordinary pods do not occupy expensive nodes, and give the serving pods a matching toleration. Some clouds add such a taint automatically, so check yours. Sharing a GPU (time slicing, or MIG partitions on supported cards) exists, but see the failure modes lesson for the noisy-neighbour risk. The Kubernetes page on scheduling GPUs is the reference.
+By default GPUs are whole units and are not shared between pods. Put GPU nodes in their own **node pool** with a **taint**, so ordinary pods do not occupy expensive nodes, and give the serving pods a matching toleration. Some clouds add such a taint automatically, so check yours. Sharing a GPU (time slicing, or MIG partitions on supported cards) exists, but see [GPU observability and capacity planning](../gpu-observability-and-capacity-planning/) for the noisy-neighbour risk. The Kubernetes page on scheduling GPUs is the reference.
 
 ## Cold starts
 

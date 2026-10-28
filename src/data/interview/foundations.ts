@@ -550,4 +550,125 @@ export const questionsFoundations: Question[] = [
     ],
     lessons: ['evals/evals-101', 'foundations/classical-ml-essentials'],
   },
+
+  {
+    id: 'parameters-hyperparameters-and-sampling-settings',
+    prompt:
+      'A teammate says: “I tuned the model’s parameters by setting the temperature to 0.2 and the learning rate to 2e-5.” What is wrong with that sentence? Explain the difference between parameters, hyperparameters and sampling settings, and what each costs you to change.',
+    roles: ['ai-eng', 'ml-eng'],
+    level: 'junior',
+    kind: 'concept',
+    topics: ['parameters', 'hyperparameters', 'sampling', 'memory'],
+    minutes: 10,
+    strong: [
+      'Parameters are the numbers inside the trained model (the weights). Training sets them, and a “7B model” has about 7 billion of them.',
+      'Hyperparameters are choices made before training that training does not learn: learning rate, batch size, training length, optimizer settings, and for LoRA the rank and which matrices get an adapter.',
+      'Sampling settings (temperature, top-p, top-k, max tokens, stop sequences, seed) are set per request and change only how one answer is generated. No retraining is needed.',
+      'The simple test: if changing it means training again, it is a training hyperparameter; if it only changes one answer, it is a sampling setting; if it is a number inside the trained model, it is a parameter.',
+      'Applies the test to the quote: temperature is a sampling setting, and 2e-5 is a training hyperparameter that only matters when fine-tuning. Neither tunes “the model’s parameters”, which change only when training runs.',
+      'Links parameters to memory: parameters times bytes per parameter, so about 14 GB for 7 billion parameters at 16-bit, about 7 GB at 8-bit and about 4 GB at 4-bit, before the KV cache and runtime.',
+      'Knows temperature does not add knowledge: a wrong fact at temperature 0 is also wrong at 0.7, only less often.',
+    ],
+    followUps: [
+      {
+        q: 'You use a hosted model through an API. Which of the three can you change?',
+        lookFor: 'Sampling settings on every call. Training hyperparameters only if the provider offers fine-tuning, and parameters only through fine-tuning. The hosted base model’s own training settings are not yours to change.',
+      },
+      {
+        q: 'Does temperature zero guarantee the same output every time?',
+        lookFor: 'No. Batching, hardware and the serving engine can still change the output. Repeatable is not the same as correct.',
+      },
+      {
+        q: 'A 7B model “fits” in 16 GB at 16-bit but runs out of memory on a long prompt. Why?',
+        lookFor: 'The weights take about 14 GB, and the KV cache grows with every token of context, plus activations and runtime overhead.',
+      },
+    ],
+    redFlags: [
+      'Uses “parameters” for anything that can be adjusted.',
+      'Believes lowering the temperature fixes a wrong fact.',
+      'Thinks sampling settings are changed by training or fine-tuning.',
+    ],
+    lessons: ['llm/parameters-and-hyperparameters', 'foundations/how-models-learn', 'serving/quantization'],
+  },
+  {
+    id: 'why-long-contexts-cost-more',
+    prompt:
+      'One user asks a short question and gets a short answer, and it costs almost nothing. Another user has a long chat of about 8,000 tokens. Explain, with numbers for an 8-billion-parameter model, what the model keeps in memory and why the long chat costs more. How does it change if 32 users chat at once?',
+    roles: ['ai-eng', 'ml-platform'],
+    level: 'mid',
+    kind: 'estimation',
+    topics: ['kv cache', 'context window', 'cost', 'memory'],
+    minutes: 12,
+    strong: [
+      'Defines the KV cache: the key and value computed for each token in each layer, stored so earlier tokens are not recomputed at every step.',
+      'Gives the formula: 2 (key and value) × layers × KV heads × head dimension × bytes per value, times the number of tokens.',
+      'Works the 8B-class example: 32 layers, 8 KV heads, head size 128 and 2 bytes per value give 2 × 32 × 8 × 128 × 2 = 131,072 bytes, which is 128 KiB per token.',
+      'Scales it: 14 tokens is 1.75 MiB, 8,000 tokens is about 1 GiB, and 32 users at 8,000 tokens each is 256,000 tokens, about 31 GiB.',
+      'Compares it with the weights: about 16 GB at 16-bit for the 8B model, so 32 long chats hold a cache about twice the size of the model, which limits how many users one GPU can serve.',
+      'Explains the speed effect: each new token reads the weights and the whole cache from memory, so decoding is limited by memory bandwidth and long contexts slow it down.',
+      'Names the levers: fewer KV heads (grouped-query attention), a lower-precision cache, paged allocation, prefix sharing, shorter prompts, or summarising old history.',
+    ],
+    followUps: [
+      {
+        q: 'Your provider charges more per token above a long-context threshold. Using this model, why might that be?',
+        lookFor: 'Fewer requests fit on each GPU because the cache takes memory, and decoding is slower per token, so each token carries a larger share of the hardware.',
+      },
+      {
+        q: 'You cannot add GPUs. What do you change first to serve more users?',
+        lookFor: 'Caps the context or summarises history, turns on prefix caching for the shared prompt, uses a lower-precision cache or a model with fewer KV heads, and uses paged cache management, measuring quality after each change.',
+      },
+      {
+        q: 'Why is prefill faster per token than decoding?',
+        lookFor: 'Prefill processes all the prompt tokens in parallel and is limited by compute. Decoding makes one token per pass and reads the whole cache each time, so it is limited by memory bandwidth.',
+      },
+    ],
+    redFlags: [
+      'Says the cost is only the number of billed tokens, with no mention of memory.',
+      'Confuses the KV cache with the model weights.',
+      'Cannot do the per-token arithmetic.',
+      'Thinks the cache stays the same size as the conversation grows.',
+    ],
+    lessons: ['start/one-question-all-the-way-through', 'serving/kv-cache-and-memory', 'cost/where-the-tokens-go'],
+  },
+  {
+    id: 'improve-a-prompt-without-overfitting',
+    prompt:
+      'You are improving a prompt that turns support emails into tickets. After a week of edits, your score on your 40 test emails rose from 70% to 95%, but users say it got worse. What probably happened, and how do you improve a prompt without fooling yourself? Say what you would do about few-shot examples.',
+    roles: ['ai-eng'],
+    level: 'mid',
+    kind: 'concept',
+    topics: ['prompting', 'few-shot', 'evals', 'overfitting'],
+    minutes: 12,
+    strong: [
+      'Diagnoses overfitting to the eval set: edits made while looking at the same 40 emails memorised their quirks, so the score no longer predicts real traffic.',
+      'Keeps a held-out set that is never looked at while editing and checks it once at the end. A large gap between the tuned score and the held-out score is the sign of overfitting.',
+      'Changes one thing at a time, runs the same cases each time, keeps the change only if the score rises, and records each prompt version with its scores.',
+      'Builds the set from real, varied requests including awkward ones, and adds production failures as new cases.',
+      'For few-shot examples: they should be relevant, diverse and consistently formatted, with about 3 to 5 suggested by vendor guidance. Examples that look alike teach the wrong rule, and a wrong label gets copied.',
+      'Does not put eval cases into the prompt as examples, because that flatters the score. Shuffles the example order and re-runs, to see whether the examples do more than intended.',
+      'Knows each example costs tokens on every call (in the lesson’s support-email prompt, 52, 129 and 233 tokens for zero, two and five examples) and considers prompt caching.',
+      'Knows that automatic optimisers such as DSPy search many candidate prompts against a metric, so the held-out set and a good metric matter more, not less.',
+    ],
+    followUps: [
+      {
+        q: 'You only have 30 labelled emails. How do you split them, and what do you claim?',
+        lookFor: 'Keeps some back as held-out (for example ten), tunes on the rest, reports the held-out score separately and cautiously, and gets more data before drawing strong conclusions. DSPy’s own docs say 30 examples can help but suggest at least 300.',
+      },
+      {
+        q: 'A new example improves 3 cases and breaks 2 others. Do you keep it?',
+        lookFor: 'Looks at which cases flipped and why, at per-category scores and at the held-out result, not only the net change. May need a different example or an instruction instead.',
+      },
+      {
+        q: 'The score jumps when you reorder the examples. What does that tell you?',
+        lookFor: 'The prompt is fragile and the examples are doing more than intended. Tests several orders, simplifies, and chooses the version that is stable.',
+      },
+    ],
+    redFlags: [
+      'Reports the score on the cases it tuned on as the result.',
+      'Changes several things at once and cannot say which one helped.',
+      'Copies eval cases into the prompt.',
+      'Treats a few points on a small set as proof.',
+    ],
+    lessons: ['llm/prompt-patterns-and-optimisation', 'evals/evals-101', 'llm/prompting-and-structured-output'],
+  },
 ];

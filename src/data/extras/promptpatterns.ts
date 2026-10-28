@@ -38,6 +38,17 @@ export const extras_promptpatterns: Record<string, Extra> = {
         answer: 0,
         why: 'A large gap between tuned cases and held-out cases is the sign of a prompt that memorised its tuning set. The held-out set exists to catch exactly this.',
       },
+      {
+        q: 'Your single prompt already meets its target on the eval set, and a teammate proposes a chain of four model calls "to be safe". What does the lesson say?',
+        options: [
+          'Add it, because more calls always improve accuracy',
+          'Replace it with an agent, which needs fewer calls',
+          'Hold off: every extra call adds latency and tokens, so add a pattern only when evals show a single prompt falls short',
+          'Add it, but run the whole chain twice and take the majority',
+        ],
+        answer: 2,
+        why: 'The lesson calls a pattern a cost: a chain adds a call per step and votes add roughly one call each. Add a pattern when your evals show a single prompt falls short, not before.',
+      },
     ],
   },
 };

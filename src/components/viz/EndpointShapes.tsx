@@ -15,7 +15,7 @@ type Option = {
 const OPTIONS: Option[] = [
   { name: 'Real-time', sub: 'endpoint', capacity: [0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8], shape: ['always-on instances', 'behind HTTPS'], use: ['interactive traffic,', 'steady latency'], warn: 'bills while it exists' },
   { name: 'Asynchronous', sub: 'endpoint', capacity: [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5], shape: ['requests queue,', 'results go to storage'], use: ['large payloads,', 'long-running requests'] },
-  { name: 'Serverless', sub: 'endpoint', capacity: [0, 0.2, 0.7, 0.1, 0, 0, 0.5, 0], shape: ['scales with traffic,', 'down to idle'], use: ['spiky, low volume'], warn: 'not for big GPU models' },
+  { name: 'Serverless', sub: 'endpoint', capacity: [0, 0.2, 0.7, 0.1, 0, 0, 0.5, 0], shape: ['scales with traffic,', 'down to idle'], use: ['spiky, low volume'], warn: 'no GPUs, 6 GB RAM max' },
   { name: 'Batch transform', sub: 'job', capacity: [0, 0.9, 0.9, 0.9, 0, 0, 0, 0], shape: ['processes a dataset,', 'then stops'], use: ['scoring many records', 'offline'] },
 ];
 

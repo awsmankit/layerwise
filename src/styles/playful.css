@@ -529,25 +529,6 @@ html.js [data-reveal].is-in {
 
 /* ---------- footer ---------- */
 
-.site-footer {
-  margin-top: 0;
-  border-top: 2px solid #000;
-  background: var(--night);
-  color: #cfcaf5;
-}
-.site-footer a {
-  color: #f1eeff;
-}
-.site-footer a:hover {
-  color: var(--sun, #ffc233);
-}
-body > main {
-  min-height: 60vh;
-}
-main + .site-footer {
-  margin-top: clamp(3rem, 7vw, 5rem);
-}
-
 /* ---------- reduced motion ---------- */
 
 @media (prefers-reduced-motion: reduce) {
@@ -713,8 +694,3 @@ main + .site-footer {
   }
 }
 
-.site-footer .licence {
-  margin-top: 0.4rem;
-  font-size: 0.85rem;
-  color: #a29cd8;
-}

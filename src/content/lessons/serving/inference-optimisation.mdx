@@ -4,7 +4,7 @@ track: serving
 level: advanced
 order: 4
 summary: The main techniques that make model serving faster or cheaper, grouped by the bottleneck each one attacks, with their costs and how to measure the result.
-updated: 2026-10-26
+updated: 2026-10-28
 sources:
   - label: "FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness (Dao et al., 2022)"
     url: https://arxiv.org/abs/2205.14135
@@ -19,7 +19,7 @@ sources:
   - label: "DistServe: Disaggregating Prefill and Decoding for Goodput-optimized LLM Serving (Zhong et al., 2024)"
     url: https://arxiv.org/abs/2401.09670
   - label: "vLLM documentation"
-    url: https://docs.vllm.ai
+    url: https://docs.vllm.ai/en/latest/
 ---
 
 import Callout from '../../../components/ui/Callout.astro';
@@ -138,7 +138,7 @@ Most techniques trade latency against throughput, and throughput is what sets co
 
 <Disclosure client:visible title="Which engines support what?">
 
-vLLM, SGLang, TensorRT-LLM and Hugging Face TGI implement most of these techniques, but names, flags and defaults change often. As of October 2026, check the current docs of your engine rather than relying on a feature list. See [inference engines compared](../../local/inference-engines-compared/).
+vLLM, SGLang and TensorRT-LLM implement most of these techniques. Hugging Face TGI did too, but it is in maintenance mode and its repository is archived, so do not start a new deployment on it. Names, flags and defaults change often. As of October 2026, check the current docs of your engine rather than relying on a feature list. See [inference engines compared](../../local/inference-engines-compared/).
 
 </Disclosure>
 

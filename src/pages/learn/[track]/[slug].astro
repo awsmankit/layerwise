@@ -12,6 +12,7 @@ import TrackTree from '../../../components/viz/TrackTree.tsx';
 import { DoneButton } from '../../../components/viz/Progress.tsx';
 import { tracks, trackById, levels } from '../../../data/tracks';
 import { extras } from '../../../data/lesson-extras';
+import { labs } from '../../../data/labs';
 import { withBase } from '../../../lib/url';
 import { getLessons, lessonPath, slugOf, readingMinutes, formatDate } from '../../../lib/content';
 
@@ -31,6 +32,7 @@ const track = trackById(lesson.data.track)!;
 const slug = slugOf(lesson);
 const key = `${track.id}/${slug}`;
 const extra = extras[key];
+const labsHere = labs.filter((l) => l.lesson === key);
 const idx = all.findIndex((l) => l.id === lesson.id);
 const prev = all[idx - 1];
 const next = all[idx + 1];
@@ -111,10 +113,11 @@ const groups = tracks.map((t) => ({
               <DoneButton client:load id={key} />
               <p>Pass the quiz, or mark the lesson done yourself. Done lessons are counted in the sidebar and on <a href={withBase('/progress/')}>Your progress</a>. Nothing leaves this browser.</p>
             </div>
-            {extra.play && extra.play.length > 0 && (
+            {((extra.play && extra.play.length > 0) || labsHere.length > 0) && (
               <p class="practise">
                 <b>Practise it:</b>{' '}
-                {extra.play.map((p) => <a class="btn quiet" href={withBase(p.href)}>{p.label}</a>)}
+                {labsHere.map((l) => <a class="btn" href={withBase(`/practice/${l.id}/`)}>Try the lab: {l.title}</a>)}
+                {(extra.play ?? []).map((p) => <a class="btn quiet" href={withBase(p.href)}>{p.label}</a>)}
               </p>
             )}
           </>

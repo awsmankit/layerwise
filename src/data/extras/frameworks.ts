@@ -44,6 +44,17 @@ export const extras_frameworks: Record<string, Extra> = {
         answer: 2,
         why: 'A framework adds a layer to learn and upgrade. It pays off when you need durable state, human approval or long-running work, not for every agent.',
       },
+      {
+        q: 'A node charges a card and then calls interrupt() to wait for approval. What does the lesson warn will happen when the run resumes?',
+        options: [
+          'Execution continues from the line after interrupt(), so the charge runs once',
+          'The whole graph restarts from the first node',
+          'The saved state is discarded and the thread id is reused for a new run',
+          'The node starts again from its first line, so the charge could run twice',
+        ],
+        answer: 3,
+        why: 'When a run resumes, the node that called interrupt() starts again from its first line, so anything before the interrupt runs twice. Keep that code safe to repeat, or put it after the interrupt.',
+      },
     ],
   },
 };

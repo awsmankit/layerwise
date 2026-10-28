@@ -1,0 +1,53 @@
+---
+import ToolPage from '../layouts/ToolPage.astro';
+import LabList from '../components/ui/LabList.tsx';
+import PracticeResources from '../components/ui/PracticeResources.tsx';
+import ProjectCards from '../components/ui/ProjectCards.tsx';
+import TrackIcon from '../components/ui/TrackIcon.astro';
+import { labs } from '../data/labs';
+import { cardStyle } from '../lib/color';
+import { cycleSwatch } from '../lib/palette';
+import { withBase } from '../lib/url';
+import { getLessons, slugOf } from '../lib/content';
+
+const lessons = await getLessons();
+const titleOf = (key?: string) => lessons.find((l) => `${l.data.track}/${slugOf(l)}` === key)?.data.title;
+const summaries = labs.map((l) => ({ id: l.id, title: l.title, level: l.level, minutes: l.minutes, goal: l.goal, lessonTitle: titleOf(l.lesson) }));
+
+const more = [
+  { href: '/play/', title: 'Games', body: 'Make design and cost decisions and see what they do.', icon: 'blueprint' },
+  { href: '/tools/sandbox/', title: 'Sandbox', body: 'Type tool commands and run free Python.', icon: 'local' },
+  { href: '/interview/practice/', title: 'Interview practice', body: 'Answer a question against the clock.', icon: 'llm' },
+  { href: '/tools/', title: 'Calculators', body: 'Try your own numbers for cost, memory and GPUs.', icon: 'cost' },
+];
+---
+
+<ToolPage figure="terminal" title="Practice" lede="Write code, run the checks, see what passes. It runs in your browser: nothing is uploaded.">
+  <LabList client:load labs={summaries} />
+
+  <h2 style="margin-top:clamp(2rem,5vw,3rem)">More ways to practise</h2>
+  <div class="lp-grid lp-grid-4" style="margin-top:1rem">
+    {
+      more.map((m, i) => (
+        <a class="lp-card" href={withBase(m.href)} style={cardStyle(cycleSwatch(i + 5))}>
+          <span class="lp-plate"><TrackIcon name={m.icon} size={40} /></span>
+          <span class="lp-body">
+            <h3>{m.title}</h3>
+            <p>{m.body}</p>
+          </span>
+        </a>
+      ))
+    }
+  </div>
+
+  <h2 style="margin-top:clamp(2rem,5vw,3rem)">Build something real</h2>
+  <ProjectCards client:visible />
+
+  <h2 style="margin-top:clamp(2rem,5vw,3rem)">Places to practise for real</h2>
+  <PracticeResources client:visible />
+
+  <Fragment slot="notes">
+    <h2>How the labs work</h2>
+    <p>Each lab is a short Python exercise with a few checks. Your code runs in your browser using Pyodide, a version of Python that runs in a web page, so nothing you type is sent anywhere. The first run downloads Python once, about 10 MB. Your code is saved in this browser, and finished labs count on <a href={withBase('/progress/')}>your progress</a>.</p>
+  </Fragment>
+</ToolPage>

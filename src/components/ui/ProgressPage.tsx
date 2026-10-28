@@ -7,6 +7,7 @@ import { shuffle } from '../../lib/interview';
 import { decodeSnapshot, encodeSnapshot, mergeSnapshots, type Snapshot } from '../../lib/transfer';
 import type { QuizItem } from '../../data/lesson-extras';
 import { paths, type PathId } from '../../data/paths';
+import { labs } from '../../data/labs';
 
 export type TrackInfo = { id: string; title: string; color: string; lessons: { key: string; title: string; href: string; level: string }[] };
 type QuizBest = Record<string, { score: number; total: number }>;
@@ -23,6 +24,8 @@ export default function ProgressPage({ tracks, quizzes }: { tracks: TrackInfo[];
   const [quiz] = useStore<QuizBest>(KEYS.quiz, {});
   const [games] = useStore<GameScores>(KEYS.games, {});
   const [path] = useStore<PathId | null>(KEYS.path, null);
+  const [labIds] = useStore<string[]>(KEYS.labs, []);
+  const labsDone = labs.filter((l) => labIds.includes(l.id)).length;
   const [msg, setMsg] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
   const [incoming, setIncoming] = useState<Snapshot | null>(null);
@@ -142,6 +145,10 @@ export default function ProgressPage({ tracks, quizzes }: { tracks: TrackInfo[];
             <b className="num">{gameRows.length}</b>
             <span>game levels played</span>
           </div>
+          <div className="pg-big">
+            <b className="num">{labsDone}</b>
+            <span>of {labs.length} practice labs done</span>
+          </div>
           <div className="pg-path">
             {path && paths[path] ? (
               <>
@@ -203,6 +210,20 @@ export default function ProgressPage({ tracks, quizzes }: { tracks: TrackInfo[];
               ))}
             </ul>
           )}
+        </section>
+
+        <section aria-labelledby="pg-labs" className="viz">
+          <h2 id="pg-labs">Practice labs</h2>
+          <ul className="rows">
+            {labs.map((l) => (
+              <li key={l.id}>
+                <a className="row pg-row" href={withBase(`/practice/${l.id}/`)}>
+                  <h3>{labIds.includes(l.id) ? '✓ ' : ''}{l.title}</h3>
+                  <span className="meta">{labIds.includes(l.id) ? 'done' : `about ${l.minutes} min`}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
         </section>
 
         <section aria-labelledby="pg-review" className="viz pg-review">

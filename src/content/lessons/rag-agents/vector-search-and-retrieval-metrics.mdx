@@ -4,7 +4,7 @@ track: rag-agents
 level: advanced
 order: 3
 summary: How approximate nearest-neighbour indexes, hybrid search and rerankers work, and how to measure retrieval and RAG answers with numbers you can defend.
-updated: 2026-10-26
+updated: 2026-10-28
 sources:
   - label: "Efficient and robust approximate nearest neighbor search using Hierarchical Navigable Small World graphs (Malkov and Yashunin)"
     url: https://arxiv.org/abs/1603.09320
@@ -152,7 +152,7 @@ Retrieval metrics ignore the answer. RAG answer metrics check the whole chain:
 | **Faithfulness or groundedness** | Is every claim in the answer supported by the retrieved context? | Split the answer into claims; count those the context supports, divided by all claims. |
 | **Context precision** | Are the retrieved chunks relevant, and are the relevant ones ranked high? | Label each chunk relevant or not (by ids or a judge), then a rank-weighted precision. |
 | **Context recall** | Did retrieval bring everything needed? | Split a reference answer into claims; share of them supported by the retrieved context. |
-| **Answer relevance** | Does the answer address the question? | A judge rating, or (in Ragas) generate questions from the answer and compare them with the original by embedding similarity. |
+| **Answer relevance** | Does the answer address the question? | A judge rating, or (in Ragas, where it is called Response Relevancy) generate questions from the answer and compare them with the original by embedding similarity. |
 
 When you have labelled chunk ids, compute context metrics directly with no model. Claim checking needs a judge model, and a judge is an instrument you must calibrate: score a sample by hand, measure agreement, and recheck when you change the judge or prompt. See [LLM-as-judge and its pitfalls](../../evals/llm-as-judge-pitfalls/). Tools such as Ragas implement these metrics, but definitions differ between tools and versions, so read the formula before comparing numbers.
 

@@ -43,7 +43,7 @@ const ratio = (q?: { score: number; total: number }) => (q && q.total ? q.score 
 
 /**
  * Combine what another browser knows with what this one knows, never losing either:
- * lessons done are joined, the better quiz score and the higher game score win, and
+ * lessons done and labs done are joined, the better quiz score and the higher game score win, and
  * a single setting (path, last lesson, theme) is taken from here unless it is unset.
  */
 export function mergeSnapshots(local: Snapshot, incoming: Snapshot): Snapshot {
@@ -54,7 +54,7 @@ export function mergeSnapshots(local: Snapshot, incoming: Snapshot): Snapshot {
     const b = incoming[k] ?? null;
     if (a === null) out[k] = b;
     else if (b === null) out[k] = a;
-    else if (k === 'layerwise:done' && Array.isArray(a) && Array.isArray(b)) out[k] = [...new Set([...a, ...b])];
+    else if ((k === 'layerwise:done' || k === 'layerwise:labs') && Array.isArray(a) && Array.isArray(b)) out[k] = [...new Set([...a, ...b])];
     else if (k === 'layerwise:quiz') {
       const merged: QuizBest = { ...(a as QuizBest) };
       for (const [id, q] of Object.entries(b as QuizBest)) if (ratio(q) > ratio(merged[id])) merged[id] = q;

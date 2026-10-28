@@ -28,6 +28,17 @@ export const extrasEcosystem: Record<string, Extra> = {
         answer: 1,
         why: 'Temperature and max tokens are sampling settings, changed per request with no retraining. Learning rate and layers only matter during training.',
       },
+      {
+        q: 'A model states a wrong fact at temperature 0. What does the lesson say about raising the temperature to 0.7?',
+        options: [
+          'It will not fix it: temperature does not add knowledge, so the fix is retrieval or fine-tuning',
+          'It helps, because a higher temperature lets the model explore until it finds the right fact',
+          'It retrains the model\'s parameters a little on every request',
+          'It makes the model look the fact up in its training data',
+        ],
+        answer: 0,
+        why: 'Temperature only changes how the model chooses among what it already knows, so a fact that is wrong at 0 is wrong at 0.7 too, just less often. Adding knowledge takes retrieval, or fine-tuning, which changes parameters.',
+      },
     ],
   },
   'rag-agents/the-tools-and-ecosystem': {
@@ -56,6 +67,17 @@ export const extrasEcosystem: Record<string, Extra> = {
         options: ['Safetensors', 'GGUF', 'SKILL.md', 'I don’t know'],
         answer: 1,
         why: 'GGUF stores quantized weights with their metadata in one file. Safetensors is a different weight format, and SKILL.md is the instruction file of an Agent Skill.',
+      },
+      {
+        q: 'Your team wants the model to follow its standard release-notes process, using a template and a small script, and to load that know-how only when a task needs it. Which fits best?',
+        options: [
+          'An MCP server, because it plugs tools into any compatible client',
+          'An Agent Skill: a SKILL.md folder of instructions and scripts the agent loads when a task matches',
+          'A serving engine, so the model runs the process on the server',
+          'Function calling, which stores the process inside the model API',
+        ],
+        answer: 1,
+        why: 'The lesson uses skills for repeatable know-how, with the instructions and scripts kept together and loaded when a task matches. An MCP server suits tools shared across several apps, and function calling stores nothing outside your application.',
       },
     ],
   },
@@ -90,6 +112,17 @@ export const extrasEcosystem: Record<string, Extra> = {
         options: ['About 1 GiB', 'About 1 MiB', 'About 16 GiB', 'I don’t know'],
         answer: 0,
         why: '8,000 × 128 KiB = 1,024,000 KiB, which is about 1 GiB. Multiply by the number of users to see why long contexts are expensive to serve.',
+      },
+      {
+        q: 'A team finds that the same message costs more to process in Hindi than in English. What reason does the lesson give?',
+        options: [
+          'The provider adds a surcharge for non-English text',
+          'Hindi has to be translated to English first inside the model',
+          'The KV cache is larger per token for Hindi',
+          'Many languages other than English take more tokens for the same meaning, and tokens are what you pay for',
+        ],
+        answer: 3,
+        why: 'Text in many languages other than English is split into more tokens for the same meaning: one Hindi word was 4 tokens with one tokenizer and 6 with an older one. More tokens means a higher bill and less room in the context window.',
       },
     ],
   },

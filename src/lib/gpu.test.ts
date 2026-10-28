@@ -24,6 +24,26 @@ describe('gpu data', () => {
     expect(gpuById('ironwood')).toMatchObject({ memGB: 192, bwGBs: 7370 });
   });
 
+  it('keeps the figures read from AMD, Google and AWS pages in October 2026', () => {
+    expect(gpuById('mi325x')).toMatchObject({ memGB: 256, bwGBs: 6000, memType: 'HBM3E' });
+    expect(gpuById('mi355x')).toMatchObject({ memGB: 288, bwGBs: 8000, memType: 'HBM3E' });
+    expect(gpuById('tpu-v6e')).toMatchObject({ memGB: 32, bwGBs: 1638 });
+    expect(gpuById('trainium2')).toMatchObject({ vendor: 'AWS', memGB: 96, bwGBs: 2900 });
+    // the Trn2 instance page lists 1.5 TB and 46 TB/s across 16 chips
+    expect(gpuById('trainium2').memGB * 16).toBeCloseTo(1536, -1);
+    expect(gpuById('trainium2').bwGBs * 16).toBeCloseTo(46400, -3);
+  });
+
+  it('MI355X has more memory and bandwidth than MI325X, which beats MI300X', () => {
+    expect(gpuById('mi355x').memGB).toBeGreaterThan(gpuById('mi325x').memGB);
+    expect(gpuById('mi325x').memGB).toBeGreaterThan(gpuById('mi300x').memGB);
+    expect(gpuById('mi325x').bwGBs).toBeGreaterThan(gpuById('mi300x').bwGBs);
+  });
+
+  it('every vendor part is one of the four the explorer groups', () => {
+    for (const g of gpus) expect(['NVIDIA', 'AMD', 'Google', 'AWS']).toContain(g.vendor);
+  });
+
   it('HBM parts have several times the bandwidth of the GDDR cards', () => {
     const hbm = gpus.filter((g) => g.memType.startsWith('HBM')).map((g) => g.bwGBs);
     const gddr = gpus.filter((g) => g.memType.startsWith('GDDR')).map((g) => g.bwGBs);

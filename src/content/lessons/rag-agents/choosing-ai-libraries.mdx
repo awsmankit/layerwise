@@ -1,0 +1,85 @@
+---
+title: "Choosing AI libraries without drowning"
+track: rag-agents
+level: intermediate
+order: 8
+summary: Which kind of library sits at which layer of an LLM app, four questions to ask before adding one, what a framework costs you over time, and a checklist to run on any library before you depend on it.
+updated: 2026-10-28
+sources:
+  - label: "AutoGen README: archived, with Microsoft Agent Framework as the successor"
+    url: https://github.com/microsoft/autogen
+  - label: "Microsoft Agent Framework overview (Microsoft Learn)"
+    url: https://learn.microsoft.com/en-us/agent-framework/overview/
+  - label: "AG2 README: v1.0 and AG2 Classic"
+    url: https://github.com/ag2ai/ag2
+  - label: "LangChain and LangGraph reach 1.0 (LangChain blog, October 2025)"
+    url: https://www.langchain.com/blog/langchain-langgraph-1dot0
+  - label: "Text Generation Inference README: maintenance mode"
+    url: https://github.com/huggingface/text-generation-inference
+  - label: "Weaviate licence file"
+    url: https://github.com/weaviate/weaviate/blob/main/LICENSE
+  - label: "Langfuse licence file"
+    url: https://github.com/langfuse/langfuse/blob/main/LICENSE
+  - label: "Arize Phoenix licence file (Elastic License 2.0)"
+    url: https://github.com/Arize-ai/phoenix/blob/main/LICENSE
+---
+
+import LlmAppStack from '../../../components/viz/LlmAppStack.tsx';
+import LibraryDecision from '../../../components/viz/LibraryDecision.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+
+New libraries appear every month, and names, owners and even repositories change. This lesson is not a list of tools. It is a way to decide. The [libraries map](../../../libraries/) holds the list, with each entry checked against the project's own repository and docs.
+
+## Libraries sit at layers
+
+<LlmAppStack client:visible />
+
+Read the stack top to bottom. Each kind of library solves one layer's problem. Three jobs cut across all of them: evaluating, guarding and observing. A small app may need none of these yet. Add them as the problem shows up.
+
+## Start from the job
+
+<LibraryDecision client:visible />
+
+Find what you are building, then read the two or three names beside it. Compare them on the map, and try the smallest one for an afternoon before you commit.
+
+## Four questions before you add anything
+
+1. **Do I have this problem today?** A library is for a problem you have, not one you might have. Three model calls in a row need a function, not a framework.
+2. **Is it maintained?** Look at the latest release and the last code push, not the star count.
+3. **How much does it hide?** Built-in prompts, retries and parsing are still your app's behaviour. Can you see them and change them?
+4. **Can I leave?** Keep the library at the edge of your code. If rewriting to plain calls would take a day, you are safe. If it would take a month, you are locked in.
+
+## What a framework costs
+
+A framework saves time at the start and charges for it later. The projects on the map show how.
+
+- **Churn.** Microsoft's AutoGen README now says the project is archived and names Microsoft Agent Framework as its successor. AG2, which grew out of AutoGen, shipped a 1.0 that is not a drop-in upgrade; the old code lives on as AG2 Classic. LangChain and LangGraph reached 1.0 in October 2025 and published a release policy, so upgrades can be planned.
+- **Things move.** Strands Agents' repository is now called harness-sdk. RAGAS and Presidio moved to new GitHub organisations. Hugging Face put Text Generation Inference into maintenance mode and points to vLLM and SGLang. Docs links and install commands go stale.
+- **Hidden behaviour.** A library's default prompts and retry rules shape your answers, and an error three layers deep is harder to debug than a twenty-line loop you wrote.
+
+Plain code has a cost too: you write and test the loop yourself. For one model, a few tools and a clear flow, that is often the cheaper side. [Agents and tool use](../agents-and-tool-use/) shows the loop in full, and [LangChain and LangGraph](../langchain-and-langgraph/) says when a graph runtime pays for itself.
+
+## A checklist for any library
+
+| Check | Where to look | Warning sign |
+| --- | --- | --- |
+| Last release and last push | The repository's releases and commits | Nothing in a year, or "archived" in the README |
+| Who answers | Recent issues and pull requests | Many open bugs with no replies |
+| Licence | The LICENSE file, not the badge | Terms that are source-available only, or directories under another licence |
+| Data sent out | The docs and config for telemetry | On by default with no clear way to turn it off |
+| Escape hatch | Can you call the provider SDK directly and still use the library? | The library owns your data model |
+| Tests and docs | The tests folder, and the docs for the version you install | Docs for a different major version |
+| Install | The command in the project's own docs | An install script you did not read |
+
+The licence row catches real surprises. Weaviate, Langfuse and LiteLLM keep some directories under a separate enterprise licence, and Arize Phoenix uses the Elastic License 2.0, which is source-available rather than an OSI-approved open-source licence. None of that rules a project out. It does decide whether you can use it for your case.
+
+<Callout title="Check the date" kind="note">
+The map was checked on 28 October 2026. Statuses, names and install commands change faster than lessons do, so open the project's own docs before you rely on a line here. `npm run check-libraries` re-checks every link and flags archived or renamed repositories.
+</Callout>
+
+## Where to go next
+
+- Browse the [libraries map](../../../libraries/) and filter by the job you have.
+- Learn how one framework works end to end in [LangChain and LangGraph](../langchain-and-langgraph/).
+- See how agents reach tools in [MCP in depth](../mcp-in-depth/) and [The tools and the ecosystem](../the-tools-and-ecosystem/).
+- Compare local and server engines in [Inference engines compared](../../local/inference-engines-compared/).

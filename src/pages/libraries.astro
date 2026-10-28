@@ -1,0 +1,16 @@
+---
+import ToolPage from '../layouts/ToolPage.astro';
+import LibraryList from '../components/ui/LibraryList.tsx';
+import { librariesChecked, libraries } from '../data/libraries';
+import { withBase } from '../lib/url';
+---
+
+<ToolPage figure="stack" title="AI libraries map" lede="The libraries and tools people use to build with models, by job, with what each one is, what it suits and where to start.">
+  <LibraryList client:load />
+  <Fragment slot="notes">
+    <h2>How to read this map</h2>
+    <p>This is a map, not a shopping list. Most projects need a few of these, and some need none: a plain loop and the model's own SDK go a long way. <a href={withBase('/learn/rag-agents/choosing-ai-libraries/')}>Choosing AI libraries</a> explains how to decide.</p>
+    <p><b>Status</b> is "Active" when the project had a release or code push in the last twelve months. "Archived" and "Maintenance mode" are what the project itself says, and the card names the successor where there is one. The release date is the latest tagged release.</p>
+    <p>Libraries change fast. All {libraries.length} entries were checked against each project's own repository and docs on {librariesChecked}, and install commands are copied as the docs show them. Read an install script before you run it, and check the licence for your use.</p>
+  </Fragment>
+</ToolPage>

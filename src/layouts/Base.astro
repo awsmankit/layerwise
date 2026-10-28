@@ -11,8 +11,10 @@ import '../styles/features.css';
 import '../styles/interview.css';
 import '../styles/diagrams.css';
 import '../styles/landing.css';
+import '../styles/footer.css';
 import SearchPalette from '../components/ui/SearchPalette.tsx';
-import { site, nav, footerNav } from '../site';
+import { site, nav, footerGroups } from '../site';
+import { swatch, trackSwatch } from '../lib/palette';
 import { withBase } from '../lib/url';
 
 interface Props {
@@ -28,6 +30,9 @@ interface Props {
 const { title, description = site.description, progress = false, track, image } = Astro.props;
 const fullTitle = title ? `${title} | ${site.name}` : `${site.name}: ${site.tagline}`;
 const path = Astro.url.pathname;
+// a thin stripe of the twelve track colours along the top of the footer
+const stops = Object.values(trackSwatch).map((n) => swatch[n]);
+const stripe = `background:linear-gradient(90deg,${stops.map((c, i) => `${c} ${((i * 100) / stops.length).toFixed(2)}% ${(((i + 1) * 100) / stops.length).toFixed(2)}%`).join(',')})`;
 const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : undefined;
 const ogImage = Astro.site ? new URL(withBase(image ?? '/og.png'), Astro.site).href : undefined;
 const trackStyle = track ? `--track:${track.color};--on-track:${track.on}` : undefined;
@@ -73,7 +78,7 @@ const trackStyle = track ? `--track:${track.color};--on-track:${track.on}` : und
       })();
     </script>
   </head>
-  <body class:list={[track && 'has-track']} style={trackStyle}>
+  <body id="top" class:list={[track && 'has-track']} style={trackStyle}>
     <a class="skip" href="#main">Skip to content</a>
     {progress && <div class="reading-progress" id="reading-progress" aria-hidden="true"></div>}
     <header class="site-header">
@@ -117,18 +122,36 @@ const trackStyle = track ? `--track:${track.color};--on-track:${track.on}` : und
     </main>
 
     <footer class="site-footer">
-      <div class="wrap">
-        <div>
-          <p>{site.name}. {site.tagline}.</p>
-          <p class="licence">
-            Lessons and teaching material: <a href={site.contentLicence.url} rel="license noopener">{site.contentLicence.label}</a>, reuse freely with credit. Code: <a href={`${site.repo}/blob/main/LICENSE`} rel="noopener">MIT</a>.
-          </p>
+      <div class="foot-stripe" style={stripe} aria-hidden="true"></div>
+      <div class="wrap foot">
+        <div class="foot-brand">
+          <a class="brand" href={withBase('/')} aria-label={`${site.name} home`}>
+            <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+              <path d="M2 5h18M4 11h14M7 17h8" stroke-linecap="round"></path>
+              <circle cx="11" cy="11" r="2.4" stroke="none"></circle>
+            </svg>
+            {site.name}
+          </a>
+          <p class="foot-tag">{site.tagline}.</p>
+          <p class="foot-privacy">No accounts and no analytics. What you do here is saved only in your own browser.</p>
         </div>
-        <ul>
-          {footerNav.map((item) => <li><a href={withBase(item.href)}>{item.label}</a></li>)}
-          <li><a href={withBase('/rss.xml')}>RSS</a></li>
-          {site.repo && <li><a href={site.repo}>Source on GitHub</a></li>}
-        </ul>
+        {
+          footerGroups.map((g) => (
+            <nav class="foot-col" aria-label={g.title}>
+              <h2>{g.title}</h2>
+              <ul>
+                {g.links.map((l) => <li><a href={withBase(l.href)}>{l.label}</a></li>)}
+                {g.title === 'This site' && site.repo && <li><a href={site.repo} rel="noopener">Source on GitHub</a></li>}
+              </ul>
+            </nav>
+          ))
+        }
+      </div>
+      <div class="wrap foot-base">
+        <p>
+          Lessons and teaching material: <a href={site.contentLicence.url} rel="license noopener">{site.contentLicence.label}</a>, reuse freely with credit. Code: <a href={`${site.repo}/blob/main/LICENSE`} rel="noopener">MIT</a>.
+        </p>
+        <a class="foot-top" href="#top">Back to top <span aria-hidden="true">↑</span></a>
       </div>
     </footer>
 

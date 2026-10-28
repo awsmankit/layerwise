@@ -14,6 +14,9 @@ const SCOPES = [
   { name: 'Regional', lines: ['stays in the one', 'region you picked'], says: 'processing stays in the one region you picked' },
 ];
 
+/* The docs list Global and Data Zone batch, but no regional batch (October 2026). */
+const offered = (type: number, scope: number) => !(type === 2 && scope === 2);
+
 const CX = (c: number) => 200 + c * 172;
 const CW = 160;
 const RY = (r: number) => 132 + r * 54;
@@ -54,6 +57,14 @@ export default function DeploymentGrid() {
               <text x="32" y={RY(j) + 42} className="dx-small">{s.lines[1]}</text>
               {TYPES.map((t, i) => {
                 const on = i === c && j === r;
+                if (!offered(i, j)) {
+                  return (
+                    <g key={t.name} aria-label={`${t.name}, ${s.name}: not offered`}>
+                      <rect x={CX(i)} y={RY(j)} width={CW} height={RH} rx="8" className="kv-free" style={{ opacity: 0.55 }} />
+                      <text x={CX(i) + CW / 2} y={RY(j) + 27} textAnchor="middle" className="dx-small">not offered</text>
+                    </g>
+                  );
+                }
                 return (
                   <g
                     key={t.name}
@@ -90,7 +101,7 @@ export default function DeploymentGrid() {
           <text x="724" y={RY(1) + RH / 2} textAnchor="middle" className="dx-small" transform={`rotate(-90 724 ${RY(1) + RH / 2})`}>more capacity</text>
         </svg>
         <p className="viz-cap" aria-live="polite">
-          <b>{`${TYPES[c].name}, ${SCOPES[r].name}:`}</b> {`${TYPES[c].says[0].toUpperCase()}${TYPES[c].says.slice(1)}. Scope: ${SCOPES[r].says}.`} Not every model supports every type and scope, so check the current availability tables.
+          <b>{`${TYPES[c].name}, ${SCOPES[r].name}:`}</b> {`${TYPES[c].says[0].toUpperCase()}${TYPES[c].says.slice(1)}. Scope: ${SCOPES[r].says}.`} Batch is offered at Global and Data Zone scope only. Not every model supports every type and scope, so check the current availability tables.
         </p>
       </div>
     </Root>

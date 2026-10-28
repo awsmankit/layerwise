@@ -11,7 +11,7 @@ const ROWS: { label: string; pieces: Piece[] }[] = [
     pieces: [
       { name: 'Model Garden', lines: ['200+ models: Gemini,', 'Claude, Gemma, Llama', 'and others'], glyph: 'box' },
       { name: 'Gemini API', lines: ["Google's own models", 'billed per token,', 'shared capacity'], glyph: 'gateway' },
-      { name: 'Provisioned Throughput', lines: ['reserved Gemini slice,', 'SLAs, predictable', 'per-token pricing'], glyph: 'lock', idle: true },
+      { name: 'Provisioned Throughput', lines: ['fixed-cost, fixed-term', 'subscription for Gemini', 'throughput, with an SLA'], glyph: 'lock', idle: true },
     ],
   },
   {
@@ -24,7 +24,7 @@ const ROWS: { label: string; pieces: Piece[] }[] = [
   {
     label: 'Agents',
     pieces: [
-      { name: 'Agent Dev Kit (ADK)', lines: ['open source: Python,', 'Go, Java, TypeScript'], glyph: 'pen' },
+      { name: 'Agent Dev Kit (ADK)', lines: ['open source: Python,', 'Go, Java, TypeScript,', 'Kotlin'], glyph: 'pen' },
       { name: 'Agent Runtime', lines: ['hosts agents; Memory', 'Bank and Sessions;', 'was Agent Engine'], glyph: 'server' },
       { name: 'Agent Studio', lines: ['low-code agent', 'builder'], glyph: 'layers' },
     ],

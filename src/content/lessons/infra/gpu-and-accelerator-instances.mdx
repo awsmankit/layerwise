@@ -4,7 +4,7 @@ track: infra
 level: intermediate
 order: 3
 summary: Compare the GPU and accelerator instance families on the three big clouds, learn which suit training and which suit inference, and understand quotas, reservations and Spot.
-updated: 2026-10-26
+updated: 2026-10-28
 sources:
   - label: "AWS: accelerated computing instance types"
     url: https://aws.amazon.com/ec2/instance-types/accelerated-computing/
@@ -24,6 +24,8 @@ sources:
     url: https://docs.cloud.google.com/compute/docs/accelerator-optimized-machines
   - label: "Google Cloud: TPU machine types"
     url: https://docs.cloud.google.com/compute/docs/tpus/tpu-machines
+  - label: "Google Cloud: TPU7x (Ironwood)"
+    url: https://docs.cloud.google.com/tpu/docs/tpu7x
 ---
 
 import Callout from '../../../components/ui/Callout.astro';
@@ -42,15 +44,15 @@ All three big clouds rent you GPUs by the hour, but they name and package them d
 | Hopper generation (H100, H200) | P5 (H100), P5e and P5en (H200) | ND H100 v5, ND H200 v5 | A3 Mega, High and Edge (H100), A3 Ultra (H200) |
 | Older training | P4 (A100) | ND A100 v4 (8x A100 40 GB) | A2 (A100) |
 | Inference and fine-tuning, NVIDIA | G6 (L4), G6e (L40S), G5 (A10G), newer G7 | NC A100 v4, NCads H100 v5, NCasT4_v3 (T4) | G2 (L4), G4 |
-| Own silicon | Trainium (Trn2, Trn3), Inferentia (Inf2) | none for NVIDIA-style training; AMD option: ND MI300X v5 | TPUs: v5e, v5p, v6e (Trillium), Ironwood |
+| Own silicon | Trainium (Trn2, Trn3), Inferentia (Inf2) | Maia chips run Microsoft's own services and are not rentable as VMs; AMD option: ND MI300X v5 | TPUs: v5e, v5p, v6e (Trillium), Ironwood (TPU7x) |
 | Software for own silicon | AWS Neuron SDK, not CUDA | n/a | JAX and XLA, plus PyTorch support; check the TPU docs |
 
 Some details worth knowing:
 
 - **AWS P5** has up to 8 H100 GPUs with up to 3,200 Gbps of EFA networking and 900 GB/s NVSwitch between GPUs. **P6-B200** has 8 Blackwell GPUs and 1,440 GB of total GPU memory. The EC2 docs also list P6-B300 and P6e-GB200.
-- **Azure ND H100 v5** is 8 H100 80 GB GPUs with 400 Gbps Quantum-2 InfiniBand per GPU, and there is no single-GPU size. ND is the large-scale training family, NC is for applied AI and inference, and NV is for visualization. Microsoft says net new NC A100 v4 capacity is not planned, with new capacity going to NCads H100 v5 (up to 2 H100 NVL 94 GB).
-- **Google A3 Mega** gives up to 1,800 Gbps GPU-to-GPU. **A3 Ultra and A4** give up to 3,600 Gbps over RDMA.
-- **Google Ironwood (TPU7x)** reached general availability in late 2025: 192 GB HBM3E per chip and a 9,216-chip superpod. TPU 8t and 8i were announced for later in 2026.
+- **Azure ND H100 v5** is 8 H100 80 GB GPUs with 400 Gbps Quantum-2 InfiniBand per GPU, and there is no single-GPU size. ND is the large-scale training family, NC is for applied AI and inference, and NV is for visualization. Microsoft's NC A100 v4 page says it is deploying only net new capacity for the newer NCads H100 v5 (up to 2 H100 NVL 94 GB), so plan for A100 capacity not growing.
+- **Google A3 Mega** (8 H100) gives up to 1,800 Gbps of network bandwidth between VMs when GPUDirect-TCPXO is set up. **A3 Ultra and A4** list up to 3,600 Gbps. Inside one VM the GPUs talk over NVLink at 900 GB/s (H100, H200) or 1,800 GB/s (B200).
+- **Google Ironwood (TPU7x)** has 192 GiB of HBM per chip and pods of up to 9,216 chips. In November 2025 Google said it would be generally available "in the coming weeks". The eighth-generation TPU 8t (training) and 8i (inference) were announced in April 2026, with general availability promised "later this year". Check the TPU docs for what you can order today.
 
 ## Training versus inference
 
@@ -69,7 +71,7 @@ A rough guide, assuming the serving engine and quantization are mature. Work out
 This is where plans fail. Availability is a separate question from price.
 
 - **Azure.** Every subscription starts with zero vCPU quota for GPU VM series in each region. You must request an increase for each series before you can create one, and approval is not instant. Having quota does not guarantee that capacity exists in the region.
-- **Google Cloud.** A3 Ultra and A4 cannot be created as ordinary on-demand VMs. You need a capacity reservation, Spot, or Flex-start. GPU quota also applies per region. Check the current docs for each machine type.
+- **Google Cloud.** A3 Ultra and A4 cannot be created as ordinary on-demand VMs. Google's consumption table allows Spot, Flex-start, or a future reservation (calendar mode or capacity block). A4X and A4X Max are available through capacity blocks only. GPU quota also applies per region, and other series such as A3 Mega and G2 can be created on demand. Check the current docs for each machine type.
 - **AWS.** Large GPU instances are often obtained through **EC2 Capacity Blocks for ML**: you reserve a block of GPUs for a fixed period starting at a chosen date. P6-B200 launched this way. AWS also applies vCPU service quotas per instance family. Check the quota console for your family.
 
 <Callout title="Ask early" kind="note">

@@ -1,0 +1,98 @@
+---
+title: "Evaluating agents: trials, graders and pass^k"
+track: evals
+level: advanced
+order: 5
+summary: "How to test something that takes many steps, uses tools and gives a different answer each time: grade the outcome, choose graders, run each task several times, and read pass@k and pass^k without fooling yourself."
+updated: 2026-10-28
+sources:
+  - label: "Demystifying evals for AI agents (Anthropic Engineering, January 2026)"
+    url: https://www.anthropic.com/research/demystifying-evals-for-ai-agents
+  - label: "τ-bench: A Benchmark for Tool-Agent-User Interaction in Real-World Domains (Yao et al., 2024)"
+    url: https://arxiv.org/abs/2406.12045
+---
+
+import AgentEvalLoop from '../../../components/viz/AgentEvalLoop.tsx';
+import PassAtK from '../../../components/viz/PassAtK.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+
+[Evals 101](../evals-101/) tests one prompt and one answer. An agent is harder to test. It takes many steps, calls tools that change real things, and may do something different each time you run it. This lesson uses one running example: a support agent that looks up an order and issues a refund when the policy allows.
+
+## What changes with an agent
+
+Three things:
+
+- **Many steps.** A wrong turn early can ruin the end, or the agent can recover. One answer to check becomes a whole run.
+- **Tools change the world.** A refund is a row in a database. What the agent *says* it did and what it *did* can differ.
+- **It varies.** A task that passed on one run might fail on the next.
+
+Anthropic's engineering post on agent evals (January 2026) gives a shared vocabulary: a **task** is one test with inputs and success criteria, a **trial** is one attempt at it, a **grader** scores some aspect of the result, the **transcript** is the full record of a trial (also called the trace or trajectory), and the **outcome** is the final state in the environment. It also makes a point that is easy to miss: evaluating an agent means evaluating the **harness** (the scaffold that lets a model act) and the model together.
+
+<AgentEvalLoop client:visible />
+
+## Grade the outcome, not the route
+
+The post's advice is to grade what the agent produced, not the path it took. Checking an exact sequence of steps is "too rigid" and leads to brittle tests, because a good agent may reach the result another way.
+
+For the refund task the outcome is in the database, not in the reply:
+
+- one refund exists for this order,
+- its amount is what the policy allows,
+- no second refund was created.
+
+"I have refunded you" is not an outcome. For tasks with several parts, partial credit is a fair way to show progress.
+
+## Choose the grader
+
+| Grader | Good at | Watch out for |
+| --- | --- | --- |
+| **Code** (string match, tests, a check on the database or a tool call) | Fast, cheap, objective, repeatable, easy to debug | Brittle to valid variations; no nuance; little use for subjective work |
+| **Model** (a rubric, pairwise comparison, several judges that must agree) | Flexible, scales, handles open-ended output | Not deterministic; costs more than code; needs calibrating against humans |
+| **Human** (expert review, spot checks) | The gold standard; calibrates model graders | Expensive and slow, and may need experts |
+
+For the refund task: code checks the database, a model grades the tone of the reply, and a person reviews a sample to check the model grader agrees. [LLM-as-judge and its pitfalls](../llm-as-judge-pitfalls/) covers calibrating the middle one.
+
+## Where the tasks come from
+
+Anthropic's guidance is that 20 to 50 simple tasks drawn from real failures is a great start, and that you should not wait for hundreds. Good sources are the checks you do by hand before a release, the tasks users ask for most, your bug tracker and your support queue. Turn each reported failure into a task.
+
+Test both directions. If you only test "refund when allowed", an agent that refunds everything will score well. Add the cases where it should refuse.
+
+Each task needs to be fair:
+
+- It should be clear enough that two domain experts would reach the same pass or fail.
+- It should have a reference solution that proves it can be solved and the graders work.
+- A 0% pass rate over many trials is most often a broken task, not an incapable agent.
+
+## One run is not enough
+
+Because results vary, run each task several times, and start every trial from a clean environment. Shared state between trials can make failures correlate or flatter the score.
+
+Two ways to summarise k trials, as Anthropic defines them:
+
+- **pass@k**: the likelihood that the agent gets at least one correct solution in k attempts.
+- **pass^k**: the probability that all k trials succeed.
+
+<PassAtK client:visible />
+
+Slide the rate to 75% and k to 3: pass^3 is 0.75 × 0.75 × 0.75, about 42%. That is the number from Anthropic's post. Here is the same arithmetic for a task solved 80% of the time, assuming each trial is independent:
+
+| Trials, k | pass@k | pass^k |
+| --- | --- | --- |
+| 1 | 80% | 80% |
+| 3 | 99.2% | 51.2% |
+| 10 | about 100% | 10.7% |
+
+The same agent looks nearly perfect on one measure and unreliable on the other. Which to use depends on the product. Use **pass@k** when one success is enough, for example when it proposes several fixes and a person picks. Use **pass^k** when it must work every time, as a refund agent must. The τ-bench paper (2024) introduced pass^k "to evaluate the reliability of agent behavior over multiple trials", and reported agents that were quite inconsistent, with pass^8 below 25% in its retail domain. That is one benchmark from 2024, but it shows why a single success rate can mislead.
+
+<Callout title="Real trials are not independent coin flips" kind="note">
+The table assumes every trial has the same chance of success. In practice some tasks always pass and some never do. That is why you also look at results task by task, not only at the average.
+</Callout>
+
+## Cost, and reading what happened
+
+**Cost.** Track latency, tokens and cost per task, as Anthropic's post lists. Define **cost per solved task** as total spend divided by tasks solved at the pass threshold you chose. It lets you compare a cheap setting that fails often with a dearer one that does not, as in [reasoning models](../../llm/reasoning-models/). Model graders and human review add to it.
+
+**Read the transcripts.** The post is blunt: you will not know whether your graders work unless you read the transcripts and grades from many trials. A failure should look fair. If you cannot tell what the agent got wrong, the grader or the task needs fixing, not the agent.
+
+Evals cost effort up front and pay back later, as the post notes. Start with 20 to 50 tasks, a clean environment per trial and a code grader, keep a few tasks aside as a held-out set as in [prompt patterns and optimisation](../../llm/prompt-patterns-and-optimisation/), and add the rest when a real failure shows you need it.

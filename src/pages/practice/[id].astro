@@ -1,0 +1,47 @@
+---
+import ToolPage from '../../layouts/ToolPage.astro';
+import LabRunner from '../../components/ui/LabRunner.tsx';
+import { labs } from '../../data/labs';
+import { nextLab, prevLab } from '../../lib/lab-progress';
+import { withBase } from '../../lib/url';
+import { getLessons, slugOf } from '../../lib/content';
+
+export function getStaticPaths() {
+  return labs.map((lab) => ({ params: { id: lab.id }, props: { lab } }));
+}
+
+const { lab } = Astro.props;
+const lessons = await getLessons();
+const lesson = lessons.find((l) => `${l.data.track}/${slugOf(l)}` === lab.lesson);
+const next = nextLab(labs, lab.id);
+const prev = prevLab(labs, lab.id);
+const level = { basic: 'Basic', intermediate: 'Intermediate', advanced: 'Advanced' }[lab.level];
+---
+
+<ToolPage title={lab.title} lede={lab.goal}>
+  <p style="margin:0 0 1rem">
+    <a href={withBase('/practice/')}>← All labs</a>
+    <span style="margin-inline:0.6rem;color:var(--ink-3)">{level} · about {lab.minutes} minutes</span>
+    {lesson && <a href={withBase(`/learn/${lab.lesson}/`)}>Learn the idea: {lesson.data.title}</a>}
+  </p>
+
+  {
+    lab.steps && lab.steps.length > 0 && (
+      <ol style="margin:0 0 1.2rem;padding-left:1.3rem;display:grid;gap:0.3rem">
+        {lab.steps.map((s) => <li>{s}</li>)}
+      </ol>
+    )
+  }
+
+  <LabRunner client:load lab={{ id: lab.id, title: lab.title, starter: lab.starter, solution: lab.solution, tests: lab.tests, hints: lab.hints }} next={next ? { id: next.id, title: next.title } : null} />
+
+  <nav aria-label="Other labs" style="display:flex;justify-content:space-between;gap:1rem;margin-top:1.6rem;flex-wrap:wrap">
+    {prev ? <a href={withBase(`/practice/${prev.id}/`)}>← {prev.title}</a> : <span />}
+    {next ? <a href={withBase(`/practice/${next.id}/`)}>{next.title} →</a> : <span />}
+  </nav>
+
+  <Fragment slot="notes">
+    <h2>About this lab</h2>
+    <p>Your code runs in your browser and is saved here, in this browser only. If the checks fail, read the message under each one: it says what was expected. Use a hint, or open the solution after one run.</p>
+  </Fragment>
+</ToolPage>

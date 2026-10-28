@@ -34,6 +34,17 @@ export const extras_mcp: Record<string, Extra> = {
         answer: 0,
         why: 'Token passthrough is forbidden by the spec: it breaks audience checks and creates confused-deputy and audit problems.',
       },
+      {
+        q: 'You are building an MCP server that runs only on one person\'s laptop, launched by their assistant. Which transport does the lesson suggest, and where should the logs go?',
+        options: [
+          'Streamable HTTP, with logs on stdout',
+          'stdio, with logs on stderr, because stdout carries the messages',
+          'The older HTTP+SSE transport, with logs in a file only',
+          'stdio, with logs on stdout so the client can show them',
+        ],
+        answer: 1,
+        why: 'stdio suits a tool on one person\'s machine, and its messages travel over stdout, so anything else written there breaks them. HTTP+SSE is deprecated, and Streamable HTTP is for shared services.',
+      },
     ],
   },
 };

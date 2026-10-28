@@ -4,12 +4,12 @@ track: infra
 level: advanced
 order: 7
 summary: Learn what to measure on GPU inference fleets, how to load test realistically, and how to turn tokens per second and peak traffic into a fleet size with headroom.
-updated: 2026-10-26
+updated: 2026-10-28
 sources:
   - label: "NVIDIA DCGM documentation"
     url: https://docs.nvidia.com/datacenter/dcgm/latest/index.html
   - label: "vLLM documentation"
-    url: https://docs.vllm.ai
+    url: https://docs.vllm.ai/en/latest/
   - label: "Efficient Memory Management for Large Language Model Serving with PagedAttention (Kwon et al., 2023)"
     url: https://arxiv.org/abs/2309.06180
   - label: "Kubernetes: Schedule GPUs"
@@ -42,7 +42,7 @@ NVIDIA's Data Center GPU Manager (DCGM) and its exporter publish GPU metrics to 
 |---|---|
 | `DCGM_FI_DEV_FB_USED` | Memory in use. Creeping growth suggests leaks or fragmentation. |
 | `DCGM_FI_DEV_GPU_TEMP`, `DCGM_FI_DEV_POWER_USAGE` | Heat and power. Sudden changes can mean cooling trouble. |
-| `DCGM_FI_DEV_CLOCK_THROTTLE_REASONS` (or similar) | Whether the GPU is slowing itself down. |
+| `DCGM_FI_DEV_CLOCKS_EVENT_REASONS` (older name: `DCGM_FI_DEV_CLOCK_THROTTLE_REASONS`) | Whether the GPU is slowing itself down. |
 | `DCGM_FI_PROF_PIPE_TENSOR_ACTIVE` | How busy the tensor cores are. Closer to real work than basic utilisation. |
 | `DCGM_FI_DEV_XID_ERRORS` | Driver-reported GPU errors. A signal to drain and replace. |
 

@@ -47,6 +47,17 @@ export const extrasInfra: Record<string, Extra> = {
         answer: 0,
         why: 'Decode makes one token at a time and re-reads all the weights for each, so memory speed sets the pace and arithmetic units mostly wait.',
       },
+      {
+        q: 'A server is generating text for a single user, and the arithmetic units sit mostly idle. Which change uses the chip better?',
+        options: [
+          'Add more tensor cores to the GPU',
+          'Raise the clock speed so the arithmetic finishes sooner',
+          'Move the weights to a CPU so they are read more cleverly',
+          'Serve many users in the same step, so one read of the weights serves many requests',
+        ],
+        answer: 3,
+        why: 'Decode is memory-bound: the cost is reading the weights, and one read can serve many requests at once. More arithmetic speed would not help, because the units are already waiting for data.',
+      },
     ],
   },
 
@@ -97,6 +108,17 @@ export const extrasInfra: Record<string, Extra> = {
         answer: 0,
         why: 'Speed is set by bytes read per step. Weights at 4 bits take roughly a quarter of the bytes of FP16, so the ceiling rises close to four times, less overheads.',
       },
+      {
+        q: 'A datasheet prints one compute figure marked "with sparsity" and a smaller one without. Your model\'s weights are not structured for sparsity. Which figure should you use to compare GPUs?',
+        options: [
+          'The larger sparse figure, because it is the peak',
+          'The dense figure, because most models do not use sparsity',
+          'The average of the two',
+          'Neither: compare power draw instead',
+        ],
+        answer: 1,
+        why: 'The sparsity figure only applies if the weights are structured for it, and most models are not. The dense figure is the one that reflects what you will actually get.',
+      },
     ],
   },
 
@@ -104,7 +126,7 @@ export const extrasInfra: Record<string, Extra> = {
     takeaways: [
       'Each cloud has families for large-scale training (AWS P, Azure ND, Google A3 and A4) and for inference and fine-tuning (AWS G, Azure NC, Google G2).',
       'AWS Trainium and Inferentia and Google TPUs use their own software stacks, not CUDA, so they can cost less but need porting work.',
-      'Access is often harder than choice: Azure starts GPU quota at zero, Google A3 Ultra and A4 need a reservation, Spot or Flex-start, and AWS uses Capacity Blocks.',
+      'Access is often harder than choice: Azure starts GPU quota at zero, Google A3 Ultra and A4 cannot be created on demand (they need Spot, Flex-start or a future reservation), and AWS uses Capacity Blocks.',
       'Reserve for steady or guaranteed work, use Spot only for interruptible work with checkpoints, and re-check instance lists because they change often.',
     ],
     prereq: ['infra/reading-a-gpu-spec-sheet'],
@@ -146,6 +168,17 @@ export const extrasInfra: Record<string, Extra> = {
         ],
         answer: 1,
         why: 'Spot capacity can be taken back at short notice. A job that saves checkpoints loses little when interrupted. Latency-critical services need a fallback.',
+      },
+      {
+        q: 'Your team needs a block of large GPUs on AWS for a two-week fine-tuning run that starts on a date you choose. Which route does the lesson point to?',
+        options: [
+          'Spot instances, which cannot be taken back once they start',
+          'On-demand instances, because large GPU instances are always available',
+          'EC2 Capacity Blocks for ML, which reserve GPUs for a fixed period starting at a chosen date',
+          'An Azure NV series VM, the large-scale training family',
+        ],
+        answer: 2,
+        why: 'Large GPU instances are often obtained through Capacity Blocks, which fix the period and start date. Spot capacity can be taken back, availability is a separate question from price, and NV VMs are for visualization.',
       },
     ],
   },
@@ -196,6 +229,17 @@ export const extrasInfra: Record<string, Extra> = {
         answer: 3,
         why: 'Early stages wait at the start and late stages wait at the end. More micro-batches per stage shrinks the idle fraction, as described in the GPipe paper.',
       },
+      {
+        q: 'A 405B model needs about 810 GB of weights in FP16, and an 8x H100 node has 640 GB of memory. Which option fits the lesson\'s advice?',
+        options: [
+          'Add data-parallel replicas, so each GPU needs less memory',
+          'Run it as it is, because eight GPUs share their memory',
+          'Use FP8 weights (about 405 GB) on the one node, or a node with more memory such as 8x H200',
+          'Use tensor parallelism across two nodes joined by InfiniBand, which is preferred for latency',
+        ],
+        answer: 2,
+        why: 'In FP8 the weights are about 405 GB and fit in the node; an 8x H200 node has about 1.1 TB. Data parallelism copies the whole model to every GPU, and tensor parallelism is kept inside a node because inter-node links are an order of magnitude slower.',
+      },
     ],
   },
 
@@ -244,6 +288,17 @@ export const extrasInfra: Record<string, Extra> = {
         ],
         answer: 1,
         why: 'On average a failure loses half a checkpoint interval. Frequent, fast, asynchronous checkpoints keep the lost work small.',
+      },
+      {
+        q: 'A 70B model has about 1.1 TB of training state at 16 bytes per parameter. With full sharding (FSDP or ZeRO stage 3) across 64 GPUs, roughly how much state does each GPU hold?',
+        options: [
+          'About 1.1 TB, the same as without sharding',
+          'About 70 GB',
+          'About 280 GB',
+          'About 17.5 GB',
+        ],
+        answer: 3,
+        why: '16 bytes divided by 64 GPUs is a quarter of a byte per parameter, so 70 billion parameters come to about 17.5 GB, leaving room for activations. Without sharding every GPU would need the full 1.1 TB.',
       },
     ],
   },
@@ -294,6 +349,17 @@ export const extrasInfra: Record<string, Extra> = {
         answer: 0,
         why: 'Starting a replica means a node, an image pull and weight loading. For interactive use keep at least one warm replica.',
       },
+      {
+        q: 'New replicas take several minutes to become ready, and the container image includes 100 GB of model weights. What does the lesson recommend?',
+        options: [
+          'Bake the weights into the image so there is only one thing to download',
+          'Keep the image small, keep the weights separate, and cache both on the node',
+          'Use a short liveness timeout so a slow pod is replaced quickly',
+          'Scale to zero so replicas are rarely cold',
+        ],
+        answer: 1,
+        why: 'The lesson\'s fix for slow starts is a small image with the weights kept separate and cached on the node. A short liveness timeout would kill a pod that is simply still loading, and baking in 100 GB of weights is what it says not to do.',
+      },
     ],
   },
 
@@ -343,6 +409,17 @@ export const extrasInfra: Record<string, Extra> = {
         ],
         answer: 3,
         why: 'Prefill cost and KV cache memory scale with length, so a test with short prompts overstates the capacity you will really get.',
+      },
+      {
+        q: 'One replica gets slower with no errors in the logs, and its GPU is running hot. What does the lesson say is likely happening, and what should you watch?',
+        options: [
+          'Thermal throttling: the GPU lowers its clocks, so watch temperature, clocks and throttle reasons',
+          'Memory fragmentation, which would show up as allocation failures in the logs',
+          'A noisy neighbour, which you would see directly in your own request metrics',
+          'A traffic spike, which you can only see by raising the replica count',
+        ],
+        answer: 0,
+        why: 'An overheating or power-capped GPU lowers its clocks, so throughput drops with no error. Fragmentation causes out-of-memory errors, and a noisy neighbour shows up as erratic latency while your own metrics look normal.',
       },
     ],
   },

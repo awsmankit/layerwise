@@ -1,0 +1,106 @@
+---
+title: "Reasoning models: when thinking is worth paying for"
+track: llm
+level: intermediate
+order: 7
+summary: What a reasoning model does before it answers, why the thinking is billed as output and adds to the wait, how the three big providers let you dial it, and how to decide, with an eval, whether a request needs it.
+updated: 2026-10-28
+sources:
+  - label: "Reasoning models (OpenAI API documentation)"
+    url: https://developers.openai.com/api/docs/guides/reasoning
+  - label: "Steering thinking: effort, cost and pricing (Claude documentation)"
+    url: https://platform.claude.com/docs/en/build-with-claude/thinking-steering-and-cost
+  - label: "Extended thinking with a fixed budget (Claude documentation)"
+    url: https://platform.claude.com/docs/en/build-with-claude/extended-thinking
+  - label: "Gemini thinking (Google AI for Developers)"
+    url: https://ai.google.dev/gemini-api/docs/thinking
+  - label: "Chain-of-Thought Prompting Elicits Reasoning in Large Language Models (Wei et al., 2022)"
+    url: https://arxiv.org/abs/2201.11903
+  - label: "Scaling LLM Test-Time Compute Optimally can be More Effective than Scaling Model Parameters (Snell et al., 2024)"
+    url: https://arxiv.org/abs/2408.03314
+---
+
+import ThinkingTimeline from '../../../components/viz/ThinkingTimeline.tsx';
+import ReasoningDecision from '../../../components/viz/ReasoningDecision.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+Most of what a chat model writes is the answer. A **reasoning model** first writes a stretch of its own working, then the answer. Take a support bot and two requests:
+
+- "What time do you open on Sunday?" One fact, no steps.
+- "My order came late, I used a coupon, and I already got a partial refund. What am I owed?" Several steps, each depending on the last.
+
+The first does not need thinking. The second might, and it costs more.
+
+## Why thinking helps
+
+The [chain-of-thought paper](https://arxiv.org/abs/2201.11903) (Wei et al., 2022) showed that showing a model a series of intermediate reasoning steps in the prompt improved its performance on arithmetic, commonsense and symbolic tasks. A reasoning model does that step by itself, before it replies.
+
+Spending more computation while answering is called **test-time compute**. A [2024 study](https://arxiv.org/abs/2408.03314) found that how well it works depends on how hard the prompt is, and that on problems where a smaller model already had some success, extra test-time compute could beat a model 14 times larger in a compute-matched comparison. That is a research result, not a promise for your task. You check it on your own evals.
+
+## What it costs
+
+<ThinkingTimeline client:visible />
+
+Two things follow from the drawing. The thinking comes **before** the answer, so you wait for it. And it is **billed as output tokens**. All three providers' documentation says so, and says the bill is for the full thinking, not the short summary you may be shown:
+
+- OpenAI: reasoning tokens are billed as output tokens and still use space in the context window. The raw tokens are not exposed; a summary is opt-in.
+- Anthropic: you are billed for the full thinking the model generated, not the summary in the response, and the same applies when the thinking display is omitted.
+- Google: pricing is based on the full thought tokens, not the summary tokens returned.
+
+Thinking also counts against your **output limit**. If the limit runs out while the model is still thinking, the response stops, possibly before any visible answer. OpenAI suggests leaving room for at least 25,000 tokens of reasoning and output when you start out. Anthropic and Google both say the same thing in their own terms: size the limit for thinking plus the answer.
+
+## The dials
+
+As of October 2026, the three providers expose roughly the same idea under different names. Model names and values change often, so this lesson names none; read the current page for the model you use.
+
+| Provider | Setting | What its docs say |
+| --- | --- | --- |
+| OpenAI | `reasoning.effort` | Values from `none` and `minimal` up to `xhigh` and `max`, depending on the model. Lower favours speed and fewer tokens; higher thinks more completely. |
+| Anthropic | `effort`, with adaptive thinking | The model decides whether and how much to think on each request, and effort is soft guidance (`low` to `max`). Older models use a fixed `budget_tokens` instead: at least 1,024, a target rather than a cap. |
+| Google | `thinking_level` | Which levels exist depends on the model. |
+
+Each also reports the cost afterwards. Anthropic puts the thinking share in `usage.output_tokens_details.thinking_tokens`, Google in `total_thought_tokens`. Read these on real traffic instead of trusting an estimate.
+
+<Callout title="Changing effort can cost you your cache" kind="cost">
+Anthropic's docs note that changing the effort level between requests invalidates cache breakpoints. Pick one setting for a conversation and keep it, as in [the prompt caching lesson](../context-window-and-caching/).
+</Callout>
+
+## Prompt for the goal, not the steps
+
+A thinking model plans its own steps, so a prompt that dictates them gets in its way. OpenAI's guidance: give a clear goal, strong constraints and an explicit output contract, without prescribing every intermediate step, and treat effort as a tuning knob rather than the main way to recover quality.
+
+For the refund question:
+
+- **Dictating:** "First list the order lines, then apply the coupon, then subtract the refund, then…"
+- **Stating the goal:** "Work out how much this customer is owed under the policy below. Return JSON with `amount` and `reason`. The amount can never exceed what they paid."
+
+How often a model thinks is also promptable. Anthropic's advice is to lower the effort level first, because it is a calibrated control, and to add a line in the system prompt only if that is not enough. Then measure, because prompt-based steering can cost quality.
+
+## When to use one
+
+<ReasoningDecision client:visible />
+
+Google's guide puts it plainly: minimal or low thinking for fact retrieval or classification, the default for comparing concepts, and maximum for advanced coding, maths or multi-step planning. OpenAI lists complex problem solving, coding, scientific reasoning and multi-step agent workflows. For a mix of easy and hard requests, Anthropic says adaptive thinking is a strong fit for it: the model decides per request, and at lower effort may skip thinking on easy inputs.
+
+## Evaluate it like anything else
+
+A reasoning model is not better by default. It is better at some tasks, at a price. So:
+
+1. Run your [eval set](../../evals/evals-101/) at two effort levels. Compare the pass rate, the output tokens and the time.
+2. Run each case more than once. How long a model thinks varies from run to run. The [agents evals lesson](../../evals/evaluating-agents/) shows why one run is not enough.
+3. Compare **cost per solved task**, not cost per request.
+
+<Deep title="Cost per solved task, worked with example numbers">
+
+Using the example numbers from the drawing (400 input tokens, 150 answer tokens, $2 and $10 per million input and output tokens), a request costs about $0.0023 with no thinking, $0.0083 with 600 thinking tokens and $0.0423 with 4,000. Suppose, as an illustration, that on 10 test cases the three settings solve 5, 8 and 9.
+
+| Setting | Cost of 10 cases | Solved | Cost per solved task |
+| --- | --- | --- | --- |
+| No thinking | $0.023 | 5 | $0.0046 |
+| Low effort | $0.083 | 8 | $0.0104 |
+| High effort | $0.423 | 9 | $0.047 |
+
+Low effort costs about twice as much per solved task as none and solves three more cases. High effort solves one more again, at more than four times the price of low. Whether that last case is worth it depends on what a wrong answer costs you. These pass counts are made up; yours come from your eval set.
+
+</Deep>

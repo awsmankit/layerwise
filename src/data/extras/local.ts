@@ -29,6 +29,17 @@ export const extrasLocal: Record<string, Extra> = {
         answer: 2,
         why: 'Small local models handle summarising, rewriting and simple extraction well, but fall behind frontier models on harder tasks, so test your own use case.',
       },
+      {
+        q: 'A downloaded model file has Q4_K_M in its name. What does that part of the name describe?',
+        options: [
+          'The number of layers that run on the CPU',
+          'The context length the model supports',
+          'Which graphics card the file needs',
+          'How the weights were quantized: numbers stored with fewer bits, so the file is smaller',
+        ],
+        answer: 3,
+        why: 'Names like Q4_K_M describe the quantization of a GGUF file, which stores the numbers with fewer bits. It says nothing about context length, layer placement or a required graphics card.',
+      },
     ],
   },
   'local/memory-math-for-local-models': {
@@ -62,6 +73,17 @@ export const extrasLocal: Record<string, Extra> = {
         answer: 0,
         why: 'Each token needs the weights read from memory, so the ceiling is about bandwidth divided by bytes read, which scales with bandwidth.',
       },
+      {
+        q: 'On a 24 GB GPU (about 20 GB usable), a 32B model at Q4 has about 19 GB of weights. What is the realistic outcome?',
+        options: [
+          'It fits with plenty of room for long conversations',
+          'It runs faster than a 14B model, because bigger models read fewer bytes per token',
+          'It fits only with a short context, because the KV cache needs memory too',
+          'It needs layers offloaded to the CPU from the start',
+        ],
+        answer: 2,
+        why: '19 GB of weights leaves about 1 GB, which holds only a short context of cache. A bigger model reads more bytes for every token, so it is slower, not faster.',
+      },
     ],
   },
   'local/inference-engines-compared': {
@@ -91,6 +113,17 @@ export const extrasLocal: Record<string, Extra> = {
         options: ['TensorRT-LLM, for maximum speed', 'A multi-GPU vLLM cluster', 'Ollama or LM Studio, with llama.cpp or MLX for more control', 'Training your own model from scratch'],
         answer: 2,
         why: 'TensorRT-LLM targets NVIDIA GPUs, and server engines are built for multi-user GPU serving. Ollama, LM Studio, llama.cpp and MLX suit one person on a Mac.',
+      },
+      {
+        q: 'A team still runs Hugging Face TGI in production and is planning new work. What does the lesson advise?',
+        options: [
+          'Plan a migration: TGI is in maintenance mode and archived, and Hugging Face recommends vLLM or SGLang for new work',
+          'Keep building on it, because it is Hugging Face\'s recommended engine',
+          'Move to Ollama, which is designed for dozens of users',
+          'Move to TensorRT-LLM, because it works on any GPU vendor',
+        ],
+        answer: 0,
+        why: 'TGI was put into maintenance mode in December 2025 and archived in March 2026. Ollama is built for one machine and personal use, and TensorRT-LLM runs on NVIDIA GPUs only.',
       },
     ],
   },
@@ -125,6 +158,17 @@ export const extrasLocal: Record<string, Extra> = {
         answer: 1,
         why: 'At low or uncertain volume the GPU would sit idle. An API turns that into a variable cost and gives you the volume data to decide later.',
       },
+      {
+        q: 'In the lesson\'s example the GPU costs about 2,920 a month and the API about 1 per million tokens, so break-even is about 2.9 billion tokens a month. Your service uses 1 billion. What follows?',
+        options: [
+          'Self-hosting is cheaper, because a GPU is only billed while it is busy',
+          'Self-hosting is cheaper, because owning hardware is always cheaper at scale',
+          'They cost the same at that volume',
+          'The API is cheaper, because 1 billion tokens is below the break-even',
+        ],
+        answer: 3,
+        why: 'Below the break-even volume the API line is lower. A GPU costs the same per hour whether it is busy or idle, and the lesson says these numbers are examples, not real prices.',
+      },
     ],
   },
   'local/private-and-air-gapped-ai': {
@@ -153,6 +197,17 @@ export const extrasLocal: Record<string, Extra> = {
         options: ['Assume it is free for any use because the weights are public', 'Read the licence for that exact model and version, and have the right person review it', 'Assume it matches the licence of the model family name', 'Check only that the download works'],
         answer: 1,
         why: 'Open-weights licences vary from permissive to restricted, and can change between versions and fine-tunes, so the licence file for your exact model is the source of truth.',
+      },
+      {
+        q: 'A model repository\'s instructions say to load it with trust_remote_code turned on. What does the lesson advise?',
+        options: [
+          'Enable it, since it only affects speed',
+          'Enable it if the repository has many downloads',
+          'Leave it off unless you have read the code that ships with the repository',
+          'Enable it for GGUF files only, because they cannot run code',
+        ],
+        answer: 2,
+        why: 'Some loaders run custom Python that ships with a model repository, so enabling the setting runs someone else\'s code. Popularity does not make code safe, and the file format does not change what this setting does.',
       },
     ],
   },
