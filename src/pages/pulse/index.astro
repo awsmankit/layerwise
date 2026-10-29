@@ -15,7 +15,7 @@ const notes = await getPulse();
       <h1>News</h1>
       <p>
         The last month from official sources: cloud platforms, model labs, serving projects and security groups, plus the latest release of the tools in the lessons. The list refreshes by itself every morning
-        (last run {formatDate(new Date(headlines.generatedAt))}). Nobody here has read these yet: each is a title, a date and a link, so open the source before you rely on it.
+        (last run {formatDate(new Date(headlines.generatedAt))}). Nobody here has read these yet: each is a title, a date and a link, so open the source before you rely on it. We found no official news feed for Anthropic or xAI, so for Anthropic the list shows only software releases (Claude Code and its Python SDK); read their own news pages directly.
       </p>
     </header>
     <Headlines client:load items={headlines.items} topics={topics} />

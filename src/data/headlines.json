@@ -1,6 +1,14 @@
 {
-  "generatedAt": "2026-10-29T07:33:43.763Z",
+  "generatedAt": "2026-10-29T08:44:08.691Z",
   "items": [
+    {
+      "source": "crewai",
+      "org": "CrewAI releases",
+      "topic": "frameworks",
+      "title": "CrewAI 1.15.33",
+      "url": "https://github.com/crewAIInc/crewAI/releases/tag/1.15.33",
+      "date": "2026-10-29T07:36:24.000Z"
+    },
     {
       "source": "ollama",
       "org": "Ollama releases",
@@ -8,6 +16,14 @@
       "title": "Ollama v0.40.13",
       "url": "https://github.com/ollama/ollama/releases/tag/v0.40.13",
       "date": "2026-10-29T02:54:11.000Z"
+    },
+    {
+      "source": "openai-python",
+      "org": "OpenAI Python SDK releases",
+      "topic": "frameworks",
+      "title": "OpenAI Python SDK v3.41.0",
+      "url": "https://github.com/openai/openai-python/releases/tag/v3.41.0",
+      "date": "2026-10-28T22:26:54.000Z"
     },
     {
       "source": "aws-whats-new",
@@ -48,6 +64,22 @@
       "title": "Accelerating software delivery with agentic QA automation using Amazon Nova Act – Part 3",
       "url": "https://aws.amazon.com/blogs/machine-learning/accelerating-software-delivery-with-agentic-qa-automation-using-amazon-nova-act-part-3/",
       "date": "2026-10-28T18:12:13.000Z"
+    },
+    {
+      "source": "deepmind",
+      "org": "Google DeepMind",
+      "topic": "models",
+      "title": "Gemini 4 Carbon: Our next frontier model",
+      "url": "https://deepmind.google/blog/gemini-4-carbon-our-next-frontier-model/",
+      "date": "2026-10-28T17:00:58.000Z"
+    },
+    {
+      "source": "meta-newsroom",
+      "org": "Meta Newsroom",
+      "topic": "models",
+      "title": "Meta Partners With Five US Universities to Accelerate Medical and Scientific Breakthroughs",
+      "url": "https://about.fb.com/news/2026/10/meta-partners-with-five-us-universities-to-accelerate-medical-and-scientific-breakthroughs/",
+      "date": "2026-10-28T17:00:49.000Z"
     },
     {
       "source": "microsoft-blog",
@@ -114,6 +146,14 @@
       "date": "2026-10-28T15:33:00.000Z"
     },
     {
+      "source": "nvidia-blog",
+      "org": "NVIDIA Blog",
+      "topic": "serving",
+      "title": "Thin, Light and Built for Everything: NVIDIA RTX Spark Windows Laptops Gain New Models, Agent Tools and Games",
+      "url": "https://blogs.nvidia.com/blog/local-ai-rtx-spark-laptops-updates-models-agents-games/",
+      "date": "2026-10-28T15:00:46.000Z"
+    },
+    {
       "source": "huggingface",
       "org": "Hugging Face blog",
       "topic": "models",
@@ -154,12 +194,28 @@
       "date": "2026-10-28T08:00:00.000Z"
     },
     {
+      "source": "meta-newsroom",
+      "org": "Meta Newsroom",
+      "topic": "models",
+      "title": "Muse Is Now Available in Singapore: The World’s First Personal AI Agent Built for Everyone",
+      "url": "https://about.fb.com/news/2026/10/muse-is-now-available-in-singapore-the-worlds-first-personal-ai-agent-built-for-everyone/",
+      "date": "2026-10-28T00:00:03.000Z"
+    },
+    {
       "source": "aws-whats-new",
       "org": "AWS, What’s New",
       "topic": "cloud",
       "title": "Amazon ECS now supports GPU sharing with NVIDIA Multi-Process Service (MPS)",
       "url": "https://aws.amazon.com/about-aws/whats-new/2026/10/amazon-ecs-gpu-sharing-nvidia-mps/",
       "date": "2026-10-27T23:31:00.000Z"
+    },
+    {
+      "source": "dynamo",
+      "org": "NVIDIA Dynamo releases",
+      "topic": "serving",
+      "title": "Dynamo v1.6.1",
+      "url": "https://github.com/ai-dynamo/dynamo/releases/tag/v1.6.1",
+      "date": "2026-10-27T21:03:59.000Z"
     },
     {
       "source": "aws-whats-new",
@@ -170,6 +226,14 @@
       "date": "2026-10-27T20:40:00.000Z"
     },
     {
+      "source": "claude-code",
+      "org": "Claude Code releases",
+      "topic": "frameworks",
+      "title": "Claude Code v2.1.312",
+      "url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.312",
+      "date": "2026-10-27T20:24:20.000Z"
+    },
+    {
       "source": "aws-whats-new",
       "org": "AWS, What’s New",
       "topic": "cloud",
@@ -178,12 +242,28 @@
       "date": "2026-10-27T19:15:00.000Z"
     },
     {
+      "source": "databricks",
+      "org": "Databricks",
+      "topic": "cloud",
+      "title": "Vital Skills: Upskilling Genie Code with Healthcare and Life Sciences skills",
+      "url": "https://www.databricks.com/blog/vital-skills-upskilling-genie-code-healthcare-and-life-sciences-skills",
+      "date": "2026-10-27T19:00:00.000Z"
+    },
+    {
       "source": "aws-ml-blog",
       "org": "AWS Machine Learning Blog",
       "topic": "cloud",
       "title": "AWS named a Leader in the 2026 Gartner Magic Quadrant for Contact Center as a Service",
       "url": "https://aws.amazon.com/blogs/machine-learning/aws-named-a-leader-in-the-2026-gartner-magic-quadrant-for-contact-center-as-a-service/",
       "date": "2026-10-27T18:03:12.000Z"
+    },
+    {
+      "source": "google-research",
+      "org": "Google Research",
+      "topic": "models",
+      "title": "The sleep framework: A new way for LLMs to retain knowledge in continual learning",
+      "url": "https://research.google/blog/the-sleep-framework-a-new-way-for-llms-to-retain-knowledge-in-continual-learning/",
+      "date": "2026-10-27T17:35:00.000Z"
     },
     {
       "source": "azure-updates",
@@ -210,6 +290,22 @@
       "date": "2026-10-27T16:12:42.000Z"
     },
     {
+      "source": "deepmind",
+      "org": "Google DeepMind",
+      "topic": "models",
+      "title": "Genie 4: A new generation of world simulation",
+      "url": "https://deepmind.google/blog/genie-4-a-new-generation-of-world-simulation/",
+      "date": "2026-10-27T16:01:38.000Z"
+    },
+    {
+      "source": "google-cloud-ai",
+      "org": "Google Cloud, AI and machine learning",
+      "topic": "cloud",
+      "title": "Scale agents securely with IAM Helper Agent Skills and MCP Tools",
+      "url": "https://cloud.google.com/blog/products/identity-security/scale-agents-securely-with-iam-helper-agent-skills-and-mcp-tools/",
+      "date": "2026-10-27T16:00:00.000Z"
+    },
+    {
       "source": "openai-news",
       "org": "OpenAI",
       "topic": "models",
@@ -226,6 +322,14 @@
       "date": "2026-10-27T15:00:00.000Z"
     },
     {
+      "source": "google-cloud-ai",
+      "org": "Google Cloud, AI and machine learning",
+      "topic": "cloud",
+      "title": "Gemini Robotics Embodied Reasoning 2 is now available on Google Cloud",
+      "url": "https://cloud.google.com/blog/products/ai-machine-learning/gemini-robotics-embodied-reasoning-2-is-now-available-on-google-cloud/",
+      "date": "2026-10-27T13:00:00.000Z"
+    },
+    {
       "source": "openai-news",
       "org": "OpenAI",
       "topic": "models",
@@ -234,12 +338,44 @@
       "date": "2026-10-27T07:00:00.000Z"
     },
     {
+      "source": "together",
+      "org": "Together AI",
+      "topic": "serving",
+      "title": "Auto repair for Together GPU Clusters: from GPU fault to healthy node",
+      "url": "https://www.together.ai/blog/auto-repair-for-together-gpu-clusters",
+      "date": "2026-10-27T00:00:00.000Z"
+    },
+    {
+      "source": "databricks",
+      "org": "Databricks",
+      "topic": "cloud",
+      "title": "Unify your productivity and AI data with Lakeflow Connect",
+      "url": "https://www.databricks.com/blog/unify-your-productivity-and-ai-data-lakeflow-connect",
+      "date": "2026-10-26T23:20:12.000Z"
+    },
+    {
       "source": "langgraph",
       "org": "LangGraph releases",
       "topic": "frameworks",
       "title": "LangGraph langgraph==1.2.18",
       "url": "https://github.com/langchain-ai/langgraph/releases/tag/1.2.18",
       "date": "2026-10-26T20:05:16.000Z"
+    },
+    {
+      "source": "databricks",
+      "org": "Databricks",
+      "topic": "cloud",
+      "title": "How to teach with Databricks Free Edition",
+      "url": "https://www.databricks.com/blog/how-teach-databricks-free-edition",
+      "date": "2026-10-26T19:40:00.000Z"
+    },
+    {
+      "source": "transformers",
+      "org": "Transformers releases",
+      "topic": "serving",
+      "title": "Transformers Release: v5.21.0",
+      "url": "https://github.com/huggingface/transformers/releases/tag/v5.21",
+      "date": "2026-10-26T18:21:30.000Z"
     },
     {
       "source": "foundry-devblog",
@@ -256,6 +392,38 @@
       "title": "Our newest AI Quest: Mapping the human brain",
       "url": "https://blog.google/products-and-platforms/products/education/ai-quests-polar-peaks/",
       "date": "2026-10-26T16:00:00.000Z"
+    },
+    {
+      "source": "aws-news-blog",
+      "org": "AWS News Blog",
+      "topic": "cloud",
+      "title": "AWS Weekly Roundup: Amazon Polly Generative engine, TorchNeuron for Trainium, and more (October 26, 2026)",
+      "url": "https://aws.amazon.com/blogs/aws/aws-weekly-roundup-amazon-polly-generative-engine-torchneuron-for-trainium-and-more-october-26-2026/",
+      "date": "2026-10-26T15:02:24.000Z"
+    },
+    {
+      "source": "anthropic-sdk",
+      "org": "Anthropic Python SDK releases",
+      "topic": "frameworks",
+      "title": "Anthropic Python SDK v2.3.0",
+      "url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v2.3.0",
+      "date": "2026-10-23T23:18:22.000Z"
+    },
+    {
+      "source": "google-research",
+      "org": "Google Research",
+      "topic": "models",
+      "title": "Bringing foundational models to the front lines of TB screening",
+      "url": "https://research.google/blog/bringing-foundational-models-to-the-front-lines-of-tb-screening/",
+      "date": "2026-10-23T18:51:33.000Z"
+    },
+    {
+      "source": "google-adk",
+      "org": "Google Agent Development Kit releases",
+      "topic": "frameworks",
+      "title": "Google ADK v2.13.0",
+      "url": "https://github.com/google/adk-python/releases/tag/v2.13.0",
+      "date": "2026-10-23T18:08:23.000Z"
     },
     {
       "source": "nvidia-dev",
@@ -290,6 +458,70 @@
       "date": "2026-10-23T00:00:00.000Z"
     },
     {
+      "source": "google-cloud-ai",
+      "org": "Google Cloud, AI and machine learning",
+      "topic": "cloud",
+      "title": "Expanding Claude availability and deployment choice on Google Cloud",
+      "url": "https://cloud.google.com/blog/products/ai-machine-learning/expanding-claude-availability-on-google-cloud/",
+      "date": "2026-10-22T21:00:00.000Z"
+    },
+    {
+      "source": "aws-news-blog",
+      "org": "AWS News Blog",
+      "topic": "cloud",
+      "title": "AWS Continuum for code vulnerabilities is now generally available",
+      "url": "https://aws.amazon.com/blogs/aws/aws-continuum-for-code-vulnerabilities-is-now-generally-available/",
+      "date": "2026-10-22T20:33:10.000Z"
+    },
+    {
+      "source": "agent-framework",
+      "org": "Microsoft Agent Framework releases",
+      "topic": "frameworks",
+      "title": "Microsoft Agent Framework python-1.23.0",
+      "url": "https://github.com/microsoft/agent-framework/releases/tag/python-1.23.0",
+      "date": "2026-10-22T17:06:17.000Z"
+    },
+    {
+      "source": "microsoft-research",
+      "org": "Microsoft Research",
+      "topic": "models",
+      "title": "Flint-interactive: A language for creating interactive data visualizations",
+      "url": "https://www.microsoft.com/en-us/research/blog/flint-interactive-a-language-for-creating-interactive-data-visualizations/",
+      "date": "2026-10-22T16:00:00.000Z"
+    },
+    {
+      "source": "nvidia-blog",
+      "org": "NVIDIA Blog",
+      "topic": "serving",
+      "title": "NVIDIA Unveils Minerva to Bring End-to-End Observability for AI Factories",
+      "url": "https://blogs.nvidia.com/blog/minerva-platform-infrastructure/",
+      "date": "2026-10-22T15:00:02.000Z"
+    },
+    {
+      "source": "deepmind",
+      "org": "Google DeepMind",
+      "topic": "models",
+      "title": "Beyond tree cover: mapping the world’s forest types",
+      "url": "https://deepmind.google/blog/beyond-tree-cover-mapping-the-worlds-forest-types/",
+      "date": "2026-10-22T14:30:24.000Z"
+    },
+    {
+      "source": "nvidia-blog",
+      "org": "NVIDIA Blog",
+      "topic": "serving",
+      "title": "How Companies Are Using NVIDIA DSX to Break the Power Bottleneck",
+      "url": "https://blogs.nvidia.com/blog/dsx-power/",
+      "date": "2026-10-22T05:00:25.000Z"
+    },
+    {
+      "source": "nvidia-blog",
+      "org": "NVIDIA Blog",
+      "topic": "serving",
+      "title": "NVIDIA Transforms European Retail, From Digital Discovery to Physical Operations",
+      "url": "https://blogs.nvidia.com/blog/european-retail-open-models-robotics/",
+      "date": "2026-10-22T05:00:23.000Z"
+    },
+    {
       "source": "langchain",
       "org": "LangChain releases",
       "topic": "frameworks",
@@ -306,12 +538,44 @@
       "date": "2026-10-21T16:00:00.000Z"
     },
     {
+      "source": "cloudflare-ai",
+      "org": "Cloudflare, AI",
+      "topic": "cloud",
+      "title": "How Commerce.com and Cloudflare are getting storefronts ready for AI agents",
+      "url": "https://blog.cloudflare.com/webmcp-commerce/",
+      "date": "2026-10-21T13:00:00.000Z"
+    },
+    {
+      "source": "mistral",
+      "org": "Mistral AI",
+      "topic": "models",
+      "title": "Mistral Advances AI for Engineering with NVIDIA",
+      "url": "https://mistral.ai/news/mistral-nvidia-ai-for-industrial-engineering/",
+      "date": "2026-10-21T12:00:20.000Z"
+    },
+    {
+      "source": "google-cloud-ai",
+      "org": "Google Cloud, AI and machine learning",
+      "topic": "cloud",
+      "title": "Google Cloud expands model choice and flexibility, bringing OpenAI models to customers",
+      "url": "https://cloud.google.com/blog/products/ai-machine-learning/google-cloud-brings-openai-models-to-customers/",
+      "date": "2026-10-21T12:00:00.000Z"
+    },
+    {
       "source": "google-ai",
       "org": "Google AI blog",
       "topic": "models",
       "title": "Southeast Asia’s digital economy to hit $368 billion",
       "url": "https://blog.google/company-news/inside-google/around-the-globe/google-asia/e-conomy-sea-report-2026/",
       "date": "2026-10-21T04:00:00.000Z"
+    },
+    {
+      "source": "mistral",
+      "org": "Mistral AI",
+      "topic": "models",
+      "title": "Voxtral 3",
+      "url": "https://mistral.ai/news/voxtral-3/",
+      "date": "2026-10-20T12:00:22.000Z"
     },
     {
       "source": "microsoft-blog",
@@ -322,12 +586,28 @@
       "date": "2026-10-20T08:20:02.000Z"
     },
     {
+      "source": "cloudflare-ai",
+      "org": "Cloudflare, AI",
+      "topic": "cloud",
+      "title": "Cutting our inference bill by 68% by being obsessive about optimization",
+      "url": "https://blog.cloudflare.com/obsessive-inference-optimization/",
+      "date": "2026-10-19T19:12:53.000Z"
+    },
+    {
       "source": "github-blog",
       "org": "The GitHub Blog",
       "topic": "cloud",
       "title": "How to continue a GitHub Copilot app session in VS Code",
       "url": "https://github.blog/ai-and-ml/github-copilot/how-to-continue-a-github-copilot-app-session-in-vs-code/",
       "date": "2026-10-19T18:47:22.000Z"
+    },
+    {
+      "source": "cloudflare-ai",
+      "org": "Cloudflare, AI",
+      "topic": "cloud",
+      "title": "Introducing Clairic, a new System One class of extraction models",
+      "url": "https://blog.cloudflare.com/clairic-extraction-model/",
+      "date": "2026-10-19T17:48:26.000Z"
     },
     {
       "source": "microsoft-blog",
@@ -354,6 +634,14 @@
       "date": "2026-10-19T05:55:53.000Z"
     },
     {
+      "source": "together",
+      "org": "Together AI",
+      "topic": "serving",
+      "title": "Together Post-Training: frontier-grade model shaping, the way that fits you",
+      "url": "https://www.together.ai/blog/together-post-training",
+      "date": "2026-10-19T00:00:00.000Z"
+    },
+    {
       "source": "vllm",
       "org": "vLLM releases",
       "topic": "serving",
@@ -370,6 +658,46 @@
       "date": "2026-10-15T19:39:27.000Z"
     },
     {
+      "source": "mistral",
+      "org": "Mistral AI",
+      "topic": "models",
+      "title": "Introducing Timestral",
+      "url": "https://mistral.ai/news/timestral/",
+      "date": "2026-10-15T12:00:00.000Z"
+    },
+    {
+      "source": "openai-agents",
+      "org": "OpenAI Agents SDK releases",
+      "topic": "frameworks",
+      "title": "OpenAI Agents SDK v0.24.0",
+      "url": "https://github.com/openai/openai-agents-python/releases/tag/v0.24.0",
+      "date": "2026-10-15T02:37:43.000Z"
+    },
+    {
+      "source": "meta-newsroom",
+      "org": "Meta Newsroom",
+      "topic": "models",
+      "title": "More Than Three Quarters of Small Business Owners Say AI Makes Them More Productive, But Most Need More Guidance",
+      "url": "https://about.fb.com/news/2026/10/more-than-three-quarters-of-small-business-owners-say-ai-makes-them-more-productive-but-most-need-more-guidance/",
+      "date": "2026-10-15T00:50:50.000Z"
+    },
+    {
+      "source": "apple-ml",
+      "org": "Apple Machine Learning Research",
+      "topic": "models",
+      "title": "Local and Distributed Large LLM Inference with MLX and RDMA on Mac Studio",
+      "url": "https://machinelearning.apple.com/research/mlx-distributed-inference",
+      "date": "2026-10-15T00:00:00.000Z"
+    },
+    {
+      "source": "apple-ml",
+      "org": "Apple Machine Learning Research",
+      "topic": "models",
+      "title": "Selection-Based Structured Reasoning: Toward Efficient Multimodal Search Agents",
+      "url": "https://machinelearning.apple.com/research/selection-structured-reasoning",
+      "date": "2026-10-15T00:00:00.000Z"
+    },
+    {
       "source": "vllm",
       "org": "vLLM releases",
       "topic": "serving",
@@ -384,6 +712,22 @@
       "title": "Gemini 4 Argon: Built to solve your hardest problems",
       "url": "https://blog.google/innovation-and-ai/models-and-research/gemini-models/introducing-gemini-4-argon/",
       "date": "2026-10-13T16:00:00.000Z"
+    },
+    {
+      "source": "aws-news-blog",
+      "org": "AWS News Blog",
+      "topic": "cloud",
+      "title": "AWS Weekly Roundup: Prime Day 2026 by the numbers, Claude Haiku 5.5, Amazon Nova 2.5 Sonic, and more (October 13, 2026)",
+      "url": "https://aws.amazon.com/blogs/aws/aws-weekly-roundup-prime-day-2026-by-the-numbers-claude-haiku-5-5-amazon-nova-2-5-sonic-and-more-october-13-2026/",
+      "date": "2026-10-13T15:59:06.000Z"
+    },
+    {
+      "source": "microsoft-research",
+      "org": "Microsoft Research",
+      "topic": "models",
+      "title": "Simulating student learning for better AI tutoring",
+      "url": "https://www.microsoft.com/en-us/research/blog/simulating-student-learning-for-better-ai-tutoring/",
+      "date": "2026-10-12T16:00:00.000Z"
     },
     {
       "source": "azure-updates",
@@ -440,6 +784,14 @@
       "title": "[In preview] Public Preview: Microsoft SQL Agent Skills",
       "url": "https://azure.microsoft.com/updates?id=573003",
       "date": "2026-09-29T17:31:11.000Z"
+    },
+    {
+      "source": "llamaindex",
+      "org": "LlamaIndex releases",
+      "topic": "frameworks",
+      "title": "LlamaIndex v0.14.25",
+      "url": "https://github.com/run-llama/llama_index/releases/tag/v0.14.25",
+      "date": "2026-09-21T16:22:27.000Z"
     }
   ]
 }

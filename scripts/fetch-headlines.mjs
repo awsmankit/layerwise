@@ -13,7 +13,7 @@ const OUT = new URL('../src/data/headlines.json', import.meta.url);
 const UA = 'LayerwiseHeadlines/1.0 (+https://github.com/awsmankit/layerwise)';
 
 async function load(source) {
-  const res = await fetch(source.url, { headers: { 'user-agent': UA, accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml' }, signal: AbortSignal.timeout(20000), redirect: 'follow' });
+  const res = await fetch(source.url, { headers: { 'user-agent': UA, accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml' }, signal: AbortSignal.timeout(45000), redirect: 'follow' });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const xml = await res.text();
   const items = parseFeed(xml);
@@ -28,7 +28,20 @@ try {
   /* first run */
 }
 
-const results = await Promise.all(sources.map(async (s) => [s, await load(s).then((items) => ({ items }), (error) => ({ error }))]));
+/** One retry, since a slow feed or a busy network is the usual reason a fetch fails. */
+const attempt = async (s) => load(s).catch(() => load(s)).then((items) => ({ items }), (error) => ({ error }));
+
+// a few at a time: dozens of simultaneous requests make the slower hosts time out
+const results = [];
+let next = 0;
+await Promise.all(
+  Array.from({ length: 6 }, async () => {
+    while (next < sources.length) {
+      const s = sources[next++];
+      results.push([s, await attempt(s)]);
+    }
+  }),
+);
 const items = [];
 const failed = [];
 for (const [s, r] of results) {
@@ -45,7 +58,7 @@ if (failed.length === sources.length) {
   process.exit(0);
 }
 
-const unique = [...new Map(items.map((i) => [i.url, i])).values()].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 80);
+const unique = [...new Map(items.map((i) => [i.url, i])).values()].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 120);
 await writeFile(OUT, JSON.stringify({ generatedAt: new Date().toISOString(), items: unique }, null, 2) + '\n');
 console.log(`${unique.length} headlines from ${sources.length - failed.length} of ${sources.length} sources.`);
 if (failed.length) console.warn('Failed:\n  ' + failed.join('\n  '));
