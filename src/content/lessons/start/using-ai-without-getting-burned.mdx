@@ -2,9 +2,9 @@
 title: Using AI without getting burned
 track: start
 level: basic
-order: 3
-summary: Seven habits that make AI tools useful and safe, and how to spot when an answer is probably invented.
-updated: 2026-10-28
+order: 6
+summary: Simple habits for using AI safely, for homework and beyond, and how to spot when an answer is probably made up.
+updated: 2026-10-29
 sources:
   - label: "NIST AI Risk Management Framework"
     url: https://www.nist.gov/itl/ai-risk-management-framework
@@ -15,41 +15,64 @@ sources:
 import Deep from '../../../components/ui/Deep.astro';
 import TrustCheck from '../../../components/viz/TrustCheck.tsx';
 
-You now know that a chatbot writes plausible text one piece at a time and cannot check itself. This lesson turns that into practical habits, whether you are using these tools at work or about to build with them.
+You now know that a chatbot writes what sounds right, one piece at a time. It cannot check itself. This lesson turns that into simple habits. They work for homework and hobbies now, and for work later on.
 
 ## Seven habits
 
-1. **Treat the output as a draft from a fast, well-read intern.** Often excellent, occasionally confidently wrong. You are the editor.
-2. **Verify what matters.** Names, numbers, dates, quotes, links, citations, legal and medical statements, and whether code actually does what it claims. The more costly a mistake, the more you check.
-3. **Give it the facts instead of asking it to recall them.** Paste the document and ask about *that*. Asking it to remember an obscure detail invites a guess.
-4. **Be specific.** Say who the audience is, what format you want, how long it should be, and what to avoid. Include an example of good output if you have one.
-5. **Protect private information.** Do not paste passwords, customer data, health records or confidential documents into a tool your organisation has not approved. Check how a tool stores and uses what you send.
-6. **Ask for its reasoning or sources, then check them.** This makes errors easier to spot. It does not make the answer trustworthy by itself, because the explanation can also be invented.
-7. **Write down prompts that work.** If you will do the task again, save the prompt and test it on ten varied examples before relying on it.
+1. Treat the answer as a first draft. Think of a fast helper who is often great but sometimes wrong. You are the one in charge.
+2. Check the facts that matter. Names, numbers, dates, quotes and links can all be wrong. Look them up in a book or on a trusted website.
+3. Give it the facts. Paste in the text you need help with and ask about that. Asking it to remember a tiny detail invites a guess.
+4. Be clear about what you want. "Explain how volcanoes erupt in five sentences, for a 10-year-old" works far better than "volcanoes".
+5. Keep personal details private. Never type in your full name, address, school, phone number, passwords or photos of yourself. Treat a chatbot like a stranger online.
+6. Ask how it knows, then check. Asking for sources makes mistakes easier to spot. But it can make up sources too, so look them up.
+7. Ask a trusted adult. If an answer worries you, confuses you or feels wrong, talk to a parent, carer or teacher.
+
+## Homework and school rules
+
+Every school has its own rules about AI. Some allow it for ideas or for checking your work, and some do not allow it at all. Check what your school and your teacher allow before you use it.
+
+If you are allowed, use it to understand, not to copy. Ask it to explain an idea, to quiz you, or to point out mistakes in your work. Then write the answer in your own words.
+
+Handing in AI writing as your own is like copying a friend's homework. You skip the learning, which is the whole point. If your school asks you to say when you used AI, always say so.
 
 ## Good uses and risky uses
 
-| Good fit | Handle with care |
+| Good fit | Be careful |
 |---|---|
-| First drafts, rewrites, tone changes | Anything published under your name without review |
-| Summarising a document you can skim to confirm | Facts about people, companies or events you cannot verify |
-| Explaining a concept or code you are learning | Medical, legal and financial decisions |
-| Brainstorming and generating options | Exact calculations (use a calculator or code) |
-| Extracting structured data you can spot-check | Decisions that affect people, made without human review |
+| Getting an idea explained another way | Copying its answer into your homework |
+| Quizzing yourself before a test | Facts you cannot check |
+| Brainstorming ideas for a story | Health, money or legal questions: ask an adult or an expert |
+| Checking your spelling and grammar | Sums: use a calculator |
+| Summing up a text you can read yourself to check | Anything that affects other people, with no person checking it |
 
-## How to spot an invented answer
+## How to spot a made-up answer
 
-Warning signs, none of them proof:
+Here are some warning signs. None of them is proof on its own.
 
-- **A reference you cannot find.** Citations, case names, links and quotes are the classic invention. Look them up yourself.
-- **Details that are too neat.** Very specific numbers or names with no source.
-- **Confidence without hedging** on something obscure.
-- **It changes when you re-ask.** Ask the same question twice. If the facts differ, at least one is wrong.
-- **It agrees with your mistake.** Models tend to go along with a false premise in the question. Ask neutrally, or ask it to challenge your assumption.
+- A source you cannot find. Book titles, links and quotes are often invented, so look them up.
+- Details that are too neat. Very exact numbers or names, with nothing to show where they came from.
+- Sounding very sure about something unusual or hard to know.
+- It changes when you ask again. Ask the same question twice. If the facts differ, at least one answer is wrong.
+- It agrees with your mistake. If your question has a wrong idea built in, the chatbot may just go along with it. Ask in a neutral way instead.
 
-Before you rely on something, ask yourself: *if this is wrong, what happens, and who finds out?*
+## Before you rely on an answer
 
-<TrustCheck client:visible />
+Ask yourself one question: if this is wrong, what happens, and who would find out?
+
+If the answer is "not much", using it as a draft is fine. If someone could be hurt, embarrassed or misled, check it properly first. The chart below walks through that question for a fact you might use in homework.
+
+<TrustCheck client:visible simple />
+
+<Deep title="Using AI at work">
+
+The same habits apply at work, with a few more rules.
+
+- **Protect private information.** Do not paste passwords, customer data, health records or confidential documents into a tool your organisation has not approved. Check how a tool stores what you send and whether it may be used for training.
+- **Review before publishing.** Anything that goes out under your name, or your company's, needs a person to read it first.
+- **Keep people in charge of decisions about people.** Hiring, lending, medical and legal decisions should not rest on an unchecked AI answer.
+- **Save prompts that work.** If you will do a task again, save the prompt and test it on ten varied examples before relying on it.
+
+</Deep>
 
 <Deep title="Why builders care about all this">
 
@@ -57,8 +80,6 @@ Every habit above is a human version of something engineers build into systems. 
 
 </Deep>
 
-## Where to go from here
+## Next
 
-- Builders and engineers: start the **Foundations** track, then **Working with LLMs**.
-- Curious about the systems side: try the **Play** section, which teaches system design through games.
-- Looking something up: the **Glossary** explains every term used on the site.
+Next: [How apps use AI](../how-apps-use-ai/), where you see what happens between the app on your screen and the model behind it.

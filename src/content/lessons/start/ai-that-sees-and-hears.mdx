@@ -1,0 +1,113 @@
+---
+title: AI that can see, hear and draw
+track: start
+level: basic
+order: 5
+summary: Pictures and sounds can be turned into numbers, just like words. See how one kind of AI can answer questions about a photo, turn speech into text and back, and draw pictures from a description.
+updated: 2026-10-29
+sources:
+  - label: "An Image is Worth 16x16 Words, Vision Transformer (Dosovitskiy et al., 2020)"
+    url: https://arxiv.org/abs/2010.11929
+  - label: "Visual Instruction Tuning, LLaVA (Liu et al., 2023)"
+    url: https://arxiv.org/abs/2304.08485
+  - label: "Robust Speech Recognition via Large-Scale Weak Supervision, Whisper (Radford et al., 2022)"
+    url: https://arxiv.org/abs/2212.04356
+  - label: "Denoising Diffusion Probabilistic Models (Ho et al., 2020)"
+    url: https://arxiv.org/abs/2006.11239
+---
+
+import PipelineFlow from '../../../components/viz/PipelineFlow.tsx';
+import Deep from '../../../components/ui/Deep.astro';
+
+In the last lesson, words became numbers. But many AI apps do more than read. They can look at photos, listen to voices and even draw.
+
+The trick is the same as before: turn everything into numbers first.
+
+## A photo is already numbers
+
+A phone photo is made of **pixels**, tiny coloured dots in a grid. Each pixel is stored as three numbers. They say how much red, green and blue it has.
+
+So a photo is really a huge grid of numbers.
+
+## Cut into squares, like words into pieces
+
+A chatbot cuts text into tokens. An AI that sees does something similar with pictures. It cuts the photo into small squares called **patches**, like a sheet of stamps.
+
+Each patch becomes a list of numbers, just as each token does. Then the model reads the patches one after another, as if they were words. A bigger, sharper photo means more patches to read.
+
+## Try it: a photo and a question
+
+Press Run, or click a step.
+
+<PipelineFlow
+  client:visible
+  title="Asking about a photo of your fridge"
+  stages={[
+    { title: 'Your photo', glyph: 'image', detail: 'You take a photo inside your fridge and ask, “What could I cook with this?”' },
+    { title: 'Cut into squares', glyph: 'scissors', detail: 'The photo is cut into a grid of small squares, called patches. A very big photo is often shrunk first.' },
+    { title: 'Turned into numbers', glyph: 'vector', detail: 'Each square becomes a list of numbers that describes what is in it, such as colours, edges and shapes. Your question is cut into tokens and turned into numbers too.' },
+    { title: 'Model reads both', glyph: 'eye', detail: 'The model reads the squares and your words together, in one long line. It can link the word “cook” to the squares that show eggs and cheese.' },
+    { title: 'Answer', glyph: 'pen', detail: 'It writes its answer one piece at a time, like any chatbot. “You could make a cheese omelette.” It might still misread a label, so check.' },
+  ]}
+  caption="A simple view. Real models have more steps, but the shape is the same."
+/>
+
+## Sound becomes numbers too
+
+Sound is a wobble in the air. A microphone measures that wobble thousands of times a second. Each measurement is a number.
+
+The AI cuts the sound into short slices, like patches of a picture. It reads them in order and writes down the words it hears. This is called speech to text, and it is how live captions work.
+
+## Talking back
+
+It can go the other way too. Text to speech turns written words into a spoken voice.
+
+Modern voices sound natural because the AI learned from real people talking. That is how a phone assistant answers out loud.
+
+## Drawing from a description
+
+Image generators make new pictures from words. They start with pure **noise**, random coloured speckles like a fuzzy old TV screen. Then the model cleans it up a little, step by step.
+
+At each step, your description guides the cleaning. After many steps, a clear picture appears that matches your words. It learned by adding noise to real pictures and practising removing it.
+
+## Where you have met this
+
+- A phone voice assistant that listens and speaks back.
+- Searching your phone's photos for "beach" without ever labelling them.
+- Live captions on videos and video calls.
+- An app that describes a photo aloud for someone who cannot see.
+- Snapping a homework question and asking for help to understand it.
+
+## It can misread a picture
+
+An AI that sees can still get things wrong. A blurry photo, odd lighting or a strange angle can fool it. It might misread a number in your homework.
+
+It sounds just as sure when it is wrong. So check anything that matters.
+
+## Fake pictures and voices
+
+AI can also make pictures, videos and voices of things that never happened. A **deepfake** is a fake that looks or sounds like a real person. Some are just for fun, but others are made to trick people.
+
+A fake voice message can sound just like someone you know. If something seems shocking or odd, stop and check before you share it. Ask a trusted adult if you are not sure.
+
+## Ask before you upload
+
+Photos you upload may be kept by the company behind the AI. So never upload photos of other people without asking them first. That includes friends, family and classmates.
+
+Also avoid photos that show your face, your school badge or your address.
+
+<Deep title="For grown-ups: vision encoders, patch embeddings and diffusion">
+
+A vision transformer splits an image into fixed-size patches, often 14 or 16 pixels square. Each patch is flattened and passed through a learned linear layer to give a **patch embedding**, and a position embedding is added so the model knows where the patch sat. A transformer **vision encoder** then processes the patches together. In vision-language models such as LLaVA, a small projection maps the encoder's outputs into the language model's token-embedding space, so image tokens sit in the same sequence as text tokens. More pixels means more patches, which means more tokens and more cost.
+
+Speech models such as Whisper turn audio into a log-Mel spectrogram, an image-like grid of energy per frequency over time, which an encoder reads and a decoder transcribes. Text to speech runs roughly the other way, predicting audio features or audio tokens from text.
+
+**Diffusion** models are trained by adding Gaussian noise to real images over many steps and learning to predict that noise. Generation runs the process in reverse, starting from pure noise and denoising step by step, steered by an embedding of the text prompt. Most current image generators do this in a compressed latent space rather than on raw pixels, and some newer systems instead generate image tokens one after another, like text.
+
+</Deep>
+
+## Want to go further?
+
+[Multimodal models](../../foundations/multimodal-models/) explains all of this in more depth. It is written for older learners.
+
+Next: [Using AI without getting burned](../using-ai-without-getting-burned/).

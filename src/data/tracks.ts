@@ -15,7 +15,7 @@ export const tracks = [
     ...pair('yellow'),
     hue: 'yellow',
     title: 'AI basics',
-    blurb: 'New to AI? Plain-English answers to what it is, how a chatbot answers you, and how to use it without getting burned.',
+    blurb: 'Short lessons in simple words for anyone new to AI, including school students: what AI is, how a chatbot answers you, and how to use it safely.',
   },
   {
     id: 'foundations',

@@ -13,6 +13,7 @@ import { DoneButton } from '../../../components/viz/Progress.tsx';
 import { tracks, trackById, levels } from '../../../data/tracks';
 import { extras } from '../../../data/lesson-extras';
 import { labs } from '../../../data/labs';
+import { videosFor, videosChecked } from '../../../data/videos';
 import { withBase } from '../../../lib/url';
 import { getLessons, lessonPath, slugOf, readingMinutes, formatDate } from '../../../lib/content';
 
@@ -33,6 +34,7 @@ const slug = slugOf(lesson);
 const key = `${track.id}/${slug}`;
 const extra = extras[key];
 const labsHere = labs.filter((l) => l.lesson === key);
+const videos = videosFor(key);
 const idx = all.findIndex((l) => l.id === lesson.id);
 const prev = all[idx - 1];
 const next = all[idx + 1];
@@ -121,6 +123,30 @@ const groups = tracks.map((t) => ({
               </p>
             )}
           </>
+        )
+      }
+
+      {
+        videos.length > 0 && (
+          <section class="lesson-watch" aria-labelledby="watch-deeper">
+            <h2 id="watch-deeper">Watch to go deeper</h2>
+            <ul>
+              {videos.map((v) => (
+                <li>
+                  <a href={v.url} target="_blank" rel="noopener noreferrer">
+                    {v.title}
+                    <span class="sr-only"> (opens YouTube in a new tab)</span>
+                  </a>
+                  <span class="lesson-watch-meta">
+                    {v.creator}
+                    {v.minutes ? `, ${v.minutes} min` : ''}
+                    {v.easy && <span class="lesson-watch-easy">Good for beginners</span>}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <p class="lesson-watch-note">These are videos by other creators, not part of Layerwise. Checked on {videosChecked}.</p>
+          </section>
         )
       }
 

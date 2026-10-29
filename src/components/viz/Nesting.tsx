@@ -3,11 +3,11 @@ import { AnimatePresence, motion } from 'motion/react';
 import { Root, EASE } from './shared';
 
 const layers = [
-  { id: 'ai', name: 'Artificial intelligence', text: 'The broad goal: making machines do things that normally need human intelligence. It includes hand-written rules, search, planning and learning.' },
-  { id: 'ml', name: 'Machine learning', text: 'Instead of writing the rules, you show the computer many examples and it works out the rules itself. A spam filter learned from thousands of labelled emails is machine learning.' },
-  { id: 'dl', name: 'Deep learning', text: 'Machine learning using large neural networks with many layers. It is what made speech recognition, image recognition and translation good enough to use every day.' },
-  { id: 'gen', name: 'Generative AI', text: 'Deep learning models that produce new content: text, images, audio, code. They learn the patterns in huge amounts of examples and generate more of the same kind.' },
-  { id: 'llm', name: 'Large language models', text: 'Generative models for text. Chatbots such as the ones you may have used are built on them. Each one is trained to predict the next piece of text, over and over.' },
+  { id: 'ai', name: 'Artificial intelligence', text: 'The big idea: getting computers to do things that usually need a thinking person. Some AI follows rules that people wrote. Most AI today learns from examples.' },
+  { id: 'ml', name: 'Machine learning', text: 'Instead of people writing the rules, the computer learns them from lots of examples. A spam filter that learned from thousands of marked emails is machine learning.' },
+  { id: 'dl', name: 'Deep learning', text: 'Machine learning with very big neural networks: many layers of simple calculations, stacked on top of each other. It made voice assistants, photo search and translation good enough to use every day.' },
+  { id: 'gen', name: 'Generative AI', text: 'Deep learning that makes new things: text, pictures, music or code. It learns the patterns in huge numbers of examples, then makes more of the same kind.' },
+  { id: 'llm', name: 'Large language models', text: 'Generative AI for text. Chatbots are built on them. Each one learned from a huge amount of writing by guessing the next bit of text, again and again.' },
 ] as const;
 
 /** Concentric outlines: each idea sits inside the previous one. Click a ring to read about it. */
@@ -46,7 +46,7 @@ export default function Nesting() {
             </AnimatePresence>
           </div>
         </div>
-        <p className="viz-cap">Each ring is a special case of the one around it. Every large language model is generative AI, deep learning, machine learning and AI. The reverse is not true.</p>
+        <p className="viz-cap">Each ring sits inside the one around it. So every large language model is also generative AI, deep learning, machine learning and AI. It does not work the other way round: not all AI is a chatbot.</p>
       </div>
     </Root>
   );

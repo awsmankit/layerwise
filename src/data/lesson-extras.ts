@@ -19,6 +19,7 @@ import { extras_libraries } from './extras/libraries';
 import { extras_reasoning } from './extras/reasoning';
 import { extras_agenteval } from './extras/agenteval';
 import { extras_euai } from './extras/euai';
+import { extrasStart } from './extras/start';
 
 export type QuizItem = {
   q: string;
@@ -43,46 +44,46 @@ const INCIDENT = { label: 'Play Incident Room', href: '/play/incident-room/' };
 const baseExtras: Record<string, Extra> = {
   'start/what-is-ai-in-plain-english': {
     takeaways: [
-      'Machine learning means the computer learns the rules from examples, instead of people writing them.',
-      'The terms nest: AI, machine learning, deep learning, generative AI, large language models. Each is a special case of the one before.',
-      'A model is a large formula with adjustable numbers. Training sets them; inference is using them.',
-      'A chatbot model predicts the next piece of text, so it can be fluent and wrong at the same time.',
+      'Machine learning means a computer learns the rules from examples, instead of people writing them.',
+      'The words fit inside each other: AI, machine learning, deep learning, generative AI and large language models.',
+      'A model is like a machine full of dials. Training sets the dials, and they stay put while you use it.',
+      'A chatbot guesses what comes next, so it can sound sure and still be wrong.',
     ],
     quiz: [
-      { q: 'A spam filter that learns from thousands of emails people marked as spam is an example of…', options: ['Hand-written rules', 'Machine learning', 'A database lookup', 'A large language model'], answer: 1, why: 'Nobody wrote the rules; the program found the patterns in labelled examples. That is machine learning.' },
-      { q: 'Which statement is true?', options: ['Every machine learning model is a large language model', 'Every large language model is a machine learning model', 'Deep learning is a kind of rule-based system', 'Generative AI is a kind of search engine'], answer: 1, why: 'The ideas nest. Large language models sit inside generative AI, deep learning and machine learning, but not the other way round.' },
-      { q: 'What does “inference” mean?', options: ['Training a model on new data', 'Using a trained model to produce an output', 'Collecting the training data', 'Fixing a model’s mistakes'], answer: 1, why: 'Training builds the model. Inference is every use of it afterwards, such as answering a chat message.' },
-      { q: 'Spammers change their wording and your learned spam filter starts missing messages. What is the fix?', options: ['Rewrite its rules by hand every time', 'Wait until it forgets the old examples', 'Show it new examples of the new tactics', 'Replace it with a database lookup'], answer: 2, why: 'A learned system adapts when you show it new examples. Hand-written rules are brittle and never finished.' },
+      { q: 'A spam filter learns from thousands of emails that people marked as spam. What is this?', options: ['Rules written by hand', 'Machine learning', 'A web search'], answer: 1, why: 'Nobody wrote the rules; the computer found the patterns in the examples.' },
+      { q: 'Which of these is true?', options: ['Every kind of AI is a chatbot', 'Every large language model is a kind of machine learning', 'Machine learning is a kind of chatbot'], answer: 1, why: 'The ideas fit inside each other, and large language models sit in the middle ring.' },
+      { q: 'What happens during training?', options: ['The model sees examples and its dials are turned a little after each one', 'Someone types in every right answer by hand', 'The model searches the internet for answers', 'The model chats with you to learn'], answer: 0, why: 'Training means guessing, then nudging the dials so the next guess is a little better.' },
+      { q: 'A chatbot answers in perfect sentences and sounds very sure. What does that tell you?', options: ['The answer must be true', 'Nothing about whether the answer is true', 'It looked the answer up'], answer: 1, why: 'A chatbot can sound sure and still be wrong, so check anything that matters.' },
     ],
   },
   'start/how-a-chatbot-answers': {
     takeaways: [
-      'A chatbot writes its answer one token at a time, by choosing from probabilities for what comes next.',
-      'Choosing involves chance, so the same question can get different answers. Temperature controls how adventurous the choice is.',
-      'The model produces plausible text, not checked facts. That is why it can hallucinate.',
-      'It only sees the text in its context window. Anything else must be pasted back in.',
+      'A chatbot writes its answer one small piece at a time, picking what comes next.',
+      'Picking involves chance, so the same question can get different answers. Temperature sets how bold the picks are.',
+      'It writes what sounds right, not checked facts. A made-up answer that sounds true is called a hallucination.',
+      'It can only see the current chat. Old chats are gone unless the app copies them back in.',
     ],
-    prereq: ['start/what-is-ai-in-plain-english'],
+    prereq: ['start/how-computers-learn'],
     quiz: [
-      { q: 'Why can a chatbot give different answers to the same question?', options: ['It looks up a different source each time', 'Choosing the next word involves a weighted chance', 'It forgets the question', 'The internet changes between asks'], answer: 1, why: 'Each token is chosen from a probability distribution, so repeated runs can differ.' },
-      { q: 'You need precise, repeatable output. Which temperature suits best?', options: ['High', 'Low', 'It makes no difference', 'Zero makes the model refuse'], answer: 1, why: 'Low temperature sticks to the most likely token, which is what you want for precision.' },
-      { q: 'A model gives you a perfect-looking citation. What is the right response?', options: ['Trust it, because it is so specific', 'Check that the source exists and says that', 'Ask the model to confirm it and trust the answer', 'Lower the temperature and trust it'], answer: 1, why: 'Invented citations are the classic hallucination. Only checking the source itself settles it.' },
-      { q: 'You open a new chat and ask about something you discussed with the same chatbot last week. It has no idea. Why?', options: ['Its temperature was set too high', 'It deleted the old chat to save space', 'It cannot read dates', 'It only sees the text in front of it, and the earlier chat is outside its context window unless the product pastes it back in'], answer: 3, why: 'The model sees only the current conversation. Anything outside the context window, including an earlier chat, is simply not there.' },
+      { q: 'Why can the same question get different answers?', options: ['It looks in a different book each time', 'Picking the next word involves some chance', 'It forgets the question halfway'], answer: 1, why: 'Each word is picked partly by chance, so two tries can come out differently.' },
+      { q: 'You want a careful, steady answer for a science fact sheet. Which temperature fits best?', options: ['Low', 'High', 'It makes no difference'], answer: 0, why: 'A low temperature sticks to the most likely words, which suits careful work.' },
+      { q: 'A chatbot gives you a book title and author for your project. What should you do?', options: ['Use it, because it sounds right', 'Check that the book really exists', 'Ask the chatbot if it is sure, and trust its reply'], answer: 1, why: 'Made-up sources look just like real ones, so only checking the real thing settles it.' },
+      { q: 'You start a new chat, and the chatbot knows nothing about last week’s chat. Why?', options: ['Its temperature was too high', 'It can only see the current chat, unless the app copies the old one back in', 'It deleted everything it learned in training'], answer: 1, why: 'A chatbot only sees the text in its context window, which is the chat in front of it.' },
     ],
   },
   'start/using-ai-without-getting-burned': {
     takeaways: [
-      'Treat output as a draft from a fast, well-read intern who sometimes bluffs.',
-      'Verify what matters, and give the model the facts instead of asking it to recall them.',
-      'Do not paste private data into tools your organisation has not approved.',
-      'Saving prompts that work, and testing them on varied examples, is the start of engineering with AI.',
+      'Treat an AI answer as a first draft. You are the one in charge.',
+      'Check the facts that matter, and never share personal details such as your address, school or passwords.',
+      'Check your school’s rules on AI, use it to understand, and write in your own words.',
+      'If an answer worries or confuses you, ask a trusted adult.',
     ],
-    prereq: ['start/how-a-chatbot-answers'],
+    prereq: ['start/ai-that-sees-and-hears'],
     quiz: [
-      { q: 'Which is the safest use?', options: ['Pasting a customer’s full record into an unapproved tool', 'Asking a model to recall an exact legal case number from memory', 'Summarising a document you can skim to confirm', 'Publishing its answer without review'], answer: 2, why: 'You can check a summary against the source. The other options risk privacy or invented facts.' },
-      { q: 'You ask the same factual question twice and get different facts. What does that suggest?', options: ['Both answers are fine', 'At least one is wrong, so verify', 'The model is being creative', 'Temperature is zero'], answer: 1, why: 'Facts should not vary. Disagreement is a sign that the model is guessing.' },
-      { q: 'What gets the most useful first draft?', options: ['A one-word prompt', 'Describing the audience, format and length, with an example', 'Asking it to be perfect', 'Asking for the longest possible answer'], answer: 1, why: 'Specific context and an example beat vague requests every time.' },
-      { q: 'Your question contains a mistaken assumption. What does the lesson say a chatbot tends to do?', options: ['Always correct you', 'Go along with the false premise, so ask neutrally or ask it to challenge your assumption', 'Refuse to answer', 'Lower its own temperature'], answer: 1, why: 'Models tend to agree with a false premise in the question. Asking neutrally, or asking it to challenge your assumption, gives you a better chance of catching the mistake.' },
+      { q: 'Which of these is safe to type into a chatbot?', options: ['Your home address', 'Your password', 'A question about how volcanoes work', 'Your phone number'], answer: 2, why: 'A general question is fine, but personal details should never go into a chatbot.' },
+      { q: 'You ask the same fact question twice and get two different answers. What does that tell you?', options: ['Both answers are right', 'At least one is wrong, so check', 'The chatbot is being creative, so it is fine'], answer: 1, why: 'Facts should not change, so different answers mean the chatbot is guessing.' },
+      { q: 'Your teacher allows AI for ideas. What is the best way to use it for an essay?', options: ['Copy its essay and hand it in', 'Ask it to explain things, then write in your own words', 'Change a few words in its essay and hand it in'], answer: 1, why: 'Writing in your own words is how you learn, and it keeps you within the rules.' },
+      { q: 'Which request will get the most useful answer?', options: ['“Volcanoes”', '“Explain how volcanoes erupt in five sentences, for a 10-year-old”', '“Tell me everything”'], answer: 1, why: 'A clear request that says what you want and who it is for gets a better answer.' },
     ],
   },
 
@@ -358,6 +359,22 @@ const baseExtras: Record<string, Extra> = {
     ],
   },
 
+  'systems/llm-app-system-design': {
+    takeaways: [
+      'A production LLM feature wraps the model call in a gateway, versioned prompts, context assembly, routing, guardrails, caches, tracing and evals, and each exists to solve a specific problem.',
+      'Use the simplest shape that works: a single call, then a fixed workflow, and an agent only when the steps cannot be known in advance.',
+      'Write down latency, cost, quality, privacy, rate-limit and tenancy requirements first. They decide which blocks you need and how they trade off.',
+      'Model APIs are mostly stateless, so history, memory, knowledge, job state and traces live in your system and need an owner and a retention policy.',
+    ],
+    prereq: ['rag-agents/agents-and-tool-use', 'evals/evals-101'],
+    play: [BLUEPRINT],
+    quiz: [
+      { q: 'Why put an AI gateway in front of the model calls?', options: ['It makes the model more accurate', 'It centralises auth, provider keys, per-tenant quotas and usage tracking', 'It replaces the need for evals', 'It removes the need for streaming'], answer: 1, why: 'Keys, limits and accounting in one place stop one tenant draining the quota and keep provider keys out of clients.' },
+      { q: 'A support assistant always checks, retrieves, answers and checks again. Which shape fits best?', options: ['A fixed workflow', 'An autonomous agent with many tools', 'A nightly batch job', 'Fine-tuning a new model'], answer: 0, why: 'When the steps are known in advance, a workflow is cheaper, more predictable and easier to test than an agent.' },
+      { q: 'A multi-tenant app adds a response cache. What must the cache key include?', options: ['Only the question text', 'The time of day', 'The model temperature', 'The tenant (and any permission scope) alongside the normalised question'], answer: 3, why: 'Without the tenant in the key, one customer can be served an answer built from another customer’s data.' },
+      { q: 'Users want to see answers quickly, but output checks need the full text. What is a common middle ground?', options: ['Skip output checks entirely', 'Buffer the whole answer for every request', 'Hold back and check text in small chunks, with whole-answer checks at the end', 'Use a larger model'], answer: 2, why: 'Chunked checking keeps most of the streaming benefit while still screening text before the user sees it.' },
+    ],
+  },
   'systems/rag-service-architecture': {
     takeaways: [
       'A production RAG service adds a gateway, orchestrator, cache, model gateway, guardrails and tracing around the retrieval.',
@@ -459,4 +476,4 @@ const baseExtras: Record<string, Extra> = {
 };
 
 /** Core lessons plus the per-track files in ./extras. */
-export const extras: Record<string, Extra> = { ...baseExtras, ...extrasCloud, ...extrasInfra, ...extrasLocal, ...extrasCore, ...extrasModels, ...extrasEcosystem, ...extras_frameworks, ...extras_mcp, ...extras_promptpatterns, ...extras_libraries, ...extras_reasoning, ...extras_agenteval, ...extras_euai, ...extrasOps, ...extrasRetrievalServing };
+export const extras: Record<string, Extra> = { ...baseExtras, ...extrasCloud, ...extrasInfra, ...extrasLocal, ...extrasCore, ...extrasModels, ...extrasEcosystem, ...extras_frameworks, ...extras_mcp, ...extras_promptpatterns, ...extras_libraries, ...extras_reasoning, ...extras_agenteval, ...extras_euai, ...extrasOps, ...extrasRetrievalServing, ...extrasStart };

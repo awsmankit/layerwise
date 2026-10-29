@@ -14,12 +14,14 @@ import { cardStyle } from '../lib/color';
 import { swatch, gameSwatch } from '../lib/palette';
 import { cases } from '../data/cases';
 import { watch } from '../data/watch';
+import { lessonVideos } from '../data/videos';
 import { labs, labById } from '../data/labs';
 import { libraries } from '../data/libraries';
 import { getLessons, formatDate } from '../lib/content';
 import headlines from '../data/headlines.json';
 
 const lessons = await getLessons();
+const videoCount = new Set([...watch.map((w) => w.url), ...Object.values(lessonVideos).flat().map((v) => v.url)]).size;
 const latest = headlines.items.slice(0, 5);
 const featuredLabs = ['cosine-search', 'chunk-overlap', 'tool-loop'].map((id) => labById(id)).filter((l) => l !== undefined);
 
@@ -97,35 +99,6 @@ const tools = [
     </div>
   </section>
 
-  <section class="lp-section wrap" aria-labelledby="lab-h">
-    <div class="lp-head">
-      <h2 id="lab-h">Write code, see what passes</h2>
-      <p>Short labs that run in your browser. Nothing is uploaded.</p>
-    </div>
-    <div class="lp-grid lp-grid-4" data-stagger>
-      {
-        featuredLabs.map((l, i) => (
-          <a class="lp-card lp-card-col" data-reveal href={withBase(`/practice/${l.id}/`)} style={cardStyle([swatch.turquoise, swatch.tangerine, swatch.purple][i])}>
-            <span class="lp-plate"><TrackIcon name="local" size={44} /></span>
-            <span class="lp-body">
-              <h3>{l.title}</h3>
-              <p>{l.goal.split('. ')[0].replace(/\.$/, '')}.</p>
-            </span>
-            <span class="lp-chip">{l.minutes} min, {l.level}</span>
-          </a>
-        ))
-      }
-      <a class="lp-card lp-card-col" data-reveal href={withBase('/practice/')} style={cardStyle(swatch.navy)}>
-        <span class="lp-plate"><TrackIcon name="systems" size={44} /></span>
-        <span class="lp-body">
-          <h3>All {labs.length} labs</h3>
-          <p>Plus projects to build and free places to practise.</p>
-        </span>
-        <span class="lp-chip">Practice</span>
-      </a>
-    </div>
-  </section>
-
   <section class="lp-section wrap" aria-labelledby="tracks-h">
     <div class="lp-head">
       <h2 id="tracks-h">Every lesson, by topic</h2>
@@ -177,6 +150,35 @@ const tools = [
           })
         }
       </div>
+    </div>
+  </section>
+
+  <section class="lp-section wrap" aria-labelledby="lab-h">
+    <div class="lp-head">
+      <h2 id="lab-h">Write code, see what passes</h2>
+      <p>Short labs that run in your browser. Nothing is uploaded.</p>
+    </div>
+    <div class="lp-grid lp-grid-4" data-stagger>
+      {
+        featuredLabs.map((l, i) => (
+          <a class="lp-card lp-card-col" data-reveal href={withBase(`/practice/${l.id}/`)} style={cardStyle([swatch.turquoise, swatch.tangerine, swatch.purple][i])}>
+            <span class="lp-plate"><TrackIcon name="local" size={44} /></span>
+            <span class="lp-body">
+              <h3>{l.title}</h3>
+              <p>{l.goal.split('. ')[0].replace(/\.$/, '')}.</p>
+            </span>
+            <span class="lp-chip">{l.minutes} min, {l.level}</span>
+          </a>
+        ))
+      }
+      <a class="lp-card lp-card-col" data-reveal href={withBase('/practice/')} style={cardStyle(swatch.navy)}>
+        <span class="lp-plate"><TrackIcon name="systems" size={44} /></span>
+        <span class="lp-body">
+          <h3>All {labs.length} labs</h3>
+          <p>Plus projects to build and free places to practise.</p>
+        </span>
+        <span class="lp-chip">Practice</span>
+      </a>
     </div>
   </section>
 
@@ -260,10 +262,10 @@ const tools = [
       <a class="lp-card" data-reveal href={withBase('/watch/')} style={cardStyle(swatch.tangerine)}>
         <span class="lp-plate"><TrackIcon name="llm" size={44} /></span>
         <span class="lp-body">
-          <h3>Further watching</h3>
-          <p>Video courses by other creators, by topic.</p>
+          <h3>Learning videos</h3>
+          <p>YouTube videos for every lesson, from well-known creators.</p>
         </span>
-        <span class="lp-chip">{watch.length} videos and courses</span>
+        <span class="lp-chip">{videoCount} videos and courses</span>
       </a>
       <a class="lp-card" data-reveal href={withBase('/teach/')} style={cardStyle(swatch.purple)}>
         <span class="lp-plate"><TrackIcon name="start" size={44} /></span>

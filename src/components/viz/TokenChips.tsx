@@ -9,16 +9,25 @@ const samples = [
   { label: 'Digits', text: '1234567890', tokens: ['123', '456', '789', '0'] },
 ];
 
-export default function TokenChips() {
+// Real splits from the o200k_base tokenizer, for the beginner lesson.
+const simpleSamples = [
+  { label: 'A sentence', text: 'I love playing football with my friends.', tokens: ['I', ' love', ' playing', ' football', ' with', ' my', ' friends', '.'] },
+  { label: 'A name', text: 'My dog is called Biscuit.', tokens: ['My', ' dog', ' is', ' called', ' Bisc', 'uit', '.'] },
+  { label: 'strawberry', text: 'strawberry', tokens: ['st', 'raw', 'berry'] },
+  { label: 'A long word', text: 'Supercalifragilisticexpialidocious', tokens: ['Super', 'cal', 'if', 'rag', 'il', 'istic', 'exp', 'ial', 'id', 'ocious'] },
+];
+
+export default function TokenChips({ simple = false }: { simple?: boolean }) {
   const [i, setI] = useState(0);
-  const s = samples[i];
+  const list = simple ? simpleSamples : samples;
+  const s = list[i];
   const words = s.text.trim().split(/\s+/).length;
 
   return (
     <Root>
       <div className="viz tc">
         <div className="tc-tabs" role="tablist" aria-label="Sample text">
-          {samples.map((x, k) => (
+          {list.map((x, k) => (
             <button
               key={x.label}
               type="button"
@@ -49,10 +58,10 @@ export default function TokenChips() {
           </AnimatePresence>
         </div>
         <p className="tc-stat num">
-          {s.text.length} characters, {words} {words === 1 ? 'word' : 'words'}, {s.tokens.length} tokens
+          {s.text.length} {simple ? 'letters and spaces' : 'characters'}, {words} {words === 1 ? 'word' : 'words'}, {s.tokens.length} {simple ? 'pieces' : 'tokens'}
         </p>
         <p className="viz-cap">
-          Illustrative splits. Every model family has its own tokenizer, so the same text costs a different number of tokens on different models. A leading space is shown as a dot.
+          {simple ? 'Real pieces from a tokenizer that some ChatGPT models use. Other chatbots cut words up a little differently. A dot shows a space at the start of a piece.' : <>Illustrative splits. Every model family has its own tokenizer, so the same text costs a different number of tokens on different models. A leading space is shown as a dot.</>}
         </p>
       </div>
     </Root>

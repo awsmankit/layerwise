@@ -497,3 +497,49 @@
   text-decoration: line-through;
   text-decoration-thickness: 1px;
 }
+
+/* FruitSort: a one-dial model for the "how computers learn" lesson */
+.fs-rule {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  margin: 0 0 0.5rem;
+}
+.fs-rule b {
+  color: var(--signal-ink);
+}
+.fs-fruit {
+  fill: var(--surface);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+}
+.fs-apple {
+  fill: var(--tint-pink);
+}
+.fs-banana {
+  fill: var(--tint-sun);
+}
+.fs-ok {
+  stroke: var(--ok);
+}
+.fs-bad {
+  stroke: var(--warn);
+}
+.fs-fresh {
+  stroke-dasharray: 3 2;
+}
+.fs-x {
+  fill: var(--warn);
+  font-size: 13px;
+  font-weight: 700;
+}
+.fs-cut {
+  stroke-dasharray: 4 3;
+  stroke-width: 1.5;
+}
+.fs-say {
+  min-height: 3em;
+  margin: 0.5rem 0 1rem;
+}
+.fs-dial {
+  margin-bottom: 1rem;
+}

@@ -1,0 +1,82 @@
+---
+title: How a computer learns from examples
+track: start
+level: basic
+order: 2
+summary: Teach a computer to tell apples from bananas. See how guessing, checking and nudging turns examples into a rule, and why the examples matter so much.
+updated: 2026-10-29
+sources:
+  - label: "Elements of AI (free introductory course)"
+    url: https://www.elementsofai.com
+  - label: "Google's Machine Learning Crash Course"
+    url: https://developers.google.com/machine-learning/crash-course
+  - label: "Google's Machine Learning Crash Course: Fairness"
+    url: https://developers.google.com/machine-learning/crash-course/fairness
+---
+
+import FruitSort from '../../../components/viz/FruitSort.tsx';
+import Deep from '../../../components/ui/Deep.astro';
+
+How did you learn what a dog looks like? Nobody gave you a list of rules. You saw lots of dogs, big and small, and your brain worked it out.
+
+Many computers learn in a similar way. In this lesson you will teach one yourself.
+
+## Rules or examples
+
+There are two ways to make a computer sort things. You can write the rules yourself, one by one. Or you can give it lots of examples with the right answers, and let it find a rule.
+
+Rules work for simple jobs. But try writing rules for "is this a dog?" Fur? Cats have fur. Four legs? So does a table. For jobs like this, examples work much better.
+
+## A rule with a dial
+
+Here is a simple job: sort apples from bananas. Our computer only knows how long each fruit is. Its rule is "longer than this many centimetres means banana".
+
+That number is a **dial**, a setting the computer can turn up or down. Set it badly and the answers are wrong. Learning means finding a good setting.
+
+## Your turn: teach it
+
+<FruitSort client:visible />
+
+At the start, the dial is at 19 cm. Three bananas are 19 cm or shorter, so the computer calls them apples. Those mistakes have red outlines and a cross.
+
+Press "Learn one step" a few times. Each press moves the dial 1 cm, then the computer checks again. Or press "Keep learning" and watch it carry on until every mistake is gone.
+
+## Guess, check, nudge, repeat
+
+What you just watched is called **training**: the computer guesses, counts its mistakes, nudges its dial, and repeats. Nobody told it where the dial should go. It found a good place by itself.
+
+## The real test: new fruit
+
+Getting the examples right is not enough. A good rule must also work on fruit it has never seen. Trying it on brand-new examples is called **testing**.
+
+Press "Try it on new fruit". Two new fruit are sorted correctly. But a small 10 cm banana is wrong. The computer never saw a banana that short.
+
+Now press "Add the small banana to the examples", then let it learn again. The dial moves down, and the small banana is now sorted correctly too.
+
+## Only as good as its examples
+
+This is the most important idea in the lesson. A computer learns only from the examples it is given. If some kinds are missing, it gets those kinds wrong.
+
+Missing examples can also make it unfair. Some real face-recognition systems worked worse for people with darker skin. Their training photos did not include enough people who looked like them.
+
+So people who build AI try to collect varied, fair examples. Then they test on new ones before trusting the result.
+
+## Real AI has billions of dials
+
+Our computer had one dial. Real AI uses the same idea, made enormous. A big chatbot has billions of dials, all nudged a tiny bit at a time during training.
+
+It also learns from far more examples. A chatbot learns from huge amounts of writing, not eight pieces of fruit. But the steps are the same: guess, check, nudge, repeat.
+
+<Deep title="For grown-ups: how real training turns the dials">
+
+The dials are called **parameters** or weights. Training measures how wrong the model is with one number, the loss. It then uses calculus to work out, for every parameter at once, which way to move it to make the loss smaller. That direction is the gradient, and stepping along it again and again is called gradient descent.
+
+Testing uses examples held back from training, often called a validation or test set. A model that scores well on its training examples but badly on held-back ones has memorised rather than learned. That is called overfitting. The small banana shows a related problem: the training examples did not cover everything the model would meet.
+
+</Deep>
+
+## Want to go further?
+
+[How models learn](../../foundations/how-models-learn/) shows the real thing, with the maths. It is written for older learners.
+
+Next: [How a chatbot answers](../how-a-chatbot-answers/).

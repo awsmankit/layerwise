@@ -21,7 +21,7 @@ const points: P[] = [
   { w: 'train', x: 50, y: 86, g: 'vehicle' },
 ];
 
-export default function EmbeddingSpace() {
+export default function EmbeddingSpace({ simple = false }: { simple?: boolean }) {
   const [sel, setSel] = useState(1);
   const near = useMemo(() => {
     const s = points[sel];
@@ -65,7 +65,9 @@ export default function EmbeddingSpace() {
           Closest to “<b>{points[sel].w}</b>”: {near.map((o) => points[o.i].w).join(', ')}.
         </p>
         <p className="viz-cap">
-          Hand-placed positions to show clustering. Real embedding spaces have hundreds or thousands of dimensions, and retrieval systems search them by nearest distance.
+          {simple
+            ? 'Positions placed by hand to show the idea. A real computer uses hundreds of numbers for each word, not two, but similar words still end up close together.'
+            : 'Hand-placed positions to show clustering. Real embedding spaces have hundreds or thousands of dimensions, and retrieval systems search them by nearest distance.'}
         </p>
       </div>
     </Root>

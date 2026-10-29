@@ -2,9 +2,9 @@
 title: How a chatbot decides what to say
 track: start
 level: basic
-order: 2
-summary: Play with a toy language model to see why answers vary, why it sometimes makes things up, and what temperature means.
-updated: 2026-10-26
+order: 3
+summary: Play with a toy chatbot to see why answers change, why it sometimes makes things up, and what the temperature setting does.
+updated: 2026-10-29
 sources:
   - label: "The Illustrated Transformer (Jay Alammar)"
     url: https://jalammar.github.io/illustrated-transformer/
@@ -17,29 +17,39 @@ import Callout from '../../../components/ui/Callout.astro';
 import Disclosure from '../../../components/viz/Disclosure.tsx';
 import Deep from '../../../components/ui/Deep.astro';
 
-When you press enter, the chatbot does not look up an answer. It writes one, a small piece at a time. Understanding that single fact explains most of the strange behaviour people notice.
+When you ask a chatbot a question, it does not look up the answer in a big book. It writes a brand new answer, one small piece at a time. Knowing that one fact explains most of the odd things chatbots do.
 
 ## What happens when you press enter
 
-1. Your message, and the conversation so far, is chopped into small pieces called **tokens**. A token is a word or part of a word.
-2. The model reads all of those tokens and works out **how likely each possible next token is**. For "The capital of France is", the token " Paris" gets a very high probability.
-3. One token is **chosen** from those probabilities.
-4. That token is added to the text.
-5. Go back to step 2 with the longer text. Stop when the model decides the answer is finished.
+1. The chatbot reads your message, and the chat so far.
+2. It works out how likely each possible next word is. After "The capital of France is", the word "Paris" is very likely.
+3. It picks one word.
+4. It adds that word to the text.
+5. It goes back to step 2 with the longer text. It stops when the answer looks finished.
 
-That loop is the whole mechanism. Every sentence a chatbot has ever written came out of it, one token at a time.
+That loop is the whole trick. Every sentence a chatbot writes comes out of it, one piece at a time.
+
+Strictly, it works with small pieces of text: often whole words, sometimes parts of words. The [lesson after this one](../how-computers-read-words/) explains them.
 
 ## Try it yourself
 
-Below is a toy version with a handful of hand-written probabilities. Click a word to choose it, or let chance pick. Then move the temperature slider and see what changes.
+Below is a toy chatbot with word chances written by hand. Click a word to pick it, or let chance pick. Then move the temperature slider and watch what changes.
 
 <NextToken client:visible />
 
-## What you just saw
+## Why answers change
 
-**Why the same question gets different answers.** Choosing among likely words involves a bit of chance, like rolling a loaded die. Run it twice and you can get two different, equally reasonable sentences. In the factual example, " Paris" is so likely that it wins nearly every time. In the open-ended one, many words are plausible, so the results vary.
+Picking the next word involves a little luck. Imagine a hat full of raffle tickets. Likely words have lots of tickets, unlikely words have only a few, and the chatbot pulls one out.
 
-**What temperature does.** It controls how boldly the model chooses. Low temperature makes it stick to the most likely word, which suits factual or precise work. High temperature gives unlikely words a real chance, which suits brainstorming but also produces more mistakes.
+So if you ask the same thing twice, you can get two different answers.
+
+In the France example, "Paris" has almost all the tickets, so it nearly always wins. In the weather example, lots of words have a fair share, so the result changes more.
+
+## What temperature does
+
+**Temperature** is a setting that controls how bold the chatbot is when it picks a word. At a low temperature, the favourite word gets even more of the tickets. So the chatbot nearly always picks it, which suits facts and careful work.
+
+At a high temperature, the tickets are shared out more evenly. Unlikely words get a real chance. That is good for silly story ideas, but it also leads to more mistakes.
 
 <Deep title="The arithmetic">
 
@@ -47,30 +57,46 @@ Temperature reshapes the probabilities. If a token has probability p, its new pr
 
 </Deep>
 
-**Why it sometimes makes things up.** The model's job is to produce a *plausible* continuation, not to check facts. If you ask about something it learned well, the plausible answer is also the true one. If you ask for a detail it never saw, such as a specific court case, a statistic or a reference, it still produces something that *looks* right, because looking right is what it was trained to do. This is called a **hallucination**.
+## Why it sometimes makes things up
 
-**Why it can seem to know so much.** It was trained on a huge amount of text, and predicting that text well meant absorbing many patterns and facts. It is a compressed, imperfect record of what it read, not a database.
+A chatbot's job is to write something that sounds right. It does not check facts. If you ask about something it learned well, what sounds right is usually also true.
 
-**Why it forgets between chats.** It only sees the text in front of it, the current conversation. The amount of text it can see at once is called its **context window**. Anything outside that window, including an earlier conversation, simply is not there unless the product pastes it back in.
+But ask for a detail it never saw, like an exact date, and it still writes something that sounds right. That is what it was trained to do. A made-up answer that sounds true is called a **hallucination**.
 
-<Callout title="The practical rule">
+<Deep title="When made-up answers cause real trouble">
 
-Treat a chatbot like a fast, well-read colleague who writes fluently and sometimes bluffs. Great for drafts and ideas. Check anything that matters. The next lesson turns that into habits.
+In 2023, two lawyers in New York handed a court a document that quoted earlier court cases. A chatbot had invented several of those cases, and the lawyers had not checked. The judge fined them. Made-up references, quotes and statistics are the most common kind of hallucination, because they look exactly like the real thing.
+
+</Deep>
+
+## Why it seems to know so much
+
+A chatbot read a huge amount, and soaked up lots of facts on the way. But it is not a library where each fact sits on a shelf. It is more like a blurry memory of everything it read.
+
+## Why it forgets between chats
+
+A chatbot can only see the text in front of it: the chat you are having now. The amount of text it can see at once is called its **context window**. An old chat sits outside that window, so the chatbot cannot see it unless the app copies it back in.
+
+<Callout title="The simple rule">
+
+Think of a chatbot as a fast, well-read helper who sometimes bluffs. It is great for first drafts and ideas. Check anything that matters.
 
 </Callout>
 
 ## Check your understanding
 
-- Why does the factual example nearly always give "Paris" but the weather example varies?
-- What would you set the temperature to for writing a legal clause, and why? What about for brainstorming product names?
-- A model gives you a perfect-looking citation. What is the right response?
+- Why does the France example nearly always give "Paris", but the weather example keeps changing?
+- Would you choose a low or a high temperature for a science fact sheet? What about for funny names for a new pet?
+- A chatbot gives you a book title and its author for your project. What should you do?
 
 <Disclosure client:visible title="Show suggested answers">
 
-- **Paris versus the weather.** For the capital of France, one word is far more likely than any other, so even with some chance involved it wins nearly every time. For the weather, many words are about equally plausible, so chance picks different ones.
-- **Temperature.** Low for a legal clause, because you want the most likely, precise wording and the same result each time. Higher for brainstorming names, because unusual words are exactly what you want there.
-- **The citation.** Look it up yourself. A citation that looks perfect is exactly what a model produces when it is guessing, so only the source itself can confirm it.
+- **Paris and the weather.** "Paris" has nearly all the tickets, so it nearly always wins. For the weather, many words have a fair share, so chance picks different ones.
+- **Temperature.** Low for the fact sheet, to get the most likely words. Higher for pet names, where unusual words are what you want.
+- **The book.** Look it up in a library catalogue or on a trusted website. A made-up book can look just as real as a true one.
 
 </Disclosure>
 
-Next: [Using AI without getting burned](../using-ai-without-getting-burned/).
+## Next
+
+Next: [How computers read words](../how-computers-read-words/), where you find out what those small pieces of text are.

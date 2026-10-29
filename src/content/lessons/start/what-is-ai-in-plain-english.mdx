@@ -3,8 +3,8 @@ title: What AI actually is, in plain English
 track: start
 level: basic
 order: 1
-summary: A map of the terms people mix up, and a straight account of what these systems can and cannot do.
-updated: 2026-10-26
+summary: What people mean by AI, how a computer can learn from examples, and what chatbots are good and bad at.
+updated: 2026-10-29
 sources:
   - label: "Google's Machine Learning Crash Course"
     url: https://developers.google.com/machine-learning/crash-course
@@ -16,70 +16,90 @@ import Nesting from '../../../components/viz/Nesting.tsx';
 import Callout from '../../../components/ui/Callout.astro';
 import Deep from '../../../components/ui/Deep.astro';
 
-You hear "AI", "machine learning", "LLM" and "generative AI" used as if they meant one thing. They do not. This lesson sorts them out, explains what is going on inside, and says plainly what these systems are good and bad at. No background needed.
+People talk about AI all the time. It is in phones, games and homework apps. This lesson explains what it really is, in plain words. You do not need to know anything about computers first.
 
-## Start with a spam filter
+## A job for a computer
 
-Suppose you want to catch spam email. There are two ways to do it.
+Spam is junk email, like messages saying you have won a prize you never entered. Imagine you want a computer to spot spam and hide it. There are two ways to do it.
 
-**Write the rules yourself.** If the subject has "WINNER" in capitals, mark it spam. If it mentions a prince, mark it spam. This works until spammers change their wording, and then you are rewriting rules forever.
+## Way one: write the rules
 
-**Learn from examples.** Collect thousands of emails that people marked as spam or not spam, and let a program find the patterns that separate them. Nobody writes the rules. When spammers change tactics, you show it new examples.
+You could write the rules yourself. "If the email says WINNER in capital letters, it is spam." "If it asks for a password, it is spam."
 
-The second way is **machine learning**, and nearly everything called AI today works like that.
+This works for a while. Then the spammers change their words, and your rules miss them. You end up writing new rules for ever.
 
-| | Rules written by hand | Learned from examples |
+## Way two: learn from examples
+
+Or you could collect thousands of emails that people have already marked "spam" or "not spam". Then you let the computer find the patterns that tell the two apart. Nobody writes the rules.
+
+When spammers try new tricks, you show the computer new examples. This second way is called **machine learning**: the computer learns the rules from examples. Nearly everything called AI today works like this.
+
+| | Writing the rules | Learning from examples |
 |---|---|---|
-| Who works out the logic | A person | The computer, from data |
-| Handles new situations | Only if someone thought of them | Often, if they resemble the examples |
-| Main weakness | Brittle, never finished | Needs good examples; can be wrong in ways that are hard to explain |
+| Who works out the rules? | A person | The computer, from examples |
+| Something new turns up | Only works if someone planned for it | Often works, if it looks like the examples |
+| Weak spot | Never finished | Needs good examples, and its mistakes can be hard to explain |
 
-## The map
+## Words that fit inside each other
 
-These terms are nested, like Russian dolls. Click each ring.
+People use "AI", "machine learning" and "chatbot" as if they meant the same thing. They do not. The words fit inside each other, like nesting dolls. Click each ring to read about it.
 
 <Nesting client:visible />
 
-## What a "model" is
+## What a model is
 
-A **model** is the thing that has learned. Think of it as a very large formula with millions or billions of adjustable dials, called **parameters**. Before training, the dials are random and the model's answers are nonsense.
+A **model** is the part of an AI system that has learned something. Picture a machine covered in millions of tiny dials. Each way of setting the dials gives different answers.
 
-**Training** means showing the model many examples and nudging the dials a little after each one so its answers get closer to the right ones. Repeat that billions of times and the dials settle into values that capture the patterns in the data.
+Before it learns anything, the dials are set at random. So at first, its answers are nonsense.
 
-After training, the dials are fixed. **Using** the model, called **inference**, just means feeding it new input and reading what comes out. That is what happens when you type into a chatbot.
+## How a model learns
 
-<Deep>
+**Training** is how the dials get set, by learning from examples. The model sees an example and makes a guess. Then every dial is turned a tiny bit, so the next guess is a little better.
 
-The dials are numbers stored in a file, which is why people talk about a model's "weights" and why a model can be copied and run on different computers. Training is expensive because it needs powerful chips running for weeks. Using a trained model is far cheaper, but it still adds up when millions of people do it.
+This happens millions of times. Slowly the dials settle where they capture the patterns in the examples.
+
+It is a bit like practising penalty kicks. Each miss tells you to aim a little differently. After thousands of kicks, you hit the target far more often.
+
+Once training is over, the dials stay where they are. They do not change while you chat. The [next lesson](../how-computers-learn/) lets you turn a dial yourself.
+
+<Deep title="Grown-up words for the same ideas">
+
+The dials are called **parameters**, or **weights**. They are just numbers stored in a file, which is why a model can be copied and run on different computers. A model with "8 billion parameters" has 8 billion of these numbers.
+
+Using a trained model is called **inference**. Training is expensive because it needs many powerful chips running for weeks. Each single use is far cheaper, but it adds up when millions of people use a model. Some companies keep chats and may use them to train later versions, which is one reason to read a tool's privacy settings.
 
 </Deep>
 
-## What a chatbot model does
+## What a chatbot does
 
-A large language model is trained on an enormous amount of text with one simple task: **given the text so far, predict what comes next.** That is all. Answering questions, writing emails and explaining code all come out of getting very good at that one task, because to predict well you have to pick up grammar, facts, styles and common sense along the way.
+The models behind chatbots are called **large language models**, because they learn from a huge amount of writing. Their main training task sounds simple: look at some text and guess what comes next.
 
-The [next lesson](../how-a-chatbot-answers/) lets you play with this directly.
+To guess well, a model has to pick up grammar, facts and styles of writing. Answering questions and writing stories both grow out of that one skill.
 
-## What it is good at, and what it is not
+<Deep title="It is not only next-word guessing">
 
-| Usually good | Usually weak |
+After that first, huge round of training, chat models get extra training. They are shown example conversations, and people rate which answers are more helpful and safe. This turns a good text-guesser into something that behaves like a helpful assistant. Underneath, it still writes by guessing what comes next.
+
+</Deep>
+
+## Good at, and not so good at
+
+| Usually good at | Usually weak at |
 |---|---|
-| Drafting, rewriting and summarising text | Knowing facts it was never shown, or that changed recently |
-| Explaining a concept in different ways | Exact arithmetic and long, careful logic without help |
-| Writing and explaining routine code | Telling you honestly when it does not know |
-| Sorting, labelling and extracting information | Anything where one wrong detail is costly, unless you check |
-| Brainstorming options | Remembering you between separate conversations on its own |
+| Writing and rewriting text | Facts it never saw, or news since it was trained |
+| Explaining an idea in different ways | Exact sums and long chains of careful thinking |
+| Summing up a long piece of writing | Saying "I don't know" when it does not know |
+| Coming up with ideas | Jobs where one small mistake matters, unless you check |
+| Sorting and labelling things | Remembering you from one chat to the next, unless the app saves it |
 
-<Callout title="Three things worth knowing from day one">
+<Callout title="Three things to remember">
 
-1. **It can be confidently wrong.** Fluent writing is not evidence of truth.
-2. **It only knows what it learned in training, plus what is in the conversation.** It does not look things up unless the product around it is built to.
-3. **Quality depends heavily on how you ask.** A clear request with the right context beats a vague one.
+1. It can be wrong and still sound sure. Writing that sounds good is not proof that it is true.
+2. It only knows what it learned, plus what is in the chat. It does not look things up unless the app is built to.
+3. How you ask matters. A clear question with details gets a better answer than a vague one.
 
 </Callout>
 
-## Where to go next
+## Next
 
-- [How a chatbot decides what to say](../how-a-chatbot-answers/), with an interactive demo.
-- [Using AI without getting burned](../using-ai-without-getting-burned/), practical habits.
-- When you are ready to build with it, the **Foundations** and **Working with LLMs** tracks pick up from here.
+Next: [How a computer learns from examples](../how-computers-learn/), where you teach a computer to sort fruit by turning a dial.

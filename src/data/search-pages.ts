@@ -20,7 +20,7 @@ export const searchPages: SearchItem[] = [
   { t: 'News', u: '/pulse/', k: 'Page', s: 'The last month of headlines from cloud providers, model labs, serving projects and security groups, refreshed daily.' },
   { t: 'Notes we explain', u: '/pulse/notes/', k: 'Page', s: 'Short, checked notes on changes that matter for the systems you build, and what to do about them.' },
   { t: 'How big companies build it', u: '/cases/', k: 'Page', s: 'Engineering write-ups from companies such as Anthropic, Uber, Shopify and Dropbox on RAG, agents, serving, evals and cost. Filter by topic and company.' },
-  { t: 'Further watching', u: '/watch/', k: 'Page', s: 'Video courses and playlists by other creators on transformers, embeddings, RAG, LangChain, LangGraph, evals and MCP.' },
+  { t: 'Learning videos', u: '/watch/', k: 'Page', s: 'YouTube videos and courses by well-known creators for every lesson, from AI basics to GPUs and cloud, plus longer courses on transformers, RAG, evals and MCP.' },
   { t: 'Interview prep', u: '/interview/', k: 'Page', s: 'Practise AI interviews or run them with a shared rubric.' },
   { t: 'Your progress', u: '/progress/', k: 'Page', s: 'Lessons done, quiz scores, revision and a mixed review. Copy a link or download a file to move it to another device.' },
   { t: 'For teachers', u: '/teach/', k: 'Page', s: 'Course plans and classroom activities.' },

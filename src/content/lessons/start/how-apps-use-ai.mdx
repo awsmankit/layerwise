@@ -2,9 +2,9 @@
 title: "How apps use AI: models, APIs, prompts and your own data"
 track: start
 level: basic
-order: 4
-summary: What actually happens between an app and a model, how apps use your own documents without retraining, and why every answer costs money and time.
-updated: 2026-10-26
+order: 7
+summary: What happens between an app and the model behind it, how an app can use its own documents without building a new model, and why every answer costs money and time.
+updated: 2026-10-29
 sources:
   - label: "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks (Lewis et al., 2020)"
     url: https://arxiv.org/abs/2005.11401
@@ -14,83 +14,107 @@ import PipelineFlow from '../../../components/viz/PipelineFlow.tsx';
 import Callout from '../../../components/ui/Callout.astro';
 import Deep from '../../../components/ui/Deep.astro';
 
-You now know that a chatbot writes its answer one token at a time. But the chat window, a writing assistant in your email or a support bot on a website are not the model itself. They are apps that talk to a model. This lesson shows how that conversation works, with no code needed.
+You now know how a chatbot writes its answer. But the chat app on your phone is not the model itself. It is an app that talks to a model. This lesson shows how that works.
 
-## The model and the app are different things
+## The model and the app are different
 
-A **model** is, in the end, a very large file of numbers (the "weights" that training set) plus some code that knows how to run them. Give it text, and it produces more text. That is all it does. It has no buttons, no login, no memory of yesterday, and no idea which company is using it.
+The model is the part that learned. It is really a very big file of numbers, plus code to run it. Give it text, and it writes more text.
 
-The **app** is everything around it: the screen you type into, your account, the saved chat history, the rules about what the bot should and should not do, and the code that decides what to send to the model. Many different apps can use the same model. Two products that feel very different may be sending text to the same model behind the scenes.
+It has no buttons, no login and no memory of yesterday.
 
-## What an API is
+The app is everything around it: the screen, your account, your saved chats and the rules about what the bot may say. Many apps can use the same model behind the scenes.
 
-Most apps do not run the model on your phone or on their own computers. They send a request over the internet to a company that runs the model on powerful chips, and they get an answer back. The agreed way of making that request is called an **API** (application programming interface).
+## Sending a message to the model
 
-Think of a restaurant. You do not walk into the kitchen. You tell the waiter what you want, in the format the menu allows, and the waiter brings back the dish. The API is the waiter: it takes a request in an agreed format, passes it to the kitchen (the model), and brings back the result. The app holds a secret key that identifies who is ordering, so the provider knows whom to bill.
+Big models need very powerful computers, so most apps do not run them on your phone. Instead, the app sends your message over the internet to a company that runs the model. Then it gets the answer back.
 
-And there is a bill. Model providers usually charge **per token**: a price for the tokens sent in, and a separate, usually higher, price for the tokens the model writes back. Prices differ widely between models and change often, so always check the provider's current price page.
+The app asks through an **API**, a set of rules for how one program asks another for something. API is short for application programming interface.
 
-## What a prompt really contains
+## The waiter
 
-When you type "Can I change my delivery address?" into a shop's support bot, the model does not receive just that sentence. The app builds a bigger package called the **prompt**. It usually contains:
+Think of a restaurant. You do not walk into the kitchen. You tell the waiter what you want, and the waiter brings your food.
 
-- **Instructions** written by the app's makers, often called a system prompt: "You are the support assistant for this shop. Be brief. Never promise refunds."
-- **The conversation so far**, because the model remembers nothing between requests. The app sends the whole chat again every time you reply.
-- **Sometimes documents**, such as the relevant part of the shop's delivery policy.
-- **Your new message**, at the end.
+The API is the waiter, and the model is the kitchen. The app shows a secret key, a bit like a membership card, so the company knows who is ordering. And like a restaurant, there is a bill for every order.
 
-That is why a chatbot seems to remember what you said five messages ago: the app keeps pasting it back in. It is also why very long chats get slower and more expensive, and eventually hit the limit of how much text the model can read at once.
+## What the model actually reads
 
-## Try it: one request, start to finish
+Say you type "Can I change my delivery address?" into a shop's help chat. The model gets much more than that. The app builds a bigger package called the **prompt**, which is everything the model reads before it answers. It usually holds:
 
-Press Run, or click a step to read what happens there.
+- Instructions from the app's makers, such as "Be polite. Keep answers short."
+- The whole chat so far.
+- Sometimes, pages from the shop's own help guide.
+- Your new message, at the end.
+
+## Why it seems to remember
+
+The model remembers nothing between messages. So each time you reply, the app sends the whole chat again. That is why the chatbot seems to remember.
+
+It is also why very long chats get slower. They can even hit the limit of what the model can read at once.
+
+## Try it: one message, start to finish
+
+Press Run, or click a step.
 
 <PipelineFlow
   client:visible
   title="From your message to the answer and back"
   stages={[
-    { title: 'You type', detail: 'You write a question in the app. So far nothing has reached the model. The text is still on your device or the app’s own computers.' },
-    { title: 'Find documents', detail: 'Optional. If the app has its own documents, such as manuals or policies, it searches them for the few passages most related to your question. This is the retrieval step.' },
-    { title: 'Build the prompt', detail: 'The app packs together its instructions, the conversation so far, any passages it found, and your new message. This bundle is what the model will actually read.' },
-    { title: 'Call the API', detail: 'The app sends the prompt over the internet to the model provider, along with its secret key. The provider counts the tokens going in, because that is what it bills for.' },
-    { title: 'Model writes', detail: 'On the provider’s chips, the model reads the whole prompt, then writes the answer one token at a time. Each output token is also counted and billed.' },
-    { title: 'App shows it', detail: 'The answer comes back to the app, often streamed word by word so you see it appear. The app may check it, save it to your chat history, and record the cost.' },
+    { title: 'You type', detail: 'You write a question in the app. Nothing has reached the model yet.' },
+    { title: 'Find pages', detail: 'Sometimes. If the app has its own documents, such as a help guide, it searches them for the few passages that best match your question.' },
+    { title: 'Build the prompt', detail: 'The app packs together its instructions, the chat so far, any pages it found, and your new message. This package is what the model will read.' },
+    { title: 'Send it', detail: 'The app sends the prompt over the internet to the company that runs the model, along with its secret key. The company counts how much text came in, because that is part of the bill.' },
+    { title: 'Model writes', detail: 'On the company’s powerful computers, the model reads the whole prompt. Then it writes the answer one small piece at a time. The answer is counted for the bill too.' },
+    { title: 'App shows it', detail: 'The answer comes back to the app, often word by word so you see it appear. The app may check it and save it to your chat history.' },
   ]}
   loop
   loopLabel="your next message"
-  caption="A simplified view. Real apps add logins, safety checks, logging and retries, but the shape is the same."
+  caption="A simple view. Real apps add logins, safety checks and more, but the shape is the same."
 />
 
-## Giving a model your own data without retraining it
+## The open-book exam
 
-A model only knows what was in its training data, up to a certain date. It has never seen your company's handbook or last week's price list. So how does a support bot answer questions about them?
+A model only knows what it learned in training. It has never seen a shop's newest price list. So how can a help bot answer questions about it?
 
-Usually not by retraining. Instead the app does what a sensible student does in an open-book exam: before answering, it looks up the relevant pages and keeps them open on the desk.
+Usually, the app does what you would do in an open-book exam. Before answering, it finds the right pages and keeps them open on the desk.
 
-1. Ahead of time, the app splits its documents into short passages and stores them in a searchable index.
-2. When you ask a question, it searches that index for the passages most related to your question.
-3. It pastes those passages into the prompt with an instruction such as "Answer using only the text below."
-4. The model writes an answer based on the passages in front of it.
+1. The app keeps its documents, such as guides and rules, where it can search them.
+2. When you ask a question, it finds the few passages that match best.
+3. It pastes them into the prompt with an instruction like "Answer using only this text."
+4. The model writes its answer from the pages in front of it.
 
-This pattern is called **retrieval-augmented generation**, or **RAG**: "retrieval" for the lookup, "generation" for the writing. Its big advantages are that updating knowledge only means updating the documents, and that the app can show you which passage an answer came from. Its weak point is the search: if the right passage is not found, the model cannot use it, and it may guess instead.
+The good part is that new facts only need new pages, not a new model. The weak part is the search. If the app does not find the right page, the model may guess instead.
 
 <Callout title="A useful test">
 
-When an AI app gives a confident answer about your organisation's rules, ask yourself where that knowledge came from. If the app cannot show you a source passage, treat the answer as unchecked.
+When an app answers a question about your school's or club's rules, ask where the answer came from. If it cannot show you the page, treat it as unchecked.
 
 </Callout>
 
-## What fine-tuning means
+<Deep title="The grown-up name: RAG">
 
-**Fine-tuning** is different: it takes an existing model and continues training it on a smaller set of your own examples, which changes the model's weights. It is good for teaching a consistent style, format or narrow skill, such as always writing in a company's tone or sorting tickets into fixed categories. It is a poor way to add facts that change, because every change means training again, and the model can still mix up what it learned. Most apps reach for better prompts first, then retrieval, and fine-tune only when those are not enough.
+This open-book pattern is called **retrieval-augmented generation**, or **RAG**: "retrieval" for the lookup, "generation" for the writing. Ahead of time, the app splits its documents into short passages and stores them in a searchable index. At question time it pulls out the most related passages and adds them to the prompt. A big advantage is that the app can show you which passage an answer came from. Its weak point is the search step: a passage that is not found cannot be used.
 
-## Why answers cost money and take time
+</Deep>
 
-Every token the model reads or writes is real computation on expensive specialised chips. Three things follow.
+<Deep title="What fine-tuning means">
 
-- **Long prompts cost more.** Instructions, the full chat history and pasted documents are all billed as input on every single request.
-- **Long answers take longer.** The model writes one token after another, so a long reply simply takes more steps. Reading the prompt also takes time, more for longer prompts.
-- **Bigger models cost more.** A larger model usually gives better answers but needs more computation per token, so it is slower and pricier. Many apps use a small model for easy tasks and a large one only when needed.
+**Fine-tuning** is different. It takes an existing model and trains it a bit more on a smaller set of your own examples, which changes the model's weights. It is good for teaching a steady style, format or narrow skill, such as always writing in a company's tone or sorting support tickets into fixed groups. It is a poor way to add facts that change, because every change means training again, and the model can still mix up what it learned. Most apps try better prompts first, then retrieval, and fine-tune only when those are not enough.
+
+</Deep>
+
+## Why answers cost money and time
+
+Every piece of text the model reads or writes takes real work on expensive computer chips. So:
+
+- Long prompts cost more. The model reads the instructions and the whole chat every time.
+- Long answers take longer. The model writes one small piece after another.
+- Bigger models cost more. They are often better, but slower, so many apps use a small model for easy jobs.
+
+<Deep title="How the bill works">
+
+Model providers usually charge **per token**, the small pieces of text from the earlier lesson. There is one price for the tokens sent in, and a separate, usually higher, price for the tokens the model writes back. The instructions at the top of the prompt, often called the **system prompt**, are sent and billed on every request, and so is the whole chat history. Prices differ widely between models and change often, so always check the provider's current price page.
+
+</Deep>
 
 <Deep title="Why apps rarely run the model themselves">
 
@@ -98,15 +122,8 @@ Running a large model means keeping all of its weights in the fast memory of spe
 
 </Deep>
 
-## What to take forward
-
-- The model is a file of numbers that turns text into more text. The app is everything around it.
-- Most apps call a model through an API and pay per token, for both what they send and what comes back.
-- The prompt is more than your message: instructions, the whole conversation so far, and sometimes documents.
-- RAG lets an app use your own documents by finding the relevant passages and pasting them in, with no retraining.
-- Fine-tuning changes the model itself. It suits style and narrow skills better than changing facts.
-
 ## Where to go next
 
-- [How a model learns](../../foundations/how-models-learn/): what training actually does to those numbers.
-- [Prompting and structured output](../../llm/prompting-and-structured-output/): how to write the instructions part of the prompt well.
+You have finished the beginner lessons. For a closer look with real numbers, try [One question, all the way through](../one-question-all-the-way-through/).
+
+Ready for the whole story? The [From machine learning to modern AI](../../../start/#student) path goes step by step from early machine learning to today's chatbots. Or start the [Foundations](../../foundations/) track.

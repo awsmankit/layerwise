@@ -55,7 +55,7 @@ export type GlyphName = keyof typeof G;
 const RULES: [RegExp, GlyphName][] = [
   [/checkpoint|snapshot|save/i, 'database'],
   [/you type|\byou\b/i, 'user'],
-  [/verify|validate|scan|review|check|eval|gate|test|grade|judge/i, 'check'],
+  [/verify|validate|scan|review|check|eval|gate\b|test|grade|judge/i, 'check'],
   [/vision|image|patch|resize|pixel|camera/i, 'image'],
   [/prefer|accept|approve|reward|bonus|feedback from/i, 'thumb'],
   [/app shows|display|screen|\bui\b|interface/i, 'screen'],

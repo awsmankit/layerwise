@@ -2,14 +2,71 @@
 import ToolPage from '../layouts/ToolPage.astro';
 import WatchList from '../components/ui/WatchList.tsx';
 import { watchChecked } from '../data/watch';
+import { lessonVideos, videosChecked } from '../data/videos';
+import { tracks } from '../data/tracks';
+import { getLessons, lessonPath, slugOf } from '../lib/content';
 import { withBase } from '../lib/url';
+
+const lessons = await getLessons();
+const groups = tracks
+  .map((t) => ({
+    t,
+    items: lessons
+      .filter((l) => l.data.track === t.id)
+      .sort((a, b) => a.data.order - b.data.order)
+      .map((l) => ({ l, videos: lessonVideos[`${t.id}/${slugOf(l)}`] ?? [] }))
+      .filter((x) => x.videos.length > 0),
+  }))
+  .filter((g) => g.items.length > 0);
 ---
 
-<ToolPage figure="terminal" title="Further watching" lede="Video courses and playlists by other creators, on the topics in the lessons, for when you would rather watch than read.">
-  <WatchList client:load />
+<ToolPage figure="terminal" title="Learning videos" lede="YouTube videos by well-known creators for every lesson, for when you would rather watch than read. Start with the ones marked “Good for beginners”.">
+  <section class="wv" aria-labelledby="wv-h">
+    <h2 id="wv-h">Videos for each lesson</h2>
+    <nav class="wv-jump" aria-label="Topics">
+      {groups.map(({ t }) => <a href={`#wv-${t.id}`}>{t.title}</a>)}
+    </nav>
+    {
+      groups.map(({ t, items }) => (
+        <section class="wv-track" aria-labelledby={`wv-${t.id}`}>
+          <h3 id={`wv-${t.id}`}>{t.title}</h3>
+          <ul class="wv-list">
+            {items.map(({ l, videos }) => (
+              <li class="lesson-watch wv-lesson">
+                <a class="wv-lesson-link" href={withBase(lessonPath(l))}>
+                  {l.data.title}
+                </a>
+                <ul>
+                  {videos.map((v) => (
+                    <li>
+                      <a href={v.url} target="_blank" rel="noopener noreferrer">
+                        {v.title}
+                        <span class="sr-only"> (opens YouTube in a new tab)</span>
+                      </a>
+                      <span class="lesson-watch-meta">
+                        {v.creator}
+                        {v.minutes ? `, ${v.minutes} min` : ''}
+                        {v.easy && <span class="lesson-watch-easy">Good for beginners</span>}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))
+    }
+  </section>
+
+  <section class="wv" aria-labelledby="wv-courses">
+    <h2 id="wv-courses">Longer courses and playlists</h2>
+    <WatchList client:load />
+  </section>
+
   <Fragment slot="notes">
     <h2>About these</h2>
-    <p>These are other people's work, not part of Layerwise. Each card names who made it and what kind of thing it is. They are free to watch unless the card says a sign-in is needed. Links were last checked on {watchChecked}, and channels move or remove videos, so a link may stop working.</p>
+    <p>These are other people's work, not part of Layerwise. Each one names who made it. The lesson videos were checked on {videosChecked} and the longer courses on {watchChecked}. Channels move or remove videos, so a link may stop working.</p>
     <p>Looking for how companies build these systems instead? See <a href={withBase('/cases/')}>How big companies build it</a>.</p>
   </Fragment>
 </ToolPage>

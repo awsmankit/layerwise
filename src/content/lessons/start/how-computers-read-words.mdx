@@ -1,0 +1,83 @@
+---
+title: How computers read words
+track: start
+level: basic
+order: 4
+summary: Computers only work with numbers. See how a chatbot cuts your words into pieces, turns each piece into a number, and places words with similar meanings close together.
+updated: 2026-10-29
+sources:
+  - label: "tiktoken, OpenAI's tokenizer library (o200k_base)"
+    url: https://github.com/openai/tiktoken
+  - label: "Google's Machine Learning Crash Course: Embeddings"
+    url: https://developers.google.com/machine-learning/crash-course/embeddings
+---
+
+import TokenChips from '../../../components/viz/TokenChips.tsx';
+import EmbeddingSpace from '../../../components/viz/EmbeddingSpace.tsx';
+import Deep from '../../../components/ui/Deep.astro';
+
+Computers only work with numbers. Every photo, song and message on your phone is stored as numbers. So how does a chatbot read the words you type?
+
+It turns them into numbers, in three steps.
+
+## Step one: cut the text into pieces
+
+First, the chatbot cuts your text into small pieces called **tokens**. A token is often a whole word, and sometimes only part of one. Common words get one piece each. Rare words and names get split.
+
+Click each tab and count the pieces.
+
+<TokenChips client:visible simple />
+
+"I love playing football with my friends." is eight pieces: seven words and the full stop. In "My dog is called Biscuit.", the name is split into Bisc and uit. Biscuit is not a common enough name to get its own piece.
+
+The very long word gets cut into ten pieces. A dot in front of a piece means a space came before it.
+
+## Step two: each piece gets a number
+
+The chatbot has a long list of every piece it knows, a bit like a dictionary. Each piece has its own number in that list. Here is "What is the capital of France?" as real numbers. They come from the cutting tool that some ChatGPT models use.
+
+| Piece | What | ·is | ·the | ·capital | ·of | ·France | ? |
+|---|---|---|---|---|---|---|---|
+| Number | 4827 | 382 | 290 | 9029 | 328 | 10128 | 30 |
+
+But 9029 says nothing about what "capital" means. It is just a place in the list, like a locker number at school.
+
+## Step three: words get an address on a map
+
+So each piece also gets a second set of numbers, which works like an address on a map. Words with similar meanings live close together. Cat lives near dog, apple near banana, and car near bus.
+
+Nobody places the words by hand. The computer learns the addresses during training, from how words are used. "I fed my cat" and "I fed my dog" are similar sentences, so cat and dog end up as neighbours.
+
+Experts call this address an **embedding**: a list of numbers that says where a word sits on the map of meanings. Click a word below to see its nearest neighbours.
+
+<EmbeddingSpace client:visible simple />
+
+## Why this matters: chatbots count in pieces
+
+Many AI services count your messages in tokens, not words. There is a limit on how many tokens one chat can hold. Apps that pay for AI are often charged per token too.
+
+Rare words, names and some languages need more pieces. So the same message can cost more in one language than in another.
+
+## Why this matters: letter puzzles are hard
+
+Ask a chatbot how many r's are in "strawberry". It does not see ten letters. It sees three pieces: st, raw and berry.
+
+It never looks at the letters one by one, so it can miscount. Newer chatbots often get this one right, but similar letter puzzles can still trip them up.
+
+## Why this matters: searching by meaning
+
+Similar meanings sit close together on the map. So apps can search by meaning, not just by matching words. Search for "puppy" and you might find a page about young dogs, even if it never says "puppy".
+
+<Deep title="For grown-ups: tokenizers and embeddings">
+
+The pieces above come from o200k_base, the tokenizer used by GPT-4o and later OpenAI models. It is built with byte-pair encoding: start from single bytes and repeatedly merge the most frequent pairs, ending with a vocabulary of about 200,000 tokens. Other model families use their own tokenizers, so the same text splits differently.
+
+Each token ID picks out one row of the model's embedding table, a learned vector of hundreds or thousands of numbers. Closeness is usually measured with cosine similarity. Inside the model, these vectors are then adjusted by the surrounding words, so "bank" by a river and "bank" with money end up in different places.
+
+</Deep>
+
+## Want to go further?
+
+[Tokens and embeddings](../../foundations/tokens-and-embeddings/) explains all of this in more depth. It is written for older learners.
+
+Next: [AI that can see, hear and draw](../ai-that-sees-and-hears/).

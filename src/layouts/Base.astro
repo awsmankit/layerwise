@@ -157,6 +157,12 @@ const trackStyle = track ? `--track:${track.color};--on-track:${track.on}` : und
 
     <SearchPalette client:idle />
 
+    <script>
+      /* links to other websites, including those in islands, MDX and later renders, open in a new tab */
+      import { installNewTabLinks } from '../lib/new-tab';
+      installNewTabLinks();
+    </script>
+
     <script is:inline>
       (function () {
         var d = document.documentElement;

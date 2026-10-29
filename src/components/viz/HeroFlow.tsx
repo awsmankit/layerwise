@@ -5,19 +5,16 @@ import { Glyph } from './glyphs';
 import { withBase } from '../../lib/url';
 
 /*
- * One question travelling through a model, looped. The token pieces and IDs are
- * the real output of the o200k_base tokenizer and the cache size is that of an
- * 8B-class model (128 KiB per token); see the lesson this links to.
+ * One question travelling through a chatbot, looped, in words a beginner can
+ * follow. The token pieces and IDs are the real output of the o200k_base
+ * tokenizer; 32 layers is typical of a mid-sized open model.
  */
 const Q = ['What', '·is', '·the', '·capital', '·of', '·France', '?'];
 const Q_IDS = [4827, 382, 290, 9029, 328, 10128, 30];
 const A = ['The', '·capital', '·of', '·France', '·is', '·Paris', '.'];
-const KIB = 128;
 
-const LABELS = ['1  Question', '2  Tokens', '3  Layers', '4  Answer'];
+const LABELS = ['1  You ask', '2  Cut into pieces', '3  The model works it out', '4  It answers, piece by piece'];
 const GHOST = 0.14;
-
-const kv = (tokens: number) => (tokens * KIB >= 1024 ? `${((tokens * KIB) / 1024).toFixed(2)} MiB` : `${tokens * KIB} KiB`);
 
 type Phase = 0 | 1 | 2 | 3 | 4;
 
@@ -92,21 +89,21 @@ export default function HeroFlow() {
   }, [phase, count]);
 
   const ox = (i: number) => 4 + i * 290;
-  const label = 'A question going through a language model: its text, then tokens, then 32 layers, then the answer arriving one token at a time.';
+  const label = 'What happens when you ask a chatbot a question: your 6 words are cut into 7 pieces, each one a number, the model works through 32 layers of number crunching, and the answer is written one piece at a time.';
 
   return (
     <Root>
       <div className="lp-flow">
         <div className="lp-flow-head">
-          <p>One question, all the way through a model</p>
+          <p>What happens when you ask a chatbot a question</p>
           <div className="lp-flow-tools">
             {!still && (
               <button type="button" className="btn quiet lp-mini" aria-pressed={!playing} onClick={() => setPlaying((p) => !p)}>
                 {playing ? 'Pause' : 'Play'}
               </button>
             )}
-            <a className="btn quiet lp-mini" href={withBase('/learn/start/one-question-all-the-way-through/')}>
-              Step by step
+            <a className="btn quiet lp-mini" href={withBase('/learn/start/how-a-chatbot-answers/')}>
+              How it works
             </a>
           </div>
         </div>
@@ -133,7 +130,7 @@ export default function HeroFlow() {
           ))}
         </svg>
 
-        <p className="lp-flow-cap">Real token pieces and IDs from a real tokenizer; the cache size is an 8B-class model's. Other models differ.</p>
+        <p className="lp-flow-cap">Real pieces and numbers from a real tokenizer. Other chatbots cut text a little differently.</p>
       </div>
     </Root>
   );
@@ -142,7 +139,7 @@ export default function HeroFlow() {
 /** One stage of the drawing. `solo` draws it alone, fully visible, for the narrow layout. */
 function StageView({ i, phase, count, cycle, solo = false }: { i: number; phase: Phase; count: number; cycle: number; solo?: boolean }) {
   const visible = solo || phase >= i;
-  const tokens = phase >= 3 ? 7 + count : phase >= 2 ? 7 : 0;
+  const written = phase >= 4 ? A.length : phase === 3 ? count : 0;
   switch (i) {
     case 0:
       return (
@@ -151,14 +148,14 @@ function StageView({ i, phase, count, cycle, solo = false }: { i: number; phase:
           <Glyph name="user" size={26} x={14} y={30} className="ng-glyph" />
           <text x="52" y="46" className="hf-q">What is the capital</text>
           <text x="52" y="68" className="hf-q">of France?</text>
-          <text x="0" y="122" className="dx-small">30 characters, 6 words</text>
+          <text x="0" y="122" className="dx-small">6 words</text>
         </Stage>
       );
     case 1:
       return (
         <Stage i={1} visible={visible}>
           <Chips words={Q} ids={Q_IDS} on={() => visible} />
-          <text x="0" y="122" className="dx-small">7 tokens, each an ID number</text>
+          <text x="0" y="122" className="dx-small">7 pieces, each one a number</text>
         </Stage>
       );
     case 2:
@@ -169,7 +166,7 @@ function StageView({ i, phase, count, cycle, solo = false }: { i: number; phase:
           ))}
           <Glyph name="layers" size={26} x={24} y={58} className="dx-glyph-hot" />
           <text x="60" y="78" className="dx-name">32 layers</text>
-          <text x="60" y="96" className="dx-small">attention + MLP</text>
+          <text x="22" y="108" className="dx-small">of number crunching</text>
           <motion.circle
             key={`p${cycle}`}
             cy="83"
@@ -179,17 +176,14 @@ function StageView({ i, phase, count, cycle, solo = false }: { i: number; phase:
             animate={phase === 2 ? { cx: [-4, 100, 250], opacity: [0, 1, 0] } : { cx: -4, opacity: 0 }}
             transition={{ duration: 1.5, ease: 'easeInOut' }}
           />
-          <text x="0" y="146" className="dx-small">all 7 at once; K and V kept</text>
+          <text x="0" y="146" className="dx-small">reads all 7 pieces at once</text>
         </Stage>
       );
     default:
       return (
         <Stage i={3} visible={visible}>
-          <Chips words={A} on={(k) => phase >= 4 || (phase === 3 && k < count)} h={28} />
-          <text x="0" y="104" className="dx-small">KV cache</text>
-          <rect x="62" y="95" width="188" height="10" rx="5" className="dx-frame" />
-          <motion.rect x="62" y="95" height="10" rx="5" className="kv-a" initial={false} animate={{ width: 188 * (Math.min(tokens, 14) / 14) }} transition={{ duration: 0.3, ease: EASE }} />
-          <text x="0" y="126" className="dx-small">{tokens ? `${tokens} tokens × ${KIB} KiB = ${kv(tokens)}` : ''}</text>
+          <Chips words={A} on={(k) => k < written} h={28} />
+          <text x="0" y="104" className="dx-small">{`written one piece at a time: ${written} of ${A.length}`}</text>
         </Stage>
       );
   }

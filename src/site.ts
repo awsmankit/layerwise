@@ -16,7 +16,7 @@ export const nav: { href: string; label: string; also?: string[] }[] = [
   { href: '/pulse/', label: 'News' },
 ];
 
-export const footerNav = [...nav, { href: '/play/', label: 'Games' }, { href: '/tools/', label: 'Calculators' }, { href: '/glossary/', label: 'Glossary' }, { href: '/cases/', label: 'Case studies' }, { href: '/watch/', label: 'Further watching' }, { href: '/progress/', label: 'Your progress' }, { href: '/teach/', label: 'For teachers' }, { href: '/about/', label: 'About' }];
+export const footerNav = [...nav, { href: '/play/', label: 'Games' }, { href: '/tools/', label: 'Calculators' }, { href: '/glossary/', label: 'Glossary' }, { href: '/cases/', label: 'Case studies' }, { href: '/watch/', label: 'Learning videos' }, { href: '/progress/', label: 'Your progress' }, { href: '/teach/', label: 'For teachers' }, { href: '/about/', label: 'About' }];
 
 /** Link groups for the footer, with the page each one opens. */
 export const footerGroups = [
@@ -45,7 +45,7 @@ export const footerGroups = [
       { href: '/pulse/', label: 'News' },
       { href: '/cases/', label: 'Case studies' },
       { href: '/libraries/', label: 'AI libraries map' },
-      { href: '/watch/', label: 'Further watching' },
+      { href: '/watch/', label: 'Learning videos' },
       { href: '/rss.xml', label: 'RSS feed' },
     ],
   },

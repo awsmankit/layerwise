@@ -3,22 +3,21 @@ import type { Extra } from '../lesson-extras';
 export const extrasCore: Record<string, Extra> = {
   'start/how-apps-use-ai': {
     takeaways: [
-      'The model is a file of numbers that turns text into more text. The app is everything around it.',
-      'Most apps call a model through an API and pay per token, for the text sent in and the text written back.',
-      'The prompt holds instructions, the whole conversation so far and sometimes documents, not just your message.',
-      'RAG lets an app use your own documents by finding relevant passages and pasting them into the prompt, without retraining.',
-      'Fine-tuning changes the model’s weights. It suits style and narrow skills better than facts that change.',
+      'The model is a big file of numbers that turns text into more text. The app is everything around it.',
+      'Apps send messages to a model through an API, like a waiter taking an order to the kitchen. Every request costs money.',
+      'The prompt holds the app’s instructions, the whole chat so far and sometimes documents, not just your message.',
+      'Like a student in an open-book exam, an app can look up the right pages and hand them to the model, without building a new model.',
     ],
-    prereq: ['start/how-a-chatbot-answers'],
+    prereq: ['start/using-ai-without-getting-burned'],
     play: [
       { label: 'Play Cost Crunch', href: '/play/cost-crunch/' },
       { label: 'Open the cost calculator', href: '/tools/cost/' },
     ],
     quiz: [
-      { q: 'A support bot seems to remember what you said ten messages ago. What is usually happening?', options: ['The model updates its weights after each message', 'The app sends the earlier conversation again with every new message', 'The model stores each user’s chats inside itself', 'The provider retrains the model every night on chat logs'], answer: 1, why: 'Models keep nothing between requests. The app pastes the conversation back into the prompt each time, which is also why long chats cost more.' },
-      { q: 'A company wants its chatbot to answer questions about a price list that changes every week. What fits best?', options: ['Fine-tune the model every week', 'Hope the model learned the prices in training', 'Write the prices from memory into the app’s instructions once', 'Retrieve the current price list and put the relevant part in the prompt'], answer: 3, why: 'Retrieval (RAG) uses the latest documents on every request, so updating the knowledge only means updating the documents.' },
-      { q: 'Why does a request with a long pasted document cost more, even if the answer is short?', options: ['Every token sent in is processed and billed, not only the tokens written back', 'Long documents switch the provider to a premium model', 'The API charges per document, not per token', 'Long prompts make the model write longer answers'], answer: 0, why: 'Providers bill input tokens as well as output tokens. A long document adds many input tokens on every request that includes it.' },
-      { q: 'What is the best description of fine-tuning?', options: ['Searching your documents before each answer', 'Writing clearer instructions in the prompt', 'Continuing to train an existing model on your own examples, which changes its weights', 'Choosing a bigger model from the same provider'], answer: 2, why: 'Fine-tuning changes the model itself. Retrieval and better prompts change only what the model reads for one request.' },
+      { q: 'A help bot seems to remember what you said ten messages ago. What is usually happening?', options: ['The app sends the whole chat again with each new message', 'The model learns from you as you chat', 'The model stores your chat inside itself'], answer: 0, why: 'The model remembers nothing between messages, so the app pastes the chat back in every time.' },
+      { q: 'A shop’s prices change every week. How can its help bot give the latest prices?', options: ['Look up the current price list and put it in the prompt', 'Hope the model learned the prices in training', 'Build a brand new model every week'], answer: 0, why: 'Like an open-book exam, the app looks up the latest pages, so only the pages need updating.' },
+      { q: 'In the restaurant example, what is the API?', options: ['The kitchen', 'The waiter', 'The food', 'The customer'], answer: 1, why: 'The API carries the request to the model, which is the kitchen, and brings the answer back.' },
+      { q: 'Why does a very long chat cost more than a short one?', options: ['The model reads the whole chat again every time you reply', 'Long chats are sent to a special premium model', 'The app charges for each minute you chat'], answer: 0, why: 'Everything the model reads is paid for, and a long chat is sent again with every reply.' },
     ],
   },
   'foundations/how-models-learn': {

@@ -213,7 +213,7 @@ export default function PathPlanner({ lessons }: { lessons: LessonInfo }) {
                   <h3>We suggest: {paths[rec].title}</h3>
                   <p className="pp-result-text">{paths[rec].who} {paths[rec].promise}</p>
                   <p className="pp-result-alt">
-                    Studying on a course? The <a href="#student" onClick={() => showPath('student')}>student path</a> goes through the ideas in order. Work on GPUs and cloud platforms? Try the{' '}
+                    Want the whole story from classical ML to today’s LLMs? The <a href="#student" onClick={() => showPath('student')}>machine learning to modern AI path</a> goes through it in order. Work on GPUs and cloud platforms? Try the{' '}
                     <a href="#infra" onClick={() => showPath('infra')}>infrastructure path</a>.
                   </p>
                   <div className="pp-actions">

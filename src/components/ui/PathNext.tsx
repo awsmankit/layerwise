@@ -11,10 +11,12 @@ export type LessonIndex = Record<string, { title: string; href: string }>;
  */
 export default function PathNext({ current, lessons }: { current: string; lessons: LessonIndex }) {
   const [saved] = useStore<PathId | null>(KEYS.path, null);
-  if (!saved || !paths[saved]) return null;
+  // Empty fragments, not null: see ContinueCard. Astro needs a React element from
+  // the server render, where nothing is saved yet, to recognise this island.
+  if (!saved || !paths[saved]) return <></>;
   const path = paths[saved];
   const i = path.steps.findIndex((s) => s.kind === 'lesson' && s.key === current);
-  if (i < 0) return null;
+  if (i < 0) return <></>;
 
   const next = path.steps[i + 1];
   const following = path.next ? paths[path.next] : null;

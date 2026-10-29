@@ -1,0 +1,194 @@
+---
+title: "System design for LLM apps: the building blocks"
+track: systems
+level: intermediate
+order: 1
+summary: The parts of a production LLM feature, why each one exists, and how latency, cost, quality and privacy requirements decide which ones you need.
+updated: 2026-10-29
+sources:
+  - label: "Building A Generative AI Platform (Chip Huyen, 2024)"
+    url: https://huyenchip.com/2024/07/25/genai-platform.html
+  - label: "Emerging Patterns in Building GenAI Products (martinfowler.com)"
+    url: https://martinfowler.com/articles/gen-ai-patterns/
+  - label: "Building effective agents (Anthropic)"
+    url: https://www.anthropic.com/research/building-effective-agents
+  - label: "AI gateway capabilities in Azure API Management (Microsoft Learn)"
+    url: https://learn.microsoft.com/en-us/azure/api-management/genai-gateway-capabilities
+  - label: "AI gateway capabilities in Apigee (Google Cloud)"
+    url: https://docs.cloud.google.com/apigee/docs/api-platform/get-started/ai-capabilities
+  - label: "Guidance for Multi-Provider Generative AI Gateway on AWS"
+    url: https://docs.aws.amazon.com/solutions/multi-provider-generative-ai-gateway-on-aws/
+  - label: "Amazon Bedrock Guardrails (AWS documentation)"
+    url: https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails.html
+  - label: "Guardrails and controls overview in Microsoft Foundry (Microsoft Learn)"
+    url: https://learn.microsoft.com/en-us/azure/foundry/guardrails/guardrails-overview
+  - label: "Model Armor overview (Google Cloud)"
+    url: https://docs.cloud.google.com/model-armor/overview
+---
+
+import NodeGraph from '../../../components/viz/NodeGraph.tsx';
+import PipelineFlow from '../../../components/viz/PipelineFlow.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+A prototype LLM feature is a prompt and one API call. The production version has to cope with thousands of users, a bill that grows with every token, a model that is sometimes slow or down, and answers that are sometimes wrong. Most of the extra parts exist to handle one of those facts. This lesson names the parts, explains why each one is there, and walks one feature through the design.
+
+## The reference architecture
+
+Click any component to see what it does and how it fails. "Show flow" animates the path of a request.
+
+<NodeGraph
+  title="The building blocks of an LLM feature"
+  height={470}
+  initial="orch"
+  failuresLabel="What goes wrong"
+  nodes={[
+    { id: 'ui', label: 'Streaming UI', x: 9, y: 50, detail: 'The web or mobile client. It streams tokens as they arrive, shows sources, offers a stop button and collects feedback such as thumbs up or down.', fails: ['A blank screen for several seconds, so stream and show progress', 'No way to report a bad answer, so you never hear about it'] },
+    { id: 'gw', label: 'AI gateway', x: 26, y: 50, detail: 'The front door. Authenticates the caller, holds the provider keys so clients never see them, enforces rate limits and token quotas per user or tenant, and records usage.', fails: ['One tenant uses the whole model quota', 'Provider keys shipped in client code'] },
+    { id: 'orch', label: 'Orchestrator', x: 46, y: 50, kind: 'core', detail: 'A stateless backend server that coordinates each request. It fetches the prompt version, checks the cache, assembles context, calls the model and checks the output. Plain code with a timeout on every step.', fails: ['No per-step timeout, so one slow dependency stalls everything', 'Retries in several layers multiply load'] },
+    { id: 'prompts', label: 'Prompt registry', x: 21, y: 14, detail: 'Prompts, model IDs and settings stored as versioned config, not string literals scattered through the code. Every trace records which version answered.', fails: ['A prompt edited in place, so nobody can say what changed', 'Prompt and model version not logged with each answer'] },
+    { id: 'context', label: 'Context assembly', x: 47, y: 13, detail: 'Builds what the model sees: retrieved passages, conversation memory, user profile and tool definitions, trimmed to a token budget.', fails: ['Retrieval ignores the caller’s permissions', 'History grows until it crowds out the useful context'] },
+    { id: 'cache', label: 'Caches', x: 70, y: 13, detail: 'Two kinds. A prompt (prefix) cache at the provider reuses work on a repeated prompt start. A response cache in your system returns a stored answer to a repeated or similar question.', fails: ['Response cache keyed without the tenant, so answers leak across customers', 'Stale answers after the source content changes'] },
+    { id: 'router', label: 'Model router', x: 66, y: 50, detail: 'Chooses the model for each call, by task, difficulty or policy, and handles retries with backoff and fallback to another model or region.', fails: ['Retrying a throttled call in a tight loop', 'A fallback model that was never evaluated'] },
+    { id: 'models', label: 'Models', x: 87, y: 50, detail: 'One or more hosted or self-hosted models, each pinned to an exact version.', fails: ['A version change alters behaviour', 'Quota exhausted at peak'] },
+    { id: 'guard', label: 'Guardrails', x: 25, y: 87, detail: 'Checks on the way in (prompt injection, personal data, off-topic requests) and on the way out (harmful content, leaked data, unsupported claims, broken format).', fails: ['False positives block valid questions', 'Output checks that cannot keep up with streaming'] },
+    { id: 'queue', label: 'Job queue', x: 47, y: 87, detail: 'Long or bulk work goes on a queue and is processed by workers. The client gets a job ID and is told when the result is ready.', fails: ['A retried job runs twice and does the action twice', 'Jobs stuck without a timeout or dead-letter queue'] },
+    { id: 'obs', label: 'Observability', x: 69, y: 87, detail: 'A trace per request: prompt version, retrieved context, model, tokens in and out, cost, latency per step, guardrail decisions and user feedback.', fails: ['Raw prompts logged with no retention or access policy', 'Cost tracked only on the monthly bill'] },
+    { id: 'evals', label: 'Evals', x: 87, y: 87, detail: 'An offline test set run on every change to prompts, retrieval or models, plus online scoring of sampled production traffic.', fails: ['Eval set never refreshed from real traffic', 'Only averages tracked, so critical failures hide'] },
+  ]}
+  edges={[['ui','gw'],['gw','orch'],['orch','prompts'],['orch','context'],['orch','cache'],['orch','router'],['router','models'],['orch','guard'],['orch','queue'],['orch','obs'],['obs','evals']]}
+  client:visible
+/>
+
+## Why each block exists
+
+| Block | The problem it solves | Day one? |
+|---|---|---|
+| Streaming UI | Generation takes seconds; streaming makes the wait feel short | Yes |
+| AI gateway | Keys, auth, quotas and usage in one place, not in every service | A thin version |
+| Prompt registry | You cannot debug or roll back what you did not version | Yes, even if it is a folder in git |
+| Context assembly | The model knows nothing about your data or your user | If the task needs your data |
+| Model router | Not every request needs the biggest model, and providers fail | One model, with timeouts and retries |
+| Guardrails | Inputs can be hostile and outputs can be wrong or harmful | Basic input and output checks |
+| Caches | Repeated prompts and questions cost money and time | Prefix caching is often nearly free to adopt |
+| Job queue | Some tasks take minutes; HTTP requests should not | Only if you have long tasks |
+| Observability | Every bad answer needs to be explainable afterwards | Yes |
+| Evals | Quality changes when anything changes | Yes, a small set |
+
+The AI gateway and model router are sometimes one product. The split here is by job: the gateway faces your callers, the router faces the models.
+
+## Three shapes: single call, workflow, agent
+
+Most LLM features fall into one of three shapes, in increasing order of cost and unpredictability.
+
+- **Single call.** One prompt, one answer. Classification, extraction, rewriting, a summary. Start here and stay here if evals say it is good enough.
+- **Workflow (chain).** A fixed sequence you design: rewrite the query, retrieve, answer, check. Each step is testable and the cost per request is predictable. Most production RAG is a workflow.
+- **Agent.** The model chooses the next step and calls tools in a loop until it decides it is done. Use it when the steps genuinely cannot be known in advance, and accept that cost and latency vary per request. Cap steps, tokens and time.
+
+Anthropic's "Building effective agents" makes the same argument: use the simplest pattern that works, and add autonomy only when it measurably helps.
+
+## Synchronous, streaming or batch
+
+| Mode | Use when | Design consequences |
+|---|---|---|
+| Synchronous | Short outputs consumed by code (a label, a JSON object) | Simple; set a tight timeout |
+| Streaming | A person is reading the answer | Server-sent events or WebSockets end to end, including through the gateway; output guardrails must work on partial text |
+| Async job | A task takes longer than a person will wait on one request | A queue, workers, a job ID, idempotent steps, a way to notify the user |
+| Batch | Bulk work nobody is waiting for | Provider batch APIs, often priced at around half the on-demand rate, with results in hours rather than seconds |
+
+## Where state lives
+
+Model APIs are, for the most part, stateless: every call resends whatever the model needs to see. So state lives in your system, and you should know where.
+
+- **Conversation history** in a database keyed by session, with a policy for trimming or summarising old turns.
+- **Long-term memory and user preferences** in a store you can inspect and delete from, because users will ask.
+- **Knowledge** in a search index that is rebuilt as sources change.
+- **Job state** in the queue and a jobs table, so a crashed worker can resume.
+- **Traces** in your observability store, with a retention period.
+
+Keeping the orchestrator itself stateless means you can scale it horizontally and restart it freely.
+
+## Requirements shape the design
+
+The same feature can need very different designs depending on its non-functional requirements. Write them down before choosing parts.
+
+| Requirement | Measure | What it pushes you towards |
+|---|---|---|
+| Latency | Time to first token (TTFT); tokens per second while streaming | Streaming, shorter prompts, prefix caching, smaller models, parallel retrieval, fewer sequential calls |
+| Cost | Cost per request and per completed task | Caching, routing easy requests to small models, output length limits, batch for offline work |
+| Quality | Eval scores, user feedback, escalation rate | Better retrieval, a larger model, a check step, human review for risky outputs |
+| Privacy and residency | Where data is processed and stored | Region-pinned endpoints, data-processing terms, redaction before logging, limits on fallback regions |
+| Rate limits | Requests and tokens per minute from the provider | Quotas per tenant at the gateway, queueing, provisioned capacity, a second region or provider |
+| Multi-tenant isolation | No tenant can see or starve another | Tenant ID on every request, retrieval filters, tenant-scoped cache keys, per-tenant quotas and cost tracking |
+
+These pull against each other. A larger model raises quality and both latency and cost; a response cache cuts cost and latency but risks stale or leaked answers. Design is choosing which trade-offs you accept.
+
+## Managed building blocks on the three clouds
+
+You can build every block yourself, and open-source gateways and tracing tools exist for most of them. Each major cloud also offers managed versions. As of October 2026:
+
+| Block | AWS | Azure | Google Cloud |
+|---|---|---|---|
+| Model hosting | Amazon Bedrock | Microsoft Foundry | Gemini Enterprise Agent Platform (formerly Vertex AI) |
+| AI gateway | Amazon API Gateway for auth and throttling; AWS also publishes a multi-provider generative AI gateway guidance built on LiteLLM | AI gateway capabilities in Azure API Management | AI gateway capabilities in Apigee |
+| Guardrails | Amazon Bedrock Guardrails | Guardrails in Microsoft Foundry, built on Azure AI Content Safety | Model Armor |
+| Prompt caching | Bedrock prompt caching | Prompt caching for Azure OpenAI models in Foundry | Context caching |
+| Batch | Bedrock batch inference | Azure OpenAI global batch | Batch inference |
+
+Names and feature sets change often, and support varies by model and region, so check the current docs before you commit.
+
+## Worked example: a support assistant
+
+A software company wants an assistant on its help centre that answers customer questions from its help articles and hands over to a person when it cannot. Every number below is an **illustrative example**, not a benchmark or a price list.
+
+**Requirements.** About 2,000 help articles in five languages. Around 20,000 conversations a day at about 3 turns each, so roughly 60,000 model calls a day, with peaks several times the average. Time to first token under 2 seconds at p95. Answers only from the help centre, with a link to the source. Customer data stays in the EU region. Several business customers have their own private articles, so retrieval must respect tenants.
+
+**Shape.** A workflow, not an agent. The steps are known: check, retrieve, answer, check. An agent would add cost and variance for no gain here. One tool, "create a support ticket", is allowed, and only after the user confirms.
+
+<PipelineFlow
+  title="One question through the support assistant"
+  stages={[
+    { title: 'Gateway', glyph: 'gateway', detail: 'Authenticate the user, attach the tenant ID, apply per-tenant token quotas. Example: around 20 ms.' },
+    { title: 'Input checks', glyph: 'shield', detail: 'Screen for prompt injection and personal data, and reject requests that are clearly off-topic. Example: around 100 ms.' },
+    { title: 'Cache lookup', glyph: 'memory', detail: 'Look up an exact-match response cache keyed by normalised question, language, tenant and help-centre version. A hit skips everything up to the output.' },
+    { title: 'Retrieve', glyph: 'search', detail: 'Hybrid search over the help-centre index, filtered by tenant and language, then rerank to the best five passages. Example: around 300 ms.' },
+    { title: 'Build prompt', glyph: 'layers', detail: 'Stable parts first (system prompt, tool definitions) so the provider’s prefix cache can reuse them, then passages, recent history and the question.' },
+    { title: 'Route and call', glyph: 'route', detail: 'A mid-sized model by default, with timeout, retry with backoff and an evaluated fallback in the same region. Example time to first token: 0.5 to 1 s.' },
+    { title: 'Output checks', glyph: 'check', detail: 'Check the streamed text in small chunks for harmful content and leaked data, and check at the end that the answer cites a retrieved passage.' },
+    { title: 'Stream and log', glyph: 'chart', detail: 'Stream to the user with source links. Write the trace: prompt version, passages, model, tokens, cost, latency and later the user’s feedback.' },
+  ]}
+  client:visible
+/>
+
+**The token budget per call (example).** System prompt and tool definitions 1,500 tokens, five passages 3,000, recent history 1,000, question 100: about 5,600 input tokens. Answers capped at 400 output tokens, averaging 300.
+
+**Cost (example prices of 3 dollars per million input tokens and 15 per million output).** Input costs about 1.7 cents and output about 0.45 cents, so roughly 2.1 cents a call and about 1,300 dollars a day at 60,000 calls. Two easy wins follow. Prefix caching on the 1,500-token stable start (if cached reads are billed at about a tenth of the normal rate, and ignoring any charge for writing the cache) saves around 0.4 cents a call. Routing simple "how do I reset my password" questions to a small model, if evals show it answers them well, cuts more.
+
+**Latency (example).** Gateway, input checks and retrieval take about 0.4 s, and the model's time to first token adds 0.5 to 1 s, so the first token arrives in under 1.5 s on a typical request. At 50 to 100 tokens per second, a 300-token answer finishes in 3 to 6 seconds, which is fine because it streams.
+
+**Quality.** An offline eval set of 300 real questions (answerable, unanswerable, other tenants' topics, injection attempts) runs on every prompt or index change. Online, track thumbs down, handovers to a person and a sampled judge score for groundedness, all split by prompt version.
+
+**What it deliberately leaves out on day one.** A semantic response cache (risky for support answers, where two similar questions can need different answers), multi-provider fallback (the EU residency rule limits the options), and an agent loop.
+
+<Deep title="Output guardrails versus streaming">
+
+A full output check needs the whole answer, but streaming sends text before the answer exists. There are three common options, each with a cost:
+
+- **Buffer everything, then check.** Safest, and it throws away the latency benefit of streaming. Reasonable for short, high-risk outputs.
+- **Check in chunks.** Hold back a sentence or a few hundred characters, check, release. A small delay and most of the benefit. Checks that need the whole answer, such as "every claim is cited", run at the end.
+- **Stream, then retract.** Show text immediately and replace it if a later check fails. Only acceptable where a brief exposure is harmless.
+
+Managed guardrail services generally support checking input and output, but whether and how they apply to streamed responses varies by service and model, so test it with your own traffic.
+
+</Deep>
+
+<Callout kind="cost" title="Measure the cost per resolved conversation">
+Cost per call hides retries, fallbacks, long histories and escalations. Divide total model, retrieval and guardrail spend by conversations that ended without a handover. That is the number the business cares about.
+</Callout>
+
+## Where to go next
+
+- [Reference architecture for a RAG service](../rag-service-architecture/) goes deeper on the retrieval side of this design and how each part fails.
+- [Model routing and fallbacks](../model-routing-and-fallbacks/) covers the router: cascades, retries with jitter and fallback chains.
+- [LLMOps: shipping and running LLM features](../../evals/llmops-in-production/) covers versioning, staged rollouts and monitoring.
+- [LLM application security](../../evals/llm-security/) covers prompt injection, data leaks and the controls behind the guardrails box.

@@ -726,6 +726,63 @@ html[data-depth='essentials'] .deep {
   font-size: 0.95rem;
 }
 
+/* "Watch to go deeper": third-party videos for this lesson */
+.lesson-watch {
+  max-width: var(--measure);
+  margin-top: 2.6rem;
+  padding: 1.1rem 1.3rem 1rem;
+  background: var(--tint-sky);
+  border: 2px solid var(--ink);
+  border-radius: var(--r-md);
+  font-family: var(--font-display);
+}
+.lesson-watch h2 {
+  font-size: 1.15rem;
+  margin: 0 0 0.6rem;
+}
+.lesson-watch ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.lesson-watch li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.6rem 0;
+}
+.lesson-watch li + li {
+  border-top: 1px dashed var(--line);
+}
+.lesson-watch a {
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.lesson-watch-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.6rem;
+  font-size: 0.88rem;
+  color: var(--ink-2);
+}
+.lesson-watch-easy {
+  padding: 0.05rem 0.55rem;
+  border: 1.5px solid currentColor;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--ok);
+}
+.lesson-watch-note {
+  margin: 0.5rem 0 0;
+  font-size: 0.82rem;
+  color: var(--ink-3);
+}
+
 /* ---------- quiz ---------- */
 
 .qz {
@@ -1252,4 +1309,43 @@ html[data-depth='essentials'] .deep {
   font-size: 0.72rem;
   font-weight: 700;
   vertical-align: middle;
+}
+
+/* ---------- learning videos page ---------- */
+
+.wv + .wv {
+  margin-top: 3rem;
+}
+.wv-jump {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.9rem;
+  margin: 0.4rem 0 1.4rem;
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+}
+.wv-track + .wv-track {
+  margin-top: 2rem;
+}
+.wv-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
+  gap: 1rem;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.wv-lesson {
+  margin-top: 0;
+  max-width: none;
+}
+.lesson-watch a.wv-lesson-link {
+  display: block;
+  font-size: 1.02rem;
+  font-weight: 700;
+  text-decoration: none;
+  margin-bottom: 0.2rem;
+}
+.lesson-watch a.wv-lesson-link:hover {
+  text-decoration: underline;
 }
