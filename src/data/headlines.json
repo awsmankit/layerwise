@@ -1,6 +1,158 @@
 {
-  "generatedAt": "2026-10-28T06:17:56.866Z",
+  "generatedAt": "2026-10-29T07:33:43.763Z",
   "items": [
+    {
+      "source": "ollama",
+      "org": "Ollama releases",
+      "topic": "serving",
+      "title": "Ollama v0.40.13",
+      "url": "https://github.com/ollama/ollama/releases/tag/v0.40.13",
+      "date": "2026-10-29T02:54:11.000Z"
+    },
+    {
+      "source": "aws-whats-new",
+      "org": "AWS, What’s New",
+      "topic": "cloud",
+      "title": "Amazon Bedrock AgentCore CLI version 1.0 is now available",
+      "url": "https://aws.amazon.com/about-aws/whats-new/2026/10/amazon-bedrock-agentcore-cli-version-1-0-available/",
+      "date": "2026-10-28T20:00:00.000Z"
+    },
+    {
+      "source": "aws-ml-blog",
+      "org": "AWS Machine Learning Blog",
+      "topic": "cloud",
+      "title": "Building an Agentic AI Platform on Amazon Bedrock AgentCore",
+      "url": "https://aws.amazon.com/blogs/machine-learning/building-an-agentic-ai-platform-on-amazon-bedrock-agentcore/",
+      "date": "2026-10-28T18:28:26.000Z"
+    },
+    {
+      "source": "aws-whats-new",
+      "org": "AWS, What’s New",
+      "topic": "cloud",
+      "title": "Quick now supports smart approvals for agentic actions",
+      "url": "https://aws.amazon.com/about-aws/whats-new/2026/10/quick-smart-approvals-agentic-actions/",
+      "date": "2026-10-28T18:28:00.000Z"
+    },
+    {
+      "source": "aws-ml-blog",
+      "org": "AWS Machine Learning Blog",
+      "topic": "cloud",
+      "title": "Distributed training with Ray Train DLCs and EFA on EKS",
+      "url": "https://aws.amazon.com/blogs/machine-learning/distributed-training-with-ray-train-dlcs-and-efa-on-eks/",
+      "date": "2026-10-28T18:19:54.000Z"
+    },
+    {
+      "source": "aws-ml-blog",
+      "org": "AWS Machine Learning Blog",
+      "topic": "cloud",
+      "title": "Accelerating software delivery with agentic QA automation using Amazon Nova Act – Part 3",
+      "url": "https://aws.amazon.com/blogs/machine-learning/accelerating-software-delivery-with-agentic-qa-automation-using-amazon-nova-act-part-3/",
+      "date": "2026-10-28T18:12:13.000Z"
+    },
+    {
+      "source": "microsoft-blog",
+      "org": "The Official Microsoft Blog",
+      "topic": "cloud",
+      "title": "Introducing the Microsoft Copilot harness: Unlocking the potential of truly multi-model agentic work",
+      "url": "https://blogs.microsoft.com/blog/2026/10/28/introducing-the-microsoft-copilot-harness-unlocking-the-potential-of-truly-multi-model-agentic-work/",
+      "date": "2026-10-28T16:51:35.000Z"
+    },
+    {
+      "source": "foundry-devblog",
+      "org": "Microsoft Foundry blog",
+      "topic": "cloud",
+      "title": "Introducing the Microsoft Copilot harness in Foundry Agent Service",
+      "url": "https://devblogs.microsoft.com/foundry/microsoft-copilot-harness-in-foundry/",
+      "date": "2026-10-28T16:45:06.000Z"
+    },
+    {
+      "source": "github-changelog",
+      "org": "GitHub Changelog",
+      "topic": "cloud",
+      "title": "Route and orchestrate models with GitHub Copilot Fusion",
+      "url": "https://github.blog/changelog/2026-10-28-route-and-orchestrate-models-with-github-copilot-fusion",
+      "date": "2026-10-28T16:00:00.000Z"
+    },
+    {
+      "source": "github-changelog",
+      "org": "GitHub Changelog",
+      "topic": "cloud",
+      "title": "GitHub Copilot app, Universe releases",
+      "url": "https://github.blog/changelog/2026-10-28-github-copilot-app-universe-releases",
+      "date": "2026-10-28T15:55:00.000Z"
+    },
+    {
+      "source": "github-changelog",
+      "org": "GitHub Changelog",
+      "topic": "cloud",
+      "title": "GitHub Enterprise now includes access to GitHub Copilot",
+      "url": "https://github.blog/changelog/2026-10-28-github-enterprise-now-includes-access-to-github-copilot",
+      "date": "2026-10-28T15:50:00.000Z"
+    },
+    {
+      "source": "github-changelog",
+      "org": "GitHub Changelog",
+      "topic": "cloud",
+      "title": "Security extension for the GitHub Copilot app",
+      "url": "https://github.blog/changelog/2026-10-28-security-extension-for-the-github-copilot-app",
+      "date": "2026-10-28T15:45:00.000Z"
+    },
+    {
+      "source": "github-changelog",
+      "org": "GitHub Changelog",
+      "topic": "cloud",
+      "title": "Build shared workflows for your team with Copilot Automations",
+      "url": "https://github.blog/changelog/2026-10-28-build-shared-workflows-for-your-team-with-copilot-automations",
+      "date": "2026-10-28T15:35:00.000Z"
+    },
+    {
+      "source": "github-changelog",
+      "org": "GitHub Changelog",
+      "topic": "cloud",
+      "title": "GitHub Copilot in VS Code, Universe releases",
+      "url": "https://github.blog/changelog/2026-10-28-github-copilot-in-vs-code-universe-releases",
+      "date": "2026-10-28T15:33:00.000Z"
+    },
+    {
+      "source": "huggingface",
+      "org": "Hugging Face blog",
+      "topic": "models",
+      "title": "NVIDIA Nemotron 3.5 Transcribe and Granary v2: Intelligent Multilingual Transcription You Can Prompt and Adapt",
+      "url": "https://huggingface.co/blog/nvidia/nemotron-transcribe-granary",
+      "date": "2026-10-28T14:58:17.000Z"
+    },
+    {
+      "source": "openai-news",
+      "org": "OpenAI",
+      "topic": "models",
+      "title": "OpenAI and ServiceNow expand partnership across enterprise workflows",
+      "url": "https://openai.com/index/openai-servicenow-partnership-expansion",
+      "date": "2026-10-28T13:15:00.000Z"
+    },
+    {
+      "source": "openai-news",
+      "org": "OpenAI",
+      "topic": "models",
+      "title": "The future of the firm",
+      "url": "https://openai.com/index/the-future-of-the-firm",
+      "date": "2026-10-28T10:00:00.000Z"
+    },
+    {
+      "source": "openai-news",
+      "org": "OpenAI",
+      "topic": "models",
+      "title": "Legora is building the agentic operating system for legal work",
+      "url": "https://openai.com/index/legora",
+      "date": "2026-10-28T09:30:00.000Z"
+    },
+    {
+      "source": "aws-whats-new",
+      "org": "AWS, What’s New",
+      "topic": "cloud",
+      "title": "Announcing the AWS Marketplace and Amazon Business unified storefront",
+      "url": "https://aws.amazon.com/about-aws/whats-new/2026/10/marketplace-business-storefront/",
+      "date": "2026-10-28T08:00:00.000Z"
+    },
     {
       "source": "aws-whats-new",
       "org": "AWS, What’s New",
@@ -10,20 +162,20 @@
       "date": "2026-10-27T23:31:00.000Z"
     },
     {
-      "source": "ollama",
-      "org": "Ollama releases",
-      "topic": "serving",
-      "title": "Ollama v0.40.12",
-      "url": "https://github.com/ollama/ollama/releases/tag/v0.40.12",
-      "date": "2026-10-27T21:41:00.000Z"
-    },
-    {
       "source": "aws-whats-new",
       "org": "AWS, What’s New",
       "topic": "cloud",
       "title": "SageMaker MLflow Apps now support MLflow 3.16",
       "url": "https://aws.amazon.com/about-aws/whats-new/2026/10/mflow-version-3-16/",
       "date": "2026-10-27T20:40:00.000Z"
+    },
+    {
+      "source": "aws-whats-new",
+      "org": "AWS, What’s New",
+      "topic": "cloud",
+      "title": "Amazon Connect Customer supports inline attachment previews",
+      "url": "https://aws.amazon.com/about-aws/whats-new/2026/10/connect-attachment-previews/",
+      "date": "2026-10-27T19:15:00.000Z"
     },
     {
       "source": "aws-ml-blog",
@@ -48,30 +200,6 @@
       "title": "Build specialized multimodal models with LFM3",
       "url": "https://huggingface.co/blog/LiquidAI/lfm3",
       "date": "2026-10-27T17:16:52.000Z"
-    },
-    {
-      "source": "aws-ml-blog",
-      "org": "AWS Machine Learning Blog",
-      "topic": "cloud",
-      "title": "Announcing SOCI-indexed images for faster SageMaker AI jobs",
-      "url": "https://aws.amazon.com/blogs/machine-learning/announcing-soci-indexed-images-for-faster-sagemaker-ai-jobs/",
-      "date": "2026-10-27T17:00:39.000Z"
-    },
-    {
-      "source": "aws-ml-blog",
-      "org": "AWS Machine Learning Blog",
-      "topic": "cloud",
-      "title": "Fix evaluation bias to unlock better models on Amazon Bedrock",
-      "url": "https://aws.amazon.com/blogs/machine-learning/fix-evaluation-bias-to-unlock-better-models-on-amazon-bedrock/",
-      "date": "2026-10-27T16:53:02.000Z"
-    },
-    {
-      "source": "aws-ml-blog",
-      "org": "AWS Machine Learning Blog",
-      "topic": "cloud",
-      "title": "Exowatt beats frontier models on accuracy with SageMaker serverless model customization",
-      "url": "https://aws.amazon.com/blogs/machine-learning/exowatt-beats-frontier-models-on-accuracy-with-sagemaker-serverless-model-customization/",
-      "date": "2026-10-27T16:50:55.000Z"
     },
     {
       "source": "huggingface",
@@ -106,36 +234,12 @@
       "date": "2026-10-27T07:00:00.000Z"
     },
     {
-      "source": "openai-news",
-      "org": "OpenAI",
-      "topic": "models",
-      "title": "How Check Point accelerates vulnerability research with Daybreak",
-      "url": "https://openai.com/index/check-point-daybreak",
-      "date": "2026-10-27T00:00:00.000Z"
-    },
-    {
-      "source": "openai-news",
-      "org": "OpenAI",
-      "topic": "models",
-      "title": "Greptile takes bug detection beyond code review with GPT-6 Astra",
-      "url": "https://openai.com/index/greptile-code-review-codex-astra",
-      "date": "2026-10-26T22:00:00.000Z"
-    },
-    {
       "source": "langgraph",
       "org": "LangGraph releases",
       "topic": "frameworks",
       "title": "LangGraph langgraph==1.2.18",
       "url": "https://github.com/langchain-ai/langgraph/releases/tag/1.2.18",
       "date": "2026-10-26T20:05:16.000Z"
-    },
-    {
-      "source": "aws-whats-new",
-      "org": "AWS, What’s New",
-      "topic": "cloud",
-      "title": "OpenAI GPT-6.1 Terra is now generally available on Amazon Bedrock",
-      "url": "https://aws.amazon.com/about-aws/whats-new/2026/10/openai-gpt-6-1-terra-on-amazon-bedrock/",
-      "date": "2026-10-26T18:27:00.000Z"
     },
     {
       "source": "foundry-devblog",
@@ -152,38 +256,6 @@
       "title": "Our newest AI Quest: Mapping the human brain",
       "url": "https://blog.google/products-and-platforms/products/education/ai-quests-polar-peaks/",
       "date": "2026-10-26T16:00:00.000Z"
-    },
-    {
-      "source": "aws-whats-new",
-      "org": "AWS, What’s New",
-      "topic": "cloud",
-      "title": "Amazon SageMaker Unified Studio adds light mode support for IDC-based domains",
-      "url": "https://aws.amazon.com/about-aws/whats-new/2026/10/smus-light-mode",
-      "date": "2026-10-26T15:32:00.000Z"
-    },
-    {
-      "source": "aws-whats-new",
-      "org": "AWS, What’s New",
-      "topic": "cloud",
-      "title": "Amazon Connect Customer expands testing and simulation to validate flow action outcomes",
-      "url": "https://aws.amazon.com/about-aws/whats-new/2026/10/connect-customer-validate-flow-actions/",
-      "date": "2026-10-26T15:00:00.000Z"
-    },
-    {
-      "source": "openai-news",
-      "org": "OpenAI",
-      "topic": "models",
-      "title": "Working with academic communities to build scientific understanding",
-      "url": "https://openai.com/index/building-scientific-understanding-with-academic-communities",
-      "date": "2026-10-26T14:30:00.000Z"
-    },
-    {
-      "source": "aws-whats-new",
-      "org": "AWS, What’s New",
-      "topic": "cloud",
-      "title": "Web Search on Amazon Bedrock now supports domain filtering and user location controls",
-      "url": "https://aws.amazon.com/about-aws/whats-new/2026/10/bedrock-web-search-domain-user-location/",
-      "date": "2026-10-23T21:04:00.000Z"
     },
     {
       "source": "nvidia-dev",
@@ -218,14 +290,6 @@
       "date": "2026-10-23T00:00:00.000Z"
     },
     {
-      "source": "huggingface",
-      "org": "Hugging Face blog",
-      "topic": "models",
-      "title": "Turning Database Grading into RL Rewards: Post-Training Agents with ThinkingBox",
-      "url": "https://huggingface.co/blog/microsoft/thinkingbox-training",
-      "date": "2026-10-22T22:24:34.000Z"
-    },
-    {
       "source": "langchain",
       "org": "LangChain releases",
       "topic": "frameworks",
@@ -234,12 +298,44 @@
       "date": "2026-10-21T21:39:18.000Z"
     },
     {
+      "source": "github-blog",
+      "org": "The GitHub Blog",
+      "topic": "cloud",
+      "title": "The bridge to agent-scale Git infrastructure",
+      "url": "https://github.blog/engineering/architecture-optimization/the-bridge-to-agent-scale-git-infrastructure/",
+      "date": "2026-10-21T16:00:00.000Z"
+    },
+    {
       "source": "google-ai",
       "org": "Google AI blog",
       "topic": "models",
       "title": "Southeast Asia’s digital economy to hit $368 billion",
       "url": "https://blog.google/company-news/inside-google/around-the-globe/google-asia/e-conomy-sea-report-2026/",
       "date": "2026-10-21T04:00:00.000Z"
+    },
+    {
+      "source": "microsoft-blog",
+      "org": "The Official Microsoft Blog",
+      "topic": "cloud",
+      "title": "Advancing digital sovereignty with greater control and choice",
+      "url": "https://blogs.microsoft.com/blog/2026/10/20/advancing-digital-sovereignty-with-greater-control-and-choice/",
+      "date": "2026-10-20T08:20:02.000Z"
+    },
+    {
+      "source": "github-blog",
+      "org": "The GitHub Blog",
+      "topic": "cloud",
+      "title": "How to continue a GitHub Copilot app session in VS Code",
+      "url": "https://github.blog/ai-and-ml/github-copilot/how-to-continue-a-github-copilot-app-session-in-vs-code/",
+      "date": "2026-10-19T18:47:22.000Z"
+    },
+    {
+      "source": "microsoft-blog",
+      "org": "The Official Microsoft Blog",
+      "topic": "cloud",
+      "title": "Securing the agentic insider",
+      "url": "https://blogs.microsoft.com/blog/2026/10/19/securing-the-agentic-insider/",
+      "date": "2026-10-19T13:00:02.000Z"
     },
     {
       "source": "foundry-devblog",
@@ -266,12 +362,12 @@
       "date": "2026-10-18T10:23:45.000Z"
     },
     {
-      "source": "foundry-devblog",
-      "org": "Microsoft Foundry blog",
+      "source": "github-blog",
+      "org": "The GitHub Blog",
       "topic": "cloud",
-      "title": "What’s new in Microsoft Foundry | September 2026",
-      "url": "https://devblogs.microsoft.com/foundry/whats-new-in-microsoft-foundry-september-2026/",
-      "date": "2026-10-16T02:04:50.000Z"
+      "title": "The next developer interface is ambient intelligence",
+      "url": "https://github.blog/news-insights/company-news/the-next-developer-interface-is-ambient-intelligence/",
+      "date": "2026-10-15T19:39:27.000Z"
     },
     {
       "source": "vllm",
@@ -320,6 +416,30 @@
       "title": "Introducing Playground: Create and play custom games",
       "url": "https://blog.google/innovation-and-ai/technology/ai/playground-experimental-gaming-platform/",
       "date": "2026-10-07T12:00:00.000Z"
+    },
+    {
+      "source": "azure-updates",
+      "org": "Azure updates",
+      "topic": "cloud",
+      "title": "[In preview] Public Preview: AKS on bare metal now on Ubuntu",
+      "url": "https://azure.microsoft.com/updates?id=573782",
+      "date": "2026-10-06T15:44:06.000Z"
+    },
+    {
+      "source": "azure-updates",
+      "org": "Azure updates",
+      "topic": "cloud",
+      "title": "[Launched] Generally Available: SQL Migration Agent Skills for assessment, migration, and validation",
+      "url": "https://azure.microsoft.com/updates?id=571899",
+      "date": "2026-09-29T17:38:16.000Z"
+    },
+    {
+      "source": "azure-updates",
+      "org": "Azure updates",
+      "topic": "cloud",
+      "title": "[In preview] Public Preview: Microsoft SQL Agent Skills",
+      "url": "https://azure.microsoft.com/updates?id=573003",
+      "date": "2026-09-29T17:31:11.000Z"
     }
   ]
 }

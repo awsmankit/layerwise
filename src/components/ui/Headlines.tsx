@@ -3,6 +3,8 @@ import { Root } from '../viz/shared';
 
 export type Headline = { source: string; org: string; topic: string; title: string; url: string; date: string };
 
+const LIMIT = 30;
+
 const day = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 
 /**
@@ -11,7 +13,12 @@ const day = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'n
  */
 export default function Headlines({ items, topics }: { items: Headline[]; topics: Record<string, string> }) {
   const [topic, setTopic] = useState<string>('all');
-  const shown = topic === 'all' ? items : items.filter((i) => i.topic === topic);
+  const [text, setText] = useState('');
+  const [all, setAll] = useState(false);
+  const words = text.toLowerCase().split(/\s+/).filter(Boolean);
+  const matching = items.filter((i) => (topic === 'all' || i.topic === topic) && words.every((w) => `${i.title} ${i.org}`.toLowerCase().includes(w)));
+  const searching = words.length > 0 || topic !== 'all';
+  const shown = searching || all ? matching : matching.slice(0, LIMIT);
   const present = Object.keys(topics).filter((t) => items.some((i) => i.topic === t));
 
   return (
@@ -26,6 +33,21 @@ export default function Headlines({ items, topics }: { items: Headline[]; topics
           </button>
         ))}
       </div>
+      <div className="viz-controls" style={{ marginBottom: '1rem' }}>
+        <label className="field">
+          <span>Search the headlines</span>
+          <input type="search" className="iv-input" value={text} onChange={(e) => setText(e.target.value)} placeholder="for example: copilot, bedrock, vllm" />
+        </label>
+        {(text || topic !== 'all') && (
+          <button type="button" className="btn quiet" style={{ alignSelf: 'end' }} onClick={() => { setText(''); setTopic('all'); }}>
+            Clear
+          </button>
+        )}
+      </div>
+      <p role="status" className="viz-cap" style={{ margin: '0 0 0.8rem' }}>
+        {searching ? `${matching.length} of ${items.length} headlines match.` : `Showing ${shown.length} of ${items.length} headlines.`}
+      </p>
+      {shown.length === 0 && <p>No headlines match. Try one word, or clear the search.</p>}
       <ul className="rows" aria-live="polite">
         {shown.map((h) => (
           <li key={h.url}>
@@ -44,6 +66,13 @@ export default function Headlines({ items, topics }: { items: Headline[]; topics
           </li>
         ))}
       </ul>
+      {!searching && !all && matching.length > LIMIT && (
+        <p style={{ marginTop: '1rem' }}>
+          <button type="button" className="btn quiet" onClick={() => setAll(true)}>
+            Show all {matching.length}
+          </button>
+        </p>
+      )}
     </Root>
   );
 }

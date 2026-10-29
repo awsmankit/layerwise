@@ -45,7 +45,7 @@ if (failed.length === sources.length) {
   process.exit(0);
 }
 
-const unique = [...new Map(items.map((i) => [i.url, i])).values()].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 40);
+const unique = [...new Map(items.map((i) => [i.url, i])).values()].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 80);
 await writeFile(OUT, JSON.stringify({ generatedAt: new Date().toISOString(), items: unique }, null, 2) + '\n');
 console.log(`${unique.length} headlines from ${sources.length - failed.length} of ${sources.length} sources.`);
 if (failed.length) console.warn('Failed:\n  ' + failed.join('\n  '));
