@@ -162,9 +162,15 @@ export default function PathPlanner({ lessons }: { lessons: LessonInfo }) {
             <button type="button" className="btn" onClick={() => setSaved(sel)} disabled={saved === sel}>
               {saved === sel ? 'This is your path' : 'Make this my path'}
             </button>
-            <a className="btn quiet" href={withBase(nextHref)}>
-              {doneCount === 0 ? 'Start the first lesson' : 'Continue the path'}
-            </a>
+            {lessonSteps.length > 0 && doneCount === lessonSteps.length ? (
+              <a className="btn" href={withBase(`/certificate/#${sel}`)}>
+                Get your certificate
+              </a>
+            ) : (
+              <a className="btn quiet" href={withBase(nextHref)}>
+                {doneCount === 0 ? 'Start the first lesson' : 'Continue the path'}
+              </a>
+            )}
           </div>
         </div>
 

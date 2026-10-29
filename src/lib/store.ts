@@ -66,6 +66,10 @@ export const KEYS = {
   theme: 'layerwise:theme',
   quiz: 'layerwise:quiz',
   labs: 'layerwise:labs',
+  /** The name a learner types for their certificates. Stays in this browser. */
+  name: 'layerwise:name',
+  /** When each learning path was first completed, for the certificates. */
+  certs: 'layerwise:certs',
 } as const;
 
 export type GameRecord = { best: number; plays: number; stars?: number };

@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { Root, EASE } from '../viz/shared';
 import { recordGame } from '../../lib/store';
 import { allOutcomes, baselineOutcome, crunchScenarios, evaluate, levers, marginal, type LeverId } from '../../games/costcrunch';
-import { LessonLinks, LevelTabs, Meter, Stars, useRecords, useScrollIntoView } from './shared';
+import { GameDock, LessonLinks, LevelTabs, Meter, Stars, useRecords, useScrollIntoView } from './shared';
 
 const usd = (n: number) => '$' + Math.round(n).toLocaleString('en-US');
 
@@ -107,6 +107,12 @@ export default function CostCrunchGame() {
                 );
               })}
             </ul>
+            <GameDock
+              items={[
+                { label: 'Cost', value: usd(out.monthly), target: `≤ ${usd(scenario.target)}`, ok: out.monthly <= scenario.target },
+                { label: 'Quality', value: out.quality.toFixed(1), target: `≥ ${scenario.qualityFloor}`, ok: out.quality >= scenario.qualityFloor },
+              ]}
+            />
           </div>
 
           <aside className="gm-side" aria-label="Live results">

@@ -4,7 +4,7 @@ import { Root, EASE, fmt } from '../viz/shared';
 import { recordGame } from '../../lib/store';
 import { weightPrecisions, kvPrecisions, models, type KvPrecision, type WeightPrecision } from '../../games/fitmodel';
 import { COUNTS, evaluate, examplePrice, rackGpus, rackScenarios, score, solutions, type Pick } from '../../games/rackstack';
-import { Check, LessonLinks, LevelTabs, Meter, useRecords, useScrollIntoView } from './shared';
+import { Check, GameDock, LessonLinks, LevelTabs, Meter, useRecords, useScrollIntoView } from './shared';
 
 const start: Pick = { gpu: 'a10g', count: 1, weights: 'fp16', kv: 'fp16' };
 
@@ -134,6 +134,14 @@ export default function RackStackGame() {
                 ))}
               </div>
             </fieldset>
+            <GameDock
+              items={[
+                { label: 'Memory', value: fmt.gb(r.memoryUsedGB), target: `≤ ${fmt.gb(r.memoryCapacityGB)}`, ok: r.memoryUsedGB <= r.memoryCapacityGB },
+                { label: 'Speed', value: r.fits ? `${Math.round(r.speed)} tok/s` : 'no fit', target: `≥ ${s.minTokS}`, ok: r.speed >= s.minTokS },
+                { label: 'Score', value: r.quality.toFixed(1), target: `≥ ${s.minQuality}`, ok: r.quality >= s.minQuality },
+                { label: 'Cost', value: `$${r.cost.toFixed(2)}/hr`, target: `≤ $${s.budget}`, ok: r.cost <= s.budget },
+              ]}
+            />
           </div>
 
           <aside className="gm-side" aria-label="Live estimates">

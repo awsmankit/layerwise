@@ -25,7 +25,7 @@ export default function Nesting() {
                 key={l.id}
                 type="button"
                 className={`ne-ring${sel === l.id ? ' is-sel' : ''}`}
-                style={{ inset: `${i * 14}% ${i * 7}%` }}
+                style={{ '--i': i } as React.CSSProperties}
                 aria-pressed={sel === l.id}
                 onClick={() => setSel(l.id)}
                 initial={{ opacity: 0, scale: 0.94 }}

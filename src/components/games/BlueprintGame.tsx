@@ -14,7 +14,7 @@ import {
   type Choice,
   type Slot,
 } from '../../games/blueprint';
-import { Check, LessonLinks, LevelTabs, Meter, useRecords, useScrollIntoView } from './shared';
+import { Check, GameDock, LessonLinks, LevelTabs, Meter, useRecords, useScrollIntoView } from './shared';
 
 const usd = (n: number) => '$' + Math.round(n).toLocaleString('en-US');
 const labelOf = (slot: Slot, id: string) => slotInfo[slot].options.find((o) => o.id === id)?.label ?? id;
@@ -108,6 +108,15 @@ export default function BlueprintGame() {
                 </fieldset>
               );
             })}
+            <GameDock
+              items={[
+                { label: 'Cost', value: usd(result.monthly), target: `≤ ${usd(n.budget)}`, ok: result.monthly <= n.budget },
+                { label: 'Speed', value: `${Math.round(result.ttftMs).toLocaleString('en-US')} ms`, target: `≤ ${n.ttftMs.toLocaleString('en-US')}`, ok: result.ttftMs <= n.ttftMs },
+                { label: 'Quality', value: `${Math.round(result.quality)}`, target: `≥ ${n.minQuality}`, ok: result.quality >= n.minQuality },
+                { label: 'Uptime', value: `${result.availability}%`, target: `≥ ${n.availability}%`, ok: result.availability >= n.availability },
+                { label: 'Parts', value: `${result.complexity}`, target: `≤ ${n.maxComplexity}`, ok: result.complexity <= n.maxComplexity },
+              ]}
+            />
           </div>
 
           <aside className="gm-side" aria-label="Live estimates">

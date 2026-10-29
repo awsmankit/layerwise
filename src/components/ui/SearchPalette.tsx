@@ -120,7 +120,10 @@ export default function SearchPalette() {
                   autoComplete="off"
                   spellCheck={false}
                 />
-                <kbd>Esc</kbd>
+                <kbd className="sp-esc">Esc</kbd>
+                <button type="button" className="sp-close" onClick={close}>
+                  Close
+                </button>
               </div>
 
               {failed && <p className="sp-empty">Search could not load. You can still browse from the menu.</p>}

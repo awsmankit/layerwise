@@ -18,7 +18,7 @@ import {
   type ModelId,
   type WeightPrecision,
 } from '../../games/fitmodel';
-import { LessonLinks, LevelTabs, Meter, useRecords, useScrollIntoView } from './shared';
+import { GameDock, LessonLinks, LevelTabs, Meter, useRecords, useScrollIntoView } from './shared';
 
 export default function FitModelGame() {
   const records = useRecords();
@@ -121,6 +121,12 @@ export default function FitModelGame() {
                 )}
               </div>
             </fieldset>
+            <GameDock
+              items={[
+                { label: 'Memory', value: fmt.gb(r.usedGB), target: `≤ ${fmt.gb(r.capacityGB)}`, ok: r.fits },
+                { label: 'Score', value: r.quality.toFixed(1), target: `≥ ${scenario.minQuality}`, ok: r.quality >= scenario.minQuality },
+              ]}
+            />
           </div>
 
           <aside className="gm-side" aria-label="Memory">

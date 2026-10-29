@@ -12,6 +12,7 @@ import '../styles/interview.css';
 import '../styles/diagrams.css';
 import '../styles/landing.css';
 import '../styles/footer.css';
+import '../styles/certificate.css';
 import SearchPalette from '../components/ui/SearchPalette.tsx';
 import { site, nav, footerGroups } from '../site';
 import { swatch, trackSwatch } from '../lib/palette';
@@ -25,9 +26,11 @@ interface Props {
   track?: { color: string; on: string };
   /** Absolute path of a social preview image, relative to the site root. */
   image?: string;
+  /** Keep a personal page out of search engines. */
+  noindex?: boolean;
 }
 
-const { title, description = site.description, progress = false, track, image } = Astro.props;
+const { title, description = site.description, progress = false, track, image, noindex = false } = Astro.props;
 const fullTitle = title ? `${title} | ${site.name}` : `${site.name}: ${site.tagline}`;
 const path = Astro.url.pathname;
 // a thin stripe of the twelve track colours along the top of the footer
@@ -45,6 +48,7 @@ const trackStyle = track ? `--track:${track.color};--on-track:${track.on}` : und
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex" />}
     <meta name="theme-color" content="#120f3d" />
     {canonical && <link rel="canonical" href={canonical} />}
     <meta property="og:type" content="website" />

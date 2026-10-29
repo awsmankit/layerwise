@@ -367,6 +367,23 @@ input[type='range']::-moz-range-thumb {
   background: var(--paper);
   border: 1.5px solid var(--signal);
 }
+/* touch screens: a taller hit area around the same 1px line, and a thumb a finger can find */
+@media (pointer: coarse) {
+  input[type='range'] {
+    height: 30px;
+    margin: 0.35rem 0;
+    background: linear-gradient(var(--line), var(--line)) center / 100% 1px no-repeat;
+  }
+  input[type='range']::-webkit-slider-thumb {
+    width: 26px;
+    height: 26px;
+    border-width: 2px;
+  }
+  input[type='range']::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+  }
+}
 
 select,
 input[type='number'] {
@@ -383,6 +400,20 @@ input[type='number'] {
 }
 select {
   cursor: pointer;
+}
+/* touch screens: iOS zooms the page into any field under 16px when it gets focus */
+@media (pointer: coarse) {
+  :root {
+    /* the lab code editor and its line numbers */
+    --code-field: 16px;
+  }
+  :root :is(select, input[type='number'], input[type='text'], input[type='search'], .iv-input, .cs-form input, .cs-code textarea) {
+    font-size: 16px;
+  }
+  select,
+  input[type='number'] {
+    padding-block: 0.55rem;
+  }
 }
 select option {
   background: var(--paper);
@@ -523,6 +554,11 @@ select option {
 }
 .prose strong {
   font-weight: 650;
+}
+/* a long identifier or URL wraps instead of pushing a phone screen sideways */
+.prose p,
+.prose li {
+  overflow-wrap: break-word;
 }
 .prose code {
   font-family: var(--font-mono);

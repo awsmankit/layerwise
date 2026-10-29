@@ -69,12 +69,13 @@ const data = { terms: glossaryForTooltips(), glossary: withBase('/glossary/') };
 
     var byId = {};
     data.terms.forEach(function (t) { byId[t.id] = t; });
-    var hideTimer = null, active = null;
+    var hideTimer = null, active = null, shownAt = 0;
 
     function show(btn) {
       clearTimeout(hideTimer);
       var t = byId[btn.getAttribute('data-id')];
       if (!t) return;
+      if (tip.hidden || active !== btn) shownAt = Date.now();
       active = btn;
       tip.innerHTML = '';
       var b = document.createElement('b'); b.textContent = t.match[0]; tip.appendChild(b);
@@ -105,7 +106,8 @@ const data = { terms: glossaryForTooltips(), glossary: withBase('/glossary/') };
     root.addEventListener('click', function (e) {
       var b = e.target.closest && e.target.closest('.term');
       if (!b) return;
-      if (!tip.hidden && active === b) { clearTimeout(hideTimer); tip.hidden = true; } else show(b);
+      // a tap fires mouseover and focus just before click, which already opened the tip: keep it open
+      if (!tip.hidden && active === b && Date.now() - shownAt > 400) { clearTimeout(hideTimer); tip.hidden = true; } else show(b);
     });
     tip.addEventListener('mouseenter', function () { clearTimeout(hideTimer); });
     tip.addEventListener('mouseleave', function () { hide(140); });

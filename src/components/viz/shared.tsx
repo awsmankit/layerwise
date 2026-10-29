@@ -1,5 +1,6 @@
 import { MotionConfig } from 'motion/react';
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { stampCompletions } from '../../lib/certificate';
 
 /** Every island is wrapped in this so reduced-motion preferences are honoured. */
 export function Root({ children }: { children: ReactNode }) {
@@ -7,6 +8,19 @@ export function Root({ children }: { children: ReactNode }) {
 }
 
 export const EASE = [0.22, 1, 0.36, 1] as const;
+
+/** True on phone-sized screens, so a figure can swap to a stacked layout. False on the server. */
+export function useNarrow(query = '(max-width: 560px)') {
+  const [narrow, setNarrow] = useState(false);
+  useEffect(() => {
+    const m = window.matchMedia(query);
+    const on = () => setNarrow(m.matches);
+    on();
+    m.addEventListener('change', on);
+    return () => m.removeEventListener('change', on);
+  }, [query]);
+  return narrow;
+}
 
 export const fmt = {
   usd(n: number): string {
@@ -54,6 +68,7 @@ export function markDone(id: string) {
   } catch {
     /* storage can be blocked; the UI simply will not persist */
   }
+  stampCompletions([...current, id]); // dates a path certificate on the day the path is finished
   window.dispatchEvent(new Event(EVENT));
 }
 
@@ -79,6 +94,7 @@ export function useDone() {
     } catch {
       /* storage can be blocked; the UI simply will not persist */
     }
+    stampCompletions(next);
     window.dispatchEvent(new Event(EVENT));
   }, []);
 

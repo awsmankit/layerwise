@@ -8,6 +8,7 @@ import { decodeSnapshot, encodeSnapshot, mergeSnapshots, perItemKeys, type Snaps
 import type { QuizItem } from '../../data/lesson-extras';
 import { paths, type PathId } from '../../data/paths';
 import { labs } from '../../data/labs';
+import PathCertificates from './PathCertificates';
 
 export type TrackInfo = { id: string; title: string; color: string; lessons: { key: string; title: string; href: string; level: string }[] };
 type QuizBest = Record<string, { score: number; total: number }>;
@@ -165,6 +166,8 @@ export default function ProgressPage({ tracks, quizzes }: { tracks: TrackInfo[];
             )}
           </div>
         </section>
+
+        <PathCertificates />
 
         <section aria-labelledby="pg-tracks">
           <h2 id="pg-tracks">By topic</h2>

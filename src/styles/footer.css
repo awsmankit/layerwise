@@ -99,6 +99,23 @@
     gap: 1.8rem 1.2rem;
   }
 }
+/* phones: each link a finger-sized row instead of a line of text with a gap */
+@media (max-width: 760px) {
+  .foot-col ul {
+    gap: 0;
+  }
+  .foot-col li a {
+    display: inline-block;
+    padding-block: 0.6rem;
+  }
+  .foot-col h2 {
+    margin-bottom: 0.3rem;
+  }
+  .foot-top {
+    padding-block: 0.6rem;
+    margin-block: -0.6rem;
+  }
+}
 @media print {
   .foot-stripe {
     display: none;

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
-import { Root, EASE } from './shared';
+import { Root, EASE, useNarrow } from './shared';
 
 type Fruit = { id: string; kind: 'apple' | 'banana'; cm: number };
 
@@ -27,9 +27,12 @@ const NEW: Fruit[] = [
 const BABY = NEW[1];
 const START = 19;
 
-const X0 = 30;
-const PX = 28;
-const xOf = (cm: number) => X0 + cm * PX;
+/* Two layouts for the same drawing: a wide ruler, and a shorter one with
+   larger labels for phones, so nothing has to scroll sideways. */
+type Geo = { w: number; from: number; to: number; px: number; x0: number; fruit: number; compact: boolean };
+const WIDE: Geo = { w: 760, from: 0, to: 25, px: 28, x0: 30, fruit: 1, compact: false };
+const NARROW: Geo = { w: 400, from: 3, to: 23, px: 18, x0: 20 - 3 * 18, fruit: 0.75, compact: true };
+const xAt = (g: Geo, cm: number) => g.x0 + cm * g.px;
 const guess = (f: Fruit, dial: number): Fruit['kind'] => (f.cm > dial ? 'banana' : 'apple');
 const wrong = (set: Fruit[], dial: number) => set.filter((f) => guess(f, dial) !== f.kind);
 
@@ -46,6 +49,8 @@ export default function FruitSort() {
   const [dial, setDial] = useState(START);
   const [stage, setStage] = useState<Stage>('train');
   const [auto, setAuto] = useState(false);
+  const g = useNarrow() ? NARROW : WIDE;
+  const xOf = (cm: number) => xAt(g, cm);
 
   const examples = stage === 'retrain' ? [...EXAMPLES, BABY] : EXAMPLES;
   const mistakes = wrong(examples, dial);
@@ -90,24 +95,33 @@ export default function FruitSort() {
           The computer’s rule: <b>longer than <span className="num">{dial}</span> cm means banana</b>.
         </p>
 
-        <svg viewBox="0 0 760 200" className="dx-svg" role="img" aria-label={`Fruit placed along a ruler by length. The cut-off is at ${dial} centimetres. ${say}`}>
+        <svg viewBox={`0 0 ${g.w} 200`} className={`dx-svg fs-svg${g.compact ? ' fs-compact' : ''}`} role="img" aria-label={`Fruit placed along a ruler by length. The cut-off is at ${dial} centimetres. ${say}`}>
           {/* the two sides of the dial */}
-          <text x={xOf(dial) - 10} y="22" textAnchor="end" className="dx-small">← apple side</text>
-          <text x={xOf(dial) + 10} y="22" className="dx-small">banana side →</text>
+          {g.compact ? (
+            <>
+              <text x={xOf(g.from)} y="22" className="dx-small">← apple side</text>
+              <text x={g.w - 4} y="22" textAnchor="end" className="dx-small">banana side →</text>
+            </>
+          ) : (
+            <>
+              <text x={xOf(dial) - 10} y="22" textAnchor="end" className="dx-small">← apple side</text>
+              <text x={xOf(dial) + 10} y="22" className="dx-small">banana side →</text>
+            </>
+          )}
 
           {/* rows */}
           <text x="0" y="60" className="dx-small">{showNew ? 'new' : ''}</text>
           <text x="0" y="112" className="dx-small">examples</text>
 
           {/* ruler */}
-          <path d={`M ${xOf(0)} 160 H ${xOf(25)}`} className="dx-link" />
-          {Array.from({ length: 13 }, (_, i) => i * 2).map((cm) => (
+          <path d={`M ${xOf(g.from)} 160 H ${xOf(g.to)}`} className="dx-link" />
+          {Array.from({ length: 13 }, (_, i) => i * 2).filter((cm) => cm >= g.from && cm <= g.to).map((cm) => (
             <g key={cm}>
               <path d={`M ${xOf(cm)} 156 V 164`} className="dx-link" />
               <text x={xOf(cm)} y="180" textAnchor="middle" className="dx-small">{cm}</text>
             </g>
           ))}
-          <text x={xOf(25)} y="180" textAnchor="end" className="dx-small">cm</text>
+          <text x={g.compact ? 0 : xOf(g.to)} y="180" textAnchor={g.compact ? 'start' : 'end'} className="dx-small">cm</text>
 
           {/* the dial */}
           <motion.g initial={false} animate={{ x: xOf(dial) }} transition={{ duration: 0.35, ease: EASE }}>
@@ -116,9 +130,9 @@ export default function FruitSort() {
           </motion.g>
 
           {examples.map((f) => (
-            <FruitMark key={f.id} f={f} y={108} ok={guess(f, dial) === f.kind} added={f === BABY} />
+            <FruitMark key={f.id} f={f} x={xOf(f.cm)} y={108} size={g.fruit} ok={guess(f, dial) === f.kind} added={f === BABY} />
           ))}
-          {showNew && NEW.map((f) => <FruitMark key={f.id} f={f} y={56} ok={guess(f, dial) === f.kind} fresh />)}
+          {showNew && NEW.map((f) => <FruitMark key={f.id} f={f} x={xOf(f.cm)} y={56} size={g.fruit} ok={guess(f, dial) === f.kind} fresh />)}
         </svg>
 
         <p className="fs-say" aria-live="polite">{say}</p>
@@ -163,12 +177,13 @@ export default function FruitSort() {
   );
 }
 
-function FruitMark({ f, y, ok, fresh = false, added = false }: { f: Fruit; y: number; ok: boolean; fresh?: boolean; added?: boolean }) {
-  const x = xOf(f.cm);
+function FruitMark({ f, x, y, size, ok, fresh = false, added = false }: { f: Fruit; x: number; y: number; size: number; ok: boolean; fresh?: boolean; added?: boolean }) {
+  const scale = size === 1 ? undefined : `translate(${x} ${y}) scale(${size}) translate(${-x} ${-y})`;
   const cls = `fs-fruit fs-${f.kind} ${ok ? 'fs-ok' : 'fs-bad'}${fresh ? ' fs-fresh' : ''}`;
   return (
     <motion.g initial={added || fresh ? { opacity: 0, y: -8 } : false} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: EASE }}>
       <title>{`${f.kind}, ${f.cm} cm: ${ok ? 'right' : 'wrong'}`}</title>
+      <g transform={scale}>
       {f.kind === 'apple' ? (
         <g className={cls}>
           <circle cx={x} cy={y} r="11" />
@@ -181,6 +196,7 @@ function FruitMark({ f, y, ok, fresh = false, added = false }: { f: Fruit; y: nu
           <path d={`M ${x + 15} ${y - 8} l 3 -4`} transform={`rotate(-12 ${x} ${y})`} />
         </g>
       )}
+      </g>
       {!ok && (
         <text x={x} y={y - 20} textAnchor="middle" className="fs-x">✗</text>
       )}

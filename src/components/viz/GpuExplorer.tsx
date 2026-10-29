@@ -112,19 +112,19 @@ export default function GpuExplorer() {
                   {g.memType}, {g.link}
                 </small>
               </span>
-              <span className="num" role="cell">
+              <span className="num" role="cell" data-h="Memory">
                 {g.memGB * count} GB
               </span>
-              <span className="num" role="cell">
+              <span className="num" role="cell" data-h="Bandwidth">
                 {fmt.int(g.bwGBs * count)} GB/s
               </span>
-              <span role="cell" className={`gx-fit ${e.fits ? 'ok' : 'bad'}`}>
+              <span role="cell" className={`gx-fit ${e.fits ? 'ok' : 'bad'}`} data-h="Fits?">
                 {e.fits ? `Yes, ${fmt.gb(e.usedGB)} of ${fmt.gb(e.capacityGB)}` : e.devicesNeeded === Infinity || e.devicesNeeded > 64 ? 'No, far too big' : `No, needs ${e.devicesNeeded} or more`}
               </span>
-              <span className="num" role="cell">
+              <span className="num" role="cell" data-h="Max users">
                 {e.maxUsers > 0 ? e.maxUsers : '0'}
               </span>
-              <span className="gx-speed" role="cell">
+              <span className="gx-speed" role="cell" data-h="Speed per user">
                 <span className="gx-bar">
                   <motion.span initial={false} animate={{ scaleX: e.perUserTokS / maxUser }} transition={{ duration: 0.45, ease: EASE }} />
                 </span>

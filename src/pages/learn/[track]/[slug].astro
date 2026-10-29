@@ -45,6 +45,8 @@ const byKey = Object.fromEntries(all.map((l) => [`${l.data.track}/${slugOf(l)}`,
 const lessonIndex = Object.fromEntries(all.map((l) => [`${l.data.track}/${slugOf(l)}`, { title: l.data.title, href: lessonPath(l) }]));
 const hasDeep = /<Deep[\s>]/.test(lesson.body ?? '');
 const prereqs = (extra?.prereq ?? []).map((k) => byKey[k]).filter(Boolean);
+const trackLessons = all.filter((l) => l.data.track === track.id);
+const trackPos = trackLessons.findIndex((l) => l.id === lesson.id) + 1;
 
 const groups = tracks.map((t) => ({
   id: t.id,
@@ -78,7 +80,22 @@ const groups = tracks.map((t) => ({
 
   <div class="wrap lesson">
     <aside class="lesson-nav" aria-label="Lesson navigation">
-      <TrackTree client:load groups={groups} currentTrack={track.id} currentSlug={slug} />
+      <details class="lesson-nav-fold" open>
+        <summary>
+          <span>Lesson {trackPos} of {trackLessons.length} in {track.title}</span>
+          <b>All lessons</b>
+        </summary>
+        <TrackTree client:load groups={groups} currentTrack={track.id} currentSlug={slug} />
+      </details>
+      <script is:inline>
+        /* phones: the lesson list starts folded so the lesson comes first; desktop keeps it open */
+        (function () {
+          var d = document.currentScript.previousElementSibling;
+          var mq = window.matchMedia('(max-width: 960px)');
+          d.open = !mq.matches;
+          mq.addEventListener('change', function () { d.open = !mq.matches; });
+        })();
+      </script>
     </aside>
 
     <article class="lesson-main">

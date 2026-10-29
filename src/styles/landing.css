@@ -499,6 +499,13 @@
   background: color-mix(in srgb, var(--c) 34%, var(--surface));
 }
 @media (max-width: 700px) {
+  /* finger-sized */
+  .lp-mini {
+    padding-block: 0.5rem;
+  }
+  .sx2-links a {
+    padding-block: 0.45rem;
+  }
   .sx2-compare {
     grid-template-columns: 1fr;
   }

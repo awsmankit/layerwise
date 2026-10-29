@@ -1,0 +1,28 @@
+---
+import '@fontsource-variable/source-serif-4/wght-italic.css';
+import Base from '../layouts/Base.astro';
+import CertificatePage from '../components/ui/CertificatePage.tsx';
+import { getLessons, lessonPath, slugOf } from '../lib/content';
+
+const lessons = await getLessons();
+const info = Object.fromEntries(lessons.map((l) => [`${l.data.track}/${slugOf(l)}`, { title: l.data.title, href: lessonPath(l) }]));
+---
+
+<Base title="Your certificate" noindex description="A certificate for finishing a Layerwise learning path, made in your browser from the progress saved there.">
+  <div class="wrap">
+    <header class="page-head cert-noprint">
+      <h1>Your <span class="squig" style="--squig:#FFC233">certificate</span></h1>
+      <p>Finish every lesson in a learning path and you get a certificate to download or print. It is made here in your browser from the progress saved in it.</p>
+    </header>
+    <CertificatePage client:load lessons={info} />
+    <noscript><p class="gm-note">The certificate is made in your browser, so it needs JavaScript.</p></noscript>
+  </div>
+</Base>
+
+<style is:global>
+  /* Only this page prints landscape, and with no margin: the certificate is the whole sheet. */
+  @page {
+    size: A4 landscape;
+    margin: 0;
+  }
+</style>

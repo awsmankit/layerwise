@@ -543,3 +543,45 @@
 .fs-dial {
   margin-bottom: 1rem;
 }
+
+/* Phones: wide hand-drawn diagrams keep a readable size and scroll sideways
+   inside their frame, instead of shrinking their labels to a few pixels. */
+@media (max-width: 640px) {
+  .viz .dx-svg:not(.rl-svg):not(.dx-tall):not(.fs-svg) {
+    min-width: 680px;
+  }
+  .viz .dx-svg.dx-tall {
+    min-width: 460px;
+  }
+  .viz:has(.dx-svg:not(.rl-svg):not(.fs-svg)) {
+    overflow-x: auto;
+    contain: inline-size;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  .viz:has(.dx-svg:not(.rl-svg):not(.fs-svg))::before {
+    content: 'Swipe sideways to see the whole diagram →';
+    position: sticky;
+    left: 0;
+    display: block;
+    width: max-content;
+    margin-bottom: 0.4rem;
+    font-size: 0.8rem;
+    color: var(--ink-3);
+  }
+}
+
+/* FruitSort on phones: a shorter ruler with larger labels */
+.fs-compact .dx-small {
+  font-size: 13px;
+}
+.fs-compact .fs-x {
+  font-size: 16px;
+}
+
+/* touch screens: the step pills above diagrams are comfortable to tap */
+@media (pointer: coarse) {
+  .dx-steps button {
+    min-height: 40px;
+  }
+}

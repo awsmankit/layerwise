@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { Root, EASE } from './shared';
+import { Root, EASE, useNarrow } from './shared';
 import { Glyph, glyphFor, type GlyphName } from './glyphs';
 
 type Stage = { title: string; detail: string; glyph?: GlyphName };
@@ -49,6 +49,7 @@ export default function PipelineFlow({
 }) {
   const [active, setActive] = useState(0);
   const [running, setRunning] = useState(false);
+  const narrow = useNarrow();
 
   useEffect(() => {
     if (!running) return;
@@ -97,109 +98,155 @@ export default function PipelineFlow({
           </button>
         </div>
 
-        <div className="pf-scroll">
-          <svg viewBox={`0 0 ${W} ${H}`} className="pf-svg" style={{ minWidth: `${perRow * 112}px`, maxWidth: `${W}px`, marginInline: 'auto' }} role="group" aria-label={title ?? 'Pipeline'}>
-            {/* connectors between cards, with a small chevron for direction */}
-            {stages.slice(1).map((_, k) => {
-              const lit = k < active;
-              if (row(k) === row(k + 1)) {
-                const x1 = cx(k) + CARD_W / 2;
-                const x2 = cx(k + 1) - CARD_W / 2;
-                const y = mid(k);
-                return (
-                  <g key={`c${k}`} className={`pf-conn${lit ? ' is-lit' : ''}`}>
-                    <line x1={x1} y1={y} x2={x2 - 2} y2={y} />
-                    <path d={`M ${x2 - 7} ${y - 4} L ${x2 - 2} ${y} L ${x2 - 7} ${y + 4}`} />
-                  </g>
-                );
-              }
-              // wrap to the next row: down from this card, back along the gap, down into the next
-              const yGap = top(k) + CARD_H + 23;
-              const yTo = top(k + 1) - 2;
-              return (
-                <g key={`c${k}`} className={`pf-conn${lit ? ' is-lit' : ''}`}>
-                  <path d={`M ${cx(k)} ${top(k) + CARD_H} V ${yGap} H ${cx(k + 1)} V ${yTo}`} style={{ strokeDasharray: lit ? 'none' : '3 4' }} />
-                  <path d={`M ${cx(k + 1) - 4} ${yTo - 5} L ${cx(k + 1)} ${yTo} L ${cx(k + 1) + 4} ${yTo - 5}`} />
-                </g>
-              );
-            })}
-
-            {loop && (
-              <g className="pf-loopline">
-                {rows === 1 ? (
-                  <>
-                    <path d={`M ${cx(n - 1)} ${bottom} V ${H - 26} H ${cx(0)} V ${TOP + CARD_H + 6}`} />
-                    <path d={`M ${cx(0) - 4} ${TOP + CARD_H + 12} L ${cx(0)} ${TOP + CARD_H + 5} L ${cx(0) + 4} ${TOP + CARD_H + 12}`} />
-                  </>
-                ) : (
-                  <>
-                    <path d={`M ${cx(n - 1)} ${bottom} V ${H - 26} H 8 V ${mid(0)} H ${cx(0) - CARD_W / 2 - 2}`} />
-                    <path d={`M ${cx(0) - CARD_W / 2 - 8} ${mid(0) - 4} L ${cx(0) - CARD_W / 2 - 2} ${mid(0)} L ${cx(0) - CARD_W / 2 - 8} ${mid(0) + 4}`} />
-                  </>
-                )}
-                <text x={W / 2} y={H - 10} textAnchor="middle" className="dx-small">
-                  {loopLabel}
-                </text>
-              </g>
-            )}
-
+        {narrow ? (
+          /* phones: the stages stack top to bottom and a tapped stage opens its text right under it */
+          <ol className="pf-steps" aria-label={title ?? 'Pipeline'}>
             {stages.map((s, i) => {
-              const x = cx(i) - CARD_W / 2;
-              const y = top(i);
               const state = i === active ? 'is-active' : i < active ? 'is-past' : '';
               const glyph = s.glyph ?? glyphFor(s.title, s.detail.slice(0, 80));
-              const ls = lines(s.title);
               return (
-                <g
-                  key={s.title}
-                  className={`pf-card ${state}`}
-                  role="button"
-                  tabIndex={0}
-                  aria-pressed={i === active}
-                  aria-label={`${i + 1}. ${s.title}`}
-                  onClick={() => {
-                    setActive(i);
-                    setRunning(false);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
+                <li key={s.title} className={`pf-step ${state}`}>
+                  <button
+                    type="button"
+                    aria-expanded={i === active}
+                    onClick={() => {
                       setActive(i);
                       setRunning(false);
-                    }
-                  }}
-                >
-                  <rect x={x} y={y} width={CARD_W} height={CARD_H} rx="10" />
-                  <text x={x + 10} y={y + 17} className="pf-n">
-                    {String(i + 1).padStart(2, '0')}
-                  </text>
-                  <Glyph key={i === active ? `on-${active}` : 'off'} name={glyph} draw={i === active} size={34} x={cx(i) - 17} y={y + 20} className="pf-glyph" />
-                  {ls.map((l, k) => (
-                    <text key={l} x={cx(i)} y={y + 76 + k * 16 - (ls.length - 1) * 4} textAnchor="middle" className="pf-label">
-                      {l}
-                    </text>
-                  ))}
-                </g>
+                    }}
+                  >
+                    <span className="pf-num">{i + 1}</span>
+                    <Glyph key={i === active ? `on-${active}` : 'off'} name={glyph} draw={i === active} size={24} className="pf-step-glyph" />
+                    <span className="pf-name">{s.title}</span>
+                  </button>
+                  <AnimatePresence initial={false}>
+                    {i === active && (
+                      <motion.p
+                        className="pf-step-detail"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.28, ease: EASE }}
+                      >
+                        {s.detail}
+                      </motion.p>
+                    )}
+                  </AnimatePresence>
+                </li>
               );
             })}
+            {loop && (
+              <li className="pf-step-loop" aria-hidden="true">
+                ↻ {loopLabel}
+              </li>
+            )}
+          </ol>
+        ) : (
+          <>
+            <div className="pf-scroll">
+              <svg viewBox={`0 0 ${W} ${H}`} className="pf-svg" style={{ minWidth: `${perRow * 112}px`, maxWidth: `${W}px`, marginInline: 'auto' }} role="group" aria-label={title ?? 'Pipeline'}>
+                {/* connectors between cards, with a small chevron for direction */}
+                {stages.slice(1).map((_, k) => {
+                  const lit = k < active;
+                  if (row(k) === row(k + 1)) {
+                    const x1 = cx(k) + CARD_W / 2;
+                    const x2 = cx(k + 1) - CARD_W / 2;
+                    const y = mid(k);
+                    return (
+                      <g key={`c${k}`} className={`pf-conn${lit ? ' is-lit' : ''}`}>
+                        <line x1={x1} y1={y} x2={x2 - 2} y2={y} />
+                        <path d={`M ${x2 - 7} ${y - 4} L ${x2 - 2} ${y} L ${x2 - 7} ${y + 4}`} />
+                      </g>
+                    );
+                  }
+                  // wrap to the next row: down from this card, back along the gap, down into the next
+                  const yGap = top(k) + CARD_H + 23;
+                  const yTo = top(k + 1) - 2;
+                  return (
+                    <g key={`c${k}`} className={`pf-conn${lit ? ' is-lit' : ''}`}>
+                      <path d={`M ${cx(k)} ${top(k) + CARD_H} V ${yGap} H ${cx(k + 1)} V ${yTo}`} style={{ strokeDasharray: lit ? 'none' : '3 4' }} />
+                      <path d={`M ${cx(k + 1) - 4} ${yTo - 5} L ${cx(k + 1)} ${yTo} L ${cx(k + 1) + 4} ${yTo - 5}`} />
+                    </g>
+                  );
+                })}
 
-            <motion.circle
-              r="4.5"
-              className="dx-packet"
-              initial={false}
-              animate={{ cx: cx(active), cy: top(active) + CARD_H }}
-              transition={{ duration: 0.7, ease: EASE }}
-            />
-          </svg>
-        </div>
+                {loop && (
+                  <g className="pf-loopline">
+                    {rows === 1 ? (
+                      <>
+                        <path d={`M ${cx(n - 1)} ${bottom} V ${H - 26} H ${cx(0)} V ${TOP + CARD_H + 6}`} />
+                        <path d={`M ${cx(0) - 4} ${TOP + CARD_H + 12} L ${cx(0)} ${TOP + CARD_H + 5} L ${cx(0) + 4} ${TOP + CARD_H + 12}`} />
+                      </>
+                    ) : (
+                      <>
+                        <path d={`M ${cx(n - 1)} ${bottom} V ${H - 26} H 8 V ${mid(0)} H ${cx(0) - CARD_W / 2 - 2}`} />
+                        <path d={`M ${cx(0) - CARD_W / 2 - 8} ${mid(0) - 4} L ${cx(0) - CARD_W / 2 - 2} ${mid(0)} L ${cx(0) - CARD_W / 2 - 8} ${mid(0) + 4}`} />
+                      </>
+                    )}
+                    <text x={W / 2} y={H - 10} textAnchor="middle" className="dx-small">
+                      {loopLabel}
+                    </text>
+                  </g>
+                )}
 
-        <div className="pf-detail" aria-live="polite">
-          <AnimatePresence mode="wait">
-            <motion.p key={active} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.22 }}>
-              <b>{stages[active].title}.</b> {stages[active].detail}
-            </motion.p>
-          </AnimatePresence>
-        </div>
+                {stages.map((s, i) => {
+                  const x = cx(i) - CARD_W / 2;
+                  const y = top(i);
+                  const state = i === active ? 'is-active' : i < active ? 'is-past' : '';
+                  const glyph = s.glyph ?? glyphFor(s.title, s.detail.slice(0, 80));
+                  const ls = lines(s.title);
+                  return (
+                    <g
+                      key={s.title}
+                      className={`pf-card ${state}`}
+                      role="button"
+                      tabIndex={0}
+                      aria-pressed={i === active}
+                      aria-label={`${i + 1}. ${s.title}`}
+                      onClick={() => {
+                        setActive(i);
+                        setRunning(false);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setActive(i);
+                          setRunning(false);
+                        }
+                      }}
+                    >
+                      <rect x={x} y={y} width={CARD_W} height={CARD_H} rx="10" />
+                      <text x={x + 10} y={y + 17} className="pf-n">
+                        {String(i + 1).padStart(2, '0')}
+                      </text>
+                      <Glyph key={i === active ? `on-${active}` : 'off'} name={glyph} draw={i === active} size={34} x={cx(i) - 17} y={y + 20} className="pf-glyph" />
+                      {ls.map((l, k) => (
+                        <text key={l} x={cx(i)} y={y + 76 + k * 16 - (ls.length - 1) * 4} textAnchor="middle" className="pf-label">
+                          {l}
+                        </text>
+                      ))}
+                    </g>
+                  );
+                })}
+
+                <motion.circle
+                  r="4.5"
+                  className="dx-packet"
+                  initial={false}
+                  animate={{ cx: cx(active), cy: top(active) + CARD_H }}
+                  transition={{ duration: 0.7, ease: EASE }}
+                />
+              </svg>
+            </div>
+
+            <div className="pf-detail" aria-live="polite">
+              <AnimatePresence mode="wait">
+                <motion.p key={active} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.22 }}>
+                  <b>{stages[active].title}.</b> {stages[active].detail}
+                </motion.p>
+              </AnimatePresence>
+            </div>
+          </>
+        )}
         {caption && <p className="viz-cap">{caption}</p>}
       </div>
     </Root>

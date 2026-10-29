@@ -24,6 +24,8 @@ export default function AttentionViz() {
   const [sel, setSel] = useState(7);
   const [causal, setCausal] = useState(true);
   const wrap = useRef<HTMLDivElement>(null);
+  const scroller = useRef<HTMLDivElement>(null);
+  const [overflows, setOverflows] = useState(false);
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
   const [centers, setCenters] = useState<{ x: number; y: number }[]>([]);
   const [width, setWidth] = useState(0);
@@ -42,6 +44,13 @@ export default function AttentionViz() {
       );
     };
     measure();
+    // a phone shows part of the sentence: say so, and start with the chosen word in view
+    const sc = scroller.current;
+    if (sc && sc.scrollWidth > sc.clientWidth + 1) {
+      setOverflows(true);
+      const el = refs.current[sel];
+      if (el) sc.scrollLeft = el.offsetLeft + el.offsetWidth / 2 - sc.clientWidth / 2;
+    }
     const ro = new ResizeObserver(measure);
     if (wrap.current) ro.observe(wrap.current);
     return () => ro.disconnect();
@@ -66,7 +75,8 @@ export default function AttentionViz() {
             </button>
           </div>
         </div>
-        <div className="av-scroll">
+        {overflows && <p className="av-hint">Swipe sideways to see the whole sentence →</p>}
+        <div className="av-scroll" ref={scroller}>
           <div className="av-wrap" ref={wrap}>
             <svg className="av-arcs" width={width} height={120} aria-hidden="true">
               {centers.length === tokens.length &&

@@ -159,7 +159,7 @@ export default function LabRunner({ lab, next }: { lab: RunnerLab; next: Next })
           <pre
             ref={gutter}
             aria-hidden="true"
-            style={{ margin: 0, padding: '0.8rem 0.6rem', textAlign: 'right', color: 'var(--ink-3)', fontFamily: 'var(--font-mono)', fontSize: '0.85rem', lineHeight: 1.55, overflow: 'hidden', borderRight: '1px solid var(--line-soft)', userSelect: 'none' }}
+            style={{ margin: 0, padding: '0.8rem 0.6rem', textAlign: 'right', color: 'var(--ink-3)', fontFamily: 'var(--font-mono)', fontSize: 'var(--code-field, 0.85rem)', lineHeight: 1.55, overflow: 'hidden', borderRight: '1px solid var(--line-soft)', userSelect: 'none' }}
           >
             {lines}
           </pre>
@@ -177,7 +177,7 @@ export default function LabRunner({ lab, next }: { lab: RunnerLab; next: Next })
               autoCapitalize="off"
               autoCorrect="off"
               rows={Math.min(24, Math.max(10, code.split('\n').length + 1))}
-              style={{ width: '100%', border: 0, outline: 'none', resize: 'vertical', padding: '0.8rem', fontFamily: 'var(--font-mono)', fontSize: '0.85rem', lineHeight: 1.55, background: 'transparent', color: 'var(--ink)', whiteSpace: 'pre', overflowX: 'auto', tabSize: 4 }}
+              style={{ width: '100%', border: 0, outline: 'none', resize: 'vertical', padding: '0.8rem', fontFamily: 'var(--font-mono)', fontSize: 'var(--code-field, 0.85rem)', lineHeight: 1.55, background: 'transparent', color: 'var(--ink)', whiteSpace: 'pre', overflowX: 'auto', tabSize: 4 }}
             />
           </label>
         </div>

@@ -109,6 +109,32 @@ export function Meter({
   );
 }
 
+export type DockItem = { label: string; value: string; target: string; ok: boolean };
+
+/**
+ * Phones only: a slim bar stuck to the bottom of the screen while the choices scroll past,
+ * with the numbers that decide the level, so each tap shows its effect without scrolling
+ * down to the full panel. A missed target is shown next to its number; a met one gets a tick.
+ * It sits at the end of the choices, so it settles in place just
+ * above that panel. Hidden from screen readers: the panel says the same thing.
+ */
+export function GameDock({ items }: { items: DockItem[] }) {
+  return (
+    <div className="gm-dock" aria-hidden="true">
+      {items.map((it) => (
+        <span key={it.label} className={`gm-dock-i ${it.ok ? 'ok' : 'bad'}`}>
+          <i>{it.ok ? '✓' : '✕'}</i>
+          {it.label}{' '}
+          <b key={it.value} className="num">
+            {it.value}
+          </b>
+          <small className="num">{it.target}</small>
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export function LessonLinks({ links, title = 'Go deeper' }: { links: { label: string; href: string }[]; title?: string }) {
   if (links.length === 0) return null;
   const seen = new Set<string>();

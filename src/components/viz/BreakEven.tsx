@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import { Root, EASE, fmt } from './shared';
 import { apiMonthly, breakEvenTokens, nodeCapacity, nodeMonthly, nodesNeeded, selfMonthly, selfPerMillion, type BreakEvenInput } from '../../lib/breakeven';
@@ -6,13 +6,24 @@ import { apiMonthly, breakEvenTokens, nodeCapacity, nodeMonthly, nodesNeeded, se
 const tokens = (n: number) => (n >= 1e9 ? `${(n / 1e9).toFixed(2)}B` : n >= 1e6 ? `${(n / 1e6).toFixed(0)}M` : fmt.int(n));
 const usd = (n: number) => '$' + Math.round(n).toLocaleString('en-US');
 
-const W = 640;
-const H = 290;
+const WIDE = 640;
 const PAD = { l: 64, r: 16, t: 16, b: 40 };
 
 export default function BreakEven() {
   const [i, setI] = useState<BreakEvenInput>({ gpuHourly: 4, gpus: 1, throughput: 2500, util: 0.4, apiPrice: 4, overhead: 3000 });
   const [volFrac, setVolFrac] = useState(0.5);
+  // On a narrow screen the chart is drawn at its real width, so its labels keep their size
+  // instead of shrinking with a 640-wide drawing.
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [W, setW] = useState(WIDE);
+  const H = W < 480 ? 250 : 290;
+  useEffect(() => {
+    const el = svgRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(([e]) => setW(Math.max(280, Math.min(WIDE, Math.round(e.contentRect.width)))));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   const set = <K extends keyof BreakEvenInput>(k: K, v: number) => setI((s) => ({ ...s, [k]: v }));
 
   const be = breakEvenTokens(i);
@@ -41,7 +52,7 @@ export default function BreakEven() {
     }
     const line = `M ${x(0)} ${y(0)} L ${x(xMax)} ${y(apiMonthly(i, xMax))}`;
     return { d, line, x, y, yMax };
-  }, [i, xMax, cap]);
+  }, [i, xMax, cap, W, H]);
 
   const num = (k: keyof BreakEvenInput, label: string, step: number, min = 0) => (
     <label className="field">
@@ -86,7 +97,7 @@ export default function BreakEven() {
           </div>
         </dl>
 
-        <svg viewBox={`0 0 ${W} ${H}`} className="be-chart" role="img" aria-label="Monthly cost of the API and of self-hosting as monthly token volume grows">
+        <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} className="be-chart" role="img" aria-label="Monthly cost of the API and of self-hosting as monthly token volume grows">
           {[0, 0.25, 0.5, 0.75, 1].map((t) => (
             <g key={t}>
               <line x1={PAD.l} x2={W - PAD.r} y1={chart.y(chart.yMax * t)} y2={chart.y(chart.yMax * t)} stroke="var(--line-soft)" />
@@ -107,10 +118,11 @@ export default function BreakEven() {
             </g>
           )}
           <line x1={chart.x(volume)} x2={chart.x(volume)} y1={PAD.t} y2={H - PAD.b} stroke="var(--ink-3)" />
-          <text x={W - PAD.r} y={PAD.t + 10} textAnchor="end" className="be-key api">
+          {/* narrow: the key sits top left, clear of the API line that ends top right */}
+          <text x={W < 480 ? PAD.l + 8 : W - PAD.r} y={PAD.t + 10} textAnchor={W < 480 ? 'start' : 'end'} className="be-key api">
             API
           </text>
-          <text x={W - PAD.r} y={PAD.t + 26} textAnchor="end" className="be-key self">
+          <text x={W < 480 ? PAD.l + 8 : W - PAD.r} y={PAD.t + 26} textAnchor={W < 480 ? 'start' : 'end'} className="be-key self">
             Self-hosted (whole servers)
           </text>
         </svg>

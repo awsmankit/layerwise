@@ -112,7 +112,7 @@ export default function NextToken() {
 
         {dist ? (
           <>
-            <p className="viz-title">What could come next? Click a word, or let chance pick.</p>
+            <p className="viz-title">What could come next? Tap a word, or let chance pick.</p>
             <ul className="nt-bars">
               <AnimatePresence initial={false}>
                 {dist.map(([t, p]) => (

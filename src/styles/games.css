@@ -9,6 +9,11 @@
   font-family: inherit;
   color: inherit;
 }
+/* buttons do not inherit font size, so option titles were 13px */
+.gm button,
+button.gm-opt {
+  font-size: 1rem;
+}
 
 /* ---------- level picker ---------- */
 
@@ -211,6 +216,11 @@
 .gm-opt.is-wrong {
   border-color: var(--line-soft);
   opacity: 0.55;
+}
+/* in a lesson quiz, is-wrong marks the answer the learner picked: keep it clearly visible */
+.qz .gm-opt.is-wrong {
+  border-color: var(--warn);
+  opacity: 1;
 }
 .gm-opt:disabled,
 .gm-lever:disabled {
@@ -707,6 +717,10 @@
     flex-direction: column;
   }
 }
+/* the phone result bar (GameDock); wide screens have the side panel in view */
+.gm-dock {
+  display: none;
+}
 @media (max-width: 720px) {
   .game-row {
     grid-template-columns: 1fr;
@@ -716,6 +730,83 @@
   }
   .gm-level {
     border-bottom: 1px solid var(--line-soft);
+  }
+  /* a long level list (Incident Room has ten) goes two across, so the game starts sooner */
+  .gm-levels:has(> .gm-level:nth-child(5)) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 0.9rem;
+  }
+  .gm-levels:has(> .gm-level:nth-child(5)) .gm-level {
+    padding-right: 0;
+  }
+  .gm-levels:has(> .gm-level:nth-child(5)) .gm-level-t {
+    font-size: 0.95rem;
+  }
+  .inc-mode input {
+    width: 20px;
+    height: 20px;
+    flex: none;
+    margin-top: 0;
+  }
+  /* the result bar: stuck to the bottom while the choices scroll past, then it settles
+     at the end of them, just above the full panel */
+  .gm-dock {
+    position: sticky;
+    bottom: 0.5rem;
+    z-index: 5;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.1rem 0.75rem;
+    margin-top: 0.6rem;
+    padding: 0.45rem 0.65rem;
+    background: color-mix(in srgb, var(--surface) 94%, transparent);
+    backdrop-filter: blur(8px);
+    border: 2px solid var(--ink);
+    border-radius: var(--r-sm);
+    box-shadow: 3px 3px 0 var(--shadow-ink);
+    font-size: 0.84rem;
+    line-height: 1.35;
+    color: var(--ink-2);
+  }
+  .gm-dock-i {
+    white-space: nowrap;
+  }
+  .gm-dock-i i {
+    margin-right: 0.2rem;
+    font-style: normal;
+    font-weight: 800;
+  }
+  .gm-dock-i.ok i {
+    color: var(--ok);
+  }
+  .gm-dock-i.bad i,
+  .gm-dock-i.bad b {
+    color: var(--warn);
+  }
+  .gm-dock-i b {
+    display: inline-block;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  /* a met target only needs its tick; a missed one shows the target to aim for */
+  .gm-dock-i.ok small {
+    display: none;
+  }
+  .gm-dock-i small {
+    margin-left: 0.2rem;
+    font-size: 0.75rem;
+    color: var(--ink-3);
+  }
+}
+/* a changed number gives a small pop, unless the reader asked for less motion */
+@media (max-width: 720px) and (prefers-reduced-motion: no-preference) {
+  .gm-dock-i b {
+    animation: gm-dock-pop 0.35s var(--pop);
+  }
+}
+@keyframes gm-dock-pop {
+  from {
+    transform: scale(1.25);
   }
 }
 

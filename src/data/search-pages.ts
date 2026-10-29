@@ -23,5 +23,6 @@ export const searchPages: SearchItem[] = [
   { t: 'Learning videos', u: '/watch/', k: 'Page', s: 'YouTube videos and courses by well-known creators for every lesson, from AI basics to GPUs and cloud, plus longer courses on transformers, RAG, evals and MCP.' },
   { t: 'Interview prep', u: '/interview/', k: 'Page', s: 'Practise AI interviews or run them with a shared rubric.' },
   { t: 'Your progress', u: '/progress/', k: 'Page', s: 'Lessons done, quiz scores, revision and a mixed review. Copy a link or download a file to move it to another device.' },
+  { t: 'Certificates', u: '/certificate/', k: 'Page', s: 'Finish every lesson in a learning path and download or print a certificate with your name on it.' },
   { t: 'For teachers', u: '/teach/', k: 'Page', s: 'Course plans and classroom activities.' },
 ];

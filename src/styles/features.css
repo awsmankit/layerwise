@@ -201,6 +201,8 @@ kbd {
 }
 .sp-kind.k-interview {
   background: #ffe2b8;
+  /* a fixed light fill, so fixed dark text: in the dark theme --ink is light */
+  color: #15123d;
 }
 .sp-kind.k-page,
 .sp-kind.k-news {
@@ -228,6 +230,43 @@ kbd {
   border-top: 1px solid var(--line-soft);
   font-size: 0.8rem;
   color: var(--ink-3);
+}
+.sp-close {
+  display: none;
+}
+/* Touch screens: a Close button instead of key hints, the palette near the top so the
+   results sit above the on-screen keyboard, and long titles kept to three lines. */
+@media (hover: none) and (pointer: coarse) {
+  .sp-esc,
+  .sp-foot {
+    display: none;
+  }
+  .sp-close {
+    display: inline-block;
+    flex: none;
+    margin: -0.5rem -0.6rem -0.5rem 0;
+    padding: 0.6rem 0.7rem;
+    background: none;
+    border: 0;
+    color: var(--signal-ink);
+    font: inherit;
+    font-weight: 650;
+    cursor: pointer;
+  }
+}
+@media (max-width: 640px) {
+  .sp-backdrop {
+    padding-top: 0.75rem;
+  }
+  .sp {
+    max-height: calc(100dvh - 1.5rem);
+  }
+  .sp-text b {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 }
 
 /* ---------- continue card (home hero) ---------- */
@@ -1348,4 +1387,52 @@ html[data-depth='essentials'] .deep {
 }
 .lesson-watch a.wv-lesson-link:hover {
   text-decoration: underline;
+}
+
+/* ---------- phones: touch targets ---------- */
+
+/* Small links get a taller tap area. The padding is cancelled by an equal negative
+   margin, so nothing moves; on inline links the padding never moved anything. */
+@media (max-width: 760px) {
+  .lp-card-col span > a:not([class]),
+  .lp-card-col h3 > a,
+  .lp-card-col p > a,
+  .eco-card a:not(.btn),
+  .wv-jump a,
+  .wv-lesson li > a:not(.wv-lesson-link),
+  .pg-path a {
+    padding-block: 0.6rem;
+    margin-block: -0.6rem;
+  }
+  .lesson-watch.wv-lesson a.wv-lesson-link {
+    padding-block: 0.5rem;
+    margin-block: -0.5rem -0.3rem;
+  }
+  .pg-tracks a,
+  .crumbs a {
+    padding-block: 0.35rem;
+    margin-block: -0.35rem;
+  }
+  .site-header .brand {
+    padding-block: 0.45rem;
+  }
+  a.lp-chip {
+    padding-block: 0.5rem;
+  }
+  .gl-letters {
+    gap: 0.4rem;
+  }
+  .gl-letters a {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+  .gl-basic {
+    min-height: 2.75rem;
+  }
+  .gl-basic input,
+  .lp-card-col input[type='checkbox'] {
+    width: 20px;
+    height: 20px;
+    flex: none;
+  }
 }

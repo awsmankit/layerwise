@@ -62,6 +62,11 @@ export default function PathNext({ current, lessons }: { current: string; lesson
         <b>{nextTitle}</b>
         {nextNote && next ? <small>{nextNote}</small> : null}
       </a>
+      {!next && (
+        <a className="path-next-cert" href={withBase(`/certificate/#${path.id}`)}>
+          Get your certificate →
+        </a>
+      )}
     </aside>
   );
 }
