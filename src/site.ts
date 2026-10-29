@@ -7,18 +7,16 @@ export const site = {
   contentLicence: { label: 'CC BY 4.0', url: 'https://creativecommons.org/licenses/by/4.0/' },
 };
 
-export const nav = [
+/** The header holds five places; games, calculators and the glossary sit under Practice and in the footer. */
+export const nav: { href: string; label: string; also?: string[] }[] = [
   { href: '/start/', label: 'Start' },
-  { href: '/learn/', label: 'Learn' },
-  { href: '/practice/', label: 'Practice' },
-  { href: '/play/', label: 'Games' },
-  { href: '/tools/', label: 'Calculators' },
+  { href: '/learn/', label: 'Learn', also: ['/glossary/'] },
+  { href: '/practice/', label: 'Practice', also: ['/play/', '/tools/'] },
   { href: '/interview/', label: 'Interviews' },
-  { href: '/glossary/', label: 'Glossary' },
   { href: '/pulse/', label: 'News' },
 ];
 
-export const footerNav = [...nav, { href: '/cases/', label: 'Case studies' }, { href: '/watch/', label: 'Further watching' }, { href: '/progress/', label: 'Your progress' }, { href: '/teach/', label: 'For teachers' }, { href: '/about/', label: 'About' }];
+export const footerNav = [...nav, { href: '/play/', label: 'Games' }, { href: '/tools/', label: 'Calculators' }, { href: '/glossary/', label: 'Glossary' }, { href: '/cases/', label: 'Case studies' }, { href: '/watch/', label: 'Further watching' }, { href: '/progress/', label: 'Your progress' }, { href: '/teach/', label: 'For teachers' }, { href: '/about/', label: 'About' }];
 
 /** Link groups for the footer, with the page each one opens. */
 export const footerGroups = [

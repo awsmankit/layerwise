@@ -93,7 +93,7 @@ const trackStyle = track ? `--track:${track.color};--on-track:${track.on}` : und
         <nav class="nav" id="site-nav" aria-label="Main">
           {
             nav.map((item) => (
-              <a href={withBase(item.href)} aria-current={path.startsWith(withBase(item.href)) ? 'page' : undefined}>
+              <a href={withBase(item.href)} aria-current={[item.href, ...(item.also ?? [])].some((h) => path.startsWith(withBase(h))) ? 'page' : undefined}>
                 {item.label}
               </a>
             ))
