@@ -522,3 +522,48 @@
     transform: none;
   }
 }
+
+/* the one-tap start for complete beginners, under the hero buttons */
+.lp-newbie {
+  flex-basis: 100%;
+  padding-block: 0.5rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--ink);
+  text-decoration-color: var(--signal);
+  text-underline-offset: 4px;
+}
+
+/* Phones: cards become compact rows (icon left, text right), so the page is
+   about half as long and every section is still there. Column cards (libraries,
+   cases, videos, labs) hold more than an icon and a title, so they stay columns. */
+@media (max-width: 620px) {
+  .lp-grid {
+    gap: 0.7rem;
+  }
+  .lp-card:not(.lp-card-row):not(.lp-card-col) {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 0.35rem 0.85rem;
+    padding: 0.8rem 0.95rem;
+  }
+  .lp-card:not(.lp-card-row):not(.lp-card-col) .lp-plate {
+    grid-row: 1 / span 2;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+  }
+  .lp-card:not(.lp-card-row):not(.lp-card-col) .lp-plate svg {
+    width: 32px;
+    height: 32px;
+  }
+  .lp-card:not(.lp-card-row):not(.lp-card-col) .lp-chip {
+    grid-column: 2;
+    justify-self: start;
+    margin-top: 0;
+  }
+  .lp-body h3 {
+    font-size: 1.08rem;
+  }
+}

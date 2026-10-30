@@ -16,7 +16,7 @@ export type Watch = {
   note?: string;
 };
 
-export const watchChecked = '2026-10-27';
+export const watchChecked = '2026-10-30';
 
 export const topicLabels: Record<string, string> = {
   transformers: 'Transformers',
@@ -42,7 +42,7 @@ export const watch: Watch[] = [
 
   {
     creator: 'Rohit Negi',
-    title: 'What are Vectors | Vector Embedding and Vector Database | GenAI Full Course #6',
+    title: 'What are Vectors | Vector Embedding and Vector Database | | GenAI Full Course #6',
     url: 'https://www.youtube.com/watch?v=JsGwjwnl4hY',
     kind: 'video',
     topic: 'embeddings',
@@ -50,7 +50,7 @@ export const watch: Watch[] = [
   },
   {
     creator: 'Rohit Negi',
-    title: 'What is Vector Database | Internal Implementation of Vector DataBase | GenAI Full Course #7',
+    title: 'What is Vector Database | Internal Implementation of Vector DataBase | | GenAI Full Course #7',
     url: 'https://www.youtube.com/watch?v=lvH_zPj2o04',
     kind: 'video',
     topic: 'embeddings',
@@ -67,14 +67,14 @@ export const watch: Watch[] = [
 
   {
     creator: 'Rohit Negi',
-    title: 'What is Retrieval Augmented Generation (RAG) | What is LangChain | GenAI Full Course #8',
+    title: 'What is Retrieval Augmented Generation (RAG) | What is LangChain  | GenAI Full Course #8',
     url: 'https://www.youtube.com/watch?v=4Ax77tnW0e8',
     kind: 'video',
     topic: 'rag',
   },
   {
     creator: 'CampusX',
-    title: 'Retrieval Augmented Generation | What is RAG | How does RAG Work | RAG Explained',
+    title: 'Retrieval Augmented Generation | What is RAG | How does RAG Work | RAG Explained | CampusX',
     url: 'https://www.youtube.com/watch?v=X0btK9X0Xnk',
     kind: 'video',
     topic: 'rag',
@@ -97,14 +97,14 @@ export const watch: Watch[] = [
 
   {
     creator: 'Krish Naik',
-    title: 'Building Ai agents With Microsoft Foundry - Build, Govern AI Apps And Agents at Scale',
+    title: 'Building Ai agents With Microsoft Foundry- Build ,Govern AI Apps And Agents at Scale',
     url: 'https://www.youtube.com/watch?v=ZP_U8eKBy2g',
     kind: 'video',
     topic: 'cloud',
   },
   {
     creator: 'Solved Systems',
-    title: 'Azure AI Foundry Playlist | Learn AI on Microsoft Azure',
+    title: '🌐 Azure AI Foundry Playlist | Learn AI on Microsoft Azure',
     url: 'https://www.youtube.com/playlist?list=PLKN5-zCKJG7w-3gXIVptJV7sSi7fbQoBE',
     kind: 'playlist',
     topic: 'cloud',
@@ -121,7 +121,7 @@ export const watch: Watch[] = [
 
   {
     creator: 'Satyajit Pattnaik',
-    title: 'Want to Master Gen AI Models? Watch This RAGAs Evaluation Now | RAGAs Framework',
+    title: 'Want to Master Gen AI Models? Watch This RAGAs Evaluation Now | RAGAs Framework | Satyajit Pattnaik',
     url: 'https://www.youtube.com/watch?v=J3M95E0LQl8',
     kind: 'video',
     topic: 'evals',
@@ -146,7 +146,7 @@ export const watch: Watch[] = [
 
   {
     creator: 'Defronix Academy',
-    title: 'Day-54 LLM Attacks & Prompt Injection Part 1 - Bug Bounty Free Course',
+    title: 'Day-54 LLM Attacks & Prompt Injection Part 1 - Bug Bounty Free Course [ Hindi ]',
     url: 'https://www.youtube.com/watch?v=DANRXYsT4Bs',
     kind: 'video',
     topic: 'security',
@@ -155,7 +155,7 @@ export const watch: Watch[] = [
   },
   {
     creator: 'Sunny Savita',
-    title: 'Guardrails for LLM Applications | Complete Tutorial for AI Developers With Guardrails AI',
+    title: 'Guardrails for LLM Applications | Complete Tutorial for AI Developers WIth Guardrails AI',
     url: 'https://www.youtube.com/watch?v=7V1w5gnZ-kw',
     kind: 'video',
     topic: 'security',
@@ -187,7 +187,7 @@ export const watch: Watch[] = [
   },
   {
     creator: 'Krish Naik',
-    title: 'All You Need To Know About Model Context Protocol (MCP)',
+    title: 'All You Need To Know About Model Context Protocol(MCP)',
     url: 'https://www.youtube.com/watch?v=-UQ6OZywZ2I',
     kind: 'video',
     topic: 'mcp',

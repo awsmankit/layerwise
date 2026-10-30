@@ -1,5 +1,6 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
 import { tracks } from '../data/tracks';
+import { shortDay } from './dates';
 
 export type Lesson = CollectionEntry<'lessons'>;
 
@@ -36,5 +37,5 @@ export async function getPulse() {
   return all.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 }
 
-export const formatDate = (d: Date) =>
-  d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+/** "14 Sep 2025", the same in pages and in islands */
+export const formatDate = (d: Date) => shortDay(d.toISOString());

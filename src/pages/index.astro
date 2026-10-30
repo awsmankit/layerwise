@@ -21,6 +21,8 @@ import { getLessons, formatDate } from '../lib/content';
 import headlines from '../data/headlines.json';
 
 const lessons = await getLessons();
+const first = paths.newcomer.steps[0];
+const firstLesson = first.kind === 'lesson' ? first.key : 'start/what-is-ai-in-plain-english';
 const videoCount = new Set([...watch.map((w) => w.url), ...Object.values(lessonVideos).flat().map((v) => v.url)]).size;
 const latest = headlines.items.slice(0, 5);
 const featuredLabs = ['cosine-search', 'chunk-overlap', 'tool-loop'].map((id) => labById(id)).filter((l) => l !== undefined);
@@ -58,6 +60,7 @@ const tools = [
         <div class="lp-hero-cta">
           <a class="btn" href={withBase('/start/')}>Find your starting point</a>
           <a class="btn quiet" href={withBase('/learn/')}>Browse lessons</a>
+          <a class="lp-newbie" href={withBase(`/learn/${firstLesson}/`)}>New to AI? Start with lesson 1 →</a>
         </div>
       </div>
       <ContinueCard client:load />

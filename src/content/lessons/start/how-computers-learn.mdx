@@ -15,6 +15,7 @@ sources:
 ---
 
 import FruitSort from '../../../components/viz/FruitSort.tsx';
+import DoodleTrainer from '../../../components/viz/DoodleTrainer.tsx';
 import Deep from '../../../components/ui/Deep.astro';
 
 How did you learn what a dog looks like? Nobody gave you a list of rules. You saw lots of dogs, big and small, and your brain worked it out.
@@ -52,6 +53,14 @@ Getting the examples right is not enough. A good rule must also work on fruit it
 Press "Try it on new fruit". Two new fruit are sorted correctly. But a small 10 cm banana is wrong. The computer never saw a banana that short.
 
 Now press "Add the small banana to the examples", then let it learn again. The dial moves down, and the small banana is now sorted correctly too.
+
+## Now teach it yourself
+
+This time you make the examples. Pick two things, then draw about five of each and save them. Then press "Test it", draw a new one, and see what the computer guesses.
+
+Look at the drawings it says yours looks most like. It has no rules, only your examples. If it gets one wrong, give it more examples, or more different ones, and try again.
+
+<DoodleTrainer client:visible />
 
 ## Only as good as its examples
 

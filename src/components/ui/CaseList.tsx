@@ -3,6 +3,7 @@ import { Root } from '../viz/shared';
 import { Glyph, type GlyphName } from '../viz/glyphs';
 import { cardStyle } from '../../lib/color';
 import { withBase } from '../../lib/url';
+import { monthYear } from '../../lib/dates';
 import { cases, topicLabels, type Case, type CaseTopic } from '../../data/cases';
 import { cycleSwatch } from '../../lib/palette';
 import { logos } from '../../data/logos';
@@ -22,10 +23,6 @@ const glyphs: Record<CaseTopic, GlyphName> = {
 /** cardStyle() gives a style attribute string; React wants an object. */
 function styleObject(css: string): CSSProperties {
   return Object.fromEntries(css.split(';').map((d) => d.split(':'))) as CSSProperties;
-}
-
-function month(date: string): string {
-  return new Date(`${date}T00:00:00Z`).toLocaleDateString('en-GB', { month: 'short', year: 'numeric', timeZone: 'UTC' });
 }
 
 const topics = Object.keys(topicLabels) as CaseTopic[];
@@ -139,7 +136,7 @@ export default function CaseList() {
               </span>
               <span className="lp-body">
                 <h3 style={{ fontSize: '1.05rem' }}>{c.company}</h3>
-                <p style={{ margin: 0 }}>{c.date ? month(c.date) : 'Date not shown on the page'}</p>
+                <p style={{ margin: 0 }}>{c.date ? monthYear(c.date) : 'Date not shown on the page'}</p>
               </span>
             </header>
             <span className="lp-body">

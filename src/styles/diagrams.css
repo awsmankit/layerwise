@@ -585,3 +585,376 @@
     min-height: 40px;
   }
 }
+
+/* DoodleTrainer: "teach the computer your drawings" in the "how computers learn" lesson.
+   A square drawing pad, saved examples as small thumbnails, and a guess that shows
+   the three most similar examples. Everything is hairline-outlined and themed. */
+.dg .btn {
+  min-height: 44px;
+}
+.dg-step {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin: 1.1rem 0 0.6rem;
+  font-weight: 600;
+}
+.dg-step b {
+  color: var(--signal-ink);
+}
+.dg-n {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--ink-2);
+  transform: translateY(-0.1rem);
+}
+.dg-pick .dg-step {
+  margin-top: 0;
+}
+.dg-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.viz .dg-chip {
+  min-height: 44px;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font: 600 0.92rem var(--font-display);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.dg-chip:hover {
+  border-color: var(--signal);
+}
+.viz .dg-chip[aria-pressed='true'] {
+  background: var(--signal);
+  border-color: var(--signal);
+  color: var(--on-signal);
+}
+.dg-chip:focus-visible,
+.dg-thumb:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.dg-own {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.6rem 1rem;
+  margin-top: 0.7rem;
+  max-width: 26rem;
+}
+.dg-field {
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.88rem;
+  color: var(--ink-2);
+}
+.dg-field input {
+  min-width: 0;
+  min-height: 44px;
+  padding: 0.4rem 0.6rem;
+  font: 1rem var(--font-display);
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+}
+.dg-field input:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 1px;
+}
+
+.dg-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
+  gap: 1rem 1.6rem;
+  align-items: start;
+}
+.dg-padcol,
+.dg-side {
+  min-width: 0;
+}
+.dg-pad {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+}
+.dg-canvas {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  cursor: crosshair;
+  /* drawing must not scroll or zoom the page, or select text on a long press */
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.dg-here {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  font-size: 0.95rem;
+  color: var(--ink-3);
+}
+.dg-tools {
+  margin-top: 0.7rem;
+}
+
+.dg-say {
+  min-height: 3em;
+  margin: 0 0 0.8rem;
+}
+.dg-say p {
+  margin: 0;
+}
+.dg-feedback {
+  margin-top: 0.6rem !important;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--ok);
+  border-radius: 4px;
+  background: var(--tint-mint);
+}
+.dg-feedback.is-wrong {
+  border-left-color: var(--warn);
+  background: var(--tint-pink);
+}
+.dg-row {
+  margin-bottom: 0.7rem;
+}
+.dg-row-head {
+  margin: 0 0 0.35rem;
+  font-size: 0.92rem;
+  color: var(--ink-2);
+}
+.dg-row-head b {
+  color: var(--ink);
+}
+.dg-need {
+  color: var(--ink-3);
+}
+/* .viz raises specificity above the lesson's own list spacing */
+.viz .dg-thumbs,
+.viz .dg-near {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.viz .dg-thumbs {
+  min-height: 52px;
+  padding-top: 7px; /* room for the delete badges */
+}
+.viz .dg-thumbs > li,
+.viz .dg-near > li {
+  margin: 0;
+}
+.dg-empty {
+  align-self: center;
+  font-size: 0.85rem;
+  color: var(--ink-3);
+}
+.dg-thumb {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  padding: 5px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+}
+button.dg-thumb {
+  cursor: pointer;
+}
+button.dg-thumb:hover {
+  border-color: var(--warn);
+}
+.dg-del {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface);
+  font-size: 13px;
+  line-height: 1;
+  color: var(--ink-3);
+}
+button.dg-thumb:hover .dg-del {
+  border-color: var(--warn);
+  color: var(--warn);
+}
+.dg-doodle {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.dg-doodle polyline {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.dg-doodle circle {
+  fill: currentColor;
+}
+.dg-tip {
+  margin: 0.4rem 0 0.6rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--cost);
+  border-radius: 4px;
+  background: var(--tint-sun);
+  font-size: 0.92rem;
+}
+.dg-note {
+  margin: 0.5rem 0 0;
+  font-size: 0.88rem;
+  color: var(--ink-3);
+}
+
+.dg-result {
+  padding: 0.8rem 0.9rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--tint-lilac);
+}
+.dg-guess {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 650;
+}
+.dg-guess b {
+  color: var(--signal-ink);
+}
+.dg-say .dg-sure {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin: 0.2rem 0 0;
+  font-size: 0.9rem;
+  color: var(--ink-2);
+}
+.dg-dots {
+  flex: none;
+  display: inline-flex;
+  gap: 3px;
+}
+.dg-dots i {
+  width: 10px;
+  height: 10px;
+  border: 1px solid var(--signal);
+  border-radius: 50%;
+}
+.dg-dots i.on {
+  background: var(--signal);
+}
+.dg-label {
+  margin: 0 0 0.4rem;
+  font-size: 0.9rem;
+}
+.dg-near li {
+  display: grid;
+  justify-items: center;
+  gap: 0.2rem;
+  width: 72px;
+}
+.dg-thumb-lg {
+  width: 64px;
+  height: 64px;
+  padding: 7px;
+}
+.dg-near .is-same .dg-thumb {
+  border-color: var(--ok);
+  border-width: 1.5px;
+}
+.dg-near .is-other .dg-thumb {
+  border-color: var(--warn);
+  border-style: dashed;
+}
+.dg-near-name {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  line-height: 1.2;
+  text-align: center;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+.dg-seen {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-top: 0.8rem;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  color: var(--ink-2);
+}
+.dg-grid {
+  flex: none;
+  display: block;
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface);
+  shape-rendering: crispEdges;
+}
+.dg-grid rect {
+  fill: var(--ink);
+}
+.dg-verdict {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+}
+.dg-verdict span {
+  margin-right: 0.2rem;
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .dg-stage {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dg-pad {
+    margin-inline: auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dg-chip,
+  .dg .btn {
+    transition: none;
+  }
+}

@@ -4,6 +4,7 @@ import { Glyph, type GlyphName } from '../viz/glyphs';
 import { cardStyle } from '../../lib/color';
 import { cycleSwatch } from '../../lib/palette';
 import { withBase } from '../../lib/url';
+import { monthYear } from '../../lib/dates';
 import { libraries, categoryLabels, type LibCategory, type Library } from '../../data/libraries';
 
 /** One hairline glyph per category. Colour comes from the palette cycle, so neighbouring cards always differ. */
@@ -26,10 +27,6 @@ const statusLabel = { active: 'Active', maintenance: 'Maintenance mode', archive
 /** cardStyle() gives a style attribute string; React wants an object. */
 function styleObject(css: string): CSSProperties {
   return Object.fromEntries(css.split(';').map((d) => d.split(':'))) as CSSProperties;
-}
-
-function month(date: string): string {
-  return new Date(`${date}T00:00:00Z`).toLocaleDateString('en-GB', { month: 'short', year: 'numeric', timeZone: 'UTC' });
 }
 
 const categories = Object.keys(categoryLabels) as LibCategory[];
@@ -103,7 +100,7 @@ function Card({ lib, index }: { lib: Library; index: number }) {
         )}
         {lib.lastRelease && (
           <span className="lp-chip" style={{ marginTop: 0 }}>
-            Release {month(lib.lastRelease)}
+            Release {monthYear(lib.lastRelease)}
           </span>
         )}
       </span>

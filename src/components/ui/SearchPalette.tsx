@@ -29,7 +29,10 @@ export default function SearchPalette() {
 
   useEffect(() => {
     const show = () => {
-      returnFocus.current = document.activeElement as HTMLElement;
+      (window as { __lwSearchPending?: boolean }).__lwSearchPending = false;
+      const from = document.activeElement as HTMLElement | null;
+      // the header button parks focus on a hidden stand-in field (for the iOS keyboard); return to the button instead
+      returnFocus.current = from?.id === 'search-proxy' ? document.getElementById('search-open') : from;
       setOpen(true);
     };
     const onKey = (e: KeyboardEvent) => {
@@ -44,6 +47,8 @@ export default function SearchPalette() {
     };
     window.addEventListener(OPEN_EVENT, show);
     window.addEventListener('keydown', onKey);
+    // the header button was tapped before this island loaded
+    if ((window as { __lwSearchPending?: boolean }).__lwSearchPending) show();
     return () => {
       window.removeEventListener(OPEN_EVENT, show);
       window.removeEventListener('keydown', onKey);

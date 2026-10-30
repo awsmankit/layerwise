@@ -760,6 +760,7 @@ button.gm-opt {
     margin-top: 0.6rem;
     padding: 0.45rem 0.65rem;
     background: color-mix(in srgb, var(--surface) 94%, transparent);
+    -webkit-backdrop-filter: blur(8px); /* Safari before 18 */
     backdrop-filter: blur(8px);
     border: 2px solid var(--ink);
     border-radius: var(--r-sm);

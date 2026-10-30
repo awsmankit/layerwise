@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Root } from '../viz/shared';
+import { shortDay } from '../../lib/dates';
 
 export type Headline = { source: string; org: string; topic: string; title: string; url: string; date: string };
 
 const LIMIT = 30;
 
-const day = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 
 /**
  * Headlines copied from official feeds, newest first, with a topic filter. These are
@@ -52,7 +52,7 @@ export default function Headlines({ items, topics }: { items: Headline[]; topics
         {shown.map((h) => (
           <li key={h.url}>
             <a className="row pulse-row" href={h.url} target="_blank" rel="noopener noreferrer">
-              <span className="meta">{day(h.date)}</span>
+              <span className="meta">{shortDay(h.date)}</span>
               <div>
                 <h3>
                   {h.title}

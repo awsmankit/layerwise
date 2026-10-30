@@ -159,6 +159,7 @@ const trackStyle = track ? `--track:${track.color};--on-track:${track.on}` : und
       </div>
     </footer>
 
+    <input id="search-proxy" type="search" tabindex="-1" aria-hidden="true" autocomplete="off" style="position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;font-size:16px;border:0;padding:0;pointer-events:none" />
     <SearchPalette client:idle />
 
     <script>
@@ -187,9 +188,17 @@ const trackStyle = track ? `--track:${track.color};--on-track:${track.on}` : und
           });
         }
 
-        /* search button opens the palette island */
+        /* search button opens the palette island. iOS only raises the keyboard for
+           focus given inside the tap itself, so a stand-in field takes focus now and the
+           palette moves it to its own input once drawn. A tap before the island has
+           loaded is remembered, and the palette opens as soon as it is ready. */
         var s = document.getElementById('search-open');
-        if (s) s.addEventListener('click', function () { window.dispatchEvent(new Event('layerwise:search-open')); });
+        if (s) s.addEventListener('click', function () {
+          var proxy = document.getElementById('search-proxy');
+          if (proxy) proxy.focus({ preventScroll: true });
+          window.__lwSearchPending = true;
+          window.dispatchEvent(new Event('layerwise:search-open'));
+        });
 
         /* mobile menu */
         var m = document.getElementById('menu-toggle');

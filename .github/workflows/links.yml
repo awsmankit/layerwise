@@ -1,6 +1,6 @@
 name: Check links weekly
 
-# Every Monday, check the links that lessons, case studies and the libraries map depend on.
+# Every Monday, check the links that lessons, case studies, the libraries map and the videos depend on.
 # If any are broken, open an issue (or add a comment to the open one) so they get fixed.
 # Links a site refuses to serve to scripts (403, 406, 429) are listed as "blocked", not broken.
 
@@ -25,7 +25,7 @@ jobs:
         with:
           node-version: 24
 
-      - name: Check lesson sources, case studies and libraries
+      - name: Check lesson sources, case studies, libraries and videos
         id: check
         run: |
           set +e
@@ -38,6 +38,9 @@ jobs:
             echo
             echo "## Libraries"
             node scripts/check-libraries.mjs
+            echo
+            echo "## YouTube videos"
+            node scripts/check-videos.mjs
           } > report.md 2>&1
           cat report.md
           if grep -qE '^(BROKEN|ARCHIVED)' report.md; then echo "broken=true" >> "$GITHUB_OUTPUT"; fi
