@@ -1,0 +1,120 @@
+---
+title: "Backpropagation from scratch: the chain rule on a graph"
+track: deep-learning
+level: intermediate
+order: 3
+summary: "Follow the chain rule through a small computational graph, forward and then backward, then write a tiny autograd engine in Python in the browser and train a neuron with it."
+updated: 2026-11-01
+sources:
+  - label: "micrograd: a tiny scalar-valued autograd engine (Andrej Karpathy, MIT licence)"
+    url: https://github.com/karpathy/micrograd
+  - label: "Neural Networks: Zero to Hero, lecture 1 on micrograd (Andrej Karpathy)"
+    url: https://karpathy.ai/zero-to-hero.html
+  - label: "CS231n: Backpropagation, intuitions"
+    url: https://cs231n.github.io/optimization-2/
+  - label: "Calculus on Computational Graphs: Backpropagation (Chris Olah)"
+    url: https://colah.github.io/posts/2015-08-Backprop/
+  - label: "Dive into Deep Learning, 5.3 Forward propagation, backward propagation and computational graphs"
+    url: https://d2l.ai/chapter_multilayer-perceptrons/backprop.html
+  - label: "PyTorch tutorial: A gentle introduction to torch.autograd"
+    url: https://pytorch.org/tutorials/beginner/blitz/autograd_tutorial.html
+  - label: "Automatic differentiation in machine learning: a survey (Baydin et al.)"
+    url: https://arxiv.org/abs/1502.05767
+---
+
+import GraphWalk from '../../../components/viz/GraphWalk.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+Every training method in [How a model learns](../../foundations/how-models-learn/) and [Training deep networks](../training-deep-networks/) needs one thing from the network: the gradient of the loss with respect to every weight. **Backpropagation** is the method that computes all of them in a single sweep. It is the chain rule from school calculus, organised so a computer can apply it to a network with billions of weights. This lesson builds it up in three steps: the rule, a graph you can step through, and a working engine you write yourself.
+
+The engine follows the idea of Andrej Karpathy's micrograd and his video lecture on it, which are the best-known way to learn this. The code and explanations here are written independently; credit for the idea and the name goes to him.
+
+## The chain rule in one example
+
+Suppose the output depends on x in two stages: first g = 2x + 1, then y = tanh(g). How fast does y change when x changes? The chain rule says to multiply the rates of the two stages: how fast y changes with g, times how fast g changes with x.
+
+At x = 0.5: g = 2, and y = tanh(2) = 0.964. The slope of tanh at that point is 1 − 0.964² = 0.0707, and g changes 2 units per unit of x. So y changes by 0.0707 × 2 = 0.141 per unit of x. Each stage only needs to know its own local slope. The product does the rest.
+
+## Everything is a graph of small operations
+
+A network's calculation, however large, is made of tiny steps: add, multiply, tanh, and a few others. Draw each result as a node, with arrows from the values it was made from. This is a **computational graph**. Each node needs to know two things: its value, and its **local derivative**, meaning how much its output changes if one input changes a little, with the others held still.
+
+| Operation | Result | Local derivative for each input |
+|---|---|---|
+| Add | x + y | 1 for x, 1 for y |
+| Multiply | x × y | y for x, x for y (each input's slope is the other input's value) |
+| tanh | tanh(x) | 1 − tanh(x)², written with the output t as 1 − t² |
+
+Backpropagation then runs in two passes. The **forward pass** computes every value, in order, from the inputs to the output. The **backward pass** starts at the output with a gradient of 1 and walks back: at each node, the gradient arriving from its result is multiplied by the node's local derivative and handed to each input.
+
+## Step through it
+
+The graph below is p = a × b, then q = p + a, then r = tanh(q). Use the button to move one step at a time: three steps forward, then four backward. Change a and b with the sliders.
+
+<GraphWalk client:visible />
+
+With the starting values (a = 0.5, b = −1.5) the forward pass gives p = −0.75, q = −0.25 and r = −0.245. Going back, tanh's slope is 1 − 0.245² = 0.940, so q and p each get a gradient of 0.940. Multiplication hands a the value of b times that, which is −1.5 × 0.940 = −1.410, and gives b the value of a times it, 0.5 × 0.940 = 0.470.
+
+Look at a. It also feeds the addition directly, and that route delivers its own 0.940. The two routes **accumulate**: a.grad = 0.940 + (−1.410) = −0.470. This is the rule that catches people out. When a value is used more than once, the gradients from every use are added together, which is why the code later uses `+=` and never `=`.
+
+A last check is worth knowing. You can estimate any gradient without calculus: nudge the input a tiny amount up and down, see how the output changes, and divide: (f(a + h) − f(a − h)) ÷ 2h. The panel at the end of the walk does this and matches backpropagation. It is the standard way to test a backpropagation implementation, and the lab below uses it too.
+
+## Why the order matters
+
+A node can pass gradients back only after it has received contributions from everything that uses it. Here, a's gradient is complete only after both the addition and the multiplication have been processed. So the backward pass visits nodes in **reverse topological order**: the reverse of any order in which every node comes after the nodes it depends on. In code you get that order for free from the forward pass by recording each node as it is made.
+
+## Why this is the method that scaled
+
+There is an obvious alternative: use the nudge test for every weight, running the network once per weight. For a model with a billion weights, that is a billion forward passes for one step. Backpropagation gets every gradient from one forward pass and one backward pass. For the matrix multiplications that dominate large networks, the backward pass costs about twice the forward pass, so a training step is roughly three times the cost of just running the model. Backpropagation also has to remember the forward values it needs, which is one reason training takes much more memory than running a model.
+
+PyTorch and other frameworks do exactly this on whole arrays of numbers instead of single numbers. The PyTorch tutorial describes it as recording operations in a directed acyclic graph and tracing it from the output back to the inputs with the chain rule. Calling `loss.backward()` in PyTorch is the same sweep you are about to write.
+
+## Write it: micrograd in under 50 lines
+
+The engine is one small class. A `Value` holds a number, its gradient, and the values it was made from. Each operation makes a new `Value` and attaches a small function that knows how to pass gradients back to its inputs:
+
+```python
+class Value:
+    def __init__(self, data, parents=()):
+        self.data = data          # the number itself
+        self.grad = 0.0           # d(output)/d(this value), filled in by backward()
+        self._parents = parents   # the values this one was made from
+        self._backward = lambda: None
+
+    def __add__(self, other):
+        other = other if isinstance(other, Value) else Value(other)
+        out = Value(self.data + other.data, (self, other))
+        def _backward():
+            ...                   # pass out.grad on to self and other
+        out._backward = _backward
+        return out
+```
+
+The lab gives you the whole class with four gaps: the backward step of addition, multiplication and tanh, and the loop in `backward()` that sets the output's gradient to 1 and calls each node's step in reverse order. Then run the checks. They compare your gradients against numerical ones on several expressions, including one where paths split and rejoin, and then train a single tanh neuron to behave like an AND gate on four points.
+
+<Callout title="The lab runs in your browser">
+
+It uses plain Python with no libraries. If you are new to Python, [Python first steps](../../skills/python-first-steps/) covers what you need: functions, lists and classes. The solution is behind a button, after you have run your code once.
+
+</Callout>
+
+In the finished engine, the neuron's loss falls from about 4.05 at step 0 to about 0.24 at step 10 and 0.08 at step 30. These numbers come from the lab's own training loop with fixed starting weights. Everything you have seen in this track, including [the playground](../inside-a-neural-network/) in the first lesson, is this loop at larger scale: forward, loss, backward, nudge.
+
+<Deep title="What a real framework adds, and why gradients vanish">
+
+Frameworks apply the same rules to tensors. For a matrix product `Y = X W`, the local rules become two more matrix products: the gradient for X is the incoming gradient times Wᵀ, and the gradient for W is Xᵀ times the incoming gradient. That is all a linear layer's backward pass is. They also provide hundreds of operations with their local rules written once, and they free forward values as soon as the backward pass no longer needs them.
+
+The graph also shows why deep networks can be hard to train, which [Training deep networks](../training-deep-networks/) covers. The gradient reaching an early layer is a product of local slopes along the path. tanh's slope is at most 1 and drops towards 0 for large inputs, so a long chain of saturated tanh nodes multiplies many small numbers together. Residual connections, normalisation and good initialisation all exist to keep this product from collapsing or exploding.
+
+</Deep>
+
+## What to remember
+
+- Backpropagation is the chain rule on a graph: each node multiplies the gradient it receives by its own local derivative and passes it to its inputs.
+- Add passes the gradient on unchanged, multiply swaps the inputs, and tanh scales by 1 − t².
+- When a value is used more than once, its gradients add. Nodes are processed in reverse topological order so each has all its contributions first.
+- One forward and one backward pass give every gradient. Nudging each weight in turn would need one pass per weight.
+- Compare against a numerical gradient to test any implementation.
+
+Next: [How computers see](../how-computers-see/) uses these same layers and this same training loop on images, with a layer designed for picture structure.

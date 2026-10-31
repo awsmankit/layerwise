@@ -1,0 +1,1044 @@
+/* Teacher kit: school plans, unplugged activity cards, worksheets, parents' guide, AI4K12 map.
+   Everything here is prefixed tk-. Print rules use a named A4 page so they do not change how
+   other pages print. */
+
+/* ---------- jump links on the teach page ---------- */
+
+.tk-jump {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1.4rem;
+}
+.tk-jump a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0.35rem 0.95rem;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  color: var(--ink);
+  background: var(--surface);
+}
+.tk-jump a:hover {
+  background: var(--signal-wash);
+}
+
+.tk-section {
+  padding-block: 2.8rem 0;
+  scroll-margin-top: 5rem;
+}
+.tk-section > h2 {
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  padding-bottom: 0.7rem;
+  border-bottom: 1px solid var(--ink);
+}
+.tk-lede {
+  margin-top: 0.9rem;
+  max-width: 66ch;
+  color: var(--ink-2);
+  font-size: 1.05rem;
+  line-height: 1.55;
+}
+
+/* ---------- small tags ---------- */
+
+.tk-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  list-style: none;
+  padding: 0;
+  margin: 0.6rem 0 0;
+}
+.tk-tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.7rem;
+  padding: 0.1rem 0.65rem;
+  border-radius: 999px;
+  border: 1.5px solid var(--ink);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.82rem;
+  background: var(--surface);
+  color: var(--ink);
+}
+.tk-tag-a {
+  background: var(--tint-lilac);
+}
+.tk-tag-b {
+  background: var(--tint-mint);
+}
+.tk-tag-c {
+  background: var(--tint-sun);
+}
+.tk-tag-d {
+  background: var(--tint-sky);
+}
+
+/* ---------- school course plans: the extra line under each session ---------- */
+
+.tk-plan-link {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.5rem;
+}
+.tk-band-badge {
+  display: inline-block;
+  margin-right: 0.5rem;
+  padding: 0.1rem 0.6rem;
+  border-radius: 999px;
+  border: 1.5px solid var(--ink);
+  background: var(--tint-pink);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+/* ---------- link cards (activities, worksheets) ---------- */
+
+.tk-grid {
+  list-style: none;
+  padding: 0;
+  margin: 1.4rem 0 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+  gap: 1rem;
+}
+.tk-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  height: 100%;
+  padding: 1.05rem 1.1rem 1.1rem;
+  border: 2px solid var(--ink);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  box-shadow: var(--hard);
+}
+.tk-card h3 {
+  font-size: 1.15rem;
+  line-height: 1.2;
+}
+.tk-card h3 a {
+  text-decoration: none;
+  color: inherit;
+}
+.tk-card h3 a::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+.tk-card {
+  position: relative;
+}
+.tk-card h3 a:focus-visible {
+  outline: 3px solid var(--signal);
+  outline-offset: 4px;
+  border-radius: 6px;
+}
+.tk-card:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--ink);
+}
+.tk-card p {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 0.98rem;
+  line-height: 1.45;
+}
+.tk-card .tk-meta {
+  margin-top: auto;
+  font-family: var(--font-display);
+  font-size: 0.88rem;
+  color: var(--ink-3);
+}
+
+/* ---------- the AI4K12 table ---------- */
+
+.tk-map {
+  width: 100%;
+  margin-top: 1.4rem;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+.tk-map th,
+.tk-map td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.75rem 0.8rem;
+  border-bottom: 1px solid var(--line);
+}
+.tk-map thead th {
+  font-family: var(--font-display);
+  font-size: 0.88rem;
+  border-bottom: 2px solid var(--ink);
+  background: var(--paper-2);
+}
+.tk-map thead th small {
+  display: block;
+  font-weight: 500;
+  color: var(--ink-3);
+}
+.tk-map tbody th {
+  min-width: 11rem;
+  font-family: var(--font-display);
+  font-size: 1rem;
+}
+.tk-map tbody th a {
+  color: inherit;
+}
+.tk-map tbody th small {
+  display: block;
+  margin-top: 0.3rem;
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 0.85rem;
+  color: var(--ink-3);
+}
+.tk-map ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+.tk-map .tk-act {
+  font-size: 0.88rem;
+  color: var(--ink-2);
+}
+.tk-map .tk-act::before {
+  content: 'Activity: ';
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+.tk-map .tk-none {
+  color: var(--ink-3);
+  font-style: italic;
+}
+.tk-map .tk-gap td {
+  background: var(--tint-sun);
+  color: var(--ink);
+}
+.tk-map .tk-gap td b {
+  font-family: var(--font-display);
+}
+.tk-map-note {
+  margin-top: 1rem;
+  max-width: 70ch;
+  font-size: 0.95rem;
+  color: var(--ink-2);
+  line-height: 1.5;
+}
+@media (max-width: 760px) {
+  .tk-map,
+  .tk-map thead,
+  .tk-map tbody,
+  .tk-map tr,
+  .tk-map th,
+  .tk-map td {
+    display: block;
+  }
+  .tk-map thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .tk-map tbody tr.tk-row {
+    margin-top: 1.4rem;
+    border: 2px solid var(--ink);
+    border-radius: var(--r-md) var(--r-md) 0 0;
+    border-bottom: 0;
+    background: var(--surface);
+  }
+  .tk-map tbody tr.tk-row th {
+    background: var(--tint-lilac);
+    color: var(--ink);
+    border-radius: calc(var(--r-md) - 2px) calc(var(--r-md) - 2px) 0 0;
+  }
+  .tk-map td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 0.3rem;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.82rem;
+    color: var(--ink-3);
+  }
+  .tk-map tr.tk-gap {
+    border: 2px solid var(--ink);
+    border-top: 0;
+    border-radius: 0 0 var(--r-md) var(--r-md);
+    overflow: hidden;
+  }
+}
+
+/* ---------- activity card pages and worksheet pages share these ---------- */
+
+.tk-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+  margin: 1.4rem 0 0;
+}
+.tk-bar .btn {
+  min-height: 2.75rem;
+}
+.tk-crumbs {
+  margin: 1.8rem 0 0;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+}
+.tk-crumbs a {
+  color: var(--ink-2);
+}
+
+.tk-page {
+  margin-top: 1.4rem;
+  padding: clamp(1rem, 3.5vw, 2rem);
+  border: 2px solid var(--ink);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  max-width: 52rem;
+}
+.tk-page > h2.tk-title,
+.tk-page > h1.tk-title {
+  font-size: clamp(1.6rem, 5vw, 2.2rem);
+  line-height: 1.1;
+}
+.tk-page h2 {
+  font-size: 1.25rem;
+  margin-top: 1.5rem;
+}
+.tk-page h3 {
+  font-size: 1.05rem;
+  margin-top: 1.1rem;
+}
+.tk-page p,
+.tk-page li {
+  line-height: 1.5;
+  font-size: 1.02rem;
+}
+.tk-page ol,
+.tk-page ul {
+  padding-left: 1.3rem;
+  margin: 0.5rem 0 0;
+  display: grid;
+  gap: 0.45rem;
+}
+.tk-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+  gap: 0.6rem;
+  margin: 1rem 0 0;
+  padding: 0;
+}
+.tk-facts div {
+  padding: 0.5rem 0.7rem;
+  border: 1.5px solid var(--ink);
+  border-radius: var(--r-sm);
+  background: var(--paper);
+}
+.tk-facts dt {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.tk-facts dd {
+  margin: 0.15rem 0 0;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.tk-teacher {
+  margin-top: 1.6rem;
+  padding: 0.2rem 1rem 1rem;
+  border: 2px dashed var(--ink);
+  border-radius: var(--r-md);
+  background: var(--tint-sun);
+  color: var(--ink);
+}
+.tk-teacher h2,
+.tk-teacher h3 {
+  color: var(--ink);
+}
+.tk-teacher p,
+.tk-teacher li {
+  color: var(--ink);
+}
+.tk-related {
+  font-size: 0.95rem;
+}
+
+/* cut-out cards */
+
+.tk-cards h3 {
+  margin-top: 1.3rem;
+}
+.tk-cards .tk-note {
+  margin: 0.3rem 0 0;
+  font-size: 0.92rem;
+  color: var(--ink-2);
+}
+.tk-cutgrid {
+  list-style: none;
+  padding: 0;
+  margin: 0.8rem 0 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 11rem), 1fr));
+  gap: 0;
+}
+.tk-cut {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.25rem;
+  min-height: 5.5rem;
+  padding: 0.7rem 0.8rem;
+  border: 1.5px dashed var(--ink-2);
+  margin: -0.75px;
+  font-size: 1rem;
+  line-height: 1.3;
+  background: var(--surface);
+  color: var(--ink);
+}
+.tk-cut b {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  letter-spacing: 0.05em;
+  color: var(--ink-3);
+}
+.tk-cutgrid.tk-wide {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+}
+.tk-cutgrid.tk-grid-nums {
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  max-width: 26rem;
+}
+.tk-cutgrid.tk-grid-nums .tk-cut {
+  min-height: 2.6rem;
+  align-items: center;
+  text-align: center;
+  padding: 0.3rem 0;
+  font-family: var(--font-mono);
+  font-size: 1.05rem;
+  letter-spacing: 0.1em;
+}
+.tk-numrow {
+  grid-column: 1 / -1;
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
+  letter-spacing: 0.35em;
+  padding: 0.35rem 0.6rem;
+  border: 1.5px solid var(--ink-2);
+  margin: -0.75px;
+  background: var(--surface);
+}
+
+/* ---------- worksheets ---------- */
+
+.tk-sheet {
+  margin-top: 1.4rem;
+  padding: clamp(1rem, 3.5vw, 2rem);
+  border: 2px solid var(--ink);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  max-width: 52rem;
+  color: var(--ink);
+}
+.tk-sheet-head {
+  display: grid;
+  gap: 0.4rem;
+  padding-bottom: 0.8rem;
+  border-bottom: 2px solid var(--ink);
+}
+.tk-sheet-head h2 {
+  font-size: clamp(1.6rem, 5vw, 2.1rem);
+  line-height: 1.1;
+}
+.tk-sheet-head p {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 0.95rem;
+}
+.tk-name {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.6rem;
+  margin-top: 0.4rem;
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+.tk-name span {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 0.4rem;
+}
+.tk-name i {
+  display: inline-block;
+  min-width: 9rem;
+  border-bottom: 1.5px solid var(--ink);
+  height: 1.4em;
+}
+.tk-sheet h3 {
+  break-after: avoid;
+  margin-top: 1.4rem;
+  font-size: 1.2rem;
+}
+.tk-sheet h3 .tk-n {
+  display: inline-grid;
+  place-items: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  margin-right: 0.4rem;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--surface);
+  font-size: 0.95rem;
+}
+.tk-sheet p {
+  line-height: 1.5;
+}
+.tk-q {
+  list-style: none;
+  padding: 0;
+  margin: 0.7rem 0 0;
+  display: grid;
+  gap: 1rem;
+  counter-reset: tkq;
+}
+.tk-q > li {
+  counter-increment: tkq;
+  break-inside: avoid;
+  line-height: 1.45;
+}
+.tk-q > li::before {
+  content: counter(tkq) '. ';
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+.tk-lines {
+  display: block;
+  margin-top: 0.3rem;
+}
+.tk-lines i {
+  display: block;
+  height: 1.8rem;
+  border-bottom: 1px solid var(--ink-3);
+}
+.tk-answer {
+  margin-top: 0.3rem;
+  padding: 0.4rem 0.7rem;
+  border-left: 4px solid var(--ok);
+  background: var(--tint-mint);
+  color: var(--ink);
+  font-size: 0.97rem;
+}
+.tk-match {
+  list-style: none;
+  padding: 0;
+  margin: 0.7rem 0 0;
+  display: grid;
+  gap: 0.6rem;
+}
+.tk-match li {
+  display: grid;
+  grid-template-columns: 9.5rem minmax(0, 1fr);
+  gap: 0.2rem 0.9rem;
+  align-items: start;
+  line-height: 1.4;
+  break-inside: avoid;
+}
+.tk-match.tk-meanings li {
+  grid-template-columns: 1.6rem minmax(0, 1fr);
+}
+.tk-match .tk-term {
+  white-space: nowrap;
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+.tk-match .tk-term i {
+  display: inline-block;
+  min-width: 2rem;
+  margin-left: 0.3rem;
+  border-bottom: 1.5px solid var(--ink);
+  height: 1.1em;
+  vertical-align: bottom;
+}
+.tk-match .tk-letter {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+.tk-bank {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  list-style: none;
+  padding: 0;
+  margin: 0.6rem 0 0;
+}
+.tk-bank li {
+  padding: 0.1rem 0.7rem;
+  border: 1.5px solid var(--ink);
+  border-radius: 6px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  background: var(--tint-lilac);
+  color: var(--ink);
+}
+.tk-ext {
+  margin-top: 1.5rem;
+  padding: 0.8rem 1rem;
+  border: 1.5px dashed var(--ink);
+  border-radius: var(--r-sm);
+}
+.tk-keyhead {
+  display: inline-block;
+  margin-bottom: 0.4rem;
+  padding: 0.1rem 0.7rem;
+  border-radius: 999px;
+  background: var(--ok);
+  color: var(--on-signal);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+/* diagrams made from boxes, so the words are real text that wraps and prints */
+
+.tk-flow {
+  list-style: none;
+  padding: 0;
+  margin: 0.9rem 0 0;
+  display: flex;
+  align-items: stretch;
+  gap: 0.4rem;
+}
+.tk-flow > li {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0.6rem 0.7rem;
+  border: 2px solid var(--ink);
+  border-radius: var(--r-sm);
+  text-align: center;
+  font-size: 0.95rem;
+  line-height: 1.3;
+  background: var(--paper);
+  color: var(--ink);
+}
+.tk-flow > li small {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--ink-3);
+  font-size: 0.82rem;
+}
+.tk-flow > li + li::before {
+  content: '→';
+  position: absolute;
+  left: -0.95rem;
+  top: 50%;
+  width: 1.5rem;
+  transform: translateY(-50%);
+  text-align: center;
+  font-size: 1.3rem;
+  line-height: 1;
+  z-index: 1;
+}
+.tk-blank {
+  display: block;
+  margin: 0.25rem auto 0;
+  width: min(100%, 8rem);
+  min-height: 2rem;
+  border: 2px dashed var(--ink);
+  border-radius: 6px;
+  background: var(--surface);
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.8;
+  text-align: center;
+}
+.tk-blank.tk-filled {
+  border-style: solid;
+  background: var(--tint-mint);
+  color: var(--ink);
+}
+@media (max-width: 600px) {
+  .tk-flow {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .tk-flow > li + li::before {
+    content: '↓';
+    left: 50%;
+    top: -1.5rem;
+    transform: translateX(-50%);
+  }
+}
+
+.tk-tree {
+  margin: 0.9rem 0 0;
+  display: grid;
+  gap: 0.5rem;
+}
+.tk-node {
+  display: inline-block;
+  padding: 0.35rem 0.7rem;
+  border: 2px solid var(--ink);
+  border-radius: var(--r-sm);
+  background: var(--paper);
+  color: var(--ink);
+  line-height: 1.3;
+}
+.tk-branch {
+  margin-left: 1rem;
+  padding-left: 1rem;
+  border-left: 2px solid var(--ink);
+  display: grid;
+  gap: 0.55rem;
+}
+.tk-branch .tk-lbl {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: var(--ink-3);
+  margin-bottom: 0.2rem;
+}
+.tk-branch .tk-blank {
+  display: inline-block;
+  margin: 0;
+  width: 6.5rem;
+  vertical-align: middle;
+}
+
+.tk-net {
+  margin: 0.9rem 0 0;
+  display: grid;
+  gap: 0.2rem;
+  justify-items: center;
+}
+.tk-layer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+.tk-unit {
+  flex: 1 1 8.5rem;
+  max-width: 14rem;
+  padding: 0.45rem 0.6rem;
+  border: 2px solid var(--ink);
+  border-radius: var(--r-sm);
+  background: var(--paper);
+  color: var(--ink);
+  text-align: center;
+  font-size: 0.92rem;
+  line-height: 1.3;
+}
+.tk-unit b {
+  display: block;
+  font-family: var(--font-display);
+}
+.tk-layer-label {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--ink-3);
+}
+.tk-arrow {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.tk-confusion {
+  margin: 0.9rem 0 0;
+  border-collapse: collapse;
+  width: 100%;
+  max-width: 28rem;
+  text-align: center;
+}
+.tk-confusion th,
+.tk-confusion td {
+  border: 2px solid var(--ink);
+  padding: 0.55rem 0.5rem;
+  font-size: 0.95rem;
+  line-height: 1.3;
+  color: var(--ink);
+}
+.tk-confusion th {
+  background: var(--paper-2);
+  font-family: var(--font-display);
+}
+.tk-confusion td .tk-blank {
+  width: 4rem;
+}
+
+/* ---------- parents' guide and the family agreement ---------- */
+
+.tk-prose {
+  max-width: 66ch;
+}
+.tk-prose h2 {
+  margin-top: 2.2rem;
+}
+.tk-prose ul,
+.tk-prose ol {
+  padding-left: 1.3rem;
+}
+.tk-agree {
+  margin-top: 1.4rem;
+  max-width: 52rem;
+  padding: clamp(1rem, 3.5vw, 2rem);
+  border: 2px solid var(--ink);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+.tk-agree ul {
+  list-style: none;
+  padding: 0;
+  margin: 0.8rem 0 0;
+  display: grid;
+  gap: 0.7rem;
+}
+.tk-agree li {
+  display: grid;
+  grid-template-columns: 1.7rem minmax(0, 1fr);
+  gap: 0.7rem;
+  align-items: start;
+  line-height: 1.45;
+}
+.tk-agree li::before {
+  content: '';
+  width: 1.4rem;
+  height: 1.4rem;
+  margin-top: 0.1rem;
+  border: 2px solid var(--ink);
+  border-radius: 5px;
+  background: var(--surface);
+}
+.tk-agree .tk-sign {
+  margin-top: 1.4rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.6rem;
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+.tk-agree .tk-sign span {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 0.4rem;
+}
+.tk-agree .tk-sign i {
+  display: inline-block;
+  min-width: 9rem;
+  height: 1.4em;
+  border-bottom: 1.5px solid var(--ink);
+}
+.tk-sources {
+  margin-top: 1.2rem;
+  font-size: 0.95rem;
+}
+
+/* ---------- print: A4 portrait, one part per page, no site furniture ---------- */
+
+@page tkpage {
+  size: A4 portrait;
+  margin: 14mm;
+}
+
+@media print {
+  .tk-noprint,
+  .tk-jump,
+  .tk-bar,
+  .tk-crumbs {
+    display: none !important;
+  }
+  .tk-print-root {
+    page: tkpage;
+  }
+  .tk-page,
+  .tk-sheet,
+  .tk-agree {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: #fff;
+    color: #000;
+    box-shadow: none;
+  }
+  .tk-page *,
+  .tk-sheet *,
+  .tk-agree * {
+    color: #000;
+  }
+  .tk-page .tk-title,
+  .tk-sheet-head h2 {
+    font-size: 20pt;
+  }
+  .tk-page p,
+  .tk-page li,
+  .tk-sheet p,
+  .tk-sheet li,
+  .tk-agree li {
+    font-size: 10.5pt;
+    line-height: 1.4;
+  }
+  .tk-part + .tk-part,
+  .tk-sheet + .tk-sheet {
+    break-before: page;
+  }
+  .tk-part {
+    break-inside: auto;
+  }
+  .tk-teacher {
+    background: #fff;
+    border: 1.5px dashed #000;
+  }
+  .tk-teacher * {
+    color: #000;
+  }
+  .tk-cut {
+    border: 1px dashed #000;
+    background: #fff;
+    break-inside: avoid;
+    min-height: 22mm;
+  }
+  .tk-cutgrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .tk-cutgrid.tk-wide {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .tk-cutgrid.tk-grid-nums {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    max-width: 120mm;
+  }
+  .tk-cut,
+  .tk-answer,
+  .tk-tree,
+  .tk-net,
+  .tk-flow,
+  .tk-confusion,
+  .tk-ext {
+    break-inside: avoid;
+  }
+  .tk-answer {
+    background: #fff;
+    border-left: 3px solid #000;
+  }
+  .tk-flow > li,
+  .tk-node,
+  .tk-unit,
+  .tk-blank,
+  .tk-bank li {
+    background: #fff !important;
+    border-color: #000;
+  }
+  .tk-blank.tk-filled {
+    background: #fff !important;
+  }
+  .tk-sheet h3 .tk-n {
+    background: #000;
+    color: #fff;
+  }
+  .tk-sheet h3 .tk-n,
+  .tk-keyhead {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .tk-keyhead {
+    background: #000;
+    color: #fff;
+  }
+  .tk-flow {
+    flex-direction: row;
+    gap: 0.4rem;
+  }
+  .tk-flow > li + li::before {
+    content: '→';
+    left: -0.95rem;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .tk-prose {
+    max-width: none;
+    font-size: 10.5pt;
+  }
+  .tk-related a[href^='http']::after,
+  .tk-sources a[href^='http']::after {
+    content: ' (' attr(href) ')';
+    font-size: 0.8em;
+    word-break: break-all;
+  }
+  .tk-prose a {
+    color: #000;
+  }
+  body[data-tk-print='agree'] .tk-part:not([data-part='agree']) {
+    display: none !important;
+  }
+
+  /* choose what to print with the buttons on the page */
+  body[data-tk-print='card'] .tk-part:not([data-part='card']),
+  body[data-tk-print='cards'] .tk-part:not([data-part='cards']),
+  body[data-tk-print='notes'] .tk-part:not([data-part='notes']),
+  body[data-tk-print='sheet'] .tk-key,
+  body[data-tk-print='key'] .tk-ws {
+    display: none !important;
+  }
+  body[data-tk-print='key'] .tk-key,
+  body[data-tk-print='sheet'] .tk-ws,
+  body[data-tk-print='card'] .tk-part[data-part='card'],
+  body[data-tk-print='cards'] .tk-part[data-part='cards'],
+  body[data-tk-print='notes'] .tk-part[data-part='notes'],
+  body[data-tk-print='agree'] .tk-part[data-part='agree'] {
+    break-before: auto !important;
+  }
+
+  /* the AI4K12 table on the teach page prints as a normal table */
+  .tk-map,
+  .tk-map thead,
+  .tk-map tbody,
+  .tk-map tr,
+  .tk-map th,
+  .tk-map td {
+    display: revert;
+  }
+  .tk-map thead {
+    position: static;
+    width: auto;
+    height: auto;
+    clip-path: none;
+  }
+  .tk-map td[data-label]::before {
+    display: none;
+  }
+  .tk-map .tk-gap td {
+    background: #fff;
+    color: #000;
+  }
+  .tk-map thead th {
+    background: #fff;
+  }
+}

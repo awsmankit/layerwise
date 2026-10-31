@@ -8,12 +8,19 @@
  * 401 and 403 mean it exists but the owner turned off embedding: listed, not broken.
  * A changed title is listed so the data can be updated, not treated as broken.
  */
-import { videosCore } from '../src/data/videos/core.ts';
-import { videosOps } from '../src/data/videos/ops.ts';
+import { readdirSync } from 'node:fs';
 import { watch } from '../src/data/watch.ts';
 
+// every video data file in src/data/videos/ (each exports one map named videos...)
+const dir = new URL('../src/data/videos/', import.meta.url);
+const lessonVideos = {};
+for (const f of readdirSync(dir).filter((f) => f.endsWith('.ts') && !/^(index|types)\.ts$|\.test\.ts$/.test(f))) {
+  const mod = await import(new URL(f, dir));
+  for (const map of Object.values(mod)) Object.assign(lessonVideos, map);
+}
+
 const items = [
-  ...Object.entries({ ...videosCore, ...videosOps }).flatMap(([lesson, list]) => list.map((v) => ({ where: lesson, title: v.title, url: v.url }))),
+  ...Object.entries(lessonVideos).flatMap(([lesson, list]) => list.map((v) => ({ where: lesson, title: v.title, url: v.url }))),
   ...watch.map((w) => ({ where: 'watch page', title: w.title, url: w.url })),
 ].filter((v) => /^https:\/\/(www\.)?youtube\.com\//.test(v.url));
 

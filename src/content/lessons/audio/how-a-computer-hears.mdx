@@ -1,0 +1,130 @@
+---
+title: How a computer hears
+track: audio
+level: basic
+order: 1
+summary: Sound is air wobbling. See how a microphone turns it into thousands of numbers a second, what 16 kHz means, why you need more than two samples per wave, and what goes wrong when you do not.
+updated: 2026-11-01
+sources:
+  - label: "Hugging Face Audio Course, Unit 1: Working with audio data"
+    url: https://huggingface.co/learn/audio-course/chapter1/audio_data
+  - label: "Whisper paper: audio is re-sampled to 16,000 Hz (Radford et al., 2022)"
+    url: https://arxiv.org/abs/2212.04356
+  - label: "MDN: Web Audio API"
+    url: https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API
+  - label: "MDN: Autoplay guide for media and Web Audio APIs"
+    url: https://developer.mozilla.org/en-US/docs/Web/Media/Guides/Autoplay
+  - label: "Wikipedia: Nyquist-Shannon sampling theorem"
+    url: https://en.wikipedia.org/wiki/Nyquist%E2%80%93Shannon_sampling_theorem
+  - label: "Wikipedia: Aliasing"
+    url: https://en.wikipedia.org/wiki/Aliasing
+  - label: "Wikipedia: Hearing range"
+    url: https://en.wikipedia.org/wiki/Hearing_range
+  - label: "Wikipedia: G.711 (telephone speech coding)"
+    url: https://en.wikipedia.org/wiki/G.711
+  - label: "Wikipedia: Compact Disc"
+    url: https://en.wikipedia.org/wiki/Compact_Disc
+  - label: "Tolerable hearing aid delays, V: open canal fittings (Stone et al., Ear and Hearing, 2008)"
+    url: https://pubmed.ncbi.nlm.nih.gov/18469715/
+---
+
+import ToneLab from '../../../components/viz/ToneLab.tsx';
+import AliasWheel from '../../../components/viz/AliasWheel.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+Words became numbers, and so did pictures. Now it is sound's turn.
+
+A computer cannot hear anything. It can only store and work with numbers. So the first job of any voice app, music app or hearing aid is to turn sound into a long list of numbers.
+
+## Sound is air wobbling
+
+When you clap, the air near your hands is squeezed and then let go. That wobble spreads out as a wave, a bit like ripples in a pond. When it reaches your ear, you hear a clap.
+
+A speaker makes the same kind of wobble on purpose. If you draw how the air pressure goes up and down over time, you get a wavy line. It is called a **waveform**.
+
+## Pitch and loudness
+
+Two things about a wave matter most. They are easy to mix up.
+
+**Pitch** is how fast the wave repeats. We count it in **hertz (Hz)**, which means wobbles per second. A slow wave is a low note. A fast wave is a high note. People can hear roughly 20 to 20,000 Hz, though it varies, and high pitches fade as we get older.
+
+**Loudness** is how tall the wave is. A tall wave pushes the air harder, so it sounds louder. Pitch and loudness are separate: you can change one and leave the other alone.
+
+## From wobble to numbers
+
+A microphone has a thin part that moves when the air wobbles. It turns that movement into a tiny electric signal that goes up and down like the wave.
+
+A computer cannot store a smooth signal. So it measures the signal again and again, very fast. Each measurement is one number, called a **sample**. A list of samples is the sound, as far as the computer is concerned.
+
+How many measurements per second is the **sampling rate**. A rate of 16,000 means 16,000 numbers every second. Each measurement also needs a height, and **bit depth** is how finely that height is measured: more bits means more possible heights, so a smoother copy.
+
+## Try it: tone lab
+
+Do these steps in order. Nothing plays until you tap Play.
+
+1. Press **Play the tone** and move the pitch and volume sliders. Taller wave, louder sound. Faster wave, higher note.
+2. Look at the lower picture. The grey line is the real sound. Each blue dot is one sample.
+3. Slide **Samples per second** down. The dots spread out. When they get too far apart, the picture turns red. Read what it says.
+4. Try the bit depth buttons. With 2 or 3 bits the dots can only sit on a few lines, so the wave turns into steps.
+
+<ToneLab client:visible />
+
+## Why too slow goes wrong
+
+Look at the red line in the lab. With the dots too far apart, a slower wave fits through every dot just as well as the real one. The computer only has the dots. It cannot tell which wave you meant, so it keeps the wrong one. This mistake is called **aliasing**.
+
+The fix is a rule. You need **more than two samples for every wave**. Put another way, the highest pitch you can keep is half the sampling rate. That limit is called the **Nyquist limit**.
+
+You have seen the same thing in films, when a car wheel seems to spin backwards. The camera takes photos, and the wheel turns too far between photos.
+
+<AliasWheel client:visible />
+
+## What "16 kHz" means
+
+"kHz" means thousands of hertz. So 16 kHz is 16,000 samples a second. By the rule, it can keep pitches up to 8,000 Hz.
+
+Most of the useful detail in speech sits below about 8,000 Hz, so 16 kHz is enough for the words. That is why many speech models use it. Whisper, a popular speech-to-text model, changes all audio to 16,000 Hz before it reads it.
+
+A higher rate would only add more numbers for the model to process. A lower rate loses detail: speech sampled at 8 kHz sounds muffled.
+
+## Where you meet this
+
+- **A phone call.** Traditional digital phone lines use 8,000 samples a second and keep only about 300 to 3,400 Hz. That is enough to understand a voice, but it sounds thin compared with music.
+- **Music.** A CD uses 44,100 samples a second, with 16 bits per sample. Half of 44,100 is 22,050 Hz, a bit above what people can hear.
+- **A hearing aid.** It measures sound, changes it and plays it into your ear with almost no delay. In one lab study of a type of fitting called open canal, which used simulated hearing aids, listeners rated delays of about 5 to 6 thousandths of a second as only just acceptable. Other fittings and situations can tolerate longer delays. Either way, the sums must be done fast, on a tiny battery.
+- **A voice assistant.** It samples your voice, and a speech-recognition model turns those numbers into words.
+
+Next time you ask a phone a question, picture the thousands of small numbers every second that make that possible.
+
+<Deep title="For grown-ups: the numbers behind the lesson">
+
+**Sampling theorem.** If a signal contains no frequencies at or above B Hz, sampling it at a rate above 2B samples a second loses nothing: in theory the original can be rebuilt exactly. Real systems put an analogue low-pass filter (an anti-aliasing filter) in front of the converter, so frequencies above half the rate are removed before sampling instead of folding back as aliases. After sampling, frequencies above the limit cannot be repaired.
+
+**The alias in the lab.** A tone of f Hz sampled at a rate fs gives exactly the same samples as a tone at f minus k times fs for any whole number k. The lab draws the one closest to zero. At 1,000 samples a second, a 900 Hz tone gives the same dots as a 100 Hz tone running backwards.
+
+**Bit depth.** A sample with b bits can take 2 to the power b values: 65,536 for 16 bits and 16,777,216 for 24 bits. Rounding to the nearest value adds a small error, called quantisation noise, and each extra bit reduces it by about 6 dB. In practice 16-bit noise is already small enough to be inaudible in normal listening.
+
+**Size, using the figures above (computed).** One second of mono speech at 16,000 samples and 16 bits is 16,000 x 2 = 32,000 bytes. One second of CD stereo is 44,100 x 2 bytes x 2 channels = 176,400 bytes, so a three-minute song is about 32 MB uncompressed. The 8,000 samples at 8 bits of a phone line give 64 kbit/s, about 8,000 bytes a second. That is why audio is usually compressed by a **codec**, a method that stores the same sound in fewer numbers.
+
+**Resampling.** Models are trained at one rate. Audio recorded at 44,100 or 48,000 Hz must be resampled to the model's rate first, or the pitches and speeds the model sees will not match what it learned. The Hugging Face audio course makes the same point.
+
+**In your browser.** This page makes sound with the Web Audio API: an oscillator makes the tone and an analyser node gives the live strip. Browsers only allow sound after a tap, which is why nothing plays until you press Play. No microphone is used in this lesson, and nothing is sent anywhere.
+
+</Deep>
+
+## What to remember
+
+- Sound is air wobbling. A microphone and a computer measure it thousands of times a second, and each measurement is a number.
+- Pitch is how fast the wave repeats (in hertz). Loudness is how tall it is.
+- Sampling rate is measurements per second. Bit depth is how finely each one is measured.
+- You need more than two samples per wave. Too few and the pitch is lost and a wrong one appears: aliasing.
+- Speech models usually use 16,000 samples a second, which keeps pitches up to 8,000 Hz.
+
+## Next
+
+A list of thousands of numbers is hard for a model to read. Models usually read a picture of the sound instead.
+
+Next: [Spectrograms and the mel scale](../spectrograms-and-the-mel-scale/).
+
+For a wider view of how AI handles pictures and sound together, see [AI that can see, hear and draw](../../start/ai-that-sees-and-hears/). Running audio on a small device is covered in [edge or cloud inference](../../edge/edge-vs-cloud-inference/).

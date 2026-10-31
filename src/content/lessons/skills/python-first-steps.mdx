@@ -1,0 +1,252 @@
+---
+title: Python first steps for AI learners
+track: skills
+level: basic
+order: 1
+summary: "Learn just enough Python to read and change the code on this site, using small AI jobs: counting words, averaging scores, cutting text into pieces and a tiny spam check. Every example runs in your browser."
+updated: 2026-11-01
+sources:
+  - label: "The Python Tutorial (official documentation)"
+    url: https://docs.python.org/3/tutorial/
+  - label: "Kaggle Learn: Python (free course)"
+    url: https://www.kaggle.com/learn/python
+  - label: "Google's Machine Learning Crash Course: prerequisites and prework"
+    url: https://developers.google.com/machine-learning/crash-course/prereqs-and-prework
+  - label: "CS50's Introduction to Programming with Python (Harvard, free)"
+    url: https://cs50.harvard.edu/python/
+  - label: "Automate the Boring Stuff with Python (free to read online)"
+    url: https://automatetheboringstuff.com/
+  - label: "Pyodide: Python in the browser"
+    url: https://pyodide.org/en/stable/
+---
+
+import RunIt from '../../../components/viz/RunIt.tsx';
+import LoopWalk from '../../../components/viz/LoopWalk.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+Almost all AI code is written in a language called **Python**. Once you can read a little of it, the practice labs on this site stop looking like magic. You can also change them and see what happens.
+
+You need no experience. This lesson is not a whole Python course: it covers the few ideas you need for the next lesson, where you build a spam filter. At the end there are free courses for going further.
+
+## How to use this lesson
+
+Every code box below is live. Press **Run it** and Python runs in your browser. The first run downloads Python once, about 10 MB. After that it is quick.
+
+You can edit any box. Break it, fix it, change a number. Nothing can go wrong with your computer, and **Reset** puts the original back. Some boxes ask you to guess the answer first. Guessing before you run is the fastest way to learn.
+
+## A program is a list of instructions
+
+A **program** is a list of instructions that a computer follows in order, one line at a time, from the top. It is like a recipe. In Python, `print` shows something on the screen.
+
+Words in quotes are **text**. Numbers are written plainly. Try it.
+
+<RunIt client:visible title="Your first program" predict="What will this print? Type both lines with a space between them." code={`print("Hello, AI")
+print(2 + 3)
+`} />
+
+Now change `"Hello, AI"` to your own name and run it again.
+
+## Variables: labelled boxes
+
+A **variable** is a box with a label on it. You put something in the box, and later you can use the box's name to get it back. The `=` sign means "put this in the box". It is not the same as the equals sign in maths.
+
+The letter `f` before a quote makes an **f-string**. Anything inside curly brackets is swapped for what is in that box.
+
+<RunIt client:visible title="Boxes with labels" code={`message = "You have WON a free prize"
+word_count = 6
+print(message)
+print("Words:", word_count)
+print(f"The message has {word_count} words.")
+`} />
+
+The box says 6, and the message does have six words. Now change the message to something longer. The count stays 6, because Python does not look at the message unless you tell it to. Next you will make Python do the counting.
+
+## Numbers and text
+
+Python can do sums with `+ - * /`. It can also change text. Text has built-in tricks, called **methods**, that you use with a dot: `message.lower()` gives the same text in small letters.
+
+`split()` cuts text at the spaces and gives back a **list** of pieces. `len()` tells you how long a list is. Predict first.
+
+<RunIt client:visible title="Text into lowercase pieces" predict="How many words will the last line print?" code={`message = "You have WON a free prize"
+print(message.lower())
+
+words = message.lower().split()
+print(words)
+print(len(words))
+`} />
+
+Why lowercase first? A computer sees `WON` and `won` as different. Making everything lowercase means the same word always looks the same. This is the first step of how a spam filter reads text. The lesson [How computers read words](../../start/how-computers-read-words/) explains the real thing, called tokens. Ours is a simpler cut.
+
+## Lists and loops
+
+A **list** is a shelf of numbered boxes. The first box is number 0, not 1. A **loop** is walking along the shelf and doing the same thing at each box.
+
+The loop below averages four test scores. Press Start, then Next step, and watch which line runs, which box is picked up, and how `total` grows.
+
+<LoopWalk client:visible />
+
+The line `for score in scores:` means: for each box, call it `score`. The indented line under it is what happens each time. That indent matters. Python uses the spaces at the start of a line to know which lines belong inside the loop.
+
+Now run the real thing, then change a score.
+
+<RunIt client:visible title="Average of a list" predict="What will the last line print?" code={`scores = [72, 85, 90, 64]
+total = 0
+for score in scores:
+    total = total + score
+print("Total:", total)
+print("Average:", total / len(scores))
+`} />
+
+A second kind of box is the **dictionary**. A list finds things by position. A dictionary is more like a phone book: you look things up by name. Here it counts how often each word appears, which is exactly what a spam filter does.
+
+<RunIt client:visible title="Counting words with a dictionary" predict="What will it print for free?" code={`words = ["free", "gift", "free", "prize"]
+counts = {}
+for word in words:
+    counts[word] = counts.get(word, 0) + 1
+print(counts)
+`} />
+
+The part `counts.get(word, 0)` means: look up this word, and if it is not in the phone book yet, say 0. Then add 1 and write it back.
+
+## Functions: your own commands
+
+You have used `print` and `len`. A **function** is a command you make yourself. You give it a name and a list of things it needs. Everything indented under `def` is what it does. `return` hands the answer back.
+
+Functions let you write the steps once and use them many times. Here is the average from before, packed up.
+
+<RunIt client:visible title="A function you can reuse" code={`def average(scores):
+    total = 0
+    for score in scores:
+        total = total + score
+    return total / len(scores)
+
+print(average([72, 85, 90, 64]))
+print(average([50, 100]))
+`} />
+
+Notice that running the `def` part prints nothing. It only teaches Python the new command. The `print` lines at the bottom use it. Try `average([])` and see what happens. We come back to that in the section on errors.
+
+## If and else: making a choice
+
+An **if** line asks a question that has the answer True or False. If it is True, the indented lines under it run. Otherwise the lines under **else** run.
+
+Here is a very simple spam filter: one rule, written by a person. Look at the third message.
+
+<RunIt client:visible title="A one-rule spam check" predict="Will the third message be called spam? Type True or False." code={`def looks_like_spam(message):
+    if "free" in message.lower():
+        return True
+    else:
+        return False
+
+print(looks_like_spam("Win a FREE prize"))
+print(looks_like_spam("See you at five"))
+print(looks_like_spam("Are you free on Friday?"))
+`} />
+
+The rule called a friend's message spam. That is the weakness of hand-written rules from the [first lesson](../../start/what-is-ai-in-plain-english/): the rule does not know what the word means. In the next lesson the computer learns better rules from examples.
+
+## Reading an error message
+
+Sooner or later, Python stops and prints an error. This happens to everyone who writes code, every day. An error is not a failure. It is Python telling you where it got stuck.
+
+Read it from the bottom up. The last line names the kind of error and says what is wrong. The line number says where to look. Run this one.
+
+<RunIt client:visible title="Your first error" code={`message = "You have won a prize"
+print(mesage)
+`} />
+
+Python says `NameError` and the name it does not know. Look at line 2: `mesage` has a letter missing. Recent versions of Python often add a hint, such as `Did you mean: 'message'?`. Fix the spelling and run it again.
+
+Here is a different kind, which is very common. Text and numbers cannot be added together with a plus sign.
+
+<RunIt client:visible title="A second error" code={`count = 5
+print("Words: " + count)
+`} />
+
+This is a `TypeError`. Fix it in either of two ways: write `print("Words:", count)`, or turn the number into text with `str(count)`.
+
+<Callout title="Three habits that help">
+
+1. Read the last line of the error first, then the line number.
+2. Change one thing at a time, and run again after each change.
+3. When you are stuck, `print` the value in the box. Seeing what is really inside often shows the problem.
+
+</Callout>
+
+## Put it all together
+
+This box uses everything above: a list, a loop, functions, `if` and text pieces. It checks three messages against four suspicious words and marks any with two or more as spam. Read it from the bottom up, then change the word list and see what changes.
+
+<RunIt client:visible title="A tiny spam-word check" rows={20} code={`spam_words = ["free", "win", "prize", "click"]
+
+def make_pieces(message):
+    pieces = []
+    for word in message.lower().split():
+        pieces.append(word.strip(".,!?:;"))
+    return pieces
+
+def count_spam_words(message):
+    count = 0
+    for piece in make_pieces(message):
+        if piece in spam_words:
+            count = count + 1
+    return count
+
+messages = [
+    "WIN a free prize!",
+    "Are you free on Friday?",
+    "Click here to win",
+]
+for message in messages:
+    n = count_spam_words(message)
+    if n >= 2:
+        print("spam", n, message)
+    else:
+        print("ham ", n, message)
+`} />
+
+(`ham` is the word that spam filters use for good messages.)
+
+<Deep title="Where does this Python run, and how do you get it on your own computer?">
+
+The Python in these boxes is a real copy of the Python language, compiled so that it runs inside your browser tab (the project is called Pyodide). Nothing you type is sent to a server. Each press of Run starts with an empty memory, so a box cannot depend on another box. Programs that run for more than 8 seconds are stopped.
+
+To use Python on your own computer, install it from python.org, or use a free notebook website such as Google Colab, where the computer doing the work is in a data centre and your browser is the screen. Notebooks are the usual way people do AI work, but not required for anything on this site.
+
+</Deep>
+
+<Deep title="Things Python does that this lesson skipped">
+
+Tuples and sets (two more kinds of box), reading files, importing other people's code with `import` (you will see `import math` in the lab), classes, error handling with `try` and `except`, and the many libraries for AI, such as NumPy, pandas and scikit-learn. You do not need these for the next lesson. The courses below cover them.
+
+</Deep>
+
+## Practise
+
+Three short labs check your code automatically and show you which checks pass. Each one takes about ten minutes, and each one uses a loop, a function or an `if`.
+
+- [Count the words, average the scores](../../../practice/py-count-and-average/)
+- [Turn text into lowercase pieces](../../../practice/py-text-to-pieces/)
+- [A tiny spam-word check](../../../practice/py-spam-word-check/)
+
+## What this lesson did not cover, and where to learn more
+
+This is a few hours of Python squeezed into one page, so it leaves out a lot. If you enjoyed it, these courses are free and well respected:
+
+- [Kaggle Learn: Python](https://www.kaggle.com/learn/python): short, hands-on lessons with exercises, the quickest next step for AI work.
+- [The official Python Tutorial](https://docs.python.org/3/tutorial/): complete and exact, but written for people who already code a little.
+- [CS50's Introduction to Programming with Python](https://cs50.harvard.edu/python/): a full university-style course with videos and problem sets.
+- [Automate the Boring Stuff with Python](https://automatetheboringstuff.com/): a free book that teaches by doing useful jobs.
+- [Google's Python Class](https://developers.google.com/edu/python): a two-day course for people who have written a little code before.
+
+Google's Machine Learning Crash Course lists Python as something to know before you start it, and links its own warm-up lessons. See its [prerequisites page](https://developers.google.com/machine-learning/crash-course/prereqs-and-prework).
+
+## What to remember
+
+- A program runs line by line, from the top. `print` shows a value.
+- A variable is a labelled box. A list is a shelf of numbered boxes starting at 0. A dictionary is a phone book.
+- A loop repeats its indented lines for each item. A function packages steps under a name. `if` and `else` choose between two paths.
+- An error message is a clue. Read the last line, then the line number.
+
+Next: [Your first model: a spam classifier, end to end](../your-first-model/).

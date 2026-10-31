@@ -1,0 +1,93 @@
+---
+title: "What is an AI agent? A helper that can do things"
+track: start
+level: basic
+order: 9
+summary: A chatbot only talks. An AI agent can also use tools, loop through think, act and look, and make mistakes with real effects. See why it needs limits and a person in charge.
+updated: 2026-11-01
+sources:
+  - label: "Anthropic: Building effective agents"
+    url: https://www.anthropic.com/engineering/building-effective-agents
+  - label: "Hugging Face Agents Course: What are agents?"
+    url: https://huggingface.co/learn/agents-course/unit1/what-are-agents
+---
+
+import PipelineFlow from '../../../components/viz/PipelineFlow.tsx';
+import AgentLoop from '../../../components/viz/AgentLoop.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+You can ask a chatbot for ideas on how to plan your week. But it cannot look at your calendar or book anything. It can only talk. An **AI agent** goes one step further.
+
+## A chatbot talks
+
+A chatbot reads your message and writes words back. That is all it does. If you ask what is on your timetable, it cannot look. It can only guess, or tell you how to find out.
+
+## An agent can also do things
+
+An agent is a program that uses an AI model to work towards a goal. It can use **tools**: a search engine, a calendar, a calculator or another app. A tool is just something the agent can ask to do a job.
+
+Here are two everyday examples:
+
+- A **homework planner** reads your timetable, sees a maths test on Friday, and adds revision slots to your calendar.
+- A **travel helper** searches for trains, compares prices and puts the best choices in a list.
+
+## The loop: think, act, look, repeat
+
+An agent works in a loop. First it thinks about what to do next. Then it uses a tool. Then it looks at the result. Then it thinks again.
+
+It stops when the job is done, or when it has run out of tries.
+
+<PipelineFlow
+  client:visible
+  title="The agent loop"
+  stages={[
+    { title: 'Think', glyph: 'question', detail: 'The model works out what to do next, given the goal and what it has seen so far.' },
+    { title: 'Act', glyph: 'wrench', detail: 'It asks a tool to do something, such as reading a calendar or searching the web.' },
+    { title: 'Look', glyph: 'eye', detail: 'The tool sends back a result. The agent reads it before deciding what comes next.' },
+  ]}
+  loop
+  loopLabel="think again, until the job is done"
+  caption="Many agents are built just like this: a model, some tools, and a loop."
+/>
+
+## Try it: run an agent
+
+You are the person in charge. Step through the agent's work, and decide what it may do at the checkpoint.
+
+<AgentLoop client:visible />
+
+## Agents can make mistakes with real effects
+
+When a chatbot gets something wrong, you read a wrong answer. When an agent gets something wrong, something can actually happen. A message can be sent. A file can be deleted. Something can be bought.
+
+Agents also only know what their tools show them. The calendar did not know about football. And an agent can make the same mistakes a chatbot makes, such as believing something false, and then build more steps on top of it.
+
+## So we give it limits
+
+Builders keep agents safe in a few ways:
+
+- **Few tools.** The agent can only use what it is given.
+- **Small powers.** It might read a calendar but not delete it.
+- **A step limit.** It stops after a set number of tries.
+- **A person for important steps.** It asks before it sends, spends or deletes.
+
+<Callout title="Rule of thumb">
+
+If a step cannot be undone, or it affects other people, a person should say yes first.
+
+</Callout>
+
+## You are in charge
+
+An agent is a helper, not a boss. If an app offers to do things for you, ask three questions. What can it do? What will it ask me before it does? How do I stop it? If you cannot find the answers, be careful.
+
+<Deep title="Agents and workflows: the grown-up version">
+
+Anthropic's engineers describe workflows as systems where models and tools follow "predefined code paths", and agents as systems where the model "dynamically" directs its own steps and tool use. They say agents are "typically just LLMs using tools based on environmental feedback in a loop". They also note that agents can cost more, that errors can build up over many steps, and they suggest testing in a sandbox, with stopping conditions and human checkpoints. For how builders connect tools to a model, read [Agents and tool use](../../rag-agents/agents-and-tool-use/).
+
+</Deep>
+
+## Next
+
+Next: [How apps use AI](../how-apps-use-ai/), where you see how an app talks to the model behind it.

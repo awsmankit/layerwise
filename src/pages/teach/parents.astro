@@ -1,0 +1,104 @@
+---
+import Base from '../../layouts/Base.astro';
+import PrintButtons from '../../components/teach/PrintButtons.astro';
+import { lessonLookup } from '../../lib/teach';
+import { withBase } from '../../lib/url';
+
+const { link } = await lessonLookup();
+const L = (k: string) => link(k);
+const bandLessons: { band: string; says: string; keys: string[] }[] = [
+  { band: 'Ages 10 to 12', says: 'What AI is, how a computer learns from examples, why unfair or missing examples cause unfair answers, how chatbots read and guess words, and habits for using AI safely.', keys: ['start/what-is-ai-in-plain-english', 'start/how-computers-learn', 'start/how-a-chatbot-answers', 'start/using-ai-without-getting-burned'] },
+  { band: 'Ages 13 to 15', says: 'Training and testing, decision trees, a first look at neural networks, how to judge whether a picture, voice or story is real, and how AI touches privacy and school work.', keys: ['start/three-ways-machines-learn', 'deep-learning/inside-a-neural-network', 'responsible/real-or-fake', 'responsible/ai-and-your-private-life', 'responsible/ai-and-school'] },
+  { band: 'Ages 16 to 18', says: 'How models are measured and where they fail, fairness in data, first models in Python, and the arguments about who is accountable when a system is wrong.', keys: ['ml/getting-data-ready', 'ml/overfitting-and-bias-variance', 'skills/your-first-model', 'responsible/when-examples-are-unfair'] },
+];
+const agreement = [
+  'We check facts that matter before we trust an AI answer, and we say where we checked.',
+  'We keep personal details out of chatbots and apps: full names, addresses, school names, phone numbers, passwords and photos of ourselves or others.',
+  'AI helps me learn; it does not do my homework for me. I follow my school’s rules and say so when I have used AI, if asked.',
+  'I do not use AI to make fake pictures, voices or messages about other people, or to upset or bully anyone.',
+  'If something online upsets me or looks wrong, I tell an adult I trust straight away, and I will not be in trouble for telling.',
+  'We agree where and when we use AI tools at home, and we look at the settings and age rules of each tool together.',
+  'We have a family code word for urgent requests made by voice or message that sound like us but might not be.',
+];
+---
+
+<Base title="Parents' and carers' guide" description="What children are learning about AI on Layerwise, how to talk about it at home, and rules of thumb for safe use, with a printable family agreement.">
+  <div class="wrap tk-print-root">
+    <p class="tk-crumbs"><a href={withBase('/teach/')}>For teachers</a> / Parents and carers</p>
+    <header class="page-head tk-noprint" style="padding-top:1.2rem">
+      <h1>Parents’ and carers’ <span class="squig" style="--squig:#0A9F85">guide</span></h1>
+      <p>What your child is learning about AI here, how to talk about it, and some plain rules of thumb for using it at home. You do not need to be a computing expert.</p>
+    </header>
+
+    <PrintButtons options={[{ mode: 'agree', label: 'Print the family agreement' }, { mode: 'all', label: 'Print the whole guide' }]} />
+
+    <div class="prose tk-prose tk-part" data-part="guide">
+      <h2>What this guide is, and is not</h2>
+      <p>Layerwise is a free learning site. It does not ask children for an account or store anything about them: their progress stays in their own browser. This guide is general advice from a learning site, not medical, legal or safeguarding advice. If you are worried about a child’s safety or wellbeing, speak to your school’s designated safeguarding lead or to local children’s services.</p>
+
+      <h2>What your child is learning</h2>
+      <p>The lessons are grouped by age. A teacher may have picked some of them, or your child may be exploring alone.</p>
+      {
+        bandLessons.map((b) => (
+          <>
+            <h3 style="margin-top:1.2rem">{b.band}</h3>
+            <p>{b.says}</p>
+            <p>
+              {b.keys.map((k, i) => {
+                const l = L(k);
+                return (
+                  <>
+                    {i > 0 && ', '}
+                    {l.href ? <a href={l.href}>{l.title}</a> : l.title}
+                  </>
+                );
+              })}
+            </p>
+          </>
+        ))
+      }
+
+      <h2>How to talk about it</h2>
+      <p>The UK Safer Internet Centre says you do not need to be a computing expert to start. Telling a child that a voice assistant is a computer, not a person, and that not everything online is real, is a good start; if you do not know an answer, you can find it out together. Show them that you will stay calm, listen and help if something worries them.</p>
+      <p>Questions that work at any age, because they ask for reasons rather than a verdict:</p>
+      <ul>
+        <li>How do you think the computer worked that out?</li>
+        <li>What did it learn from, and who chose those examples?</li>
+        <li>How could we check that answer?</li>
+        <li>Who might it get wrong?</li>
+        <li>Is it helping you learn, or just helping you finish?</li>
+      </ul>
+      <p>Ask your child to teach you one of the <a href={withBase('/teach/activities/')}>unplugged activities</a>. Explaining it to someone else is one of the best checks of understanding.</p>
+
+      <h2>Rules of thumb for use at home</h2>
+      <ol>
+        <li><b>Treat an answer as a first draft.</b> AI tools can be wrong in a confident voice, so check names, numbers, dates and quotes that matter. The UK Safer Internet Centre says to check with other sources or an adult if unsure.</li>
+        <li><b>Keep personal details out.</b> Names, addresses, schools, phone numbers, passwords and photos should not be typed into a chatbot. The UK Safer Internet Centre also notes that AI features can collect data about you and your family.</li>
+        <li><b>Learning, not copying.</b> Check what the school allows. Using AI to understand an idea or quiz yourself is different from handing in its writing as your own.</li>
+        <li><b>Sounding human is not being human.</b> Chatbots can sound caring. The UK Safer Internet Centre says AI should never replace support from people your child knows and trusts. Look at the age rules and settings of each tool, because they differ and change; we have not checked any product’s rules for this page.</li>
+        <li><b>Fakes and scams.</b> Pictures, voices and videos can be faked, and detection tools are not reliable enough to decide for you. Look at where something came from and confirm it another way. For a surprising or urgent request, stop and contact the person on a number you already know. A family code word is a simple, widely suggested habit; it is our suggestion rather than something we can cite.</li>
+        <li><b>Be kind.</b> Making fake or hurtful pictures, voices or messages about other people can cause real harm and some of it may be against the law, depending on where you live.</li>
+        <li><b>If something upsetting appears.</b> Stay calm, listen, and thank your child for telling you. Report it on the app or website where it appeared. The UK Safer Internet Centre says illegal child sexual abuse images, including AI-generated ones, should be reported to the Internet Watch Foundation and on the platform. In the UK, <a href="https://reportharmfulcontent.com/" rel="noopener">Report Harmful Content</a> is a service for other harmful material. Outside the UK, look for your country’s equivalent.</li>
+      </ol>
+
+      <h2>Where to learn more</h2>
+      <ul class="tk-sources">
+        <li><a href="https://saferinternet.org.uk/safer-internet-day/safer-internet-day-2026/top-tips-for-parents-and-carers" rel="noopener">UK Safer Internet Centre: top tips for parents and carers</a> (Safer Internet Day 2026, read 1 November 2026).</li>
+        <li><a href="https://saferinternet.org.uk/safer-internet-day/safer-internet-day-2026/top-tips-for-young-people" rel="noopener">UK Safer Internet Centre: top tips for young people</a>, which a teenager can read themselves.</li>
+        <li><a href="https://dayofai.org/family-resources" rel="noopener">Day of AI: AI Literacy Family Toolkit</a>, with short videos, conversation cards and activities, free to use.</li>
+        <li><a href="https://www.commonsense.org/education/families-ai-literacy-toolkit" rel="noopener">Common Sense Education: AI Literacy Toolkit for Families</a>, made with Day of AI.</li>
+      </ul>
+      <p class="tk-sources">Other charities publish guides on children and AI chatbots, including the NSPCC and Internet Matters. Their sites blocked our automatic checks when we wrote this page, so we have not quoted them; they are worth reading directly.</p>
+    </div>
+
+    <section class="tk-agree tk-part" data-part="agree" aria-label="Family agreement">
+      <h2 style="margin:0;font-size:1.5rem">Our family AI agreement</h2>
+      <p style="margin:0.4rem 0 0;color:var(--ink-2)">Tick the ones you agree on. Change any of them: this is a starting point for a conversation, not a rule book.</p>
+      <ul>
+        {agreement.map((a) => <li>{a}</li>)}
+      </ul>
+      <div class="tk-sign"><span>Child <i></i></span><span>Parent or carer <i></i></span><span>Date <i></i></span></div>
+    </section>
+    <div style="height:3rem"></div>
+  </div>
+</Base>

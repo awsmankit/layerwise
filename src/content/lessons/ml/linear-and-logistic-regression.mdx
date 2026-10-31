@@ -1,0 +1,143 @@
+---
+title: "Linear and logistic regression: fit a line, then a probability"
+track: ml
+level: basic
+order: 2
+summary: Least squares in pictures (residuals, squared error, why the best line wins), what slope and intercept mean, several inputs, and how a sigmoid turns a score into a yes/no probability. Logistic regression is the one neuron that deep learning stacks.
+updated: 2026-11-01
+sources:
+  - label: "Google Machine Learning Crash Course: Linear regression"
+    url: https://developers.google.com/machine-learning/crash-course/linear-regression
+  - label: "Google Machine Learning Crash Course: Logistic regression"
+    url: https://developers.google.com/machine-learning/crash-course/logistic-regression
+  - label: "scikit-learn user guide: Linear models"
+    url: https://scikit-learn.org/stable/modules/linear_model.html
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import LineFitter from '../../../components/viz/LineFitter.tsx';
+
+Two of the oldest prediction methods are still among the most used. **Linear regression** predicts a number, such as a mark, a price or a delivery time. **Logistic regression** predicts a yes or no, such as pass or fail, spam or not spam, with a probability attached. Both are fast, easy to explain, and the strongest first thing to try on many problems. Logistic regression is also, exactly, one neuron of a neural network.
+
+## Fit a line through the points
+
+Suppose you have the hours each of 11 students revised and the mark each got. Plot hours across and mark up, and the dots slope upwards. A straight line through them gives a rule you can use:
+
+> predicted mark = **intercept** + **slope** x hours
+
+The **slope** is how much the prediction rises for one more hour: a slope of 6 means about 6 more marks per extra hour. The **intercept** is where the line crosses the up axis, the prediction at zero hours. Reading a prediction is just walking along the line to your value. Treat the ends with care: a line fitted on 0 to 10 hours says nothing reliable about 40 hours.
+
+Many lines could pass through the dots. The question is which is best.
+
+## What "best" means: residuals and squares
+
+A line is wrong for each student by some amount. That gap is the **residual**: the real mark minus the line's prediction. A dot above the line has a positive residual, a dot below it a negative one.
+
+Adding residuals up does not work, because misses above and below cancel and a terrible line can total zero. So each miss is **squared** first. Squares are never negative, and a miss of 10 counts four times as much as a miss of 5, so the line is pushed to avoid big misses. The sum is the **sum of squared errors**; divide by the number of points to get the **mean squared error**. The **least squares** line is the one with the smallest total.
+
+A pencil example, with made-up numbers. Five points, and the best line, which works out as predicted y = 1.3 + 0.9 x:
+
+| x | y | Line says | Residual | Squared |
+|---|---|---|---|---|
+| 1 | 2 | 2.2 | -0.2 | 0.04 |
+| 2 | 3 | 3.1 | -0.1 | 0.01 |
+| 3 | 5 | 4.0 | 1.0 | 1.00 |
+| 4 | 4 | 4.9 | -0.9 | 0.81 |
+| 5 | 6 | 5.8 | 0.2 | 0.04 |
+| | | | Total | **1.90** |
+
+Try the tidier-looking line y = x + 1. It predicts 2, 3, 4, 5, 6, so its residuals are 0, 0, 1, -1, 0 and its total is **2.00**. Close, but worse. Nudge the slope or intercept of the best line in any direction and the total only goes up.
+
+Drag the dots below, and watch the line and the squares move. Then switch to "Draw my own line" and try to beat the best one.
+
+<LineFitter client:visible />
+
+<Deep title="Where the best line comes from: a formula, no searching">
+For one input, the least squares line has a closed form. With x-bar and y-bar the averages, slope = sum of (x - x-bar)(y - y-bar) divided by sum of (x - x-bar) squared, and intercept = y-bar - slope x x-bar. In the table, x-bar is 3 and y-bar is 4. The top sum is 4 + 1 + 0 + 0 + 4 = 9, the bottom is 4 + 1 + 0 + 1 + 4 = 10, so the slope is 0.9 and the intercept is 4 - 0.9 x 3 = 1.3. For many inputs the same idea is a matrix equation (the normal equations), which numerical libraries solve directly.
+
+The reason a formula exists is that squared error makes a smooth bowl with a single lowest point. [How a model learns](../../foundations/how-models-learn/) reaches the bottom of a bowl by gradient descent, taking small downhill steps. For a straight line you can jump straight to the bottom. For most other models, including logistic regression below, you cannot, and gradient descent does the work.
+
+The absolute error (average size of the miss, no squaring) is gentler on outliers, because one wild point cannot dominate. [Classical ML essentials](../../foundations/classical-ml-essentials/) compares MAE with RMSE.
+</Deep>
+
+## More than one input
+
+Real predictions use several measurements. The line becomes a weighted sum, with one weight (a **coefficient**) per input:
+
+> mark = intercept + b1 x hours revised + b2 x hours slept
+
+Least squares still works, and the fitted numbers can be read off. Here are six students, again made-up:
+
+| Hours revised | Hours slept | Mark |
+|---|---|---|
+| 1 | 6 | 35 |
+| 2 | 8 | 48 |
+| 3 | 5 | 45 |
+| 4 | 7 | 60 |
+| 5 | 9 | 72 |
+| 6 | 6 | 68 |
+
+The best fit is about **mark = 7.9 + 6.7 x revised + 3.4 x slept**. Read each coefficient as "with the other input held the same, one more hour of this adds about this many marks". A student who revises 4 hours and sleeps 8 is predicted about 62 marks.
+
+<Callout title="A coefficient describes the data, not a cause">
+The 6.7 says that, in these students, more revision goes with higher marks. It does not prove that revising causes them. Inputs that move together (revision and tiredness, say) make the coefficients swing a lot from sample to sample, so read them with caution and never as a promise about what would happen if you changed one input.
+</Callout>
+
+## Yes or no: turn a score into a probability
+
+Now predict pass or fail. Fail is 0 and pass is 1. A straight line fitted to 0s and 1s would predict 1.3 for a keen student and -0.2 for a lazy one, and neither is a probability.
+
+Logistic regression keeps the weighted sum but squashes it. First compute a **score** the same way as before, then pass it through the **sigmoid** function:
+
+> probability = 1 / (1 + e^(-score))
+
+The sigmoid is an S-shaped curve. A score of 0 gives exactly 0.5. Large positive scores approach 1 and large negative scores approach 0, but never reach them.
+
+| Score | -4 | -2 | 0 | 2 | 4 |
+|---|---|---|---|---|---|
+| Probability | 0.018 | 0.119 | 0.5 | 0.881 | 0.982 |
+
+An example (made up): chance of passing = sigmoid(1.2 x (hours - 4)). At 2 hours the score is -2.4 and the chance is 8%. At 4 hours the score is 0 and the chance is 50%. At 6 hours the score is 2.4 and the chance is 92%.
+
+**How it learns.** Squared error is not the right yardstick for probabilities. The usual one is **log loss**: take the probability the model gave to what actually happened and compute minus its natural log. Giving 0.9 to the right answer costs 0.105. Giving 0.5 costs 0.693. Giving 0.1 to the right answer, a confident mistake, costs 2.30. Confident and wrong is punished hard. There is no formula for the best weights, so the model starts with a guess and takes gradient descent steps, exactly the loop in [How a model learns](../../foundations/how-models-learn/).
+
+<LineFitter client:visible start="yesno" />
+
+Move the boundary and steepness by hand, then press "Take 10 gradient steps" and watch the log loss fall. The slider values are the model's two dials.
+
+<Deep title="Why the score is called log-odds">
+If a probability is p, the odds are p / (1 - p): a 75% chance is odds of 3 to 1. The sigmoid is built so that the score equals the natural log of the odds. That makes the weights easy to read. In the example the weight of 1.2 means each extra hour of revision multiplies the odds of passing by e^1.2, about 3.3. Probability itself rises in an S shape, but odds change by a steady factor.
+</Deep>
+
+## The decision threshold
+
+A probability is not yet a decision. To say "pass" or "fail" you pick a **threshold**: predict yes when the probability reaches it. 0.5 is the usual default, and with a score that is 0 at 4 hours it puts the **decision boundary** at 4 hours. With one input the boundary is a point on the axis, with two inputs a straight line, with more a flat sheet.
+
+Move the threshold slider in the figure: the boundary slides with it, and the number of points on the wrong side changes. A lower threshold catches more yes cases but raises false alarms. The right value depends on what each kind of mistake costs, which is worked through in [Classical ML essentials](../../foundations/classical-ml-essentials/), under "Choosing a threshold from the cost of errors". Keep in mind that 0.5 is a default, not a decision.
+
+Because the boundary is straight, logistic regression cannot carve out a curved or patchy region unless you add features that bend it, such as hours squared. The tree models in [the next lessons](../decision-trees-and-random-forests/) cut such regions naturally.
+
+## The one neuron deep learning builds on
+
+Look at the logistic model as a pipeline: take the inputs, multiply each by a weight, add a bias (the intercept), and pass the total through a bend (the sigmoid). That is precisely what one artificial **neuron** does. A neural network stacks many neurons in layers, with each layer feeding the next, and trains every weight by the same gradient descent. [Inside a neural network](../../deep-learning/inside-a-neural-network/) builds that from a single neuron; what you learned here is that first neuron.
+
+A trained network's final layer for a yes/no question is often a sigmoid too, so its output is read the same way: a probability, a threshold, a decision.
+
+## When linear and logistic models are the right tool
+
+- They are quick to train, hard to break, and the numbers are easy to explain to non-experts.
+- They make a strong baseline. If a complicated model barely beats a logistic regression, ask whether it is worth the extra complexity.
+- They need inputs on comparable scales when you add regularisation, and they cannot find curves or interactions between inputs unless you add those as features.
+- Several classes (not just yes or no) use the same idea with one score per class, called softmax regression.
+
+## What to remember
+
+- The best line is the one with the smallest sum of squared residuals. Squaring stops cancelling and punishes large misses.
+- Slope is the change in the prediction per unit of input, intercept is the prediction at zero. Both describe the data you fitted, so be careful away from it.
+- With several inputs each coefficient means "holding the others fixed", and it is not a statement about cause.
+- Logistic regression is a weighted sum passed through a sigmoid, giving a probability. It learns by lowering log loss with gradient descent.
+- A threshold turns the probability into a decision, and its best value comes from the cost of mistakes, not habit.
+- A logistic regression is one neuron. Stacking and training many of them is deep learning.
+
+Next: [Overfitting and bias-variance](../overfitting-and-bias-variance/).

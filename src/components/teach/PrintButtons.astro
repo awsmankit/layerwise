@@ -1,0 +1,31 @@
+---
+interface Props {
+  /** each button prints one part of the page; `all` prints everything */
+  options: { mode: string; label: string }[];
+}
+const { options } = Astro.props;
+---
+
+<div class="tk-bar tk-noprint" role="group" aria-label="Print options">
+  {
+    options.map((o, i) => (
+      <button type="button" class:list={['btn', i > 0 && 'quiet']} data-tk-mode={o.mode}>
+        {o.label}
+      </button>
+    ))
+  }
+  <span class="tk-noprint" style="font-size:0.9rem;color:var(--ink-3)">Opens your browser’s print box. Nothing is saved or sent anywhere.</span>
+</div>
+
+<script>
+  const clear = () => document.body.removeAttribute('data-tk-print');
+  window.addEventListener('afterprint', clear);
+  document.querySelectorAll<HTMLButtonElement>('[data-tk-mode]').forEach((b) =>
+    b.addEventListener('click', () => {
+      const mode = b.dataset.tkMode!;
+      if (mode === 'all') clear();
+      else document.body.setAttribute('data-tk-print', mode);
+      window.print();
+    }),
+  );
+</script>

@@ -1,0 +1,88 @@
+/* Styles for the interactive components in the "ml-b" lesson batch. Keep every class under this batch's own prefix. */
+
+/* ---------- DataPrepLab: clean a messy table (prefix mb-) ---------- */
+.mb-prep { --mb-bad: var(--warn); }
+.mb-controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1rem 1.4rem; margin-top: 1rem; }
+.mb-set { border: 0; padding: 0; margin: 0; min-width: 0; display: flex; flex-direction: column; gap: 0.3rem; }
+.mb-set legend { padding: 0; margin-bottom: 0.35rem; font-weight: 650; font-size: 0.95rem; }
+.mb-opt { display: flex; align-items: flex-start; gap: 0.55rem; min-height: 40px; padding: 0.4rem 0.6rem; border: 1px solid var(--line-soft); border-radius: 8px; font-size: 0.92rem; line-height: 1.3; cursor: pointer; background: transparent; }
+.mb-opt input { width: 20px; height: 20px; margin: 0; flex: none; accent-color: var(--signal); }
+.mb-opt small { display: block; color: var(--ink-3); font-size: 0.8rem; margin-top: 0.15rem; }
+.mb-opt:has(input:checked) { border-color: var(--signal); background: var(--signal-wash); }
+.mb-opt:has(input:focus-visible) { outline: 2px solid var(--signal); outline-offset: 2px; }
+.mb-opt-warn:has(input:checked) { border-color: var(--warn); background: color-mix(in srgb, var(--warn) 14%, transparent); }
+.mb-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+.mb-actions .btn { min-height: 44px; }
+.mb-result { margin-top: 1.1rem; padding: 0.9rem 1rem; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.mb-big { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap; margin: 0; }
+.mb-label { color: var(--ink-2); font-size: 0.95rem; }
+.mb-big b { font-size: 1.7rem; font-variant-numeric: tabular-nums; }
+.mb-big b.mb-false { color: var(--warn); }
+.mb-bar { height: 8px; border: 1px solid var(--line); border-radius: 4px; margin: 0.5rem 0 0.6rem; overflow: hidden; }
+.mb-bar i { display: block; height: 100%; background: var(--signal); transition: width 0.4s ease; }
+.mb-bar i.mb-false-bar { background: var(--warn); }
+.mb-small { margin: 0.35rem 0 0; font-size: 0.88rem; color: var(--ink-2); line-height: 1.4; }
+.mb-note.mb-warn { color: var(--ink); font-weight: 600; }
+.mb-table-wrap { margin-top: 1rem; max-height: 340px; overflow: auto; border: 1px solid var(--line); border-radius: 8px; }
+.mb-table-wrap:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+.mb-table { border-collapse: collapse; width: 100%; font-size: 0.86rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mb-table th { position: sticky; top: 0; background: var(--surface); text-align: left; font-weight: 650; padding: 0.4rem 0.6rem; border-bottom: 1px solid var(--line); }
+.mb-table td { padding: 0.3rem 0.6rem; border-bottom: 1px solid var(--line-soft); }
+.mb-table .mb-bad { color: var(--warn); font-weight: 650; }
+.mb-table .mb-chg { background: var(--signal-wash); }
+.mb-table .mb-blank { color: var(--ink-3); font-style: italic; }
+.mb-table .mb-fill { color: var(--signal-ink); }
+.mb-table tr.mb-gone td { text-decoration: line-through; color: var(--ink-3); }
+.mb-table tr.mb-locked td { opacity: 0.5; }
+
+
+/* ---------- FitCapacity: polynomial capacity slider (prefix mb-) ---------- */
+.mb-fit .btn[aria-pressed='true'],
+.mb-boot .btn[aria-pressed='true'] { background: var(--signal-wash); border-color: var(--signal); color: var(--signal-ink); }
+.mb-fit .btn:focus-visible,
+.mb-boot .btn:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+.mb-svg { display: block; width: 100%; height: auto; max-width: 700px; margin: 0.9rem auto 0; overflow: visible; }
+.mb-frame { fill: none; stroke: var(--line); stroke-width: 1; }
+.mb-grid { stroke: var(--line-soft); stroke-width: 1; }
+.mb-tick { font-family: var(--font-mono); font-size: 12.5px; fill: var(--ink-3); }
+.mb-truth { fill: none; stroke: var(--ink-3); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.mb-curve { fill: none; stroke: var(--signal); stroke-width: 2.6; stroke-linejoin: round; }
+.mb-other { fill: none; stroke: var(--signal); stroke-width: 1; opacity: 0.28; }
+.mb-dot { fill: var(--surface); stroke: var(--ink); stroke-width: 1.5; }
+.mb-floor { stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 2 4; }
+.mb-line { fill: none; stroke-width: 2.2; stroke-linejoin: round; }
+.mb-line-train { stroke: var(--ok); }
+.mb-line-test { stroke: var(--warn); }
+.mb-here { stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 3 4; }
+.mb-pt-train { fill: var(--ok); }
+.mb-pt-test { fill: var(--warn); }
+.mb-legend { display: flex; flex-wrap: wrap; gap: 0.3rem 1.1rem; justify-content: center; margin: 0.6rem 0 0; font-size: 0.85rem; color: var(--ink-2); }
+.mb-legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+.mb-sw { display: inline-block; width: 18px; height: 0; border-top: 3px solid var(--ink); }
+.mb-sw-dot { width: 10px; height: 10px; border: 1.5px solid var(--ink); border-radius: 50%; background: var(--surface); }
+.mb-sw-curve { border-color: var(--signal); }
+.mb-sw-truth { border-top: 2px dashed var(--ink-3); }
+.mb-sw-other { border-color: var(--signal); opacity: 0.4; border-top-width: 1px; }
+.mb-sw-train { border-color: var(--ok); }
+.mb-sw-test { border-color: var(--warn); }
+.mb-sw-floor { border-top: 2px dotted var(--ink-3); }
+.mb-pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0 1.5rem; }
+.mb-verdict { color: var(--ink); font-weight: 600; }
+.mb-parts { display: grid; gap: 0.5rem; }
+.mb-part { display: grid; grid-template-columns: 7.5rem 1fr 4.5rem; align-items: center; gap: 0.2rem 0.8rem; font-size: 0.9rem; }
+.mb-part .mb-bar { margin: 0; }
+.mb-part b { text-align: right; font-variant-numeric: tabular-nums; }
+.mb-part small { grid-column: 2 / 4; color: var(--ink-3); font-size: 0.8rem; margin-top: -0.2rem; }
+@media (max-width: 480px) { .mb-part { grid-template-columns: 6rem 1fr 3.8rem; } }
+
+/* ---------- BootstrapLab: is the difference real (prefix mb-) ---------- */
+.mb-bin-in { fill: var(--signal); opacity: 0.85; }
+.mb-bin-out { fill: var(--ink-3); opacity: 0.3; }
+.mb-bin-bad { fill: var(--warn); opacity: 0.8; }
+.mb-zero { stroke: var(--ink); stroke-width: 1.5; stroke-dasharray: 4 3; }
+.mb-true { stroke: var(--ok); stroke-width: 2; }
+.mb-tick-true { fill: var(--ok); }
+.mb-part-wide { grid-template-columns: 8.5rem 1fr 3.2rem; }
+@media (max-width: 480px) { .mb-part-wide { grid-template-columns: 6.8rem 1fr 3rem; } }
+.mb-boot .btn:not(.quiet) { min-height: 44px; }
+.mb-boot .mb-big b, .mb-fit .mb-big b { font-size: 1.35rem; }

@@ -1,0 +1,98 @@
+/* Styles for the interactive components in the "skills" lesson batch. Keep every class under this batch's own prefix. */
+
+/* ---------- Run it pad ---------- */
+.sk-pad { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.7rem; }
+.sk-pad .viz-title { margin-bottom: 0; }
+.sk-setup { border: 1px solid var(--line-soft); border-radius: var(--r-sm); background: var(--surface); }
+.sk-setup summary { cursor: pointer; padding: 0.6rem 0.8rem; min-height: 44px; display: flex; align-items: center; color: var(--ink-2); font-size: 0.92rem; }
+.sk-setup pre { margin: 0; padding: 0.4rem 0.8rem 0.8rem; max-height: 16rem; overflow: auto; font-family: var(--font-mono); font-size: 0.82rem; line-height: 1.5; color: var(--ink-2); white-space: pre; }
+.sk-guess { display: grid; gap: 0.3rem; font-size: 0.95rem; }
+.sk-guess input,
+.sk-type input { width: 100%; font: inherit; font-family: var(--font-mono); font-size: 16px; padding: 0.6rem 0.7rem; min-height: 44px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface); color: var(--ink); }
+.sk-code { display: block; }
+.sk-code textarea { display: block; width: 100%; font-family: var(--font-mono); font-size: var(--code-field, 0.88rem); line-height: 1.55; padding: 0.7rem 0.8rem; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface); color: var(--ink); white-space: pre; overflow-x: auto; resize: vertical; tab-size: 4; }
+.sk-code textarea:focus-visible,
+.sk-guess input:focus-visible,
+.sk-type input:focus-visible,
+.sk-setup summary:focus-visible,
+.sk-setup pre:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+.sk-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.sk-actions .btn { min-height: 44px; }
+.sk-note { margin: 0; font-size: 0.88rem; color: var(--ink-3); line-height: 1.4; }
+.sk-hint { font-size: 0.8rem; }
+.sk-result { display: grid; gap: 0.5rem; }
+.sk-result p { margin: 0; }
+.sk-out { margin: 0; padding: 0.7rem 0.9rem; background: var(--night); color: #f6f3ff; border-radius: var(--r-sm); font-family: var(--font-mono); font-size: 0.85rem; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.sk-err { border: 1.5px solid var(--warn); border-radius: var(--r-sm); padding: 0.7rem 0.9rem; display: grid; gap: 0.5rem; }
+.sk-bad { color: var(--warn); }
+.sk-compare code { font-family: var(--font-mono); font-size: 0.88em; overflow-wrap: anywhere; }
+
+/* ---------- LoopWalk ---------- */
+.sk-walk { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.8rem; }
+.sk-walk .viz-title { margin-bottom: 0; }
+.sk-lines { margin: 0; padding: 0.6rem 0; background: var(--surface); border: 1px solid var(--line-soft); border-radius: var(--r-sm); font-family: var(--font-mono); font-size: 0.9rem; line-height: 1.6; overflow-x: auto; }
+.sk-line { display: block; padding: 0 0.8rem; white-space: pre; border-left: 4px solid transparent; transition: background 0.2s; }
+.sk-line.is-on { background: var(--signal-wash); border-left-color: var(--signal); font-weight: 600; }
+.sk-shelf { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.4rem; }
+.sk-box { display: grid; justify-items: center; gap: 0.1rem; padding: 0.5rem 0.2rem; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface); transition: transform 0.2s, background 0.2s; }
+.sk-box b { font-family: var(--font-mono); font-size: 1.15rem; }
+.sk-idx { font-size: 0.8rem; color: var(--ink-3); }
+.sk-box.is-on { background: var(--tint-sun); border-color: var(--ink); transform: translateY(-4px); }
+.sk-vars { margin: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4rem; }
+.sk-vars div { border: 1px solid var(--line-soft); border-radius: var(--r-sm); padding: 0.4rem 0.6rem; }
+.sk-vars div.has { border-color: var(--signal); background: var(--signal-wash); }
+.sk-vars dt { font-family: var(--font-mono); font-size: 0.85rem; color: var(--ink-3); }
+.sk-vars dd { margin: 0; font-family: var(--font-mono); font-size: 1rem; font-weight: 600; overflow-wrap: anywhere; }
+.sk-vars div:not(.has) dd { font-size: 0.8rem; font-weight: 400; color: var(--ink-3); font-family: var(--font-display); }
+.sk-say { margin: 0; min-height: 3.2em; }
+.sk-printed code { font-family: var(--font-mono); font-weight: 600; }
+
+/* ---------- SpamScorer ---------- */
+.sk-score { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.8rem; }
+.sk-score .viz-title { margin-bottom: 0; }
+.sk-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.sk-chip { text-align: left; min-height: 44px; padding: 0.4rem 0.8rem; border: 1px solid var(--line); border-radius: 999px; background: transparent; font-size: 0.88rem; line-height: 1.3; cursor: pointer; }
+.sk-chip[aria-pressed='true'] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.viz .sk-chip[aria-pressed='true'] { color: var(--paper); }
+.sk-chip:focus-visible,
+.sk-actions .btn:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+.sk-type { display: grid; gap: 0.3rem; font-size: 0.92rem; }
+.sk-votes { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.35rem; }
+.sk-vote { display: grid; grid-template-columns: minmax(5rem, 9rem) 1fr; grid-template-areas: 'w c' 'b b'; gap: 0 0.7rem; align-items: baseline; padding: 0.4rem 0; border-bottom: 1px solid var(--line-soft); }
+.sk-vote .sk-w { grid-area: w; font-family: var(--font-mono); font-weight: 600; overflow-wrap: anywhere; }
+.sk-vote .sk-c { grid-area: c; font-size: 0.85rem; color: var(--ink-3); }
+.sk-vote .sk-bar { grid-area: b; }
+.sk-vote.is-unseen .sk-w { color: var(--ink-3); font-weight: 400; }
+.sk-start .sk-w { font-family: var(--font-display); font-weight: 500; font-size: 0.9rem; }
+.sk-bar { position: relative; display: block; height: 1.5rem; margin-top: 0.25rem; background: var(--line-soft); border-radius: 4px; }
+.sk-bar::after { content: ''; position: absolute; left: 50%; top: -2px; bottom: -2px; width: 2px; background: var(--ink-3); }
+.sk-fill { position: absolute; top: 0; bottom: 0; border-radius: 3px; transition: width 0.25s; }
+.sk-num { position: absolute; right: 0.4rem; top: 50%; transform: translateY(-50%); font-family: var(--font-mono); font-size: 0.8rem; color: var(--ink); z-index: 1; text-shadow: 0 0 3px var(--surface); }
+.sk-total { margin: 0; font-size: 1.02rem; }
+.sk-yes { color: var(--ok); }
+.sk-no { color: var(--warn); }
+
+@media (max-width: 560px) {
+  .sk-vars { grid-template-columns: 1fr; }
+  .sk-vars div { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sk-box, .sk-line, .sk-fill { transition: none; }
+}
+
+/* ---------- dataset listing in the lesson ---------- */
+.sk-data { margin-block: 1.2rem; border: 1px solid var(--line-soft); border-radius: var(--r-sm); background: var(--surface); }
+.sk-data summary { cursor: pointer; padding: 0.7rem 0.9rem; min-height: 44px; display: flex; align-items: center; font-family: var(--font-display); font-weight: 600; }
+.sk-data summary:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+.sk-data h4 { margin: 0.9rem 0.9rem 0.3rem; font-family: var(--font-display); font-size: 0.95rem; }
+.sk-data ol { margin: 0 0.9rem 0.9rem; padding-left: 1.6rem; display: grid; gap: 0.3rem; font-size: 0.95rem; }
+.sk-tag { display: inline-block; margin-right: 0.3rem; padding: 0 0.45rem; border-radius: 999px; border: 1px solid currentColor; font-family: var(--font-display); font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
+.sk-tag.sk-spam { color: var(--warn); }
+.sk-tag.sk-ham { color: var(--ok); }
+
+.sk-pick { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
+.sk-pick-label { flex-basis: 100%; font-size: 0.9rem; color: var(--ink-2); }
+.sk-num-chip { min-width: 44px; justify-content: center; text-align: center; padding-inline: 0.5rem; font-family: var(--font-mono); }
+
+/* code must read literally: no ligatures that turn != into a different symbol */
+.sk-code textarea, .sk-out, .sk-lines, .sk-setup pre, .sk-vote .sk-w, .sk-guess input, .sk-type input, .sk-vars dd, .sk-box b { font-variant-ligatures: none; font-feature-settings: 'liga' 0, 'calt' 0; }

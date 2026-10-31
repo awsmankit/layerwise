@@ -20,6 +20,23 @@ import { extras_reasoning } from './extras/reasoning';
 import { extras_agenteval } from './extras/agenteval';
 import { extras_euai } from './extras/euai';
 import { extrasStart } from './extras/start';
+import { extrasW1StartA } from './extras/w1-start-a';
+import { extrasW1RespA } from './extras/w1-resp-a';
+import { extrasW1RespB } from './extras/w1-resp-b';
+import { extrasW1Skills } from './extras/w1-skills';
+import { extrasW1DlA } from './extras/w1-dl-a';
+import { extrasW1DlB } from './extras/w1-dl-b';
+import { extrasW1MlA } from './extras/w1-ml-a';
+import { extrasW1MlB } from './extras/w1-ml-b';
+import { extrasW1Audio } from './extras/w1-audio';
+import { extrasW2AgentsA } from './extras/w2-agents-a';
+import { extrasW2AgentsB } from './extras/w2-agents-b';
+import { extrasW2Product } from './extras/w2-product';
+import { extrasW2Evals } from './extras/w2-evals';
+import { extrasW2Docs } from './extras/w2-docs';
+import { extrasW2DlA } from './extras/w2-dl-a';
+import { extrasW2DlB } from './extras/w2-dl-b';
+import { extrasW2Resp } from './extras/w2-resp';
 
 export type QuizItem = {
   q: string;
@@ -476,4 +493,4 @@ const baseExtras: Record<string, Extra> = {
 };
 
 /** Core lessons plus the per-track files in ./extras. */
-export const extras: Record<string, Extra> = { ...baseExtras, ...extrasCloud, ...extrasInfra, ...extrasLocal, ...extrasCore, ...extrasModels, ...extrasEcosystem, ...extras_frameworks, ...extras_mcp, ...extras_promptpatterns, ...extras_libraries, ...extras_reasoning, ...extras_agenteval, ...extras_euai, ...extrasOps, ...extrasRetrievalServing, ...extrasStart };
+export const extras: Record<string, Extra> = { ...baseExtras, ...extrasCloud, ...extrasInfra, ...extrasLocal, ...extrasCore, ...extrasModels, ...extrasEcosystem, ...extras_frameworks, ...extras_mcp, ...extras_promptpatterns, ...extras_libraries, ...extras_reasoning, ...extras_agenteval, ...extras_euai, ...extrasOps, ...extrasRetrievalServing, ...extrasStart, ...extrasW1StartA, ...extrasW1RespA, ...extrasW1RespB, ...extrasW1Skills, ...extrasW1DlA, ...extrasW1DlB, ...extrasW1MlA, ...extrasW1MlB, ...extrasW1Audio, ...extrasW2AgentsA, ...extrasW2AgentsB, ...extrasW2Product, ...extrasW2Evals, ...extrasW2Docs, ...extrasW2DlA, ...extrasW2DlB, ...extrasW2Resp };

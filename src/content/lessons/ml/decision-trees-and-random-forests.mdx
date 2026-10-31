@@ -1,0 +1,135 @@
+---
+title: "Decision trees and random forests"
+track: ml
+level: basic
+order: 4
+summary: How a tree learns which question to ask next (Gini and entropy, checked by hand on ten rows), why one deep tree memorises noise, how bagging and random forests fix that by voting, and when trees beat neural networks on tables.
+updated: 2026-11-01
+sources:
+  - label: "Google Machine Learning Education: Decision forests"
+    url: https://developers.google.com/machine-learning/decision-forests
+  - label: "scikit-learn user guide: Decision trees"
+    url: https://scikit-learn.org/stable/modules/tree.html
+  - label: "scikit-learn user guide: Ensembles (random forests, feature importance)"
+    url: https://scikit-learn.org/stable/modules/ensemble.html
+  - label: "scikit-learn user guide: Permutation feature importance"
+    url: https://scikit-learn.org/stable/modules/permutation_importance.html
+  - label: "Random Forests (Breiman, 2001)"
+    url: https://link.springer.com/article/10.1023/A:1010933404324
+  - label: "MLU-Explain: Decision trees (Amazon, visual essay)"
+    url: https://mlu-explain.github.io/decision-tree/
+  - label: "MLU-Explain: Random forest (Amazon, visual essay)"
+    url: https://mlu-explain.github.io/random-forest/
+  - label: "Why do tree-based models still outperform deep learning on tabular data? (Grinsztajn, Oyallon and Varoquaux, 2022)"
+    url: https://arxiv.org/abs/2207.08815
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import SplitPicker from '../../../components/viz/SplitPicker.tsx';
+
+A decision tree predicts by asking a short chain of yes/no questions, like a game of twenty questions. Trees are among the most used models on tables of data, and they are one of the easiest models to explain to someone who is not a specialist. This lesson shows how the questions are chosen, why one tree is unreliable, and how a crowd of trees fixes that. If the idea of a tree of questions is new, [Computers that decide and plan](../../start/computers-that-decide-and-plan/) is the gentle version.
+
+## A tree is a stack of questions
+
+Each box in the tree asks one question about one input, such as "did the student revise for at least 4 hours?". The answer sends the row left or right to the next question. The tree ends in **leaves**: a leaf gives the answer, which is the most common class among the training rows that reached it, or for a number prediction, their average.
+
+Nobody writes the questions. The computer learns them from labelled examples. The only hard part is deciding, at each box, which question to ask.
+
+## Picking the question: impurity
+
+A good question leaves each side mostly one answer. A bad one leaves both sides as mixed as before. **Impurity** puts a number on how mixed a group is. The most common version is the **Gini impurity**: 1 minus the sum of the squared shares of each class. A group of all one class scores 0. A 50/50 group of two classes scores 0.5, the worst case for two classes. The other usual measure is **entropy**, which is 0 for a pure group and 1 bit for a 50/50 group.
+
+Here are ten students, made up, with whether they passed:
+
+| Student | Revised 4+ hours? | Slept 8 hours? | Passed? |
+|---|---|---|---|
+| 1 | yes | yes | pass |
+| 2 | yes | yes | pass |
+| 3 | yes | yes | pass |
+| 4 | yes | no | pass |
+| 5 | yes | no | pass |
+| 6 | yes | yes | fail |
+| 7 | no | yes | fail |
+| 8 | no | no | fail |
+| 9 | no | no | fail |
+| 10 | no | no | fail |
+
+Before any question the group is 5 pass and 5 fail, so Gini = 1 - 0.5 x 0.5 - 0.5 x 0.5 = **0.5**. Try the two questions:
+
+| Question | Yes side | No side | Gini of each side | Weighted Gini | Drop from 0.5 |
+|---|---|---|---|---|---|
+| Revised 4+ hours? | 6 students: 5 pass, 1 fail | 4 students: 0 pass, 4 fail | 0.278 and 0 | 0.6 x 0.278 + 0.4 x 0 = **0.167** | **0.333** |
+| Slept 8 hours? | 5 students: 3 pass, 2 fail | 5 students: 2 pass, 3 fail | 0.48 and 0.48 | **0.48** | **0.02** |
+
+The first Gini is 1 - (5/6)^2 - (1/6)^2 = 0.278. Each side is weighted by how many students it holds, because a big mixed group matters more than a tiny one. The revision question cleans the groups up far more, so it wins. Entropy gives the same verdict: the weighted entropy after the revision question is 0.39 bits, a drop of 0.61 from 1 bit, while the sleep question drops only 0.03.
+
+The learning algorithm tries every input and every cut point, keeps the question with the biggest drop, splits the rows, and repeats inside each side. It stops when a side is pure, or when a limit you set (depth, or the least rows allowed in a leaf) is reached. Choosing the best question right now, with no look ahead, is called a **greedy** method.
+
+<SplitPicker client:visible />
+
+In the figure, "Pick a split" lets you place a cut and see the table for it, and "Jump to the best split" shows what the algorithm would choose. Then "Grow a tree" repeats that choice automatically while you change the depth.
+
+<Deep title="Trees for numbers, and other details">
+A tree that predicts a number (a regression tree) uses the same procedure, but measures how mixed a group is by the squared error around the group's average, and each leaf predicts that average. A single input can be cut at any value between two neighbouring training values, so continuous inputs are no harder than yes/no ones; categorical inputs need handling that depends on the library (scikit-learn's trees, for example, expect numbers). Gini and entropy usually pick very similar trees; the choice rarely matters much.
+</Deep>
+
+## One deep tree memorises the noise
+
+Let a tree keep asking questions until every leaf is pure, and it will get every training row right. That sounds perfect and is not. Real data has noise and mislabelled rows, and a deep tree builds a small box around each one. On new points those boxes are wrong.
+
+Open "Grow a tree" in the figure and raise the depth. Training accuracy climbs to 100%, while accuracy on 1,000 fresh points from the same source stops improving and often falls. This is **overfitting**, met in [Classical ML essentials](../../foundations/classical-ml-essentials/), and [the next lesson](../overfitting-and-bias-variance/) is about it. A second problem is that deep trees are **unstable**: change a handful of rows and the whole tree can come out different.
+
+The usual defences are limits set before growing (a maximum depth, a minimum number of rows per leaf) or **pruning**: growing a large tree and then cutting back branches that do not help on held-out data. Both make the model simpler. A better defence is to stop relying on a single tree.
+
+## Bagging: a crowd of different trees
+
+Imagine twenty students each guessing a jar of sweets. Any one guess is off, but the average is usually close, because individual errors point in different directions. **Bagging** (short for bootstrap aggregating) does this with trees:
+
+1. Draw a **bootstrap sample**: pick rows at random, with replacement, until it is as big as the original. Some rows appear twice, and about 37% are left out.
+2. Grow a deep tree on that sample.
+3. Repeat many times, then let the trees **vote** (or average, for numbers).
+
+Each tree overfits in its own way, so the errors partly cancel. Averaging lowers the **variance**, how much the answer changes with the particular sample, while leaving the **bias** about the same.
+
+A **random forest** adds one more trick. At each split a tree may look at only a random subset of the inputs. That stops every tree choosing the same strong input first, so the trees differ more and the vote is more useful. For classification, a common default is a subset the size of the square root of the number of inputs. The scikit-learn guide describes both sources of randomness (resampled rows and random input subsets) as there to lower variance, at a small possible cost in bias.
+
+Switch to "Forest" in the figure. One fully grown tree scores 100% on its training points and noticeably less on fresh ones. A forest of fully grown trees usually does better on the fresh points, and its shading is smoother, because the shade is the share of trees voting for each class. In practice a forest needs few settings. The scikit-learn guide notes that more trees are better but slower, and that results stop improving significantly beyond a certain number.
+
+<Callout title="A free validation score">
+Each tree never saw about 37% of the rows. Letting only those trees predict each row gives an **out-of-bag** estimate of accuracy without setting data aside. It is a handy first check, but keep a proper validation or test set for decisions that matter.
+</Callout>
+
+## Feature importance: a first look, with a warning
+
+A forest can report how much each input contributed. The common version adds up the impurity drop from every split that used the input, weighted by how many rows reached that split, and scales the totals to add to 1. In the figure the bars show this for x and y.
+
+Treat it as a first look only. The scikit-learn guide warns that these importances come from the training data, so they may not show what matters on new data, and that they favour inputs with many distinct values. Correlated inputs also share the credit between them. **Permutation importance**, which shuffles one input in held-out data and measures how much the score drops, is the safer follow-up.
+
+## When trees beat neural networks
+
+Trees are strong on **tables**: rows of mixed numbers and categories, as in sales, credit, sensors or medical records.
+
+| | Trees and forests | Neural networks |
+|---|---|---|
+| Table of mixed columns | Usually the strongest start | Often needs more tuning and care |
+| Scaling the inputs | Not needed, since questions only compare to a cut | Usually needed |
+| Images, sound, text | Poor fit | The standard choice |
+| Very large datasets and learned features | Capped by hand-made features | Can keep improving |
+| Explaining one prediction | Follow the questions | Harder |
+| Predicting beyond the training range | Cannot: a tree repeats the nearest leaf | Smooth models can extrapolate, though not reliably |
+
+One 2022 benchmark of 45 tabular datasets (Grinsztajn, Oyallon and Varoquaux) found tree-based models still ahead of the deep learning methods tested on medium-sized data of around 10,000 rows. This is evidence about those datasets and methods, not a law; [the boosting lesson](../gradient-boosting/) looks at it more carefully.
+
+Trees have limits of their own. Their cuts are straight and line up with the axes, so a diagonal boundary becomes a staircase. And because a leaf repeats the average of what it saw, a tree cannot predict a trend beyond the data it was trained on.
+
+## What to remember
+
+- A tree is a stack of yes/no questions, learned from data by repeatedly choosing the split that most reduces impurity (Gini or entropy).
+- In the ten-row example, "revised 4+ hours" drops the Gini from 0.5 to 0.167, and "slept 8 hours" drops it only to 0.48.
+- A single deep tree memorises noise: perfect on training rows, worse on new ones, and unstable.
+- Bagging many trees on resampled rows and letting them vote lowers variance. A random forest also gives each split a random subset of inputs.
+- Impurity-based feature importance is a first look. Prefer permutation importance on held-out data for conclusions.
+- Trees are a strong default for tables and a poor fit for images, sound and text.
+
+Next: [Gradient boosting](../gradient-boosting/).

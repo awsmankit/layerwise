@@ -24,5 +24,8 @@ export const searchPages: SearchItem[] = [
   { t: 'Interview prep', u: '/interview/', k: 'Page', s: 'Practise AI interviews or run them with a shared rubric.' },
   { t: 'Your progress', u: '/progress/', k: 'Page', s: 'Lessons done, quiz scores, revision and a mixed review. Copy a link or download a file to move it to another device.' },
   { t: 'Certificates', u: '/certificate/', k: 'Page', s: 'Finish every lesson in a learning path and download or print a certificate with your name on it.' },
-  { t: 'For teachers', u: '/teach/', k: 'Page', s: 'Course plans and classroom activities.' },
+  { t: 'For teachers', u: '/teach/', k: 'Page', s: 'School plans for ages 10 to 18, unplugged activities, worksheets, a parents guide, an AI4K12 map and adult workshop plans.' },
+  { t: 'Unplugged activity cards', u: '/teach/activities/', k: 'Page', s: 'Twelve classroom activities with no computer: be the classifier, 20 questions as a decision tree, human neural network, bias in the data, spot the fake source, tokens by hand.' },
+  { t: 'Printable worksheets', u: '/teach/worksheets/', k: 'Page', s: 'An A4 worksheet and answer key for each age band: 10 to 12, 13 to 15 and 16 to 18.' },
+  { t: 'Parents and carers guide', u: '/teach/parents/', k: 'Page', s: 'What children learn about AI here, how to talk about it, rules of thumb for safe use at home, and a printable family agreement.' },
 ];

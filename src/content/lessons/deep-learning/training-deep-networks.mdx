@@ -1,0 +1,152 @@
+---
+title: "Training deep networks: initialisation, normalisation, optimisers and regularisation"
+track: deep-learning
+level: intermediate
+order: 2
+summary: "Why deep networks are hard to train, and the standard fixes in the order you meet them: starting scale, normalisation layers, optimisers such as momentum and Adam, learning-rate schedules with warm-up, and regularisation."
+updated: 2026-11-01
+sources:
+  - label: "Adam: A Method for Stochastic Optimization (Kingma and Ba, 2014)"
+    url: https://arxiv.org/abs/1412.6980
+  - label: "Decoupled Weight Decay Regularization, the AdamW paper (Loshchilov and Hutter, 2017)"
+    url: https://arxiv.org/abs/1711.05101
+  - label: "Delving Deep into Rectifiers, He initialisation (He et al., 2015)"
+    url: https://arxiv.org/abs/1502.01852
+  - label: "Understanding the difficulty of training deep feedforward neural networks, Xavier initialisation (Glorot and Bengio, 2010)"
+    url: https://proceedings.mlr.press/v9/glorot10a.html
+  - label: "Batch Normalization (Ioffe and Szegedy, 2015)"
+    url: https://arxiv.org/abs/1502.03167
+  - label: "How Does Batch Normalization Help Optimization? (Santurkar et al., 2018)"
+    url: https://arxiv.org/abs/1805.11604
+  - label: "Layer Normalization (Ba et al., 2016)"
+    url: https://arxiv.org/abs/1607.06450
+  - label: "Root Mean Square Layer Normalization (Zhang and Sennrich, 2019)"
+    url: https://arxiv.org/abs/1910.07467
+  - label: "Dropout: A Simple Way to Prevent Neural Networks from Overfitting (Srivastava et al., 2014)"
+    url: https://jmlr.org/papers/v15/srivastava14a.html
+  - label: "Accurate, Large Minibatch SGD: Training ImageNet in 1 Hour (Goyal et al., 2017)"
+    url: https://arxiv.org/abs/1706.02677
+  - label: "Why Momentum Really Works (Distill)"
+    url: https://distill.pub/2017/momentum/
+  - label: "Dive into Deep Learning, 5.4 Numerical stability and initialization"
+    url: https://d2l.ai/chapter_multilayer-perceptrons/numerical-stability-and-init.html
+  - label: "A Recipe for Training Neural Networks (Andrej Karpathy, 2019)"
+    url: https://karpathy.github.io/2019/04/25/recipe/
+  - label: "Deep Learning Tuning Playbook (Google Research)"
+    url: https://github.com/google-research/tuning_playbook
+---
+
+import InitDepth from '../../../components/viz/InitDepth.tsx';
+import NormGrid from '../../../components/viz/NormGrid.tsx';
+import OptimiserRace from '../../../components/viz/OptimiserRace.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+[Inside a neural network](../inside-a-neural-network/) ended with a small network that trained in a second. Real networks are deeper, and depth makes training fragile: the same loop of guess, measure and nudge can crawl, explode or quietly learn nothing. This lesson walks through the standard fixes in the order you meet the problems. Each one exists because of a specific way training goes wrong.
+
+## Why depth makes training fragile
+
+A deep network is a long chain of multiplications. Whatever happens to a number as it passes through one layer happens again at every layer, so small effects compound. If each layer shrinks the signal by 10 per cent, 20 layers leave 0.9 to the power 20, about 12 per cent of it. If each layer grows it by 10 per cent, 20 layers give 1.1 to the power 20, about 6.7 times. At 100 layers the same two factors give 0.00003 and about 13,800.
+
+The gradients travel backwards through the same layers, so they compound in the same way. When they shrink to almost nothing, the early layers barely learn: this is the **vanishing gradient** problem. When they grow without limit, one step throws the weights somewhere useless: the **exploding gradient** problem. An old example is the sigmoid activation, whose slope is never above 0.25. Ten sigmoid layers can multiply the gradient by 0.25 ten times, about one millionth.
+
+## Initialisation: choose the starting scale on purpose
+
+Weights start as random numbers. The spread of those numbers decides whether the signal keeps its size from layer to layer. **Xavier** (also called Glorot) initialisation picks a spread that keeps the size steady for activations such as tanh. **He** initialisation uses a spread larger by a factor of the square root of 2, because ReLU zeroes about half of its inputs and the signal would otherwise halve in variance at every layer.
+
+Move the slider and watch twenty layers. Each bar is the size of the numbers after one layer, on a log scale, with 1 in the middle.
+
+<InitDepth client:visible />
+
+With ReLU and a scale of 1.41 (He) the bars stay level. At 1.0, the signal shrinks to well under a hundredth of its size by layer 20. At 2.0 it grows by more than a hundredfold. With tanh the picture changes: the same large scale does not explode, because tanh squashes everything into the range -1 to 1, but the units get stuck at the flat ends of the curve where the slope, and therefore the gradient, is close to zero. Frameworks apply a sensible default initialisation for you, which is why you rarely tune this, but it explains why copying a layer type into a new architecture sometimes silently breaks training.
+
+## Normalisation: re-centre the numbers as you go
+
+Initialisation fixes the start. **Normalisation layers** keep the numbers well-behaved throughout training. They subtract a mean and divide by a spread, so that what the next layer sees has a steady size. A tiny example: the numbers 2, 4, 6, 8 have mean 5 and standard deviation about 2.24, so they become -1.34, -0.45, 0.45 and 1.34. Then a learned scale and shift let the layer move away from exactly zero mean and unit spread if that helps.
+
+The difference between the main kinds is which numbers are grouped together. Pick any number below.
+
+<NormGrid client:visible />
+
+- **Batch norm** (Ioffe and Szegedy, 2015) normalises each feature across the examples in the batch. It made much deeper image networks trainable, but it depends on the batch: small batches give noisy statistics, and at inference time it must use averages saved during training.
+- **Layer norm** (Ba et al., 2016) normalises across the features of one example. It does not care about batch size or sequence length, which suits transformers.
+- **RMSNorm** (Zhang and Sennrich, 2019) is a simpler layer norm that only rescales by the root mean square and skips the mean. Many recent language models use it. [Inside a transformer block](../../foundations/inside-a-transformer/) shows where it sits.
+
+Why batch norm helps is still discussed. The original paper credited a reduction in "internal covariate shift". Later work (Santurkar et al., 2018) argued that this is not the main reason and that normalisation instead makes the loss surface smoother and its gradients more predictable. Treat it as a technique that works reliably, with the explanation still under study.
+
+## Optimisers: how to take the step
+
+An optimiser turns gradients into weight updates. The race below uses a loss "ravine": a valley 100 times steeper across than along. This is a stand-in for what real loss surfaces often look like, where some directions are steep and others gentle.
+
+<OptimiserRace client:visible />
+
+- **SGD** moves each weight against its gradient by the learning rate. In a ravine, the steep walls force a small rate (here, anything above 0.02 blows up), and a small rate makes progress along the floor very slow. Push the rate towards that limit and the path starts to zig-zag from wall to wall.
+- **Momentum** keeps a running velocity: each step adds the new gradient to a fraction (often 0.9) of the previous step. The steady push along the floor builds up, so it covers the long floor much faster. It overshoots and swings from side to side, but the swings die away. In the figure's default settings it reaches the goal in 62 steps while SGD with the same rate has not arrived after 300.
+- **Adam** (Kingma and Ba, 2014) keeps a running average of the gradient like momentum, and also of its square, then divides each weight's step by the square root of that second average. A weight with consistently large gradients takes smaller steps, a weight with tiny gradients takes larger ones. In the default settings it takes 98 steps.
+
+Be honest about what this figure shows: on a smooth, tidy bowl like this, momentum does as well as Adam or better. Adam's reputation comes from real networks, where different weights have gradients of very different sizes, and where it tends to work with little tuning. Andrej Karpathy's training recipe suggests Adam with a learning rate of 3e-4 as a safe first baseline, while noting that a well-tuned SGD can slightly beat it on convolutional networks. Both statements are advice from experience rather than theorems.
+
+**AdamW** is Adam with weight decay done properly. Loshchilov and Hutter showed that L2 regularisation and weight decay are the same thing for plain SGD but not for Adam, and that decoupling the decay from the Adam step improves results. Most current transformer training uses AdamW.
+
+Adam's price is memory. It stores two extra numbers per weight, the running averages. For a 7-billion-parameter model that is 14 billion extra numbers, about 56 GB if each is stored in 4 bytes, before counting the weights and gradients. [Training infrastructure](../../infra/training-infrastructure/) shows how that is spread across GPUs.
+
+## Learning-rate schedules and warm-up
+
+The best learning rate changes during a run. Early on, weights are random, the gradients are noisy and Adam's averages have not settled, so large steps can wreck the start. Later, a smaller rate lets the weights settle into a good spot. So most runs use a **schedule**: a short **warm-up** that raises the rate from zero to its peak, followed by a decay.
+
+| Step | Learning rate | Phase |
+|---|---|---|
+| 0 | 0 | Start of warm-up |
+| 500 | 0.00015 | Halfway up |
+| 1,000 | 0.0003 | Peak |
+| 50,500 | 0.000165 | Halfway through a cosine decay |
+| 100,000 | 0.00003 | End: 10 per cent of the peak |
+
+These are example numbers for a schedule with a 1,000-step linear warm-up and a cosine decay to 10 per cent of the peak, not a recommendation. Real runs choose different lengths. Goyal et al. (2017) also reported a linear scaling rule: when the batch size is multiplied by k, multiply the learning rate by k, and use a warm-up so the larger rate is reachable. Google's tuning playbook suggests adding warm-up when a run is unstable early on.
+
+**Gradient clipping** pairs with this: if the overall size of the gradient exceeds a limit (1.0 is a common choice), scale it down before the step. One unlucky batch then cannot throw the weights far.
+
+## Regularisation: fitting the pattern, not the noise
+
+A network with enough weights can memorise its training data. Regularisation makes memorising harder. [Overfitting and bias-variance](../../ml/overfitting-and-bias-variance/) explains the idea in general; these are the deep learning versions.
+
+- **Weight decay** shrinks every weight slightly towards zero at each step, so large weights have to earn their place.
+- **Dropout** (Srivastava et al., 2014) randomly switches off a fraction of the neurons on every training step, for example half of them. No neuron can rely on a particular neighbour being there, so the network learns more robust features. At test time nothing is dropped. Many large language model pretraining runs use little or no dropout, because they see most of their data only about once and have less to memorise.
+- **Early stopping** watches the validation loss and stops when it stops improving, keeping the best saved checkpoint.
+- **Data augmentation**, such as flipping or cropping images, gives the network more varied examples without collecting more.
+
+## A training doctor
+
+| Symptom | Likely causes | What to try |
+|---|---|---|
+| Loss becomes NaN or infinity | Learning rate too high, a bad value in the data, overflow in low-precision numbers | Lower the rate, clip gradients, check the data for missing or infinite values |
+| Loss does not move from the start | Rate far too small, dead ReLU units, a bug such as mismatched labels | First check that the model can overfit a tiny batch of a few examples, as Karpathy's recipe advises |
+| Loss spikes now and then | Rate too high for this batch size, no warm-up, an odd batch | Add warm-up, clip gradients, lower the peak rate |
+| Training loss falls, validation loss rises | Overfitting | More data or augmentation, weight decay, dropout, early stopping |
+| Both stay high | Underfitting: model too small, trained too briefly, or rate wrong | A larger model, longer training, a rate sweep |
+
+<Callout title="A first aid habit">
+
+Before any long run, train on a handful of examples and check the loss goes to nearly zero. If it cannot, something is broken in the code or the setup, and no amount of tuning will fix it. Then scale up.
+
+</Callout>
+
+<Deep title="Adam's update, written out">
+
+For each weight, with gradient `g` at step `t`, Adam keeps two running averages: `m = β1·m + (1 − β1)·g` and `v = β2·v + (1 − β2)·g²`. The paper's suggested defaults are β1 = 0.9 and β2 = 0.999. Because both start at zero, early values are biased low, so they are corrected: `m̂ = m / (1 − β1^t)` and `v̂ = v / (1 − β2^t)`. The update is `w ← w − lr · m̂ / (√v̂ + ε)` with a tiny ε such as 1e-8.
+
+AdamW changes only the last line: `w ← w − lr · (m̂ / (√v̂ + ε) + λ·w)`, so the decay `λ·w` is applied to the weight directly instead of being added to the gradient and then rescaled by `v̂`.
+
+The figure's optimisers are exactly these formulas, run on the loss `0.5 × (1 × u² + 100 × v²)`, where u and v are the coordinates along and across the valley.
+
+</Deep>
+
+## What to remember
+
+- Depth compounds: a factor slightly below or above 1 per layer becomes vanishing or exploding signals and gradients.
+- Initialisation sets the starting scale (Xavier for tanh-like activations, He for ReLU). Normalisation (batch, layer, RMS) keeps numbers steady during training.
+- SGD zig-zags in ravines; momentum smooths the zig-zag; Adam scales each weight's step, and AdamW decays weights properly. Adam stores two extra numbers per weight.
+- Use a warm-up then a decay, and clip gradients. Regularise with weight decay, dropout and early stopping.
+- When a run misbehaves, check the symptom table and test that the model can overfit a tiny batch.
+
+Next: [Backpropagation from scratch](../backprop-from-scratch/) builds the gradient computation that all of these optimisers consume. For which of these settings you meet in language-model work, see [Parameters and hyperparameters](../../llm/parameters-and-hyperparameters/).

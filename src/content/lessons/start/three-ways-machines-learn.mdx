@@ -1,0 +1,95 @@
+---
+title: Three ways a machine can learn
+track: start
+level: basic
+order: 3
+summary: Learning from labelled examples, finding groups on its own, and learning by trial and reward. Try all three on one pile of fruit, then see which one chatbots use.
+updated: 2026-11-01
+sources:
+  - label: "Elements of AI (free introductory course)"
+    url: https://www.elementsofai.com
+  - label: "Google's Machine Learning Crash Course"
+    url: https://developers.google.com/machine-learning/crash-course
+  - label: "AI4K12 Big Idea 3: Learning"
+    url: https://ai4k12.org/big-idea-3-overview/
+  - label: "scikit-learn: choosing the right estimator"
+    url: https://scikit-learn.org/stable/machine_learning_map.html
+  - label: "Reinforcement Learning: An Introduction (Sutton and Barto, free book)"
+    url: http://incompleteideas.net/book/the-book-2nd.html
+  - label: "Hugging Face Deep RL course: Introduction"
+    url: https://huggingface.co/learn/deep-rl-course/unit1/introduction
+  - label: "Wikipedia: Reinforcement learning from human feedback"
+    url: https://en.wikipedia.org/wiki/Reinforcement_learning_from_human_feedback
+---
+
+import ThreeWays from '../../../components/viz/ThreeWays.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+Think about how you learned things. A teacher showed you the right answer. You sorted your own LEGO into piles. You played a game over and over until you stopped losing.
+
+Computers can learn in these three ways too. This lesson shows all of them on one pile of fruit.
+
+## Way one: with the answers
+
+Remember the spam filter, and the apple and banana game? In both, the computer saw examples that came with the right answer. A **label** is that answer, such as "spam" or "banana".
+
+Learning from labelled examples is called **supervised learning**. The labels act like a teacher checking your work. It is the most common kind of machine learning.
+
+The labels must be right and fair. If they are wrong, or some kinds are missing, the computer learns the wrong lesson. [When examples are unfair](../../responsible/when-examples-are-unfair/) looks at this.
+
+## Way two: no answers at all
+
+Now imagine the same pile with the name tags removed. Nobody says which fruit is which.
+
+The computer can still look for fruit that sit close together, like short red ones and long yellow ones. Finding groups with no labels is called **unsupervised learning**. A music app does this when it puts similar songs into one playlist.
+
+There is a catch. The computer finds groups, but it cannot name them. A person has to say "these are bananas". Also, you choose how many groups to look for, and a different number gives different groups.
+
+## Way three: points for trying
+
+In the third way, nobody gives answers, and nobody sorts anything. A learner tries something, then gets a score. A **reward** is a point for doing well. Losing points is the opposite.
+
+Learning from rewards is called **reinforcement learning**. Think of a dog learning "sit" for a treat, or a game bot that tries a level thousands of times. It begins by wandering. Slowly it remembers which moves led to points.
+
+## Try all three
+
+Use the tabs. In the first, tap the chart to place a mystery fruit. In the second, choose how many groups, then press "One round". In the third, let the robot try the grid.
+
+<ThreeWays client:visible />
+
+In the third tab, press "Try 10 times" a few times. At first the robot wanders and falls into holes. Later it walks almost straight to the star. Nobody told it the route. It only had points.
+
+## The reward you choose matters
+
+A robot does what earns points, not what you meant. Imagine a racing game bot that gets points for picking up coins. It might drive in circles collecting coins and never finish the race.
+
+So people who build these systems think hard about what to reward. A badly chosen reward gives odd behaviour.
+
+## Chatbots mix all three
+
+A chatbot learns first from huge amounts of text. It hides the next word and guesses it. The text itself holds the answer, so nobody has to write labels. Along the way it also finds patterns, such as which words belong together.
+
+Then people read pairs of its answers and pick the better one. Those choices act as rewards. They nudge the chatbot towards answers people like. This is one reason chatbots sound so helpful. It can also push them towards answers that please people rather than answers that are true.
+
+## Which way fits which job?
+
+- Sorting spam, naming a plant from a photo: **with labels**, because you have right answers.
+- Grouping songs or shoppers you know little about: **without labels**.
+- Playing a game or steering a robot: **with rewards**.
+
+<Callout title="One sentence each">
+Labels: learn from examples with the right answers. Groups: find patterns with no answers. Rewards: try things and keep what scores.
+</Callout>
+
+<Deep title="For grown-ups: what the three demos use">
+
+Supervised learning splits into classification (predict a category, as the fruit tab does) and regression (predict a number, such as a price). The first tab uses k-nearest neighbours with k = 3 on two features, length and redness, rescaled to the same range. Features are the measurements the model sees; the label is what it must predict.
+
+The second tab runs k-means: pick k centres, assign every point to its nearest centre, move each centre to the mean of its points, and repeat until nothing changes. The starting centres are chosen by a fixed rule so the demo is repeatable, but k-means can end up in different places from different starts. The third tab is tabular Q-learning on a small grid: the agent keeps a value for every cell and move, and after each move nudges that value towards the reward it got plus a discounted estimate of what follows. It explores with a random move 20% of the time. The seed is fixed, so the same presses always give the same result. All the fruit data and rewards are made-up examples.
+
+Chatbot pretraining is usually called self-supervised learning: the labels come from the data itself (the next token), not from people. Tuning with human preferences is often called reinforcement learning from human feedback (RLHF): a reward model is trained from human rankings, then the chatbot is trained to score well on it. A badly specified reward can be exploited, which researchers call reward hacking. See [the training pipeline](../../foundations/training-pipeline/) for the engineer-level version, and [how models learn](../../foundations/how-models-learn/) for the maths.
+
+</Deep>
+
+Next: [How a chatbot answers](../how-a-chatbot-answers/).

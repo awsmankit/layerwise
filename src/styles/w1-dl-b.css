@@ -1,0 +1,486 @@
+/* Styles for the interactive components in the "dl-b" lesson batch. Keep every class under this batch's own prefix. */
+
+/* ---------- shared bits ---------- */
+
+.viz.db {
+  --c: 24px;
+}
+.db-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+.db-row-tight {
+  margin-bottom: 0.3rem;
+}
+.db-label {
+  min-width: 4.2rem;
+  font-size: 0.85rem;
+  font-weight: 650;
+  color: var(--ink-3);
+}
+.viz .db-chip {
+  min-height: 40px;
+  padding: 0.3rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font: 600 0.9rem var(--font-display);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.db-chip:hover {
+  border-color: var(--signal);
+}
+.viz .db-chip[aria-pressed='true'] {
+  background: var(--signal);
+  border-color: var(--signal);
+  color: var(--on-signal);
+}
+.db-chip:focus-visible,
+.db-fm:focus-visible,
+.db-in:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.db-blurb {
+  margin: 0.2rem 0 1rem;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+.db-sub {
+  font-weight: 500;
+  color: var(--ink-3);
+}
+.db-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+.viz.db .btn {
+  min-height: 44px;
+}
+
+/* ---------- convolution lab ---------- */
+
+.db-stage {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.6rem;
+  align-items: flex-start;
+}
+.db-fig {
+  margin: 0;
+  min-width: 0;
+}
+.db-fig figcaption {
+  margin-bottom: 0.4rem;
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+.db-board {
+  max-width: 100%;
+}
+.db-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--n), var(--c));
+  gap: 1px;
+  width: max-content;
+  background: var(--line-soft);
+  border: 1px solid var(--line);
+}
+.db-px {
+  display: grid;
+  place-items: center;
+  width: var(--c);
+  height: var(--c);
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  font: 600 calc(var(--c) * 0.5) var(--font-mono);
+  line-height: 1;
+  user-select: none;
+  cursor: pointer;
+}
+.db-ring {
+  background: var(--surface);
+  color: var(--ink-3);
+  cursor: default;
+}
+.db-fm {
+  box-shadow: none;
+  background: var(--surface);
+}
+.db-fm.is-sel {
+  outline: 2px solid var(--signal);
+  outline-offset: -2px;
+  z-index: 1;
+}
+.db-empty {
+  background: repeating-linear-gradient(45deg, var(--surface) 0 3px, var(--line-soft) 3px 4px);
+}
+.db-window {
+  position: absolute;
+  left: calc(var(--left) * (var(--c) + 1px));
+  top: calc(var(--top) * (var(--c) + 1px));
+  width: calc(3 * var(--c) + 4px);
+  height: calc(3 * var(--c) + 4px);
+  margin: -1px;
+  border: 2px solid var(--signal);
+  box-shadow: 0 0 0 1px var(--surface);
+  pointer-events: none;
+}
+.db-key {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--ink-3);
+}
+.db-swatch {
+  display: inline-block;
+  width: 0.8em;
+  height: 0.8em;
+  margin: 0 0.2em 0 0.6em;
+  vertical-align: -0.05em;
+  border: 1px solid var(--line);
+}
+.db-swatch:first-child {
+  margin-left: 0;
+}
+.db-pos {
+  background: var(--signal);
+}
+.db-neg {
+  background: var(--warn);
+}
+.db-zero {
+  background: var(--surface);
+}
+.db-pooled {
+  margin-top: 1rem;
+}
+
+.db-calc {
+  margin-top: 1.2rem;
+  padding: 0.9rem 0.9rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--paper);
+}
+.db-calc-title {
+  margin-bottom: 0.7rem;
+  font-weight: 650;
+  font-size: 0.95rem;
+}
+.db-sum {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem 0.5rem;
+}
+.db-mini {
+  display: grid;
+  gap: 0.25rem;
+  justify-items: center;
+}
+.db-mini-t {
+  font-size: 0.78rem;
+  font-weight: 650;
+  color: var(--ink-3);
+}
+.db-mini-g {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  gap: 2px;
+}
+.db-c,
+.db-in {
+  display: grid;
+  place-items: center;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 0.15rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--ink);
+  font: 600 0.92rem var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+.db-minus {
+  color: var(--warn);
+}
+.db-in {
+  width: 44px;
+  height: 44px;
+  font-size: 16px;
+  text-align: center;
+}
+.db-op {
+  font: 600 1.2rem var(--font-display);
+  color: var(--ink-3);
+}
+.db-result {
+  margin-top: 0.8rem;
+  font-size: 0.95rem;
+  color: var(--ink-2);
+}
+.db-result b {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.db-opts {
+  margin-bottom: 0;
+}
+
+/* phones: the picture and its ring of zeros must fit the framed box */
+@media (max-width: 560px) {
+  .viz.db {
+    padding-inline: 0.7rem;
+  }
+  .viz.db .db-fig {
+    width: 100%;
+  }
+  .viz.db {
+    --c: min(28px, calc((100vw - 4.7rem - 14px) / var(--side, 14)));
+  }
+  .db-c {
+    min-width: 28px;
+    height: 30px;
+    font-size: 0.85rem;
+  }
+  .db-op {
+    font-size: 1rem;
+  }
+}
+
+/* ---------- counting the weights ---------- */
+
+.db-count {
+  display: grid;
+  gap: 0.9rem;
+}
+.db-count-row {
+  display: grid;
+  gap: 0.2rem;
+}
+.db-count-t {
+  font-size: 0.9rem;
+  color: var(--ink-2);
+}
+.db-count-n {
+  font: 650 1.35rem var(--font-display);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.db-bar {
+  height: 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.db-bar span {
+  display: block;
+  height: 100%;
+  background: var(--signal);
+  transition: width 0.4s var(--ease);
+}
+.db-bar-ok span {
+  background: var(--ok);
+}
+.db-count-sum {
+  font-size: 0.95rem;
+  color: var(--ink-2);
+}
+.db-count-sum b {
+  color: var(--ink);
+}
+
+/* ---------- residual block ---------- */
+
+.db-res {
+  display: block;
+  width: 100%;
+  max-width: 340px;
+  height: auto;
+  margin: 0.6rem auto 0;
+  overflow: visible;
+}
+.db-t {
+  font: 500 14px var(--font-display);
+  fill: var(--ink);
+}
+.db-t-b {
+  font-weight: 700;
+}
+.db-t-s {
+  font-size: 13.5px;
+  fill: var(--ink-3);
+}
+.db-box {
+  fill: var(--surface);
+  stroke: var(--ink);
+  stroke-width: 1;
+  stroke-opacity: 0.7;
+}
+.db-hot {
+  stroke: var(--signal);
+  stroke-opacity: 1;
+  stroke-width: 1.5;
+}
+.db-line {
+  fill: none;
+  stroke: var(--ink);
+  stroke-opacity: 0.6;
+  stroke-width: 1;
+}
+.db-skip {
+  fill: none;
+  stroke: var(--signal);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 4;
+}
+.db-back {
+  fill: none;
+  stroke: var(--warn);
+  stroke-width: 2;
+}
+.db-arrowhead {
+  fill: var(--ink);
+  fill-opacity: 0.6;
+}
+.db-arrowhead-s {
+  fill: var(--warn);
+}
+.db-equation {
+  margin-top: 0.8rem;
+  text-align: center;
+  font: 500 1.1rem var(--font-mono);
+}
+
+/* ---------- diffusion toy ---------- */
+
+.db-plotbox {
+  width: min(100%, 360px);
+  margin: 0.4rem auto 0.6rem;
+}
+.db-plot {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: manipulation;
+}
+.db-plot-frame {
+  fill: var(--surface);
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.db-ghost {
+  fill: none;
+  stroke: var(--ink);
+  stroke-opacity: 0.22;
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+}
+.db-ghost-on {
+  stroke: var(--signal);
+  stroke-opacity: 0.8;
+}
+.db-dot {
+  fill: var(--signal);
+  fill-opacity: 0.8;
+}
+.db-plot-key {
+  margin-top: 0.3rem;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--ink-3);
+}
+.db-dotkey,
+.db-ghostkey {
+  display: inline-block;
+  width: 0.7em;
+  height: 0.7em;
+  margin-right: 0.2em;
+  border-radius: 50%;
+  vertical-align: -0.05em;
+}
+.db-dotkey {
+  background: var(--signal);
+}
+.db-ghostkey {
+  border: 1px dashed var(--ink-3);
+}
+.db-stats {
+  text-align: center;
+  font-size: 0.95rem;
+  color: var(--ink-2);
+}
+.db-stats b {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.db-read {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.2rem 1.2rem;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.88rem;
+  color: var(--ink-3);
+}
+.db-read li {
+  margin: 0;
+  padding: 0;
+}
+.db-read li::before {
+  content: none;
+}
+.db-read b {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.db-hint {
+  max-width: 34rem;
+  margin: 0.7rem auto 0;
+  padding: 0.5rem 0.8rem;
+  border-left: 3px solid var(--signal);
+  background: var(--signal-wash);
+  font-size: 0.92rem;
+  color: var(--ink-2);
+}
+.db-sec {
+  margin-top: 1.2rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--line-soft);
+}
+.db-sec-t {
+  margin-bottom: 0.5rem;
+  font-weight: 650;
+  font-size: 0.95rem;
+}
+.db-twocol {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.2rem 1.6rem;
+  align-items: center;
+}
+@media (prefers-reduced-motion: reduce) {
+  .db-bar span {
+    transition: none;
+  }
+}
+@media (max-width: 560px) {
+  .db-label {
+    min-width: 100%;
+  }
+}

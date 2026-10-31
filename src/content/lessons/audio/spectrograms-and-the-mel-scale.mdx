@@ -1,0 +1,169 @@
+---
+title: Spectrograms and the mel scale
+track: audio
+level: intermediate
+order: 2
+summary: Why most speech models read a picture of sound instead of the raw waveform. The Fourier transform in plain words, short windows and spectrograms, the mel scale, and the exact front end Whisper uses.
+updated: 2026-11-01
+sources:
+  - label: "Robust Speech Recognition via Large-Scale Weak Supervision, Whisper (Radford et al., 2022)"
+    url: https://arxiv.org/abs/2212.04356
+  - label: "OpenAI Whisper source code: audio.py (sample rate, window, hop, mel filters, log scaling)"
+    url: https://github.com/openai/whisper/blob/main/whisper/audio.py
+  - label: "Whisper large-v3 model card (128 mel bins instead of 80)"
+    url: https://huggingface.co/openai/whisper-large-v3
+  - label: "wav2vec 2.0: A Framework for Self-Supervised Learning of Speech Representations (Baevski et al., 2020)"
+    url: https://arxiv.org/abs/2006.11477
+  - label: "Hugging Face Audio Course, Unit 1: Working with audio data (spectrogram and mel spectrogram)"
+    url: https://huggingface.co/learn/audio-course/chapter1/audio_data
+  - label: "Wikipedia: Mel scale"
+    url: https://en.wikipedia.org/wiki/Mel_scale
+  - label: "Wikipedia: Spectrogram"
+    url: https://en.wikipedia.org/wiki/Spectrogram
+  - label: "Wikipedia: Mel-frequency cepstrum (MFCCs)"
+    url: https://en.wikipedia.org/wiki/Mel-frequency_cepstrum
+  - label: "Wikipedia: Formant"
+    url: https://en.wikipedia.org/wiki/Formant
+  - label: "MDN: AnalyserNode"
+    url: https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode
+  - label: "Web Audio API specification: FFT windowing and smoothing (the analyser applies a Blackman window)"
+    url: https://webaudio.github.io/web-audio-api/
+---
+
+import SumOfTones from '../../../components/viz/SumOfTones.tsx';
+import Spectrolab from '../../../components/viz/Spectrolab.tsx';
+import MelBands from '../../../components/viz/MelBands.tsx';
+import PipelineFlow from '../../../components/viz/PipelineFlow.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+[How a computer hears](../how-a-computer-hears/) ended with a long list of samples: 16,000 numbers a second for speech. That list is faithful, but it is a poor thing to hand to a model. This lesson covers what most speech models read instead, and why.
+
+## Why not read the raw waveform?
+
+A waveform shows how loud the air pressure is at each instant. What makes an "ah" different from an "ee" is something else: which pitches are present in the sound, and how strong each one is. That is hard to see in a wavy line, and a model would have to work it out from scratch.
+
+The numbers are also fragile. Shift a sound a hair earlier or later and almost every sample changes, although it still sounds the same. A model reading samples has to learn to ignore that.
+
+Some models do read raw audio: wav2vec 2.0 feeds the waveform into a stack of convolutions. But many speech models, Whisper (a speech-to-text model, also called ASR, automatic speech recognition) among them, are given a time-frequency picture. Getting that picture takes three ideas.
+
+## Idea 1: a sound is a sum of pure tones
+
+A **pure tone** is the smoothest possible wave, a sine wave, with one pitch. Real sounds are mixtures. A voice, a violin and a clap are each a sum of many pure tones at different pitches and strengths.
+
+The **Fourier transform** is the calculation that works backwards. Give it a stretch of sound and it tells you which pure tones are inside and how strong each one is. The result is a **spectrum**: strength for each frequency. The fast way to compute it is called the FFT.
+
+Mix some tones below and watch the bars. The wave on top is built by adding the tones. The bars underneath were measured from that wave alone by a real transform, and they find the ingredients you mixed.
+
+<SumOfTones client:visible />
+
+## Idea 2: short windows make a spectrogram
+
+One transform of a whole sentence says which pitches occurred, but not when. Speech changes every few hundredths of a second. So we cut the sound into short pieces called **windows**, transform each one, and line the results up side by side.
+
+The picture that results is a **spectrogram**. Time runs across, frequency runs up, and brightness shows energy. Each column is one window's spectrum.
+
+Windows overlap: the **hop** is how far we slide forward each time. Whisper uses a 25 ms window and a 10 ms hop. At 16,000 samples a second, that is a 400-sample window sliding 160 samples at a time, giving 100 columns for every second of audio. Each window is also faded in and out at its edges (with a Hann window) so the sudden cut does not smear the result.
+
+## Idea 3: time versus frequency detail
+
+A window of N samples at rate R gives frequency detail of R divided by N. A long window sees pitch sharply but blurs timing. A short window pinpoints moments but blurs pitch. You cannot have both. These figures are computed for a 16,000 Hz rate:
+
+| Window | Samples | Frequency detail | Good for |
+|---|---|---|---|
+| 6.25 ms | 100 | 160 Hz | Sharp moments, such as a click |
+| 25 ms | 400 | 40 Hz | A balance, used for speech |
+| 100 ms | 1,600 | 10 Hz | Steady tones, such as a held note |
+
+A voice buzzing at 120 Hz also has energy at 240, 360, 480 Hz and so on. These whole-number multiples are called **harmonics**, and they are 120 Hz apart. A 160 Hz resolution cannot separate them. A 40 Hz resolution can.
+
+## Try it: a live spectrogram
+
+Press a sound button. Nothing plays until you tap one. Then try these:
+
+1. **Chirp**: a single bright line climbing as the pitch rises.
+2. **Vowel "ah"** with the longest window, then the shortest. The harmonic stripes appear and then blur.
+3. **Claps** with the shortest window, then the longest. The sharp lines smear sideways.
+4. Press **Mel scale** and compare the same sounds.
+
+<Spectrolab client:visible />
+
+Your browser's analyser node is doing the transform here. It uses its own window shape (a Blackman window, which the Web Audio specification describes) and gives a new column about every screen refresh, so it is a demonstration of the idea, not Whisper's exact recipe.
+
+## Hearing is not evenly spaced
+
+Look at the plain view of the vowel. Most of the bright detail sits in the lower part of the picture, and the upper half is faint.
+
+Our ears work this way. The step from 100 Hz to 200 Hz sounds large: it is an octave. The step from 5,000 Hz to 5,100 Hz is barely noticeable, although both are 100 Hz. The **mel scale** is a pitch scale built from listening tests in which people judged which pitches were equally far apart. In the original definition, a 1,000 Hz tone is 1,000 mel. One common formula is mel = 2,595 x log10(1 + f / 700).
+
+By that formula, 100 Hz to 200 Hz is about 133 mel, and 5,000 Hz to 5,100 Hz is only about 20 mel, around 7 times smaller. (Whisper's filters come from librosa's default, a Slaney-style scale that is straight below 1 kHz and logarithmic above it. The numbers differ a little; the shape is the same.)
+
+## Mel bands: squeezing the picture
+
+A **mel filterbank** applies this idea to a spectrum. It adds up the energy into overlapping triangular bands whose centres are evenly spaced in mel. That gives many narrow bands at low pitches and a few wide ones high up. Whisper uses 80 bands between 0 and 8,000 Hz: the lowest is about 74 Hz wide and the highest about 590 Hz wide, around 8 times wider (computed from the Slaney scale).
+
+<MelBands client:visible />
+
+A 400-sample window gives 201 frequency bins (up to 8,000 Hz in 40 Hz steps). The filterbank turns each column of 201 numbers into 80. The result is a **mel spectrogram**.
+
+## Log scaling
+
+Loudness is not linear for ears either. Energy in a spectrogram can vary by a factor of billions, from a whisper to a shout. So the energies are converted to a logarithmic scale. Whisper takes log10, stops values falling more than 8 below the loudest value in the clip (a factor of 10^8 in power), then shifts and scales them into a range a network handles well (the paper says roughly -1 to 1). The final picture is a **log-mel spectrogram**.
+
+## How Whisper reads it
+
+<PipelineFlow
+  client:visible
+  title="From a recording to Whisper's encoder"
+  stages={[
+    { title: 'Resample', detail: 'All audio is converted to 16,000 samples a second, so every clip speaks the same language.' },
+    { title: 'Cut to 30 seconds', detail: 'Whisper works on 30-second chunks: 480,000 samples. Shorter audio is padded and longer audio is split.' },
+    { title: 'Windows and transform', detail: 'A 25 ms Hann window (400 samples) slides 10 ms (160 samples) at a time. Each window gets a Fourier transform: 201 values per column, 3,000 columns per chunk.' },
+    { title: 'Mel bands and log', detail: 'The 201 values per column become 80 mel bands (128 in the large-v3 model), then log scaling. The result is an 80 by 3,000 grid: 240,000 numbers, half as many as the raw 480,000 samples.' },
+    { title: 'Encoder', detail: 'Two convolution layers (the second with stride 2) shrink 3,000 columns to 1,500 positions, one per 20 ms. A transformer reads them like a sequence of tokens.' },
+    { title: 'Decoder writes text', detail: 'A second transformer writes the words one token at a time, reading the encoder output as it goes.' },
+  ]}
+  caption="Whisper's front end, from the paper and the open-source code. Details differ between speech models."
+/>
+
+So the model sees an image-like grid, 80 tall, and reads it as a sequence of frames, one every 10 ms, a lot like a sentence of tokens.
+
+<Callout kind="edge" title="Frames set the cost">
+A frame every 10 ms means 100 frames a second, so cost grows with the hop. A 25 ms window also means a system must hear 25 ms of sound before it can make the first column. That is already longer than the 5 to 6 ms delays rated just acceptable in the hearing-aid study quoted in the previous lesson, so a product that must respond that fast has to use much shorter frames or other methods. See <a href="../../edge/edge-vs-cloud-inference/">edge or cloud inference</a> for the wider trade-off.
+</Callout>
+
+<Deep title="Worked numbers and a Python sketch">
+
+**One bin.** A 1,000 Hz tone at 16,000 samples a second, cut into a 400-sample Hann window, has a transform peak exactly in bin 25 (25 x 40 Hz = 1,000 Hz). A 1,030 Hz tone falls between bins 25 and 26 and spreads over both. This site's tests check those values against numpy and librosa.
+
+**Sketch.** This is close to, but not identical to, Whisper's own code:
+
+```python
+import librosa, numpy as np
+y, sr = librosa.load("clip.wav", sr=16000)            # resample to 16 kHz
+mel = librosa.feature.melspectrogram(
+    y=y, sr=sr, n_fft=400, hop_length=160, n_mels=80)  # (80, frames)
+log_mel = np.log10(np.maximum(mel, 1e-10))
+log_mel = np.maximum(log_mel, log_mel.max() - 8.0)     # keep within 8 of the loudest
+log_mel = (log_mel + 4.0) / 4.0
+```
+
+For one second of audio this gives 101 columns. Whisper's own code drops the final one, and uses magnitudes squared, as librosa does.
+
+**MFCCs.** A classical, more compact cousin takes the discrete cosine transform of the log-mel values and keeps only the first few coefficients. Neural models mostly read the log-mel values directly.
+
+**What the spectrogram throws away.** It keeps strength but not the exact timing of waves inside each window (the phase). That is fine for recognising speech. It means you cannot turn a spectrogram back into sound exactly, so models that produce speech usually need a vocoder to fill that in.
+
+**Many other models use it.** Wake-word detectors, noise suppressors and hearing-aid models also read time-frequency pictures, often with other band layouts. This lesson covers the shared idea; later lessons build on it.
+
+</Deep>
+
+## What to remember
+
+- A sound is a sum of pure tones. The Fourier transform finds which ones and how strong.
+- A spectrogram applies it to short, overlapping windows: time across, frequency up, brightness for energy.
+- Long windows give sharp pitch and blurred timing. Short windows give the reverse. Whisper's 25 ms window with a 10 ms hop is a speech compromise.
+- The mel scale spaces bands the way hearing does, with fine detail low and coarse detail high. Taking logs mirrors how loudness is heard.
+- Whisper reads an 80 by 3,000 log-mel grid for each 30 seconds of 16 kHz audio (128 bands in large-v3).
+
+Next: [Multimodal models](../../foundations/multimodal-models/) shows how speech, images and text come together in one system, and why audio costs so many tokens.

@@ -1,0 +1,121 @@
+---
+import Base from '../../../layouts/Base.astro';
+import PrintButtons from '../../../components/teach/PrintButtons.astro';
+import { unplugged, bands } from '../../../data/unplugged';
+import { lessonLookup, splitLabel } from '../../../lib/teach';
+import { withBase } from '../../../lib/url';
+
+export function getStaticPaths() {
+  return unplugged.map((a) => ({ params: { id: a.id }, props: { a } }));
+}
+const { a } = Astro.props;
+const { link } = await lessonLookup();
+const bandLabel = bands.filter((b) => a.bands.includes(b.id)).map((b) => b.short.replace('-', ' to ')).join(', ');
+const bigIdeaNames = ['', 'Perception', 'Representation and reasoning', 'Learning', 'Natural interaction', 'Societal impact'];
+const idx = unplugged.findIndex((x) => x.id === a.id);
+const options = [
+  { mode: 'card', label: 'Print the card' },
+  ...(a.cards ? [{ mode: 'cards', label: 'Print the cut-out cards' }] : []),
+  ...(a.answers ? [{ mode: 'notes', label: 'Print teacher notes' }] : []),
+  { mode: 'all', label: 'Print everything' },
+];
+const isRows = (items: string[]) => items.every((s) => /^[01 ]+$/.test(s));
+---
+
+<Base title={`${a.title} (activity card)`} description={a.hook}>
+  <div class="wrap tk-print-root">
+    <p class="tk-crumbs"><a href={withBase('/teach/')}>For teachers</a> / <a href={withBase('/teach/activities/')}>Activity cards</a> / {a.title}</p>
+
+    <PrintButtons options={options} />
+
+    <article class="tk-page tk-part" data-part="card">
+      <h1 class="tk-title">{a.title}</h1>
+      <p>{a.hook}</p>
+      <dl class="tk-facts">
+        <div><dt>Ages</dt><dd>{bandLabel}</dd></div>
+        <div><dt>Time</dt><dd>{a.minutes} minutes</dd></div>
+        <div><dt>Group</dt><dd>{a.group}</dd></div>
+        <div><dt>AI4K12 big idea</dt><dd>{a.bigIdea}: {bigIdeaNames[a.bigIdea]}</dd></div>
+      </dl>
+
+      <h2>You need</h2>
+      <ul>{a.materials.map((m) => <li>{m}</li>)}</ul>
+
+      <h2>Steps</h2>
+      <ol>{a.steps.map((s) => <li>{s}</li>)}</ol>
+
+      <h2>What to notice</h2>
+      <ul>{a.notice.map((s) => <li>{s}</li>)}</ul>
+
+      <h2>Talk about it</h2>
+      <ul>{a.discuss.map((s) => <li>{s}</li>)}</ul>
+
+      <h2>Supports these lessons</h2>
+      <ul>
+        {
+          a.lessons.map((k) => {
+            const l = link(k);
+            return <li>{l.href ? <a href={l.href}>{l.title}</a> : l.title}</li>;
+          })
+        }
+      </ul>
+    </article>
+
+    {
+      a.cards && (
+        <section class="tk-page tk-cards tk-part" data-part="cards" aria-label="Cut-out cards">
+          <h2 style="margin-top:0">Cut-out cards: {a.title}</h2>
+          {a.cards.map((c) => (
+            <>
+              <h3>{c.title}</h3>
+              {c.note && <p class="tk-note">{c.note}</p>}
+              {isRows(c.items) ? (
+                <div class="tk-cutgrid" style="display:grid;grid-template-columns:1fr;max-width:26rem">
+                  {c.items.map((r) => <div class="tk-numrow">{r}</div>)}
+                </div>
+              ) : (
+                <ul class:list={['tk-cutgrid', c.items.some((s) => s.length > 60) && 'tk-wide']}>
+                  {c.items.map((s) => {
+                    const p = splitLabel(s);
+                    return (
+                      <li class="tk-cut">
+                        {p.label && <b>{p.label}</b>}
+                        <span>{p.text}</span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </>
+          ))}
+        </section>
+      )
+    }
+
+    {
+      a.answers && (
+        <section class="tk-page tk-part" data-part="notes" aria-label="Teacher notes">
+          <div class="tk-teacher">
+            <h2>Teacher notes</h2>
+            <ul>{a.answers.map((s) => <li>{s}</li>)}</ul>
+            <h3>Related resources</h3>
+            <ul class="tk-related">
+              {a.related.map((r) => (
+                <li>
+                  <a href={r.url} rel="noopener">{r.label}</a>
+                </li>
+              ))}
+            </ul>
+            <p class="tk-related">Activities are written for Layerwise, in our own words, and may be copied and adapted under <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener">CC BY 4.0</a> with credit to Layerwise. Linked resources have their own licences and terms.</p>
+          </div>
+        </section>
+      )
+    }
+
+    <nav class="tk-crumbs" aria-label="Other cards" style="margin-bottom:3rem">
+      {idx > 0 && <a href={withBase(`/teach/activities/${unplugged[idx - 1].id}/`)}>Previous: {unplugged[idx - 1].title}</a>}
+      {idx > 0 && idx < unplugged.length - 1 && ' | '}
+      {idx < unplugged.length - 1 && <a href={withBase(`/teach/activities/${unplugged[idx + 1].id}/`)}>Next: {unplugged[idx + 1].title}</a>}
+    </nav>
+  </div>
+</Base>

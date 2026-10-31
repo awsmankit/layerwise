@@ -1,0 +1,157 @@
+---
+title: Is the difference real?
+track: ml
+level: intermediate
+order: 6
+summary: Noise, sample size, bootstrap intervals, paired comparisons, p-values and A/B tests, and how many test cases you need before one model's higher score means anything. Plus base rates, by counting.
+updated: 2026-11-01
+sources:
+  - label: "Adding Error Bars to Evals: A Statistical Approach to Language Model Evaluations (Evan Miller, 2024)"
+    url: https://arxiv.org/abs/2411.00640
+  - label: "How Not To Run an A/B Test (Evan Miller, 2010)"
+    url: https://www.evanmiller.org/how-not-to-run-an-ab-test.html
+  - label: "The ASA statement on statistical significance and p-values (Wasserstein and Lazar, 2016)"
+    url: https://www.amstat.org/asa/files/pdfs/p-valuestatement.pdf
+  - label: "Think Stats, 3rd edition (Allen Downey)"
+    url: https://greenteapress.com/wp/think-stats-3e/
+  - label: "Seeing Theory: a visual introduction to probability and statistics (Brown University)"
+    url: https://seeing-theory.brown.edu/
+  - label: "3Blue1Brown: Bayes' theorem"
+    url: https://www.3blue1brown.com/lessons/bayes-theorem
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import BootstrapLab from '../../../components/viz/BootstrapLab.tsx';
+
+You change a prompt. The old version passed 80 of your 100 test cases; the new one passes 83. Do you ship it? Most people would say yes, because 83 is bigger than 80. This lesson shows why that is not an answer, and what to do instead. It uses ideas from statistics, taught by counting and simulating rather than by formula. It assumes you know what a test set is ([Evals 101](../../evals/evals-101/) and [Classical ML essentials](../../foundations/classical-ml-essentials/)) and the idea of overfitting to a validation set ([How a model learns](../../foundations/how-models-learn/)).
+
+## Every score is one draw
+
+A test set is a sample of the cases you could have chosen. Pick a different 100 and the score changes, even for the same model. The score you measured is one draw from a spread of scores you might have got.
+
+How wide is the spread? For a pass rate p on n cases, the **standard error** is the square root of p times (1 - p), divided by n. For 80% on 100 cases that is the square root of 0.8 x 0.2 / 100 = 0.04, so four points. A rough 95% range is about two standard errors either side: roughly 72% to 88%. That is the plausible range for the model's true pass rate.
+
+The same pass rate on different numbers of cases:
+
+| Pass rate seen | Cases | Plausible range for the true rate (95%, bootstrap) |
+|---|---|---|
+| 8 of 10 | 10 | 50% to 100% |
+| 80 of 100 | 100 | 72% to 88% |
+| 800 of 1,000 | 1,000 | 77.5% to 82.5% |
+
+Ten cases tell you almost nothing. That is why an interviewer asks "ten cases is small, what do you do before changing production?" Ten times the cases shrinks the range to about a third of its width, not a tenth: the width falls with the square root of the number of cases. Halving the width takes four times as many cases.
+
+## The bootstrap: shake your own data
+
+You do not need a formula to get that range. The **bootstrap** gets it by simulation. Treat your test set as if it were the whole world. Draw 100 cases from it with replacement (so some come up twice and some not at all), compute the score, and repeat a few thousand times. The spread of those scores shows how much a score moves when the cases change. The middle 95% of them is a **confidence interval**.
+
+A confidence interval is not a promise that the true value is inside this particular interval. The 95% describes the method: if you repeated the whole experiment many times, about 95% of the intervals built this way would contain the true value.
+
+For simple pass rates the bootstrap and the textbook formula agree closely, so the formula is often enough. The bootstrap is worth knowing because it still works when the score is something awkward, such as a median latency or an F1.
+
+## Compare on the same cases
+
+Back to 80 against 83. Suppose both prompts were run on the same 100 cases, and the results are:
+
+| | B passes | B fails |
+|---|---|---|
+| **A passes** | 75 | 5 |
+| **A fails** | 8 | 12 |
+
+A passed 75 + 5 = 80 and B passed 75 + 8 = 83. Look where they differ. On 75 cases both pass and on 12 both fail, so those say nothing about which is better. All the information is in the 13 cases where they disagree: B won 8 and A won 5.
+
+This is a **paired comparison**. Resample whole cases (keeping each case's two results together) and measure the gap. For this table the 95% bootstrap interval for B minus A is about -4 points to +10 points. It includes zero, so the data cannot say B is better. If you had treated the two results as unrelated, the interval would be wider still: -8 to +14.
+
+Pairing helps because a hard case is hard for both models. Throwing that shared difficulty away adds noise that does not belong. A 2024 paper on error bars for LLM evals by Evan Miller recommends exactly this: analyse the question-level paired differences rather than comparing two summary scores.
+
+Now try it. In the simulator, two models are tested on the same N cases. You choose how many cases and the true gap. The histogram is the bootstrap: each bar counts resamples with that gap. Pairing is on by default; switch it off and watch the interval widen.
+
+<BootstrapLab client:visible />
+
+Try N = 30 with a true gap of 5 points, then "Run 200 experiments". B is truly better, yet in about one test in six A looks ahead, and the interval confirms B in only about one test in ten. Now try N = 1,000: B is confirmed in nearly every test. Finally set the gap to zero: the models are identical, yet in about 45% of tests at N = 100 B looks ahead, and a winner is declared a few times in a hundred.
+
+## A/B tests and p-values, in plain words
+
+An **A/B test** is the same question asked of live traffic: show half the users version A and half version B, chosen at random, then compare an outcome. Random assignment matters because it spreads every other difference between users evenly across both groups, so a gap can be put down to the change.
+
+The usual tool for deciding whether a gap is more than luck is the **p-value**. Here is what it means. Suppose there were really no difference between A and B. The p-value is how often you would still see a gap at least as big as the one you saw, just by chance.
+
+For the 8-against-5 table, the question becomes: if the models were equally good, the 13 cases where they disagree would split like coin flips. How often does a fair coin give a split at least as lopsided as 8 to 5, in either direction? About 58% of the time, so p is about 0.58. Nothing to see. Ten times the data with the same proportions (80 against 50) gives p of about 0.011: now the split would be rare by luck.
+
+What a p-value is not:
+
+- It is **not the chance that B is better**. It assumes there is no difference and asks how surprising the data are.
+- It is **not the size of the difference.** A tiny gap on huge data can be very significant. With 100,000 cases per model, 80.0% against 80.5% gives p of about 0.005 and may be worth nothing.
+- 0.049 and 0.051 are **not different in kind.** The 0.05 line is a convention.
+- A big p-value does **not show the models are the same.** It may only mean the test was too small to tell.
+
+The American Statistical Association published a statement in 2016 on this. Among its points: p-values do not measure the probability that a hypothesis is true, and a conclusion should not rest on whether a p-value passes a threshold.
+
+## Effect size: how big, not just whether
+
+So report the gap and its interval, in units people care about: "B passed 3 more cases in 100 (interval -4 to +10 points)". That is the **effect size**, with its uncertainty. A decision follows from asking whether even the optimistic end of the interval is worth the cost of shipping, and whether the pessimistic end is harmless.
+
+## Do not peek, and do not try twenty things
+
+**Peeking.** If you check an A/B test every day and stop as soon as p dips below 0.05, you will often stop on a fluke. A fixed stopping rule, or a method designed for repeated looks, is needed. Evan Miller's note on the topic shows how badly checking early inflates false positives.
+
+**Many comparisons.** At the 5% level, one comparison between identical prompts gives a false alarm 5% of the time. Try 20 prompt variants and the chance of at least one false alarm is 1 - 0.95^20 = 64%. If you run many variants, expect something to "win", and treat the winner as a hypothesis to confirm on fresh cases. A simple fix is to demand a stricter threshold, for example 0.05 / 20 = 0.0025 for each (the Bonferroni correction). Another is to confirm the winner on cases you did not use to pick it. This is the same trap as overfitting to a validation set, which [Overfitting and bias-variance](../overfitting-and-bias-variance/) covers.
+
+## How many cases do you need?
+
+It depends on the gap you want to detect. The standard recipe (two-sided 5% level, 80% chance of catching a real gap, comparing two separate groups) needs this many cases for each model, starting from a 70% pass rate:
+
+| Real gap | Cases per model |
+|---|---|
+| 70% to 80% (10 points) | 295 |
+| 70% to 75% (5 points) | 1,252 |
+| 70% to 73% (3 points) | 3,555 |
+
+Detecting a small gap is expensive: halve the gap and you need about four times the cases. Running both models on the same cases helps a lot when they agree on most of them. If the models disagree on 15% of cases, detecting a 5-point gap needs about 469 cases, not 1,252 per model. Before you build an eval, decide the smallest gap that would change your decision, and size the test set for it. The Evan Miller paper has the formulas and recommends this kind of power analysis.
+
+A few cautions for LLM evals:
+
+- If you use a model as the judge, its mistakes add noise on top. See [LLM-as-judge pitfalls](../../evals/llm-as-judge-pitfalls/).
+- If many test cases come from the same source document or user, they are not independent, and the interval should be wider than the simple formula says.
+- If the model's output varies between runs, running each case several times reduces that noise, but it does not replace having more distinct cases.
+
+<Deep title="The sample-size formula and the simulation setup">
+
+For two pass rates p1 and p2 with p̄ their average, cases per group is approximately 2 p̄ (1 - p̄) (z_a + z_b)² / (p1 - p2)², where z_a = 1.96 for a two-sided 5% test and z_b = 0.84 for 80% power. For 70% against 75%: p̄ = 0.725, so 2 x 0.725 x 0.275 x 7.85 / 0.0025 = about 1,252.
+
+For the paired case, with d the share of cases where exactly one model passes and δ the gap: n = ((1.96 √d + 0.84 √(d - δ²)) / δ)². With d = 0.15 and δ = 0.05: ((0.759 + 0.323) / 0.05)² = about 469.
+
+In the simulator, model A truly passes 70% of cases. On 60% of the cases both models share the same random draw (they find the same cases easy), and on the rest their draws are independent, which keeps each model's own pass rate exactly as set. The random numbers are seeded, so the same settings always give the same results. "Clearly better" means the 95% paired-bootstrap interval, from 200 resamples, lies wholly above zero. The data in the tables above are made up for the lesson.
+
+</Deep>
+
+## Base rates: a short detour by counting
+
+A related mistake has the same root: ignoring how common something is. Imagine a screening test for something that 1% of people have. The test catches 90% of the people who have it, and wrongly flags 10% of the people who do not. Someone tests positive. How likely is it that they have it?
+
+Do not use a formula. Imagine 1,000 people.
+
+| | Count |
+|---|---|
+| Have it (1% of 1,000) | 10 |
+| Do not have it | 990 |
+| Have it and test positive (90% of 10) | 9 |
+| Do not have it, but test positive (10% of 990) | 99 |
+| **All positive tests** | **9 + 99 = 108** |
+
+Of the 108 people who test positive, only 9 have it: about 8%. The test is right about 90% of the time overall (900 of 1,000 people get the correct result), and still a positive result is much more likely to be a false alarm than not, because the healthy people vastly outnumber the sick. The fraction of people who truly have the condition, here 1%, is the **base rate**. It is the starting point, and a test result only updates it.
+
+The same arithmetic applies to a guardrail or judge that flags bad answers. If 1 answer in 100 is really bad and the checker wrongly flags 10% of good ones, most flags are false alarms. It is also the reasoning behind precision in [Classical ML essentials](../../foundations/classical-ml-essentials/). For the full story, 3Blue1Brown's lesson on Bayes' theorem builds it up with pictures.
+
+## What to remember
+
+- A score is one draw. Ten cases tell you almost nothing; four times the cases halves the uncertainty.
+- Put an interval on every score, and compare models on the same cases (paired).
+- A p-value is how surprising the gap would be if there were no real difference. It is not the chance that B is better, and it says nothing about size.
+- Report the effect size and its interval. Decide in advance what gap would matter.
+- Do not peek, and discount the winner of many tries; confirm it on fresh cases.
+- Plan the size of the test: detecting 5 points on a 70% pass rate needs over a thousand cases per model unless both run on the same cases.
+- When something is rare, a positive result is mostly false alarms. Count 1,000 people.
+
+Next: [Evals 101](../../evals/evals-101/) puts these ideas to work on AI features, and [LLM-as-judge pitfalls](../../evals/llm-as-judge-pitfalls/) shows another source of noise.

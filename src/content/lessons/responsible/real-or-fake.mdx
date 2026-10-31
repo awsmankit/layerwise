@@ -1,0 +1,109 @@
+---
+title: "Real or fake? Pictures, voices and news you can't believe at first glance"
+track: responsible
+level: basic
+order: 2
+summary: AI can make pictures, voices and headlines that look real. Learn why checking the source works better than hunting for clues in the pixels, what watermarks and content credentials can and cannot tell you, and what to do when you are not sure.
+updated: 2026-11-01
+sources:
+  - label: "AI-synthesized faces are indistinguishable from real faces and more trustworthy (Nightingale and Farid, PNAS, 2022)"
+    url: https://pubmed.ncbi.nlm.nih.gov/35165187/
+  - label: "Civic Online Reasoning, Stanford History Education Group (lateral reading and checking who is behind information)"
+    url: https://cor.inquirygroup.org/
+  - label: "C2PA frequently asked questions"
+    url: https://c2pa.org/faq/
+  - label: "Content Credentials"
+    url: https://contentcredentials.org/
+  - label: "FBI Internet Crime Complaint Center: Criminals Use Generative Artificial Intelligence to Facilitate Financial Fraud (3 December 2024)"
+    url: https://www.ic3.gov/PSA/2024/PSA241203
+  - label: "US Federal Trade Commission: Scammers use AI to enhance their family emergency schemes (March 2023)"
+    url: https://consumer.ftc.gov/consumer-alerts/2023/03/scammers-use-ai-enhance-their-family-emergency-schemes
+  - label: "European Commission: Code of Practice on marking and labelling of AI-generated content"
+    url: https://digital-strategy.ec.europa.eu/en/policies/code-practice-ai-generated-content
+  - label: "Google DeepMind: SynthID"
+    url: https://deepmind.google/models/synthid/
+---
+
+import SourceDetective from '../../../components/viz/SourceDetective.tsx';
+import Deep from '../../../components/ui/Deep.astro';
+
+Someone sends you a picture of a sea monster on your school field. Is it real?
+
+A few years ago you could often tell. Now AI can make pictures, voices and videos that look and sound real, and it takes minutes. In [AI that can see, hear and draw](../../start/ai-that-sees-and-hears/) you met these fakes. This lesson is about what to do next.
+
+## Why "spot the extra finger" stops working
+
+Old tips said: look at the hands, the shadows, the writing in the background. They helped for a while. But the tools keep getting better, and each new one fixes the old mistakes.
+
+In a 2022 study, researchers found that people could not tell AI-made faces from real ones. People even rated the fake faces as more trustworthy. So clues in the pixels are a bonus, never proof.
+
+## Check the source, not the pixels
+
+A picture can be perfect and still be a lie. So ask about where it came from.
+
+- **Who posted it?** Is it a known person, school or news site, or an account made last week?
+- **Can I find it somewhere else?** If it is real and big news, trusted places will show it too.
+- **How does it make me feel?** More on this below.
+- **Is there a label?** Some tools add one, but see "Labels" below.
+
+The best trick is called **lateral reading**. Do not stay on the page. Open a new tab and see what other trusted sites say about it. Professional fact-checkers do exactly this.
+
+A **reverse image search** helps too. It starts from a picture instead of words, and shows where else the picture has appeared. Ask a grown-up to help. It may show an older copy, which suggests the picture is being used in a new, false way.
+
+## Does it make you angry or excited, fast?
+
+Fakes are often built to make you feel something strong right away. Shocked, thrilled, furious. When you feel that rush, you share first and think later.
+
+So treat a strong feeling as a clue. It does not mean the post is false. It means: pause for one minute.
+
+## Labels: watermarks and content credentials
+
+Some AI tools add a hidden **watermark**, a mark inside the picture or sound that a computer can find but you cannot see. Some add **content credentials**, a signed record of how a file was made and changed.
+
+Labels can help, but know their limits.
+
+- **No label does not mean real.** Labels can be removed, and many tools never add them.
+- **A label does not mean true.** It can say how a picture was made. It cannot say that what the picture shows really happened.
+- **Edits can break the check.** If a file is changed without its record being updated, the check fails. That is a useful warning sign.
+
+## Voices you know can be copied
+
+AI can copy a voice from a short recording. Scammers use this to make a call or message that sounds like someone in your family. It says: "I am in trouble, send money now."
+
+Here is what to do.
+
+1. **Stop.** Do not send money or gift cards, however real the voice sounds.
+2. **Call back** on a number you already know, or ask another family member.
+3. **Use a safe word.** Agree a secret word with your family, in person. Never post it online.
+4. **Tell an adult.**
+
+## Try it: Check it like a detective
+
+Six made-up scenes: a picture, a voice message, a headline and a chatbot answer. In each one, open the source card, then choose what to do. Two of them turn out to be fine.
+
+<SourceDetective client:visible />
+
+## Pause, check, ask, report
+
+- **Pause.** Do not share while you feel the rush.
+- **Check.** Who made it, and what do trusted places say?
+- **Ask.** Show a trusted adult, especially if it is about money, danger or someone you know.
+- **Report.** Use the app's report button if it is a scam or hurts someone.
+
+You will not catch every fake, and neither can grown-ups. A checking habit does most of the work.
+
+<Deep title="For grown-ups: provenance, marking and detectors">
+
+**Content credentials** are an open standard from the Coalition for Content Provenance and Authenticity (C2PA). A tool or camera attaches a signed manifest that records how a file was made and edited, and any later change breaks the cryptographic link. The C2PA's own FAQ is clear about the limits: a manifest is typically embedded in the file but can be separated from it, and it records provenance, which helps people judge reliability. It does not make a claim true. The Content Credentials site itself says its aim is to let good actors show the authenticity of their content, and that bad actors will keep trying to label synthetic content as authentic. Check the spec's current version (the C2PA site listed version 2.5 on 1 November 2026).
+
+**Watermarks** are different. They are hidden signals added when content is generated. Google DeepMind's SynthID, for example, is built into Google's own generative tools, and its detector covers content from Google and some listed partners. It finds only content that carries a SynthID watermark. Its own page claims robustness to common edits such as cropping for images and video, and a more limited claim for audio. A missing watermark tells you nothing about content from other tools.
+
+**Law and policy.** In the EU, Article 50 of the AI Act sets transparency duties, including machine-readable marking of AI-generated content and labelling of deepfakes. The Commission's page for the Code of Practice on marking and labelling lists a final code after a plenary on 10 June 2026 (page last updated 19 October 2026). It says technical solutions should be effective, interoperable, robust and reliable "as far as technically feasible", that adherence is voluntary and that the Article 50 duties are legal obligations applying from 2 August 2026. Details can change and this is not legal advice. Check the current text.
+
+**Detectors.** Software that claims to tell AI content from real content exists, but it should be treated as one clue and not as proof, especially before accusing anyone. Teach the source-first routine instead.
+
+**Family emergency scams.** The FBI's December 2024 notice warns that criminals use AI-generated audio to impersonate relatives to obtain payments, and advises families to agree a secret word or phrase. The FTC's 2023 alert advises hanging up and calling the person on a number you know is theirs, and treating requests for wire transfers, cryptocurrency or gift cards as warning signs.
+
+</Deep>
+
+Next: [AI and your private life](../ai-and-your-private-life/).

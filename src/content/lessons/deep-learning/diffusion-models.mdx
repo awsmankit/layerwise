@@ -1,0 +1,161 @@
+---
+title: "Diffusion models: how image generators work"
+track: deep-learning
+level: intermediate
+order: 5
+summary: Add noise to a picture step by step, train a network to predict that noise, then start from pure noise and clean it up. See text guidance, latent space, steps and samplers, and the honest limits, with a toy denoiser you can run.
+updated: 2026-11-01
+sources:
+  - label: "Denoising Diffusion Probabilistic Models, DDPM (Ho et al., 2020)"
+    url: https://arxiv.org/abs/2006.11239
+  - label: "Denoising Diffusion Implicit Models, DDIM (Song et al., 2020)"
+    url: https://arxiv.org/abs/2010.02502
+  - label: "High-Resolution Image Synthesis with Latent Diffusion Models (Rombach et al., 2021)"
+    url: https://arxiv.org/abs/2112.10752
+  - label: "Classifier-Free Diffusion Guidance (Ho and Salimans, 2022)"
+    url: https://arxiv.org/abs/2207.12598
+  - label: "Scalable Diffusion Models with Transformers, DiT (Peebles and Xie, 2022)"
+    url: https://arxiv.org/abs/2212.09748
+  - label: "Scaling Rectified Flow Transformers for High-Resolution Image Synthesis, Stable Diffusion 3 (Esser et al., 2024)"
+    url: https://arxiv.org/abs/2403.03206
+  - label: "Adding Conditional Control to Text-to-Image Diffusion Models, ControlNet (Zhang et al., 2023)"
+    url: https://arxiv.org/abs/2302.05543
+  - label: "Extracting Training Data from Diffusion Models (Carlini et al., 2023)"
+    url: https://arxiv.org/abs/2301.13188
+  - label: "Stable Bias: Analyzing Societal Representations in Diffusion Models (Luccioni et al., 2023)"
+    url: https://arxiv.org/abs/2303.11408
+  - label: "Hugging Face blog: Stable Diffusion with Diffusers"
+    url: https://huggingface.co/blog/stable_diffusion
+  - label: "Hugging Face Diffusers: conditional image generation (guidance scale, seeds, negative prompts)"
+    url: https://huggingface.co/docs/diffusers/en/using-diffusers/conditional_image_generation
+  - label: "Hugging Face Diffusion Course, Unit 1"
+    url: https://huggingface.co/learn/diffusion-course/unit1/1
+  - label: "Lilian Weng: What are Diffusion Models?"
+    url: https://lilianweng.github.io/posts/2021-07-11-diffusion-models/
+  - label: "Diffusion Explainer (Polo Club)"
+    url: https://poloclub.github.io/diffusion-explainer/
+---
+
+import Deep from '../../../components/ui/Deep.astro';
+import PipelineFlow from '../../../components/viz/PipelineFlow.tsx';
+import DiffusionToy from '../../../components/viz/DiffusionToy.tsx';
+
+An image generator does not paint from a blank page. It starts from a screen of random speckle and cleans it up, a little at a time, until a picture is left. The model has learned what "a little cleaner" looks like, because during training it practised on pictures that were deliberately ruined. This lesson goes through that idea in order, then the knobs you will meet in real tools, and then where it goes wrong.
+
+It builds on [how models learn](../../foundations/how-models-learn/), on the patches and CLIP in [multimodal models](../../foundations/multimodal-models/), and on the short version in [AI that can see, hear and draw](../../start/ai-that-sees-and-hears/). The network inside many generators is made of the convolution and residual pieces from [how computers see](../how-computers-see/).
+
+## Step one: ruin a picture on purpose
+
+Take a real picture and add a small amount of random noise to every number in it. Do it again, and again. After enough rounds there is no picture left, only noise that looks the same whatever you started with. This is the **forward process**, and it needs no learning at all.
+
+The original DDPM paper used 1,000 steps, adding a little more noise each time. Because the noise is random and adds up in a simple way, you do not have to run all the steps to see step 400. One formula jumps straight there: keep some fraction of the original picture and mix in the rest as fresh noise. Early steps keep nearly all of the picture, and late steps keep almost none.
+
+## Step two: train a network to predict the noise
+
+Here is the training game. Pick a real picture and a random step *t*. Jump to that step to get a noisy picture, and remember exactly which noise you added. Show the network the noisy picture and the value of *t*, and ask it to guess the noise. Its error is the gap between its guess and the true noise. Training nudges its weights to shrink that gap, over millions of pictures and all the steps.
+
+Why predict the noise rather than the clean picture? Because they are two views of the same thing. If you know the noisy picture and the noise, you can work out the clean picture. A one-number example, with made-up values: a clean pixel of 0.8, noise of −0.5, and a step that keeps 0.71 of the picture and 0.71 of the noise gives a noisy value of about 0.21. A network that correctly guesses "the noise was −0.5" lets you subtract it and recover 0.8. DDPM found that predicting the noise worked well. Newer systems sometimes predict a different but equivalent quantity, which does not change the idea.
+
+## Step three: start from noise and walk back
+
+Now the generator. Draw a fresh screen of pure random noise. Ask the network to guess the noise in it, remove a part of that guess, and you have a slightly cleaner picture. Repeat from step 1,000 down to step 0. Every starting screen of noise ends as a different picture, which is why one prompt can make endless images.
+
+The demo below does exactly this, in two dimensions so you can see every point. The "pictures" are clouds of points drawn from a simple shape. **The denoiser is not a trained network.** For such a simple dataset the best possible denoiser can be written as a formula, so that exact formula stands in for the network that a real generator would learn from millions of photos.
+
+<DiffusionToy client:visible />
+
+Things to try:
+
+- Drag **Noising step** from 0 to 1,000 and watch the ring dissolve. Near 1,000 the points are pure noise and the shape has no influence left.
+- Press **Denoise** with 50 steps. The noise is walked back onto the ring.
+- Set **Steps** to 1 and press Denoise again. All the points collapse into a clump in the middle. With one jump the best single guess for "somewhere on a ring" is the average of the whole ring, which is its centre. Real generators show the same effect as a blurry picture.
+- Try 3, 5 and 10 steps and watch the ring sharpen. Then switch to **Two spirals**: fine detail needs more steps.
+- Switch the sampler to **Random** and press Denoise a few times with **New noise**. A random sampler adds a little fresh noise at every step. The steady one has none, so the same seed always gives the same result.
+
+## Steps and samplers
+
+Each step is one pass through the network, so steps are the main cost of making an image. The original 1,000 steps were slow. The DDIM paper showed that the same trained network can be run with a different update rule and far fewer steps, reporting samples 10 to 50 times faster in wall-clock time. A **sampler** (or scheduler) is that rule: how to turn the network's noise guess into the next, cleaner picture, and which steps to visit.
+
+More steps usually give better pictures at the price of time. The Hugging Face Stable Diffusion guide recommends the default of 50 steps and reports that with 15 steps the structure of its example picture stayed the same but there were problems in the details. Other work trains "student" networks to take only a handful of steps. In the demo, one step is a blur, ten is decent and fifty is hard to tell from the real data.
+
+Two practical points about randomness. A **seed** is the number that fixes the starting noise. With the same model, prompt, settings and seed, a tool such as Diffusers gives the same image, which is how you make a result reproducible. Change only the seed and you get a different picture from the same prompt.
+
+## Steering with text: conditioning and guidance
+
+So far the generator makes any picture from the training data. To make the picture you asked for, the network also receives the prompt. In Stable Diffusion the prompt goes through a text encoder, the text half of CLIP (see [multimodal models](../../foundations/multimodal-models/)), and the resulting vectors reach the denoiser through cross-attention layers. At each step the network answers a different question: "given this prompt, what noise is in this picture?"
+
+Following the prompt is not automatic, and **classifier-free guidance** is the trick that strengthens it. The network is trained both with prompts and, part of the time, with the prompt left out, so one network can make two guesses: one with the prompt and one without. At each step the sampler takes the unprompted guess and moves it further in the direction of the prompted one:
+
+noise guess = unprompted guess + w × (prompted guess − unprompted guess)
+
+The number *w* is the **guidance scale**. At 0 the prompt is ignored. At 1 you get the plain prompted guess. Above 1, the generator follows the prompt harder. Diffusers describes it the same way: lower values give the model more "creativity", higher values follow the prompt more closely, and values that are too high can produce artefacts. In the demo choose a prompt, then raise **Guidance** from 0 upwards. At 0 the points land on both halves, at 1 only on the prompted half, and at higher values they bunch up and variety falls.
+
+Two costs follow. Guidance usually needs two predictions per step, so it makes each step cost about double unless the two run together in one batch. And scales are not comparable between models, so read the documentation of the one you use. A **negative prompt** (things to avoid) typically takes the place of the empty prompt in the unprompted guess, so the push is away from it.
+
+**Cheat sheet for text-to-image tools**
+
+| Knob | What it changes | Trade-off |
+|---|---|---|
+| Prompt | What the picture should show | Be specific about subject, style and setting. Test, do not copy long keyword lists. |
+| Seed | The starting noise | Same seed and settings reproduce an image. Change it for variations. |
+| Steps | How many cleaning-up rounds | More is usually cleaner but slower. Returns shrink after a while. |
+| Guidance scale | How hard it obeys the prompt | Too low drifts off the prompt. Too high looks harsh and samey. |
+| Size | The picture's width and height | Models do best near the size they were trained on. Bigger costs more. |
+| Negative prompt | What to steer away from | Helps with recurring flaws, but not a guarantee. |
+
+## Why it works in a compressed space: latent diffusion
+
+Doing all of this on raw pixels is expensive. A 512 by 512 colour picture is 786,432 numbers, and the network must process them at every step. The latent diffusion paper notes that training pixel-space diffusion models often consumes hundreds of GPU days and that running them is costly because the steps happen one after another.
+
+The fix is to work in a smaller space. An autoencoder learns to squeeze a picture into a compact **latent** (and to expand it back). In Stable Diffusion, a (3, 512, 512) picture becomes a (4, 64, 64) latent, which is 16,384 numbers: 8 times smaller along each side and 48 times fewer numbers overall. The noise, the denoising and the guidance all happen on that small latent. Only at the end does the decoder turn the clean latent into pixels.
+
+<PipelineFlow
+  client:visible
+  title="Latent diffusion, start to finish"
+  loop
+  loopLabel="repeat for every step"
+  stages={[
+    { title: 'Prompt', detail: 'Your text, cut into tokens.' },
+    { title: 'Text encoder', detail: 'Turns the tokens into vectors that describe their meaning. In Stable Diffusion this is the text half of CLIP. It is not trained again with the image model.' },
+    { title: 'Random latent', detail: 'The seed makes a small grid of pure noise, for example 4 by 64 by 64 numbers for a 512 by 512 picture. This is where the picture begins.' },
+    { title: 'Denoiser', detail: 'A U-Net (or a transformer) predicts the noise in the latent given the step and the text vectors, usually twice per step for guidance. The sampler removes part of it.' },
+    { title: 'Decoder', detail: 'After the last step, the decoder expands the clean latent into the full-size picture.' },
+  ]}
+  caption="The loop runs once per step. The text encoder runs once, and the decoder runs once at the end."
+/>
+
+<Deep title="Newer designs: transformers and flow matching">
+The denoiser in the first Stable Diffusion was a U-Net, built from residual blocks with attention layers between them for the text. The DiT paper swapped it for a transformer working on patches of the latent, and found that bigger DiTs, in terms of compute per pass, gave consistently better results. Stable Diffusion 3 combines a transformer with rectified flow, a formulation in which the path between data and noise is a straight line. In it, the network predicts which way to move rather than which noise was added, and the paper reports better text comprehension and typography from its design. Flow matching more broadly treats diffusion paths as a special case of a wider family. You do not need these details to use a generator, but the names appear in model cards, so they are worth recognising.
+</Deep>
+
+<Deep title="Editing and control: image-to-image, inpainting and ControlNet">
+Because the reverse process starts from noise, you can start it from a partly noised copy of your own picture instead. Noise it to the middle of the schedule and denoise from there: the layout survives and the details change. Tools often call the amount of noise "strength". Inpainting does the same only inside a masked area. ControlNet adds a trainable side network to a frozen pretrained generator so it can follow extra inputs such as edges, depth or pose, while the original weights stay untouched.
+</Deep>
+
+<Deep title="Cost, worked">
+Cost is roughly steps × cost of one pass × passes per step. These are example numbers, not benchmarks. Suppose one pass at your size takes 50 ms. 30 steps with one pass each is 1.5 s. With guidance as two separate passes it is 3 s. A student model that needs 8 guided steps in one batch could take around 0.4 s, if the batch costs little more than a single pass. Doubling the side length of a pixel-space picture quadruples the numbers each pass handles, which is another reason to work in latent space.
+</Deep>
+
+## Honest limits
+
+Diffusion models are impressive and flawed. Knowing the flaws is part of using them well.
+
+- **Hands, text and counting.** Many generators have been known to get hands, lettering inside the picture, and exact counts or spatial relations wrong. Newer designs improve some of this. The SD3 authors report better typography from their architecture. Test your own use case, because the situation changes quickly.
+- **Memorising training images.** Carlini and colleagues extracted over a thousand training images from state-of-the-art diffusion models, from photographs of individual people to trademarked logos. A generator can reproduce something it saw, which matters for privacy and rights.
+- **Bias.** The Stable Bias study analysed DALL-E 2 and two versions of Stable Diffusion and found that all of them consistently under-represented marginalised identities, to different extents. A prompt for a job or a person comes back with the patterns of the training data.
+- **Copyright and consent.** Whether training on pictures without permission is allowed, and who owns the output, is argued in courts and law-making in several countries, and the answers differ by place and keep changing. This lesson gives no legal advice. If you ship a product, ask someone qualified.
+- **Fakes.** A system that makes convincing pictures also makes convincing fakes. How to spot them, and what labelling and provenance can and cannot do, is in [real or fake](../../responsible/real-or-fake/).
+
+## What to remember
+
+- Forward process: add noise step by step until only noise is left. No learning is needed.
+- Training: show the network a noisy picture and the step, and ask for the noise. Predicting the noise lets you recover the clean picture.
+- Generating: start from pure noise and repeat "guess the noise, remove a part". Each starting noise gives a different picture.
+- Fewer steps are faster but blurrier, because each jump is a bigger guess. A sampler is the rule for the jumps. A seed fixes the starting noise.
+- Guidance mixes a prompted and an unprompted guess. A higher scale follows the prompt harder and varies less, and it costs about two predictions per step.
+- Latent diffusion does all this on a compressed picture, 48 times fewer numbers in Stable Diffusion, and decodes at the end.
+- Known weak spots: hands, text, counting, memorised images, bias. Provenance and copyright questions are unsettled.
+
+For more, the [Hugging Face diffusion course](https://huggingface.co/learn/diffusion-course/unit1/1), Lilian Weng's [What are Diffusion Models?](https://lilianweng.github.io/posts/2021-07-11-diffusion-models/) and the [Diffusion Explainer](https://poloclub.github.io/diffusion-explainer/) go deeper.
+
+To see how pictures and text meet in a shared space, go to [multimodal models](../../foundations/multimodal-models/). To think about telling real from generated, go to [real or fake](../../responsible/real-or-fake/).

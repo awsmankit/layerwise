@@ -1,0 +1,624 @@
+/* Styles for the interactive components in the "dl-a" lesson batch. Keep every class under this batch's own prefix. */
+
+/* two class colours that stay apart for most kinds of colour blindness: blue and orange */
+.da-pg,
+.da-race,
+.da-depth,
+.da-graph,
+.da-neuron,
+.da-norm {
+  --da-a: #2563eb;
+  --da-b: #d96400;
+}
+@media (prefers-color-scheme: dark) {
+:root:not([data-theme='light']) .da-pg,
+:root:not([data-theme='light']) .da-race,
+:root:not([data-theme='light']) .da-depth,
+:root:not([data-theme='light']) .da-graph,
+:root:not([data-theme='light']) .da-neuron,
+:root:not([data-theme='light']) .da-norm {
+    --da-a: #6ea8ff;
+    --da-b: #ffa24d;
+  }
+}
+:root[data-theme='dark'] .da-pg,
+:root[data-theme='dark'] .da-race,
+:root[data-theme='dark'] .da-depth,
+:root[data-theme='dark'] .da-graph,
+:root[data-theme='dark'] .da-neuron,
+:root[data-theme='dark'] .da-norm {
+  --da-a: #6ea8ff;
+  --da-b: #ffa24d;
+}
+
+/* ---------- shared small controls ---------- */
+
+.da-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+.da-lab {
+  font-size: 0.88rem;
+  color: var(--ink-2);
+  margin-right: 0.2rem;
+}
+.viz .da-chip {
+  min-height: 44px;
+  padding: 0.35rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font: 600 0.92rem var(--font-display);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.viz .da-chip:hover:not(:disabled) {
+  border-color: var(--signal);
+}
+.viz .da-chip[aria-pressed='true'] {
+  background: var(--signal);
+  border-color: var(--signal);
+  color: var(--on-signal);
+}
+.viz .da-chip:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.da-chip:focus-visible,
+.da-step:focus-visible,
+.da-go:focus-visible,
+.viz .btn:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.viz .da-step {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--ink);
+  font: 600 1.3rem/1 var(--font-display);
+  cursor: pointer;
+}
+.viz .da-step:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.da-note {
+  margin: 0.5rem 0 1rem;
+  font-size: 0.92rem;
+  color: var(--ink-2);
+}
+
+/* ---------- playground ---------- */
+
+.da-main {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: 1rem 1.6rem;
+  align-items: start;
+}
+.da-left,
+.da-right {
+  min-width: 0;
+  display: grid;
+  gap: 0.8rem;
+}
+.da-bigwrap,
+.da-netwrap {
+  width: 100%;
+  min-width: 0;
+}
+.da-big {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  /* a swipe that starts on the picture still scrolls the page, unless the learner turned on "Add dots" */
+  touch-action: pan-y;
+  border-radius: 2px;
+}
+.da-big.da-drawing {
+  touch-action: none;
+  cursor: crosshair;
+  outline: 2px dashed var(--signal);
+  outline-offset: 3px;
+}
+.da-net {
+  display: block;
+  width: 100%;
+}
+.da-cols {
+  display: grid;
+  margin-top: 0.25rem;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--ink-3);
+}
+.da-layers {
+  display: grid;
+  gap: 0.4rem;
+}
+.da-layer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.da-layer .da-lab {
+  width: 4.6rem;
+}
+.da-count {
+  min-width: 5.6rem;
+  text-align: center;
+  font-size: 0.92rem;
+  font-variant-numeric: tabular-nums;
+}
+.da-run {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1.1rem;
+}
+.da-run .btn {
+  min-height: 44px;
+  padding: 0.55rem 1.1rem;
+  justify-content: center;
+}
+.da-go {
+  min-width: 9rem;
+}
+.da-rate {
+  display: block;
+  margin-top: 0.9rem;
+  max-width: 28rem;
+}
+.da-rate > span {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.92rem;
+  color: var(--ink-2);
+}
+.da-rate > span b {
+  color: var(--ink);
+}
+.da-rate input[type='range'],
+.da-race input[type='range'],
+.da-depth input[type='range'],
+.da-graph input[type='range'] {
+  touch-action: pan-y;
+}
+.da-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 1.2rem;
+  margin-top: 0.8rem;
+  font-size: 0.92rem;
+  color: var(--ink-2);
+}
+.da-stats b {
+  color: var(--ink);
+  font-weight: 650;
+}
+.da-spark {
+  display: block;
+  width: 100%;
+  max-width: 28rem;
+  height: 44px;
+  margin-top: 0.5rem;
+}
+.da-spark-axis {
+  stroke: var(--line);
+  stroke-width: 1;
+  fill: none;
+}
+.da-spark-line {
+  stroke: var(--signal);
+  stroke-width: 1.8;
+  fill: none;
+  stroke-linejoin: round;
+}
+.da-spark-cap {
+  margin-top: 0.2rem;
+  font-size: 0.8rem;
+  color: var(--ink-3);
+}
+
+/* ---------- one-neuron calculator ---------- */
+
+.da-sliders {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 0.2rem 2rem;
+  margin-top: 0.8rem;
+}
+.da-slide {
+  display: block;
+}
+.da-slide > span {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.92rem;
+  color: var(--ink-2);
+}
+.da-slide > span b {
+  color: var(--ink);
+  font-weight: 650;
+}
+.da-neuron input[type='range'] {
+  touch-action: pan-y;
+}
+.viz .da-sum {
+  list-style: none;
+  padding-left: 0;
+  margin: 0.8rem 0 0;
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.95rem;
+  color: var(--ink-2);
+}
+.da-sum b {
+  color: var(--ink);
+}
+.da-sum .da-out {
+  color: var(--signal-ink);
+}
+.da-svg {
+  display: block;
+  width: 100%;
+  max-width: 340px;
+  height: auto;
+  margin: 0.8rem 0 0;
+}
+.da-axis {
+  stroke: var(--line);
+  stroke-width: 1;
+  fill: none;
+}
+.da-curve {
+  stroke: var(--ink);
+  stroke-width: 1.8;
+  fill: none;
+  stroke-linejoin: round;
+}
+.da-drop {
+  stroke: var(--signal);
+  stroke-width: 1.4;
+  stroke-dasharray: 3 3;
+  fill: none;
+}
+.da-dot {
+  fill: var(--signal);
+  stroke: var(--surface);
+  stroke-width: 1.5;
+}
+.da-t {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  fill: var(--ink-3);
+}
+
+/* ---------- optimiser race ---------- */
+
+.da-rsvg {
+  max-width: 460px;
+  margin-top: 0.4rem;
+}
+.da-contour {
+  fill: none;
+  stroke: var(--ink);
+  stroke-opacity: 0.25;
+  stroke-width: 1;
+}
+.da-goal {
+  fill: var(--signal-wash);
+  stroke: var(--signal);
+  stroke-width: 1.2;
+  stroke-dasharray: 3 2;
+}
+.da-mark {
+  fill: var(--ink);
+}
+.da-path {
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.da-head {
+  stroke: var(--surface);
+  stroke-width: 1.5;
+}
+.da-p-sgd .da-path {
+  stroke: var(--da-b);
+}
+.da-p-sgd .da-head,
+.da-p-sgd .da-sw {
+  fill: var(--da-b);
+  background: var(--da-b);
+}
+.da-p-momentum .da-path {
+  stroke: var(--da-a);
+}
+.da-p-momentum .da-head,
+.da-p-momentum .da-sw {
+  fill: var(--da-a);
+  background: var(--da-a);
+}
+.da-p-adam .da-path {
+  stroke: var(--ink);
+  stroke-dasharray: 5 3;
+}
+.da-p-adam .da-head,
+.da-p-adam .da-sw {
+  fill: var(--ink);
+  background: var(--ink);
+}
+.da-play {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1.2rem;
+  margin-top: 0.8rem;
+}
+.da-play .btn {
+  min-height: 44px;
+  justify-content: center;
+}
+.da-scrub {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+.da-scrub > span {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.92rem;
+  color: var(--ink-2);
+}
+.da-opts {
+  list-style: none;
+  padding-left: 0;
+  margin: 0.8rem 0 0;
+  display: grid;
+  gap: 0.8rem;
+}
+.viz .da-opts {
+  padding-left: 0;
+}
+.da-opt {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.2rem 1rem;
+  align-items: center;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--line-soft);
+}
+.da-opt.da-off {
+  opacity: 0.5;
+}
+.da-opt .da-res {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--ink-2);
+}
+.da-res.da-good b,
+.da-res.da-good {
+  color: var(--ink);
+}
+.da-res.da-bad {
+  color: var(--warn);
+}
+.da-rate2 {
+  display: block;
+  min-width: 0;
+}
+.da-rate2 > span {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.88rem;
+  color: var(--ink-2);
+}
+.da-rate2 > span b {
+  color: var(--ink);
+}
+.viz .da-tog {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.da-sw {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid var(--surface);
+  box-shadow: 0 0 0 1px var(--line);
+}
+
+/* ---------- init and depth ---------- */
+
+.da-gap {
+  margin-left: 0.6rem;
+}
+.da-dsvg {
+  max-width: 460px;
+}
+.da-bar {
+  fill: var(--da-a);
+}
+.da-bar-bad {
+  fill: var(--da-b);
+}
+.da-axis-1 {
+  stroke: var(--ink);
+  stroke-opacity: 0.7;
+}
+.da-faint {
+  stroke-opacity: 0.45;
+  stroke-dasharray: 2 3;
+}
+.da-verdict {
+  margin: 0.8rem 0 0;
+  font-size: 0.95rem;
+  color: var(--ink-2);
+}
+.da-verdict b {
+  color: var(--ink);
+}
+
+/* ---------- normalisation grid ---------- */
+
+.da-grid {
+  display: grid;
+  grid-template-columns: 2.6rem repeat(5, minmax(0, 1fr));
+  gap: 4px;
+  margin-top: 0.9rem;
+  max-width: 30rem;
+}
+.da-gridrow {
+  display: contents;
+}
+.da-head2 {
+  font-size: 0.74rem;
+  line-height: 1.15;
+  color: var(--ink-3);
+  align-self: center;
+  text-align: center;
+}
+.da-gridrow > .da-head2 {
+  text-align: left;
+  font-size: 0.8rem;
+}
+.viz .da-cell {
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  font: 600 1rem var(--font-mono);
+  cursor: pointer;
+}
+.viz .da-cell.da-in {
+  background: color-mix(in srgb, var(--da-a) 22%, var(--surface));
+  border-color: var(--da-a);
+}
+.viz .da-cell.da-sel {
+  background: var(--da-a);
+  color: var(--surface);
+  border-color: var(--da-a);
+}
+.da-cell:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.da-calc {
+  margin: 0.9rem 0 0;
+  font-size: 0.95rem;
+  color: var(--ink-2);
+}
+.da-calc b {
+  color: var(--ink);
+}
+
+.da-rsvg .da-t {
+  paint-order: stroke;
+  stroke: var(--surface);
+  stroke-width: 3px;
+}
+
+/* ---------- graph walk ---------- */
+
+.da-gsvg {
+  max-width: 380px;
+  margin-inline: auto;
+}
+.da-edge {
+  stroke: var(--ink);
+  stroke-opacity: 0.45;
+  stroke-width: 1.3;
+}
+.da-edge-hot {
+  stroke: var(--signal);
+  stroke-opacity: 1;
+  stroke-width: 2.4;
+}
+.da-arrow {
+  fill: var(--ink);
+  fill-opacity: 0.45;
+}
+.da-arrow-hot {
+  fill: var(--signal);
+  fill-opacity: 1;
+}
+.da-box {
+  fill: var(--surface);
+  stroke: var(--ink);
+  stroke-opacity: 0.5;
+  stroke-width: 1;
+}
+.da-box-hot {
+  stroke: var(--signal);
+  stroke-opacity: 1;
+  stroke-width: 2.4;
+  fill: var(--signal-wash);
+}
+.da-name {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 700;
+  fill: var(--ink);
+}
+.da-val {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  fill: var(--ink-2);
+}
+.da-grad {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  fill: var(--da-b);
+}
+.da-dim {
+  fill: var(--ink-3);
+  font-weight: 400;
+}
+.da-local {
+  fill: var(--signal-ink);
+  font-weight: 700;
+  paint-order: stroke;
+  stroke: var(--surface);
+  stroke-width: 3px;
+}
+.da-nav {
+  min-height: 44px;
+  justify-content: center;
+}
+.da-stepno {
+  font-size: 0.9rem;
+  color: var(--ink-3);
+}
+.da-say {
+  margin-top: 0.6rem;
+  min-height: 7.5rem;
+}
+.da-say p {
+  margin: 0.3rem 0 0;
+  font-size: 0.95rem;
+  color: var(--ink-2);
+}
+.da-say .da-phase {
+  margin-top: 0;
+  font-weight: 650;
+  font-size: 0.98rem;
+  color: var(--ink);
+}
+.da-phase-backward {
+  color: var(--da-b) !important;
+}
+.da-check {
+  color: var(--ink) !important;
+}

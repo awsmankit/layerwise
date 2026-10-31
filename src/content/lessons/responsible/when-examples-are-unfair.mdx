@@ -1,0 +1,92 @@
+---
+title: "When the examples are unfair: how AI learns bias"
+track: responsible
+level: basic
+order: 1
+summary: A computer copies the examples it is given. Find out how lopsided examples make AI work better for some people than others, how to check for it with a Bias Detective game, and what helps.
+updated: 2026-11-01
+sources:
+  - label: "Gender Shades: Intersectional Accuracy Disparities in Commercial Gender Classification (Buolamwini and Gebru, 2018)"
+    url: https://proceedings.mlr.press/v81/buolamwini18a.html
+  - label: "No Classification without Representation: Assessing Geodiversity Issues in Open Data Sets for the Developing World (Shankar et al., 2017)"
+    url: https://arxiv.org/abs/1711.08536
+  - label: "Amazon scraps a secret A.I. recruiting tool that showed bias against women (CNBC, republishing Reuters, 10 October 2018)"
+    url: https://www.cnbc.com/2018/10/10/amazon-scraps-a-secret-ai-recruiting-tool-that-showed-bias-against-women.html
+  - label: "Racial disparities in automated speech recognition (Koenecke et al., PNAS, 2020)"
+    url: https://pubmed.ncbi.nlm.nih.gov/32205437/
+  - label: "Face Recognition Vendor Test Part 3: Demographic Effects (NIST, NISTIR 8280, December 2019)"
+    url: https://www.nist.gov/publications/face-recognition-vendor-test-part-3-demographic-effects
+  - label: "Inherent Trade-Offs in the Fair Determination of Risk Scores (Kleinberg et al., 2016)"
+    url: https://arxiv.org/abs/1609.05807
+  - label: "Google Machine Learning Crash Course: Fairness"
+    url: https://developers.google.com/machine-learning/crash-course/fairness
+  - label: "AI4K12 Big Idea 5: Societal Impact"
+    url: https://ai4k12.org/big-idea-5-societal-impact/
+---
+
+import BiasDetective from '../../../components/viz/BiasDetective.tsx';
+import Deep from '../../../components/ui/Deep.astro';
+
+Imagine you teach a robot to spot dogs. You show it a thousand photos, but nearly all of them are big brown dogs. Then you show it a tiny white one. It might say "not a dog".
+
+The robot is not being mean. It only knows what it was shown. You met this idea in [How a computer learns from examples](../../start/how-computers-learn/). Here we look closer, because it matters most when AI is used on people.
+
+## A computer copies its examples
+
+A computer finds patterns in the examples it is given. It has no opinions of its own. If the examples are lopsided, its answers are lopsided too.
+
+We call this **bias**: a system that works better for some groups of people than for others. Usually nobody wanted that. They just did not notice the examples were lopsided.
+
+## Three ways the examples go wrong
+
+- **Some groups are missing or rare.** A program that learned from photos taken mostly in one part of the world does worse on photos from elsewhere.
+- **The labels copy old choices.** A **label** is the right answer attached to an example. If people made unfair choices in the past, and the computer learns from them, it learns to repeat them.
+- **We measured the wrong thing.** Imagine an app that scores "good students" by how fast they type. It leaves out everyone who types slowly but thinks well.
+
+## Try it: Bias Detective
+
+This toy sorter puts cards into stars and hearts. Some cards were drawn with a marker and some with a pencil. Pencil lines are paler, so those cards look a little different to the sorter.
+
+The training pile is lopsided on purpose. Test the sorter, check each group, then try to fix it. Add marker cards first and see what happens.
+
+<BiasDetective client:visible />
+
+## What you should have found
+
+The overall score looked good: 25 right out of 30. But the pencil cards were only 50%, no better than guessing. One score for everybody hid a problem for a smaller group.
+
+More marker cards changed nothing for pencil cards. Pencil cards fixed it. So the fix is not just more examples. It is the right variety.
+
+## It happens in real life too
+
+- **Face analysis.** In 2018, two researchers tested three commercial programs that guess from a face photo whether someone is a man or a woman. For lighter-skinned men, the programs were wrong at most 0.8% of the time. For darker-skinned women they were wrong up to 34.7% of the time. Two photo collections used to test such programs were about 80% and 86% lighter-skinned.
+- **Photo labels.** Researchers found that about 60% of the photos in one big public collection, among those with a known country, came from just six countries in North America and Europe. A program trained on it was less sure about wedding photos from some other countries.
+- **Hiring.** A company built an experimental tool to rank job applications. Reuters reported in 2018 that it learned from about ten years of applications, most from men. It marked down applications that contained the word "women's", as in "women's chess club captain". Engineers fixed that word but could not be sure it would not find other unfair shortcuts, so the project was dropped.
+
+## How people check for bias
+
+Do not trust one score. Split the results into groups and compare them, as "Check each group separately" did in the game. If one group does much worse, something is wrong.
+
+Three questions help with any AI that decides about people. Who is in the examples? Who is missing? How well does it work for each group?
+
+## What helps
+
+- **More varied examples.** Add the kinds that were missing, as you did with the pencil cards.
+- **Testing on everyone.** Test each group separately, before the system is used.
+- **People in the loop.** For choices about jobs, school or health, a person should check the result. People also need a way to say "this looks wrong".
+
+Bias can be reduced, and finding it is the first step. In a 2019 US government test of face-recognition programs, the most accurate ones had smaller differences between groups.
+
+<Deep title="For grown-ups: what 'fair' can mean, and where bias enters">
+
+Bias can enter through **sampling** (who is in the data), **labels** (human decisions or historical outcomes used as ground truth), **proxies** (a postcode standing in for a protected trait), **measurement** (the target is not what we care about) and **feedback loops** (a system's output changes the data it later learns from). Google's machine learning course lists these under named types of bias and recommends auditing training data and evaluating predictions for bias before production.
+
+The usual first check is to compute the same metric per group, not only overall: accuracy, but also false positive and false negative rates, since a system can be equally accurate for two groups and still make a different kind of error for each. Small groups need larger test samples, or the per-group number is too noisy to trust. In the toy, each group has only 10 or 20 test cards, so a single card moves a score by 5 to 10 points.
+
+"Fair" has more than one meaning. One reading is that people with the same true outcome should get the same chance of a good result. Another is that a score of, say, 70% should mean the same thing in every group. Kleinberg and colleagues proved that, except in highly constrained special cases, three natural versions of these cannot all hold at once, so choosing between them is a values decision that should be made and written down by people, not left to the model.
+
+Measured examples: the 2018 Gender Shades paper found error rates up to 34.7% for darker-skinned women and at most 0.8% for lighter-skinned men across three commercial systems, and reported that two common benchmarks were 79.6% and 86.2% lighter-skinned. A 2020 PNAS study of five commercial speech-to-text systems found an average word error rate of 0.35 for Black speakers and 0.19 for white speakers on matched interview audio. NIST's December 2019 report on face recognition found demographic differences in many but not all of the algorithms it tested, with false-positive rates often varying by factors of 10 to over 100 across groups, and smaller differences in the most accurate algorithms. Systems change quickly, so treat these as dated studies, not a description of today's products.
+
+</Deep>
+
+Next: [Real or fake?](../real-or-fake/)

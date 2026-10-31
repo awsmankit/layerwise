@@ -1,19 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { videosCore } from './core';
-import { videosOps } from './ops';
-import { videosChecked } from './index';
+import { videoFiles, videosChecked } from './index';
 
-const files = { core: videosCore, ops: videosOps };
+const files = videoFiles;
 const youtube = /^https:\/\/www\.youtube\.com\/(watch\?v=[\w-]{11}|playlist\?list=[\w-]+)$/;
 
 describe('lesson videos', () => {
-  it('only use keys that are real lessons, and no key appears in both files', () => {
+  it('only use keys that are real lessons, and no key appears in two files', () => {
     for (const [name, map] of Object.entries(files))
       for (const key of Object.keys(map))
         expect(existsSync(join(process.cwd(), 'src/content/lessons', `${key}.mdx`)), `${name}: ${key}`).toBe(true);
-    for (const key of Object.keys(videosCore)) expect(key in videosOps, `${key} is in core and ops`).toBe(false);
+    const seen = new Map<string, string>();
+    for (const [name, map] of Object.entries(files))
+      for (const key of Object.keys(map)) {
+        expect(seen.has(key), `${key} is in both ${seen.get(key)} and ${name}`).toBe(false);
+        seen.set(key, name);
+      }
   });
 
   it('link only to YouTube videos or playlists', () => {

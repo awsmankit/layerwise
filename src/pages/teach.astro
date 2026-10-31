@@ -1,19 +1,31 @@
 ---
 import Base from '../layouts/Base.astro';
 import { courses } from '../data/courses';
-import { getLessons, lessonPath, slugOf } from '../lib/content';
+import { unplugged, unpluggedById } from '../data/unplugged';
+import { worksheets } from '../data/worksheets';
+import { bigIdeas, gradeBands } from '../data/standards';
+import { lessonLookup } from '../lib/teach';
 import { withBase } from '../lib/url';
 
-const all = await getLessons();
-const byKey = Object.fromEntries(all.map((l) => [`${l.data.track}/${slugOf(l)}`, l]));
-for (const c of courses) for (const s of c.sessions) for (const k of s.lessons) if (!byKey[k]) throw new Error(`Course "${c.id}" refers to a missing lesson: ${k}`);
+const { link } = await lessonLookup();
+const school = courses.filter((c) => c.band);
+const adult = courses.filter((c) => !c.band);
+const tagClass: Record<string, string> = { '10-12': 'tk-tag-a', '13-15': 'tk-tag-b', '16-18': 'tk-tag-c' };
 ---
 
-<Base title="For teachers" description="Course plans, classroom activities and practical tips for teaching AI engineering with Layerwise.">
+<Base title="For teachers" description="School course plans for ages 10 to 18, unplugged activity cards, printable worksheets, a parents' guide, an AI4K12 map and workshop plans for adults, built from the lessons on Layerwise.">
   <div class="wrap">
     <header class="page-head">
       <h1>For <span class="squig" style="--squig:#0A9F85">teachers</span></h1>
-      <p>Ready-made plans for a half-day workshop, a one-day platform workshop and a six-week course, built from the lessons, games and quizzes on this site. Adapt them freely: everything here is <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener">CC BY 4.0</a>, so you can copy, change and use it in paid courses as long as you credit Layerwise.</p>
+      <p>Ready-made plans for school classes aged 10 to 18, activities that need no computer, printable worksheets and a guide for parents, plus workshop plans for adults. Everything is <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener">CC BY 4.0</a>: copy it, change it and use it in paid courses as long as you credit Layerwise. No accounts, and nothing about students is stored.</p>
+      <nav class="tk-jump" aria-label="On this page">
+        <a href="#schools">School plans</a>
+        <a href="#activities">Activity cards</a>
+        <a href="#worksheets">Worksheets</a>
+        <a href="#parents">Parents</a>
+        <a href="#ai4k12">AI4K12 map</a>
+        <a href="#adults">Adult workshops</a>
+      </nav>
     </header>
 
     <div class="prose" style="margin-top:2rem">
@@ -22,15 +34,186 @@ for (const c of courses) for (const s of c.sessions) for (const k of s.lessons) 
         <li><strong>Assign a path, not a list.</strong> Send students to <a href={withBase('/start/')}>Choose a path</a>; each lesson then shows “next in your path”, so nobody gets lost.</li>
         <li><strong>Project the interactive pictures.</strong> They are built to be explained live: the request lifecycle, attention, the next-word demo, the parallelism diagram.</li>
         <li><strong>Games work well in pairs.</strong> Incident Room makes a good group debugging exercise; Blueprint and Rack &amp; Stack make good “defend your design” discussions.</li>
-        <li><strong>Print handouts.</strong> Printing a lesson gives a clean handout with the summary and all the deeper sections expanded.</li>
-        <li><strong>Collect progress.</strong> Progress stays in each student’s browser. On <a href={withBase('/progress/')}>Your progress</a> they can download a file or print a summary to hand in.</li>
+        <li><strong>Print handouts.</strong> Printing a lesson gives a clean handout with the summary and all the deeper sections expanded. The activity cards and worksheets below have their own A4 layouts.</li>
+        <li><strong>Collect progress, if you want to.</strong> Progress stays in each student’s browser. On <a href={withBase('/progress/')}>Your progress</a> they can download a file or print a summary to hand in. Nothing is sent to us.</li>
         <li><strong>Mock interviews.</strong> The <a href={withBase('/interview/')}>interview question bank</a> gives discussion questions with model answers, and the interviewer mode gives a consistent rubric for peer assessment.</li>
         <li><strong>Check the dates.</strong> Cloud product names, GPU specs and prices change. Lessons date their volatile facts; check those against the vendor pages before you teach them.</li>
       </ul>
     </div>
 
+    <section class="tk-section" id="schools">
+      <h2>School plans by age</h2>
+      <p class="tk-lede">Three plans with sessions of 45 to 60 minutes. Each session names its lessons, an unplugged activity, an activity and a way to check learning. The lessons are written for readers from about 11 upwards; the youngest plan assumes you read parts aloud and project the demos.</p>
+    </section>
+
     {
-      courses.map((c) => (
+      school.map((c) => (
+        <section class="track course" id={c.id}>
+          <div class="track-head">
+            <h2>
+              <span class="tk-band-badge">Ages {c.band!.replace('-', ' to ')}</span>
+              {c.title.replace(/^Ages [0-9]+ to [0-9]+: /, '')}
+            </h2>
+            <p>
+              {c.audience} {c.length}.
+            </p>
+          </div>
+          <ol class="course-sessions">
+            {c.sessions.map((s) => (
+              <li>
+                <h3>
+                  {s.title} <span class="num">({s.minutes} min)</span>
+                </h3>
+                <p>
+                  <b>Read:</b>{' '}
+                  {s.lessons.map((k, i) => {
+                    const l = link(k);
+                    return (
+                      <>
+                        {i > 0 && ', '}
+                        {l.href ? <a href={l.href}>{l.title}</a> : l.title}
+                      </>
+                    );
+                  })}
+                </p>
+                {s.unplugged && (
+                  <p>
+                    <b>Activity cards:</b>{' '}
+                    {s.unplugged.map((id, i) => (
+                      <>
+                        {i > 0 && ', '}
+                        <a href={withBase(`/teach/activities/${id}/`)}>{unpluggedById[id].title}</a>
+                      </>
+                    ))}
+                  </p>
+                )}
+                <p>
+                  <b>Activity:</b> {s.activity}
+                </p>
+                <p>
+                  <b>Check:</b> {s.check}
+                </p>
+              </li>
+            ))}
+          </ol>
+        </section>
+      ))
+    }
+
+    <section class="tk-section" id="activities">
+      <h2>Unplugged activity cards</h2>
+      <p class="tk-lede">{unplugged.length} short activities that need paper, scissors and a pencil. Each has ages, time, materials, steps, what to notice, discussion questions, cut-out cards and teacher notes, and prints on A4. We wrote them for this site; where an idea sits beside a public resource (CS Unplugged, Experience AI, AI4K12), the card credits it.</p>
+      <ul class="tk-grid">
+        {
+          unplugged.map((a) => (
+            <li>
+              <article class="tk-card">
+                <h3>
+                  <a href={withBase(`/teach/activities/${a.id}/`)}>{a.title}</a>
+                </h3>
+                <p>{a.hook}</p>
+                <ul class="tk-tags">
+                  <li class={`tk-tag ${tagClass[a.bands[0]]}`}>Ages {a.bands[0].split('-')[0]} to {a.bands[a.bands.length - 1].split('-')[1]}</li>
+                  <li class="tk-tag tk-tag-d">{a.minutes} min</li>
+                </ul>
+              </article>
+            </li>
+          ))
+        }
+      </ul>
+      <p class="tk-map-note"><a href={withBase('/teach/activities/')}>See the cards grouped by age</a>.</p>
+    </section>
+
+    <section class="tk-section" id="worksheets">
+      <h2>Worksheets and answer keys</h2>
+      <p class="tk-lede">One A4 worksheet for each age band, with an answer key on its own page. Print the worksheet, or the key, or both.</p>
+      <ul class="tk-grid">
+        {
+          worksheets.map((w) => (
+            <li>
+              <article class="tk-card">
+                <h3>
+                  <a href={withBase(`/teach/worksheets/${w.band}/`)}>{w.title}</a>
+                </h3>
+                <p>{w.strap}</p>
+                <ul class="tk-tags">
+                  <li class={`tk-tag ${tagClass[w.band]}`}>Ages {w.band.replace('-', ' to ')}</li>
+                  <li class="tk-tag tk-tag-d">About {w.minutes} min</li>
+                </ul>
+              </article>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section class="tk-section" id="parents">
+      <h2>For parents and carers</h2>
+      <p class="tk-lede">A short guide to what children are learning, how to talk about it, and rules of thumb for using AI at home, with a printable family agreement. Send it home after the first session. <a href={withBase('/teach/parents/')}>Open the parents’ guide</a>.</p>
+    </section>
+
+    <section class="tk-section" id="ai4k12">
+      <h2>AI4K12 map</h2>
+      <p class="tk-lede">The <a href="https://ai4k12.org/" rel="noopener">AI4K12 Initiative</a> organises what students should know about AI into five big ideas. This table shows which Layerwise lessons and activity cards fit each idea by grade band, and where the gaps are. We read the five big-idea pages and the draft progression charts on 1 November 2026.</p>
+      <p class="tk-map-note">Honest caveats. The mapping is ours: Layerwise lessons were not written against the framework and AI4K12 has not reviewed or endorsed this page. The progression charts are working drafts. A lesson is listed where its content fits the chart’s concepts for that band, not because it covers every item in them. The framework also has a K-2 band, which Layerwise does not serve. Ages are approximate: grades 3-5 is about 8 to 11, grades 6-8 about 11 to 14 and grades 9-12 about 14 to 18, and our “10 to 12” plan spans the first two.</p>
+      <table class="tk-map">
+        <caption class="tk-noprint" style="position:absolute;left:-9999px">Lessons and activities for each AI4K12 big idea, by grade band</caption>
+        <thead>
+          <tr>
+            <th scope="col">Big idea</th>
+            {gradeBands.map((g) => <th scope="col">{g.label}<small>{g.ages}</small></th>)}
+          </tr>
+        </thead>
+        <tbody>
+          {
+            bigIdeas.map((b) => (
+              <>
+                <tr class="tk-row">
+                  <th scope="row">
+                    <a href={b.url} rel="noopener">{b.n}. {b.name}</a>
+                    <small>{b.idea}</small>
+                  </th>
+                  {gradeBands.map((g) => {
+                    const cell = b.bands[g.id];
+                    return (
+                      <td data-label={`${g.label} (${g.ages})`}>
+                        {cell.lessons.length + cell.activities.length === 0 ? (
+                          <span class="tk-none">Nothing yet</span>
+                        ) : (
+                          <ul>
+                            {cell.lessons.map((k) => {
+                              const l = link(k);
+                              return <li>{l.href ? <a href={l.href}>{l.title}</a> : l.title}</li>;
+                            })}
+                            {cell.activities.map((id) => (
+                              <li class="tk-act">
+                                <a href={withBase(`/teach/activities/${id}/`)}>{unpluggedById[id].title}</a>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+                <tr class="tk-gap">
+                  <td colspan="4"><b>Gaps:</b> {b.gaps}</td>
+                </tr>
+              </>
+            ))
+          }
+        </tbody>
+      </table>
+      <p class="tk-map-note">Other frameworks to check against: the <a href="https://ailiteracyframework.org/" rel="noopener">AI Literacy Framework</a> from the European Commission and OECD, and UNESCO’s AI competency framework for students. We have not mapped to them yet.</p>
+    </section>
+
+    <section class="tk-section" id="adults" style="padding-bottom:3rem">
+      <h2>Workshops for adults and professionals</h2>
+      <p class="tk-lede">A half-day workshop for a mixed team, a one-day platform workshop and a six-week course for developers.</p>
+    </section>
+
+    {
+      adult.map((c) => (
         <section class="track course" id={c.id}>
           <div class="track-head">
             <h2>{c.title}</h2>
@@ -46,12 +229,15 @@ for (const c of courses) for (const s of c.sessions) for (const k of s.lessons) 
                 </h3>
                 <p>
                   <b>Read:</b>{' '}
-                  {s.lessons.map((k, i) => (
-                    <>
-                      {i > 0 && ', '}
-                      <a href={withBase(lessonPath(byKey[k]))}>{byKey[k].data.title}</a>
-                    </>
-                  ))}
+                  {s.lessons.map((k, i) => {
+                    const l = link(k);
+                    return (
+                      <>
+                        {i > 0 && ', '}
+                        {l.href ? <a href={l.href}>{l.title}</a> : l.title}
+                      </>
+                    );
+                  })}
                 </p>
                 <p>
                   <b>Activity:</b> {s.activity}

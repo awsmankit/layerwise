@@ -1,0 +1,270 @@
+---
+title: "Your first model: a spam classifier, end to end"
+track: skills
+level: basic
+order: 2
+summary: "Build a spam filter yourself in plain Python. Collect labelled messages, turn words into counts, train a counting classifier, test it on messages it has never seen, study its mistakes and improve it."
+updated: 2026-11-01
+sources:
+  - label: "scikit-learn: Getting started"
+    url: https://scikit-learn.org/stable/getting_started.html
+  - label: "scikit-learn: MultinomialNB (the classifier used in the next-step block)"
+    url: https://scikit-learn.org/stable/modules/generated/sklearn.naive_bayes.MultinomialNB.html
+  - label: "scikit-learn: Naive Bayes (user guide)"
+    url: https://scikit-learn.org/stable/modules/naive_bayes.html
+  - label: "Wikipedia: Naive Bayes spam filtering"
+    url: https://en.wikipedia.org/wiki/Naive_Bayes_spam_filtering
+  - label: "UCI Machine Learning Repository: SMS Spam Collection (a real labelled dataset, 5,574 messages)"
+    url: https://archive.ics.uci.edu/dataset/228/sms+spam+collection
+  - label: "Kaggle Learn: Intro to Machine Learning"
+    url: https://www.kaggle.com/learn/intro-to-machine-learning
+  - label: "3Blue1Brown: Bayes' theorem"
+    url: https://www.3blue1brown.com/lessons/bayes-theorem
+---
+
+import RunIt from '../../../components/viz/RunIt.tsx';
+import SpamScorer from '../../../components/viz/SpamScorer.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import { TRAIN, TEST, EXTRA } from '../../../lib/spam-data';
+
+In [the first lesson](../../start/what-is-ai-in-plain-english/) there were two ways to catch spam. You could write the rules yourself, but spammers change their words. Or you could show the computer many messages marked "spam" or "not spam", and let it find the pattern.
+
+Here you do the second way, from start to finish, in about 40 lines of Python. It is a real technique, called **naive Bayes**, and it powered early email spam filters. You will need [Python first steps](../python-first-steps/) first, or some Python already.
+
+## The plan
+
+Almost every machine learning project follows the same loop, from the idea in [How a computer learns from examples](../../start/how-computers-learn/):
+
+1. Collect examples with the right answers (the **labels**).
+2. Turn each example into numbers.
+3. **Train**: let the computer learn from the examples.
+4. **Test** it on examples it has never seen.
+5. Look at its mistakes.
+6. Improve it, and test again.
+
+## Step 1: collect labelled examples
+
+A **dataset** is a collection of examples. Ours has 46 short text messages that were written for this lesson. Each has a **label**: `spam` for junk, or `ham` for a message you want. (Spam filters really do call the good ones "ham".) None of them is a real person's message.
+
+We split them in two. 30 are **training** messages, which the model learns from. 12 are **test** messages, kept in a drawer until the end. A further 4 come in at the last step.
+
+<details className="sk-data">
+<summary>See all 46 messages with their labels</summary>
+<h4>30 training messages</h4>
+<ol>{TRAIN.map(([t, l]) => <li key={t}><span className={`sk-tag sk-${l}`}>{l === 'spam' ? 'spam' : 'not spam'}</span> {t}</li>)}</ol>
+<h4>12 test messages (kept back)</h4>
+<ol>{TEST.map(([t, l]) => <li key={t}><span className={`sk-tag sk-${l}`}>{l === 'spam' ? 'spam' : 'not spam'}</span> {t}</li>)}</ol>
+<h4>4 extra messages (used in step 6)</h4>
+<ol>{EXTRA.map(([t, l]) => <li key={t}><span className={`sk-tag sk-${l}`}>{l === 'spam' ? 'spam' : 'not spam'}</span> {t}</li>)}</ol>
+</details>
+
+Forty-six is tiny. Real datasets have thousands or millions. For instance the public [SMS Spam Collection](https://archive.ics.uci.edu/dataset/228/sms+spam+collection) has 5,574 real, labelled text messages. We keep ours small so you can read every one and see why the model does what it does.
+
+## Step 2: turn words into counts
+
+A computer cannot read a sentence, but it can count. We cut each message into lowercase words, as in the last lesson. Then the model only needs to know which words appear and how often. The order of the words is thrown away, which is why this is nicknamed a "bag of words".
+
+This box cuts a message up, then counts how many spam and not-spam messages contain the word `free`.
+
+<RunIt client:visible title="Words into counts" setup={['data']} rows={16} code={`def tokenize(text):
+    words = []
+    for piece in text.lower().split():
+        piece = piece.strip(".,!?:;")
+        if piece != "":
+            words.append(piece)
+    return words
+
+print(tokenize("WIN a FREE prize now, click here"))
+
+in_spam = 0
+in_ham = 0
+for text, label in train_set:
+    if "free" in tokenize(text):
+        if label == "spam":
+            in_spam = in_spam + 1
+        else:
+            in_ham = in_ham + 1
+print("free is in", in_spam, "spam and", in_ham, "not-spam messages")
+`} />
+
+That is a strong clue already. Now try the word `you`, or `now`, in place of `free`.
+
+## Step 3: train by counting
+
+Here is a surprise: **training** this model is only counting. For each label we keep two things: how many messages had it, and how many times each word appeared in those messages. That table of counts is the model. The word counts are called its **parameters**, like the dial in the fruit game.
+
+<RunIt client:visible title="Train: count the words" setup={['data', 'tokenize']} rows={22} code={`def train(examples):
+    words = {"spam": {}, "ham": {}}
+    messages = {"spam": 0, "ham": 0}
+    for text, label in examples:
+        messages[label] += 1
+        for word in tokenize(text):
+            counts = words[label]
+            counts[word] = counts.get(word, 0) + 1
+    return {"words": words, "messages": messages}
+
+model = train(train_set)
+print(model["messages"])
+for word in ["free", "now", "you", "the"]:
+    print(word, model["words"]["spam"].get(word, 0), model["words"]["ham"].get(word, 0))
+`} />
+
+The three numbers on each line are the word, how often it appeared in spam, and how often in not-spam. `free` and `now` appear only in spam. `you` and `the` mostly in good messages.
+
+## Step 4: let the words vote
+
+To label a new message, the model asks about each label in turn: how common is this kind of message, and how likely are these words in it? Each word then casts a **vote**, for spam or not spam. A word that was seen often in spam and never in ham votes strongly for spam. A word that is common on both sides barely votes. A word never seen in training does not vote at all.
+
+Choose a test message and watch the votes. Then tap "Plus the 4 extra", which we will come to in step 6.
+
+<SpamScorer client:visible />
+
+Two details make this work. The "add 1" trick gives every word a small chance in every label, so one missing word cannot make the whole score zero. And the model treats words as if they did not affect each other. That is not true: "free" and "gift" often appear together. It is why the method is called **naive**. It still works surprisingly well.
+
+The score the code works out is the "votes added up", measured on a scale that uses logarithms. You can ignore the scale: the higher score wins.
+
+<RunIt client:visible title="Score one message" setup={['data', 'tokenize', 'train']} rows={24} code={`import math
+
+def log_score(model, text, label):
+    counts = model["words"][label]
+    total_words = sum(counts.values())
+    seen = set(model["words"]["spam"])
+    seen |= set(model["words"]["ham"])
+    spam_n = model["messages"]["spam"]
+    ham_n = model["messages"]["ham"]
+    score = math.log(model["messages"][label] / (spam_n + ham_n))
+    for word in tokenize(text):
+        if word in seen:
+            chance = (counts.get(word, 0) + 1) / (total_words + len(seen))
+            score += math.log(chance)
+    return score
+
+model = train(train_set)
+text = "Win a free ticket, click now"
+print("spam score:", round(log_score(model, text, "spam"), 2))
+print("ham score: ", round(log_score(model, text, "ham"), 2))
+`} />
+
+Both scores are negative, so the winner is the one closer to zero. Spam wins by a wide margin. Try a message of your own.
+
+## Step 5: test it on messages it has never seen
+
+Now the real question. Does it work on messages that were not in the training set? Write `predict` (pick the label with the higher score) and `accuracy` (the fraction it gets right), then try it on both sets.
+
+<RunIt client:visible title="Test on unseen messages" setup={['data', 'tokenize', 'train', 'log_score']} rows={22} code={`def predict(model, text):
+    if log_score(model, text, "spam") > log_score(model, text, "ham"):
+        return "spam"
+    return "ham"
+
+def accuracy(model, examples):
+    right = 0
+    for text, label in examples:
+        if predict(model, text) == label:
+            right += 1
+    return right / len(examples)
+
+model = train(train_set)
+print("on the training messages:", accuracy(model, train_set))
+print("on the test messages:    ", round(accuracy(model, test_set), 2))
+`} />
+
+It gets every training message right. That is no surprise, because it learned from them. Only the test score is honest: 10 right out of 12, or 0.83. If you only checked the training messages you would think it was perfect.
+
+## Step 6: look at the mistakes
+
+A single score hides the interesting part. Print the messages it got wrong.
+
+<RunIt client:visible title="Show the mistakes" setup={['data', 'tokenize', 'train', 'log_score', 'predict', 'accuracy']} code={`model = train(train_set)
+for text, label in test_set:
+    guess = predict(model, text)
+    if guess != label:
+        print("wrong:", text)
+        print("   real label:", label, "  model said:", guess)
+`} />
+
+There are two mistakes, and they are different kinds. Open each one in the vote picture above.
+
+- **"Earn money from home, no experience needed"** is spam that the model called not spam. Almost none of its words appeared in training, so almost none voted. The only known word is `home`, which was seen once, in a good message. A new kind of spam fools a model that has never seen that kind.
+- **"Are you free to play games now?"** is a good message that the model called spam. The words `free` and `now` only ever appeared in spam, so they pushed hard. The model has no idea that a friend can ask if you are free.
+
+Both are the lesson from the fruit game again: a model is only as good as its examples.
+
+## Step 7: improve it
+
+The easiest fix is more examples of the kind it got wrong. These four are in the drawer: two spam messages about working from home, and two friendly messages that use the word `free`. Train on all 34 and test again.
+
+<RunIt client:visible title="Train again with four more examples" setup={['data', 'tokenize', 'train', 'log_score', 'predict', 'accuracy']} code={`bigger = train_set + extra_set
+model = train(bigger)
+print("on the test messages:", round(accuracy(model, test_set), 2))
+
+for text, label in test_set:
+    if predict(model, text) != label:
+        print("still wrong:", text)
+`} />
+
+Now it gets all 12 right. But be careful before you celebrate.
+
+<Callout title="Why this score is too good to trust">
+
+First, those four extra messages were written after seeing which test messages failed. That is peeking at the answers. A fair project would keep a second, untouched test set for the very end.
+
+Second, 12 test messages is far too few. One message is worth about 8 percentage points. And "Are you free to play games now?" is now a very narrow win; look at its votes. Treat this as a demonstration of the steps, not as a score you could quote.
+
+</Callout>
+
+Other ways to improve: write more examples, use more varied ones, or change how the text is cut. All of them follow the loop: change one thing, retrain, test, look at the mistakes.
+
+## Your turn: the lab
+
+The [Train and test a spam classifier lab](../../../practice/spam-classifier/) gives you the data and the scoring and asks you to write `train`, `predict` and `accuracy` yourself. It checks each one automatically.
+
+## Next step: the same idea in scikit-learn
+
+<Callout title="This block does not run on this page">
+
+The code below uses a library called scikit-learn, which these browser boxes do not load. To run it, you need Python on your own computer, or a free notebook site such as Google Colab, with scikit-learn installed. Use the same `train_set` and `test_set` lists as above.
+
+</Callout>
+
+```python
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.pipeline import make_pipeline
+
+model = make_pipeline(CountVectorizer(), MultinomialNB())
+model.fit([text for text, label in train_set],
+          [label for text, label in train_set])
+
+test_texts = [text for text, label in test_set]
+test_labels = [label for text, label in test_set]
+print(model.score(test_texts, test_labels))
+print(model.predict(["Are you free to play games now?"]))
+```
+
+Everything you wrote by hand is here in a few lines. `CountVectorizer` cuts text and counts words, like `tokenize` and the counting in `train`. `MultinomialNB` is naive Bayes for word counts, like `log_score` and `predict`. `score` is `accuracy`. When this lesson was written (1 November 2026), running these lines on a computer with scikit-learn 1.9.1 gave the same two mistakes on our data, and 12 out of 12 after adding the four extra messages. scikit-learn cuts text a little differently (for example, it ignores one-letter words such as "a"), so on other data the results would not match exactly.
+
+<Deep title="The maths behind the votes">
+
+Naive Bayes uses Bayes' rule: the chance of a label given the words is proportional to how common the label is, times the chance of each word given that label. Multiplying many small chances gives tiny numbers, so code adds their logarithms instead. That is why the scores above are negative, and why the higher (less negative) one wins.
+
+For example, `free` appears 6 times in the 102 spam words, and never in the 115 ham words. There are 133 different words in training. With the add-1 rule, its chance is (6 + 1) / (102 + 133) in spam and (0 + 1) / (115 + 133) in ham. The ratio is about 7.4, whose logarithm is about 2.0, the vote you see in the picture. The starting lean before any word is the log of 14 spam messages over 16 ham messages, about −0.13.
+
+Naive Bayes is one classifier among many. Another standard one learns a weight for each word instead of counting, called logistic regression. It is covered in [Linear and logistic regression](../../ml/linear-and-logistic-regression/). For the idea of Bayes' rule explained with pictures, see [3Blue1Brown's lesson on Bayes' theorem](https://www.3blue1brown.com/lessons/bayes-theorem). The [scikit-learn guide to naive Bayes](https://scikit-learn.org/stable/modules/naive_bayes.html) lists the variants.
+
+</Deep>
+
+<Deep title="How real spam filters differ">
+
+They train on far more messages and use more than words: the sender, links, how the message is laid out, and what other people mark as spam. Modern filters often use neural networks. They also care about mistakes unequally, because losing a real message is usually worse than letting a spam message through. So they measure more than accuracy. Even so, the loop you used (collect, split, train, test, look at mistakes, improve) is the same.
+
+</Deep>
+
+## What to remember
+
+- A model learns from labelled examples. Training here is counting words for each label.
+- Test on messages the model has never seen. The training score tells you nothing about new messages.
+- Look at the mistakes, not just the score. They show what the examples are missing.
+- Fixing mistakes with the test messages in view makes the test score too optimistic, and a small test set is a shaky guide.
+
+To go further, try [Kaggle's free Intro to Machine Learning course](https://www.kaggle.com/learn/intro-to-machine-learning). Browse the other [practice labs](../../../practice/). To revisit the idea behind it all, see [How a computer learns from examples](../../start/how-computers-learn/).

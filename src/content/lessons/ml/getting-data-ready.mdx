@@ -1,0 +1,192 @@
+---
+title: Getting data ready
+track: ml
+level: basic
+order: 1
+summary: "Cleaning and preparing a table before any model sees it: blanks, outliers, wrong units, categories, scaling, new columns, and why you split the data first."
+updated: 2026-11-01
+sources:
+  - label: "scikit-learn: Common pitfalls and recommended practices (data leakage)"
+    url: https://scikit-learn.org/stable/common_pitfalls.html
+  - label: "scikit-learn: Imputation of missing values"
+    url: https://scikit-learn.org/stable/modules/impute.html
+  - label: "scikit-learn: Preprocessing data (scaling and encoding)"
+    url: https://scikit-learn.org/stable/modules/preprocessing.html
+  - label: "Google Machine Learning Crash Course: Categorical data"
+    url: https://developers.google.com/machine-learning/crash-course/categorical-data
+  - label: "Google Machine Learning Crash Course: Numerical data"
+    url: https://developers.google.com/machine-learning/crash-course/numerical-data
+  - label: "Google Machine Learning guides: Good data analysis"
+    url: https://developers.google.com/machine-learning/guides/good-data-analysis
+  - label: "Kaggle Learn: Data cleaning"
+    url: https://www.kaggle.com/learn/data-cleaning
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import DataPrepLab from '../../../components/viz/DataPrepLab.tsx';
+
+A model learns from the table you give it. If the table has a house listed at 1,250 square metres because someone typed an extra zero, the model will try to learn from that house too. Most of the work in a real machine learning project is not choosing a clever model. It is making the table honest. This lesson goes through the jobs in the order you do them, and ends with the mistake that spoils more projects than any other: letting the test data influence the preparation.
+
+You already know why we hold data back (see [Classical ML essentials](../../foundations/classical-ml-essentials/) for splits, leakage and metrics, and [How a model learns](../../foundations/how-models-learn/) for what training does). Here the new part is what you do to the data before training, and where that preparation can cheat.
+
+## Try it first
+
+The table below is invented example data: 200 house listings with their asking prices. It is deliberately messy. Change the choices and watch the score of a simple model move. The score is the typical size of the model's price mistake on 40 houses it was not trained on, in thousands of pounds. Lower is better.
+
+<DataPrepLab client:visible />
+
+Everything below explains what you just did, and what the numbers mean.
+
+## Step 0: split first
+
+Before you fix anything, set some rows aside. A common split is training rows (the model learns from them), validation rows (you compare ideas on them) and test rows (you look at them once, at the end). In the table above, 120 houses train, 40 score, and 40 are locked away.
+
+Why first? Because many cleaning steps learn something from the data, such as an average. If you learn it from every row, the test rows have already shaped the model. We come back to this at the end.
+
+## Step 1: look at the table
+
+Before changing anything, count and look. How many rows? What is the smallest and largest value in each column? How many blanks? Do any rows appear twice? Do the values make sense: a house of 1,250 square metres, an age of 999 years, a price ten times its neighbours?
+
+Ten minutes of this finds most problems. Nobody can fix a problem they have not seen, and no model will tell you the table is wrong. It will simply learn from it.
+
+## Wrong types and wrong units
+
+A number is only meaningful with its unit. In the example, 14 sizes were typed in square feet and the rest in square metres. A house of 1,184 looks enormous next to one of 110, but they may be the same size. Converting needs the divisor: 1 square metre is about 10.76 square feet, so 1,184 square feet is about 110 square metres.
+
+Other type problems: a number stored as text ("1,200"), dates stored in different formats, and placeholders such as 999 or -1 that stand for "unknown". A placeholder that looks like a real number is dangerous, because the model reads it as one. Turn it into a proper blank first.
+
+Spelling counts too. "Brook", "brook" and "Brook " (with a trailing space) are one neighbourhood, but a computer sees three. Make them agree before you turn text into numbers.
+
+## Missing values
+
+Real tables have blanks. You have three honest choices.
+
+- **Drop** the rows (or the column). This is simple, but you lose data, and a model that cannot handle blanks cannot price a house that has one.
+- **Fill** the blank with a typical value. The usual choices are the average (mean) or the middle value (median).
+- **Flag** it: fill the blank, and add a new yes-or-no column saying "this value was blank". Sometimes blank means something. In the example, the ages of old houses are left blank more often, so the flag carries information.
+
+Do not fill with 0 just because it is easy. Zero is a real value: an age of 0 means brand new and a size of 0 means no house. In the demo, filling blanks with a typical value instead of 0 helped, and adding the flag helped a little more.
+
+Why a value is missing matters. A blank because a form field was optional is different from a blank because a sensor broke on hot days. Ask where the table came from.
+
+The score from "drop the rows" can look better than the others in the demo. Look at the counts under the score: it is judged on fewer, different houses, so it is not a fair comparison.
+
+## Outliers
+
+An **outlier** is a value far from the rest. Sometimes it is a typing error (an extra zero), and you should fix or remove it. Sometimes it is real (one mansion), and removing it throws away true information, so keep it and think about whether the model should predict such cases at all.
+
+The average is dragged by outliers; the median is not. Take five sizes: 85, 90, 95, 100 and 1,250. The mean is 324 square metres. The median is 95. Which is closer to a typical house?
+
+Other options: clip values to a sensible range, or use a log scale for values that span a huge range, such as incomes. Whatever you do, note it down. In the demo, removing the two impossible rows was the single biggest improvement, because one wrong price pulls a straight line towards it.
+
+## Turning categories into numbers
+
+A model works with numbers, so a column of words such as the area has to be turned into numbers.
+
+The tempting way is to give each a code: Abbey 1, Brook 2, Castle 3, Dale 4. But this tells the model that Dale is "more" than Abbey, and that Brook sits halfway between Abbey and Castle. That is only sensible when the categories have a real order (small, medium, large).
+
+The safer way is **one-hot encoding**: one new column for each category, holding 1 for a match and 0 for the rest. A house in Brook becomes: Abbey 0, Brook 1, Castle 0, Dale 0. No false order. The price is more columns, which is awkward when a category has thousands of values; then people group rare values, or use a hashing trick (scikit-learn has a FeatureHasher for this).
+
+In the demo, one-hot columns helped much more than numeric codes, because neighbourhood really does change price and the codes mixed that up.
+
+<Callout title="A warning about target encoding">
+
+Another trick replaces each category with the average price of houses in it. This is called target encoding. It uses the answer column to build a feature, so it leaks unless you compute the averages from the training rows only, and carefully (usually inside cross-validation). Start with one-hot.
+
+</Callout>
+
+## Scaling, and when it matters
+
+Columns come in different ranges: size runs 45 to 180, the distance to the station runs 100 to 3,000 metres. **Scaling** (also called normalisation) puts them on comparable footing. Two common ways:
+
+- **Min-max:** squeeze each column into 0 to 1. A size of 90 in a range of 45 to 180 becomes (90 - 45) / 135 = 0.33.
+- **Standardise:** subtract the average and divide by the spread, so values become "how many spreads above or below typical". With mean 100 and spread 25, a value of 150 becomes 2.
+
+Whether this changes anything depends on the model.
+
+- **Distance-based models matter.** A nearest-neighbours model finds similar houses by distance. Without scaling, a 1,000 metre difference to the station swamps a 40 square metre difference in size, though size matters more for price. In the demo, switching to nearest neighbours and scaling the columns cut the error from about £78k to about £57k.
+- **Models trained by gradient descent and models with a penalty** (neural networks, regularised regression) learn faster and treat columns fairly when they are scaled.
+- **Plain straight-line fits and decision trees** do not care. Their predictions are the same with or without scaling. Try it: with the straight-line model the score does not move.
+
+Rule of thumb: scale when distance, gradient descent or a penalty is involved. It does no harm elsewhere.
+
+## Making new columns
+
+**Feature engineering** means building columns that make the pattern easier to see. Some examples:
+
+- A ratio: size per room (90 square metres over 3 rooms is 30).
+- Something from a date: the year it was built and the year it was listed give the age (1998 and 2025 give 27 years).
+- A domain formula: body mass index is weight over height squared (70 kg and 1.75 m give 22.9), which doctors use because it captures something weight alone does not.
+- A combination of two columns that matter together.
+
+Good new columns come from knowing the problem, not from trying everything. Only use things you will actually know at prediction time. The next section is what happens when you do not.
+
+## Where leakage really enters
+
+**Leakage** means the model got information it will not have in real use. The score then looks excellent, and the real result disappoints. You met the idea in [Classical ML essentials](../../foundations/classical-ml-essentials/) and in [Evals 101](../../evals/evals-101/). Here is where it creeps in during preparation.
+
+1. **Fitting a step on all the data.** Average-fills, scalers and category lists are learned from data. Learn them from the training rows only, then apply them unchanged to validation and test rows. The scikit-learn guide says the general rule is never to call fit on the test data.
+2. **A column made from the answer.** A "valuation after the sale" column cannot exist before the sale. In the demo, adding it dropped the straight-line error from about £29k to about £4k. A score that good should make you suspicious, not happy.
+3. **The same thing on both sides of the split.** A house relisted twice, or one customer with many rows, can land in training and test. A flexible model then remembers it. In the demo, putting the scored houses into the training set cut the nearest-neighbours error from about £60k to about £34k, though the model learned nothing new about houses.
+4. **Time.** If you will predict the future, split by time, not at random.
+
+Use the "Leak it" switch in the demo to see each one. You will notice that the first, quiet kind barely moved the score here. That is typical for a simple model with plenty of rows, and it is the reason it goes unnoticed. It grows when there are many columns, few rows, or a step that picks columns by looking at the answer. The loud kinds are easy to spot in the score; the quiet one only shows up in the pipeline.
+
+The cure is a habit: put every preparation step in a pipeline that is fitted on training data and only applied to the rest.
+
+<Deep title="The same pipeline in scikit-learn">
+
+```python
+from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+
+# X is a table with columns size_m2, rooms, age, area; y is the price.
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+
+numbers = make_pipeline(SimpleImputer(strategy="median", add_indicator=True), StandardScaler())
+prepare = ColumnTransformer([
+    ("numbers", numbers, ["size_m2", "rooms", "age"]),
+    ("area", OneHotEncoder(handle_unknown="ignore"), ["area"]),
+])
+model = make_pipeline(prepare, LinearRegression())
+
+model.fit(X_train, y_train)          # medians, scaling and categories learned here only
+print(model.score(X_test, y_test))   # the same steps are applied, not re-learned
+```
+
+`add_indicator=True` adds the "was blank" flag columns. `handle_unknown="ignore"` stops the model failing on a category it never saw in training. Because the preparation sits inside the pipeline, cross-validation re-learns it inside each fold, so no fold peeks at the one it is scored on.
+
+</Deep>
+
+## Labels need checking too
+
+Everything above is about the input columns. The answer column, the **label**, also has problems. Labels come from people, sensors or rules, and people disagree and make mistakes. If a fifth of your labels are wrong, no model can honestly score above that ceiling. Check a small sample by hand, ask a second person to label the same cases and see how often you agree, and write down what each label means. [Evals 101](../../evals/evals-101/) makes the same point for the test sets used on AI features.
+
+## A data-quality checklist
+
+1. Split off the test rows first, and look at them only at the end.
+2. Count rows, blanks, and repeated rows. Look at each column's smallest and largest values.
+3. Check units and types; turn placeholders like 999 into proper blanks.
+4. Make spellings agree.
+5. Decide what to do with outliers and write the reason down.
+6. Choose drop, fill or flag for blanks, with values learned from training rows.
+7. Turn categories into numbers without inventing a false order.
+8. Scale if the model uses distances, gradient descent or a penalty.
+9. Ask of every new column: would I know this at prediction time?
+10. Put the steps in one pipeline, and keep a note of what each does.
+
+## What to remember
+
+- Split before you prepare. Learn every fill value, scale and category list from training rows only.
+- Look at the data first. Wrong units, placeholders and typos hurt more than a weak model.
+- Blanks: drop, fill or flag. Not 0 unless 0 is true.
+- One-hot encode categories that have no order. Scale for distance-based models; trees and plain straight-line fits do not need it.
+- A suspiciously good score is a reason to hunt for a leak.
+- The numbers in the demo come from invented data and one small model. The pattern is general; the exact figures are not.
+
+Next: [Linear and logistic regression](../linear-and-logistic-regression/) uses a table prepared like this to fit a first real model. For a model that ignores most of this, see [decision trees and random forests](../decision-trees-and-random-forests/). If you want to run the idea in code, try [Your first model](../../skills/your-first-model/). The idea of each row as a list of numbers returns in [Tokens and embeddings](../../foundations/tokens-and-embeddings/), where words become lists too.

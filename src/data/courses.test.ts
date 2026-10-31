@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { courses } from './courses';
+import { unpluggedById } from './unplugged';
 
 describe('course plans', () => {
   it('only refer to lessons that exist, and never repeat a lesson inside a course', () => {
@@ -42,5 +43,26 @@ describe('course plans', () => {
   it('keep the half-day workshop under four hours of sessions', () => {
     const half = courses.find((c) => c.id === 'half-day')!;
     expect(half.sessions.reduce((n, s) => n + s.minutes, 0)).toBeLessThanOrEqual(220);
+  });
+
+  it('have one school plan for each age band, built from sessions of 45 to 90 minutes', () => {
+    const school = courses.filter((c) => c.band);
+    expect(school.map((c) => c.band)).toEqual(['10-12', '13-15', '16-18']);
+    for (const c of school) {
+      expect(c.sessions.length, c.id).toBeGreaterThanOrEqual(6);
+      for (const s of c.sessions) {
+        expect(s.minutes, `${c.id}: ${s.title}`).toBeGreaterThanOrEqual(45);
+        expect(s.minutes).toBeLessThanOrEqual(90);
+      }
+    }
+  });
+
+  it('only name unplugged activities that exist, and name an activity for the age band', () => {
+    for (const c of courses)
+      for (const s of c.sessions)
+        for (const id of s.unplugged ?? []) {
+          expect(unpluggedById[id], `${c.id}: ${id}`).toBeDefined();
+          if (c.band) expect(unpluggedById[id].bands, `${c.id}: ${id} is not for ${c.band}`).toContain(c.band);
+        }
   });
 });

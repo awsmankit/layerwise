@@ -1,0 +1,102 @@
+---
+title: "AI and school: honest, smart use"
+track: responsible
+level: basic
+order: 4
+summary: How to use AI as a study buddy that helps you learn instead of doing the work for you, why you must check your school's rules and the facts, and how to ask AI well.
+updated: 2026-11-01
+sources:
+  - label: "Stanford HAI: The 2026 AI Index Report, Education chapter (read 1 November 2026)"
+    url: https://hai.stanford.edu/ai-index/2026-ai-index-report/education
+  - label: "AILit Framework: AI literacy for primary and secondary education (European Commission and OECD, with CodeAI)"
+    url: https://ailiteracyframework.org/
+  - label: "Retrieval Practice: the research behind quizzing yourself"
+    url: https://www.retrievalpractice.org/
+  - label: "Anthropic: Prompting best practices (be clear and direct, add context, use examples, sequential steps)"
+    url: https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices
+  - label: "Google: Prompting Essentials"
+    url: https://grow.google/prompting-essentials/
+---
+
+import OkOrNot from '../../../components/viz/OkOrNot.tsx';
+import PromptMakeover from '../../../components/viz/PromptMakeover.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+A chatbot can write a whole essay in ten seconds. So why do you still have to do homework? Because homework is not really about the answer. It is about what happens in your head while you find it.
+
+## The gym and the forklift
+
+Think of homework as a gym. The weights are heavy on purpose, because lifting them makes you stronger. If a forklift lifts them for you, the weights go up and you learn nothing.
+
+AI can be your coach, or it can be the forklift. The trick is to pick the coach.
+
+## Be a study buddy, not an answer machine
+
+Here are ways to use AI that help you learn:
+
+- "Explain photosynthesis in simpler words."
+- "Quiz me on this week's spellings, one question at a time."
+- "Here is my answer and how I got it. Can you spot a mistake in my thinking?"
+- "Give me a hint, not the answer."
+
+And here is the one that does not: "Write my report." That is the forklift. You hand in work you did not do, and you skip the learning. Quizzing yourself is a good example of what to do instead, since trying to remember something is one of the best ways to learn it.
+
+## Check the rules first
+
+Schools do not agree about AI. Some allow it for studying, some for drafting, and some not at all. Stanford's 2026 AI Index reports that four out of five US high-school and college students now use AI for schoolwork. It also says only about half of middle and high schools have AI policies, and just 6% of teachers say those policies are clear. That was in the US, but the lesson works anywhere: do not guess.
+
+So ask your teacher. "May I use AI for this task, and for what?" It takes ten seconds.
+
+## Try it: okay or not okay?
+
+Pick an answer for each scenario. Then change your teacher's rule at the top and watch the right answers change.
+
+<OkOrNot client:visible />
+
+## Use your own words
+
+Write first, then ask for feedback. If you paste in AI's sentences, they are not your thoughts. Read what it says, close it, and explain it in your own words. If you cannot, you have not learned it yet.
+
+## Say when you used it
+
+If your school asks you to say when you used AI, say so. A short note is enough: "I used AI to quiz me and check my spelling. I wrote the answers myself." Being open is always safer than keeping quiet.
+
+## Check the facts
+
+You have seen that a chatbot writes what sounds right, which is why it can make things up. You can read about that in [How a chatbot answers](../../start/how-a-chatbot-answers/). So check names, numbers, dates and quotes in your textbook or on a trusted website. A chatbot that says "yes, that is correct" has not checked anything.
+
+## Ask AI well
+
+Good answers start with good questions. Four things help:
+
+1. **A clear task.** Say what you want, not just a topic.
+2. **Who it is for.** Your age, or what you already know.
+3. **An example or a shape.** "Five short sentences" or "compare it to something from home".
+4. **Steps, not just answers.** Ask it to check you, or to go one step at a time.
+
+## Try it: prompt makeover
+
+<PromptMakeover client:visible />
+
+<Callout title="A good habit">
+
+Ask for steps, then try the next step yourself. If you ask for answers only, you will not get better.
+
+</Callout>
+
+<Deep title="Where these tips come from">
+
+These match what AI companies' own guides say. Anthropic's prompting guide recommends being clear and direct, giving context, using examples, and giving instructions as sequential steps. Google's Prompting Essentials course teaches a structured way to write prompts. The AILit Framework, made by the European Commission and the OECD, lists engaging with, creating with, managing and shaping AI as the skills students need.
+
+</Deep>
+
+<Deep title="For teachers and parents">
+
+The Stanford figures above describe the US and come from a summary page that does not name the underlying surveys, so treat them as a rough guide. A short class rule helps: say which tasks AI may be used for, whether students must note their use, and what to do if unsure. Assessments that show thinking, such as drafts, a quick spoken check or work done in class, make it less tempting to hand in work that is not the student's own.
+
+</Deep>
+
+## Next
+
+Next: [What is an AI agent?](../../start/what-is-an-ai-agent/), a helper that can do things, not only talk.

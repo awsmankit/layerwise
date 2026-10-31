@@ -1,0 +1,116 @@
+---
+title: "Inside a neural network: neurons, layers and activations"
+track: deep-learning
+level: basic
+order: 1
+summary: Build a neural network from one neuron up, see why it needs a bend between its layers, and train a small one in your browser to watch it carve a boundary through dots.
+updated: 2026-11-01
+sources:
+  - label: "Neural Networks and Deep Learning, chapter 1 (Michael Nielsen)"
+    url: http://neuralnetworksanddeeplearning.com/chap1.html
+  - label: "Neural Networks and Deep Learning, chapter 4: a visual proof that neural nets can compute any function (Michael Nielsen)"
+    url: http://neuralnetworksanddeeplearning.com/chap4.html
+  - label: "Dive into Deep Learning, 5.1 Multilayer perceptrons"
+    url: https://d2l.ai/chapter_multilayer-perceptrons/mlp.html
+  - label: "CS231n: Neural networks part 1, setting up the architecture"
+    url: https://cs231n.github.io/neural-networks-1/
+  - label: "TensorFlow Playground (the bigger tool this lesson's playground is modelled on)"
+    url: https://playground.tensorflow.org/
+---
+
+import NeuronCalc from '../../../components/viz/NeuronCalc.tsx';
+import NeuralPlayground from '../../../components/viz/NeuralPlayground.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+[How a model learns](../../foundations/how-models-learn/) described a model as a design with many adjustable numbers, and training as turning those numbers. This lesson opens the design. A **neural network** is built from one very small part, repeated thousands or billions of times, and by the end you will have trained one yourself and watched it work.
+
+## One neuron is a weighted vote
+
+A **neuron** does three things. It multiplies each input by a number called a **weight**, adds the results together with one more number called the **bias**, and passes that total through an **activation function**. That is all of it.
+
+Think of a committee voting on whether to go out. Each member (an input) has a say, and each has a different amount of influence (the weight). The bias is how eager the committee is before anyone speaks. The activation function decides how the total turns into a final answer. Try it below: move the weights and watch the total and the output change.
+
+<NeuronCalc client:visible />
+
+With the starting values, the two products are 0.80 and -0.60, the bias takes off 0.30, and the total is -0.10. ReLU turns every negative total into zero, so this neuron says nothing. Raise weight 1 and it starts to speak.
+
+The weights and the bias are the neuron's **parameters**: the dials that training turns. Everything the neuron "knows" is in those numbers.
+
+## A layer is many neurons side by side
+
+One neuron can only vote on one thing. A **layer** is a group of neurons that all read the same inputs, each with its own weights, so each looks for something different. A layer with 4 neurons turns 2 input numbers into 4 output numbers.
+
+The next layer reads those 4 numbers the same way. Stack a few layers and you have a network: numbers go in at one end, pass through layer after layer, and one or more numbers come out at the other. Running the numbers through once like this is a **forward pass**. The layers between the input and the output are called **hidden layers**, because you never see their numbers directly.
+
+Counting the dials is simple. A layer with 2 inputs and 4 neurons has 2 × 4 = 8 weights and 4 biases. A second layer taking those 4 numbers into 1 output has 4 weights and 1 bias. The whole network has 8 + 4 + 4 + 1 = **17 parameters**. Real networks have the same shape, only wider and longer: a large language model has billions.
+
+## Why the bend matters
+
+Here is the surprise. If the neurons only multiplied and added, stacking layers would give you nothing. Take two layers with one neuron each. The first computes y = 2x + 1. The second computes z = 3y − 4. Put them together:
+
+z = 3 × (2x + 1) − 4 = 6x − 1
+
+That is one straight-line rule, so two layers did the work of one. The same happens with any number of layers and any number of neurons: **a stack of linear layers is one linear layer**. A hundred of them could never learn more than a single straight cut through the data.
+
+The activation function is the fix. Put ReLU, which keeps positive numbers and turns negatives into zero, between the two layers: z = 3 × max(0, 2x + 1) − 4. Now the answer is −4 for any x below −0.5 and 6x − 1 above it. The line has a kink, and the kink cannot be written as a single straight line. Each extra bend adds shape, so a network with enough neurons can bend itself round almost any pattern.
+
+| Activation | What it does | Output range | Where you meet it |
+|---|---|---|---|
+| ReLU | Keeps positives, turns negatives into 0 | 0 up | The default in many networks |
+| Tanh | A smooth S that squashes any number into −1 to 1 | −1 to 1 | Older designs; some recurrent networks |
+| Sigmoid | A smooth S into 0 to 1, read as a probability | 0 to 1 | Final layer for yes or no; rare in hidden layers |
+| GELU, SwiGLU | Smooth cousins of ReLU, the second one gated | about −0.2 up | Inside many current language models |
+| Softmax | Turns a list of scores into probabilities that add to 1 | 0 to 1 | Final layer when choosing between many options |
+
+Softmax is a different kind of function, because it acts on a whole list at once. Scores of 2.0, 1.0 and 0.1 become probabilities of about 0.66, 0.24 and 0.10. A language model ends with a softmax over every token in its vocabulary, which is how it picks the next token.
+
+## What "deep" means
+
+A **deep** network is one with many hidden layers. That is the whole definition: "deep learning" means training networks with several layers or more, rather than one.
+
+Why do layers help? Each layer builds on the one before. In a picture classifier, early layers tend to respond to simple things such as edges, later ones to shapes made of edges, later still to whole objects. Nobody programs this; it is what training finds. A single, very wide hidden layer can in theory match any smooth function, which is a proven result, but the theorem says nothing about how many neurons that takes or how easy it is to find the weights. In practice, depth often reaches the same pattern with far fewer neurons.
+
+## Try it: a network in your browser
+
+This playground trains a real network, written from scratch in your browser with no library. It has two inputs, the position across and the position up, and one output, the chance that a dot there is blue. The big picture shows the network's answer at every position. The small squares show what each neuron responds to.
+
+<NeuralPlayground client:visible />
+
+Run these experiments, in this order:
+
+1. Choose **Two clumps**, press **Remove a layer** until none are left, and press **Train**. With no hidden layers the output neuron sees only the two inputs, and one straight line is enough.
+2. Choose **Ring**. The line cannot work: the blue dots are inside the orange ones. Add a layer with 4 neurons and train. Look at the small squares: each hidden neuron has found its own simple cut, and the output neuron combines them into a closed shape.
+3. Turn the neurons in that layer down to 2, then restart with new weights. It gets most dots but not all. Neurons are the pieces the network has to build its shape from.
+4. Choose **Corners**, then set the activation to **None**, and add layers. However many you add, the boundary stays a straight line and cannot split the corners. This is the collapse from the section above, happening live.
+5. Choose **Spiral**, add layers up to two of 6 neurons, pick **ReLU** and train. In the runs behind this lesson it took a few hundred steps to get nearly every dot right. Notice the boundary: it fits the dots, including the odd stray one, so it is likely memorising rather than finding a neat rule. That is overfitting, which [How a model learns](../../foundations/how-models-learn/) introduced.
+
+<Callout title="What the playground is and is not">
+
+It uses the same pieces as a large network: weights, biases, activations and training by gradient descent. It differs in scale. It has at most a few dozen neurons and trains on 120 dots, and it uses a fixed set of choices (an optimiser called Adam, a loss for yes-or-no answers). Real networks are the same idea, much bigger.
+
+</Callout>
+
+## How the network learns
+
+Nothing in the playground is told what a ring is. Training starts with random weights, so the first picture is nonsense. Then it repeats the loop from [How a model learns](../../foundations/how-models-learn/): run the dots through, measure how wrong the answers are with a loss, work out how each weight should change, and nudge every weight a little. The loss number under the picture falls as the shape improves. The step that works out which way to nudge each weight is called backpropagation, and [Backpropagation from scratch](../backprop-from-scratch/) builds it yourself.
+
+<Deep title="The same thing as matrices, and the proof of the collapse">
+
+A layer with `n_in` inputs and `n_out` neurons is one weight matrix `W` of shape `n_out × n_in`, a bias vector `b` of length `n_out`, and an activation `σ` applied to each element: `a = σ(W x + b)`. For a batch of examples, stack them as rows to get an input of shape `(batch, n_in)`; the layer then computes `σ(X Wᵀ + b)` with shape `(batch, n_out)`. Almost every shape in a deep learning framework is some version of "(batch, features)".
+
+Take two layers without an activation. The first gives `W₁x + b₁`. The second gives `W₂(W₁x + b₁) + b₂`, which equals `(W₂W₁)x + (W₂b₁ + b₂)`. That has the form `W x + b` with a new matrix `W = W₂W₁` and a new bias `b = W₂b₁ + b₂`, so it is one layer. The same step repeats for any number of layers. The playground's tests check exactly this arithmetic.
+
+The feed-forward part of every transformer block is this same structure: a wide layer, an activation, and a narrower layer. See [Inside a transformer block](../../foundations/inside-a-transformer/). Counting these parameters by hand is how the sizes in [Parameters and hyperparameters](../../llm/parameters-and-hyperparameters/) come about.
+
+</Deep>
+
+## What to remember
+
+- A neuron multiplies inputs by weights, adds a bias, and applies an activation function. The weights and bias are what training changes.
+- A layer is many neurons reading the same inputs. A network is layers in a row; "deep" means many hidden layers.
+- Without an activation function, any stack of layers is one linear layer. The bend between layers is what lets a network learn curves.
+- ReLU is a common default; sigmoid gives a yes-or-no probability, and softmax gives probabilities over many options.
+- Training starts with random weights and nudges them to lower a loss. More neurons and layers give more shapes, at the price of more things to train and more room to memorise.
+
+Next: [Training deep networks](../training-deep-networks/) explains why training deep networks goes wrong and the standard fixes. For where these layers sit in a language model, see [Inside a transformer block](../../foundations/inside-a-transformer/).

@@ -1,0 +1,95 @@
+---
+title: Computers that decide and plan
+track: start
+level: basic
+order: 7
+summary: Not all AI learns from examples. See how a computer can decide with rules, a tree of questions, or by looking ahead in a game, and why it picks the move it does.
+updated: 2026-11-01
+sources:
+  - label: "AI4K12 Big Idea 2: Representation and Reasoning"
+    url: https://ai4k12.org/big-idea-2-overview/
+  - label: "Elements of AI (free introductory course)"
+    url: https://course.elementsofai.com/
+  - label: "Wikipedia: Expert system"
+    url: https://en.wikipedia.org/wiki/Expert_system
+  - label: "Wikipedia: Decision tree learning"
+    url: https://en.wikipedia.org/wiki/Decision_tree_learning
+  - label: "Wikipedia: Minimax"
+    url: https://en.wikipedia.org/wiki/Minimax
+  - label: "Wikipedia: Tic-tac-toe"
+    url: https://en.wikipedia.org/wiki/Tic-tac-toe
+  - label: "Wikipedia: Shannon number"
+    url: https://en.wikipedia.org/wiki/Shannon_number
+  - label: "Wikipedia: Nim (the subtraction game)"
+    url: https://en.wikipedia.org/wiki/Nim
+---
+
+import RuleHelper from '../../../components/viz/RuleHelper.tsx';
+import AnimalTree from '../../../components/viz/AnimalTree.tsx';
+import NimLookAhead from '../../../components/viz/NimLookAhead.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+So far, the computers in these lessons learned from examples. But a computer can also make good decisions without learning anything. It can follow rules, ask questions in a smart order, or look ahead in a game.
+
+Computers that work this way are old, and they are still everywhere. A route in a map app and a game opponent can both be built from these ideas.
+
+## Rules
+
+A rule says "if this, then that". Remember the spam filter from the first lesson, with its rule about the word WINNER? A helper made only of rules like that is called **rule-based**.
+
+Try the helper below. It has three rules. Pick a type of weather and a temperature.
+
+<RuleHelper client:visible />
+
+Rules are easy to read and easy to check. But a person must think of every case. When you pick snowy and warm, no rule fits. Real rule lists grow and grow, which is why many jobs moved to learning from examples.
+
+## Twenty questions
+
+You know the game. Someone thinks of an animal, and you ask yes or no questions to find it. A **decision tree** is a plan for which question to ask next, based on each answer.
+
+A good tree asks questions that cut the animals in half. A bad one wastes questions. Build one below, or let the computer finish it for you.
+
+<AnimalTree client:visible />
+
+Look at how many questions each animal needed. A question that every animal answers the same way tells you nothing. The best first question here splits seven animals into four and three.
+
+Here you picked the questions. A computer can also work them out from examples. That is learning, and it is how many real decision trees are made.
+
+## Looking ahead
+
+Now a game. Five sticks lie on the table. You take 1 or 2 sticks on your turn. Whoever takes the last stick wins.
+
+Before it moves, the computer builds a **look-ahead tree**. It tries each move, then each reply, then each reply to that, until the game ends. This is called **search**. It then picks a move that wins whatever you do.
+
+<NimLookAhead client:visible />
+
+Play it twice, once going first and once going second. Can you ever win against it? Hint: which pile of sticks is bad for whoever has to move? Look at the blue and yellow circles and squares to see why. A square is blue when every move you have still leads to a computer win.
+
+The computer is not learning here. It checks every possible game, which takes no examples at all.
+
+## Too many games to check
+
+Take-away is tiny, with 20 positions in the tree. Tic-tac-toe is small too, with 26,830 possible games when you ignore rotations and mirror images. A computer can check them all.
+
+Chess is different. One well-known estimate says there are at least a 1 followed by 120 zeros of possible games, far more than any computer could check. So chess programs look only a few moves ahead, and use a score to judge the positions they reach.
+
+<Callout title="Three ideas to remember">
+Rules: a person writes them, and they miss cases. Trees: a plan of questions, best when each one splits the choices evenly. Search: look ahead, and pick the move that leads to a win.
+</Callout>
+
+## Thinking and learning together
+
+Many real systems mix these ideas with learning. A game program might use search to look ahead and learning to judge how good each position is. Neither idea replaces the other.
+
+<Deep title="For grown-ups: the technical names">
+
+Rule lists written by experts were the basis of expert systems, which Wikipedia describes as systems that reason through a body of knowledge represented mainly as if-then rules. They were created in the 1970s and widely used in the 1980s, before neural networks took over many jobs.
+
+The tree builder uses a greedy rule for "let the computer finish it": at each node, pick the question whose larger half is smallest. Learned decision trees use a similar greedy idea, but they score splits with a measure such as Gini impurity or entropy, using labelled examples. For this animal set and these five questions, a brute-force search shows the best possible tree has a longest chain of 4 questions and an average of 3.0, and the even-split rule matches that. The animal answers are simplified examples. [Decision trees and random forests](../../ml/decision-trees-and-random-forests/) covers the learned version.
+
+The take-away game is a subtraction game, and the look-ahead tree is solved by minimax: a position is won for the player to move if at least one move leads to a position they win, and lost if every move leads to a win for the other player. The tree for 5 sticks has 20 positions and 8 possible endings. Here a pile that is a multiple of 3 is lost for the player to move, which is why the computer can only be beaten if it must move at 3. Chess-scale search needs pruning, limited depth and an evaluation function; the 10^120 figure is Shannon's conservative lower bound on the game-tree complexity of chess.
+
+</Deep>
+
+Next: [Using AI without getting burned](../using-ai-without-getting-burned/), seven simple habits for any AI answer.

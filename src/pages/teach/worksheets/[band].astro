@@ -1,0 +1,169 @@
+---
+import Base from '../../../layouts/Base.astro';
+import PrintButtons from '../../../components/teach/PrintButtons.astro';
+import { worksheets } from '../../../data/worksheets';
+import { unpluggedById } from '../../../data/unplugged';
+import { lessonLookup } from '../../../lib/teach';
+import { withBase } from '../../../lib/url';
+
+export function getStaticPaths() {
+  return worksheets.map((w) => ({ params: { band: w.band }, props: { w } }));
+}
+const { w } = Astro.props;
+const { link } = await lessonLookup();
+const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+---
+
+<Base title={`${w.title} (worksheet, ages ${w.band.replace('-', ' to ')})`} description={w.strap}>
+  <div class="wrap tk-print-root">
+    <p class="tk-crumbs"><a href={withBase('/teach/')}>For teachers</a> / <a href={withBase('/teach/worksheets/')}>Worksheets</a> / Ages {w.band.replace('-', ' to ')}</p>
+    <PrintButtons options={[{ mode: 'sheet', label: 'Print the worksheet' }, { mode: 'key', label: 'Print the answer key' }, { mode: 'all', label: 'Print both' }]} />
+
+    <article class="tk-sheet tk-ws">
+      <header class="tk-sheet-head">
+        <h2>{w.title}</h2>
+        <p>Ages {w.band.replace('-', ' to ')}. About {w.minutes} minutes.</p>
+        <div class="tk-name"><span>Name <i></i></span><span>Date <i></i></span></div>
+      </header>
+
+      <h3><span class="tk-n" aria-hidden="true">1</span>Match the words</h3>
+      <p>Write the letter of the right meaning next to each word.</p>
+      <ul class="tk-match">
+        {w.vocab.map((v) => <li><span class="tk-term">{v.term}<i></i></span><span></span></li>)}
+      </ul>
+      <ul class="tk-match tk-meanings" style="margin-top:0.8rem">
+        {w.meaningOrder.map((vi, i) => <li><span class="tk-letter">{letters[i]}</span><span>{w.vocab[vi].meaning}</span></li>)}
+      </ul>
+
+      {
+        w.sections.map((s, si) => (
+          <>
+            <h3><span class="tk-n" aria-hidden="true">{si + 2}</span>{s.title}</h3>
+            {s.intro && <p>{s.intro}</p>}
+            {s.wordBank && (
+              <ul class="tk-bank" aria-label="Word bank">{s.wordBank.map((x) => <li>{x}</li>)}</ul>
+            )}
+            {s.diagram === 'pipeline' && (
+              <ol class="tk-flow" aria-label="From examples to an answer">
+                <li>Lots of examples<small>photos of fruit, each labelled</small></li>
+                <li><span class="tk-blank" aria-label="Box A">A</span><small>guess, check, nudge, repeat</small></li>
+                <li><span class="tk-blank" aria-label="Box B">B</span><small>the rule with its dials set</small></li>
+                <li>A new picture goes in<small>a fruit it has never seen</small></li>
+                <li><span class="tk-blank" aria-label="Box C">C</span><small>what comes out</small></li>
+              </ol>
+            )}
+            {s.diagram === 'tree' && (
+              <div class="tk-tree" role="group" aria-label="Decision tree with empty boxes">
+                <span class="tk-node">Does it have a tail?</span>
+                <div class="tk-branch">
+                  <div><span class="tk-lbl">No</span><span class="tk-node"><span class="tk-blank" aria-label="Box 3">3</span></span></div>
+                  <div>
+                    <span class="tk-lbl">Yes</span>
+                    <span class="tk-node">Does it have at least <span class="tk-blank" aria-label="Box 1">1</span> spots?</span>
+                    <div class="tk-branch" style="margin-top:0.55rem">
+                      <div><span class="tk-lbl">No</span><span class="tk-node">Blip</span></div>
+                      <div><span class="tk-lbl">Yes</span><span class="tk-node"><span class="tk-blank" aria-label="Box 2">2</span></span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            {s.diagram === 'network' && (
+              <div class="tk-net" role="group" aria-label="A small network with two hidden units">
+                <div class="tk-layer"><span class="tk-layer-label">Inputs (1 for yes, 0 for no)</span></div>
+                <div class="tk-layer">
+                  <div class="tk-unit"><b>Sunny</b></div>
+                  <div class="tk-unit"><b>Friend free</b></div>
+                  <div class="tk-unit"><b>Homework done</b></div>
+                </div>
+                <span class="tk-arrow" aria-hidden="true">↓</span>
+                <div class="tk-layer">
+                  <div class="tk-unit"><b>H1</b>Sunny × 1 + Friend free × 1<br />Says 1 if the total is at least 1</div>
+                  <div class="tk-unit"><b>H2</b>Homework done × 1<br />Says 1 if the total is at least 1</div>
+                </div>
+                <span class="tk-arrow" aria-hidden="true">↓</span>
+                <div class="tk-layer">
+                  <div class="tk-unit"><b>Output</b>H1 × 1 + H2 × 1<br />GO if the total is at least 2</div>
+                </div>
+              </div>
+            )}
+            {s.diagram === 'confusion' && (
+              <table class="tk-confusion">
+                <caption class="tk-noprint" style="caption-side:bottom;font-size:0.85rem;padding-top:0.3rem">Fill in the four boxes.</caption>
+                <thead>
+                  <tr><th scope="col"></th><th scope="col">Filter says spam</th><th scope="col">Filter says not spam</th></tr>
+                </thead>
+                <tbody>
+                  <tr><th scope="row">Really spam</th><td>Caught<span class="tk-blank" aria-label="Spam caught"></span></td><td>Missed<span class="tk-blank" aria-label="Spam missed"></span></td></tr>
+                  <tr><th scope="row">Really not spam</th><td>Wrongly flagged<span class="tk-blank" aria-label="Real wrongly flagged"></span></td><td>Passed<span class="tk-blank" aria-label="Real passed"></span></td></tr>
+                </tbody>
+              </table>
+            )}
+            <ol class="tk-q">
+              {s.items.map((it) => (
+                <li>
+                  {it.q}
+                  {it.lines && <span class="tk-lines" aria-hidden="true">{Array.from({ length: it.lines }, () => <i />)}</span>}
+                </li>
+              ))}
+            </ol>
+          </>
+        ))
+      }
+
+      <div class="tk-ext">
+        <p style="margin:0">{w.extension.q}</p>
+        {w.extension.lines && <span class="tk-lines" aria-hidden="true">{Array.from({ length: w.extension.lines }, () => <i />)}</span>}
+      </div>
+    </article>
+
+    <article class="tk-sheet tk-key">
+      <header class="tk-sheet-head">
+        <span class="tk-keyhead">Teacher answer key</span>
+        <h2>{w.title}</h2>
+        <p>Ages {w.band.replace('-', ' to ')}. Model answers; accept any answer that shows the same idea.</p>
+      </header>
+
+      <h3><span class="tk-n" aria-hidden="true">1</span>Match the words</h3>
+      <ul class="tk-match">
+        {
+          w.vocab.map((v, vi) => (
+            <li><span class="tk-term">{v.term}</span><span class="tk-letter">{letters[w.meaningOrder.indexOf(vi)]}</span></li>
+          ))
+        }
+      </ul>
+
+      {
+        w.sections.map((s, si) => (
+          <>
+            <h3><span class="tk-n" aria-hidden="true">{si + 2}</span>{s.title}</h3>
+            <ol class="tk-q">
+              {s.items.map((it) => (
+                <li>
+                  {it.q}
+                  <div class="tk-answer">{it.answer}</div>
+                </li>
+              ))}
+            </ol>
+          </>
+        ))
+      }
+      <div class="tk-ext">
+        <p style="margin:0">{w.extension.q}</p>
+        <div class="tk-answer">{w.extension.answer}</div>
+      </div>
+
+      <h3 style="margin-top:1.6rem">Pairs with</h3>
+      <ul>
+        {
+          w.lessons.map((k) => {
+            const l = link(k);
+            return <li>{l.href ? <a href={l.href}>{l.title}</a> : l.title}</li>;
+          })
+        }
+        {w.unplugged.map((id) => <li><a href={withBase(`/teach/activities/${id}/`)}>{unpluggedById[id].title} (activity card)</a></li>)}
+      </ul>
+      <p class="tk-related" style="font-size:0.9rem">Worksheet and key are written for Layerwise and may be copied and adapted under CC BY 4.0 with credit to Layerwise. Numbers marked as invented are for practice only.</p>
+    </article>
+  </div>
+</Base>

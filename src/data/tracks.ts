@@ -18,6 +18,27 @@ export const tracks = [
     blurb: 'Short lessons in simple words for anyone new to AI, including school students: what AI is, how a chatbot answers you, and how to use it safely.',
   },
   {
+    id: 'ml',
+    ...pair('slate'),
+    hue: 'slate',
+    title: 'Classical ML and data',
+    blurb: 'Regression, trees, boosting, clean data and honest statistics: the methods behind most real-world prediction.',
+  },
+  {
+    id: 'skills',
+    ...pair('mint'),
+    hue: 'mint',
+    title: 'Skills and first projects',
+    blurb: 'Python, notebooks and a first model you build yourself. No experience needed.',
+  },
+  {
+    id: 'deep-learning',
+    ...pair('periwinkle'),
+    hue: 'periwinkle',
+    title: 'Deep learning',
+    blurb: 'Neurons, training deep networks, convolutions, diffusion and scaling laws, built up one idea at a time.',
+  },
+  {
     id: 'foundations',
     ...pair('turquoise'),
     hue: 'turquoise',
@@ -44,6 +65,13 @@ export const tracks = [
     hue: 'red',
     title: 'Evals and quality',
     blurb: 'How to know a GenAI feature works, and keep knowing after the model changes.',
+  },
+  {
+    id: 'responsible',
+    ...pair('peach'),
+    hue: 'peach',
+    title: 'Responsible AI',
+    blurb: 'Bias, privacy, fake media, safety and the rules, for people who use AI and people who build it.',
   },
   {
     id: 'serving',
@@ -74,11 +102,11 @@ export const tracks = [
     blurb: 'AWS, Azure and Google Cloud side by side: model APIs, ML platforms, agents, security and capacity.',
   },
   {
-    id: 'systems',
-    ...pair('tangerine'),
-    hue: 'tangerine',
-    title: 'System design',
-    blurb: 'Reference architectures, failure modes and trade-offs for production AI.',
+    id: 'edge',
+    ...pair('cocoa'),
+    hue: 'cocoa',
+    title: 'Edge and on-device AI',
+    blurb: 'Latency, memory and power budgets when the model runs on the device.',
   },
   {
     id: 'cost',
@@ -88,11 +116,18 @@ export const tracks = [
     blurb: 'Where the money goes and the levers that reduce it.',
   },
   {
-    id: 'edge',
-    ...pair('cocoa'),
-    hue: 'cocoa',
-    title: 'Edge and on-device AI',
-    blurb: 'Latency, memory and power budgets when the model runs on the device.',
+    id: 'systems',
+    ...pair('tangerine'),
+    hue: 'tangerine',
+    title: 'System design',
+    blurb: 'Reference architectures, failure modes and trade-offs for production AI.',
+  },
+  {
+    id: 'audio',
+    ...pair('wine'),
+    hue: 'wine',
+    title: 'Audio and speech',
+    blurb: 'How a computer hears: sound as numbers, spectrograms and the models that listen and speak.',
   },
 ] as const;
 

@@ -1,0 +1,137 @@
+---
+title: Overfitting and the bias-variance trade-off
+track: ml
+level: basic
+order: 3
+summary: Why a model can be too simple or too flexible, shown by fitting curves of rising degree to noisy points, and what more data, regularisation and cross-validation do about it.
+updated: 2026-11-01
+sources:
+  - label: "scikit-learn: Underfitting vs. Overfitting (polynomial example)"
+    url: https://scikit-learn.org/stable/auto_examples/model_selection/plot_underfitting_overfitting.html
+  - label: "scikit-learn: Validation curves and learning curves"
+    url: https://scikit-learn.org/stable/modules/learning_curve.html
+  - label: "scikit-learn: Cross-validation, evaluating estimator performance"
+    url: https://scikit-learn.org/stable/modules/cross_validation.html
+  - label: "scikit-learn: Linear models (ridge and lasso)"
+    url: https://scikit-learn.org/stable/modules/linear_model.html
+  - label: "Google Machine Learning Crash Course: Overfitting, L2 regularization"
+    url: https://developers.google.com/machine-learning/crash-course/overfitting/regularization
+  - label: "MLU-Explain: The Bias Variance Tradeoff"
+    url: https://mlu-explain.github.io/bias-variance/
+  - label: "Reconciling modern machine learning practice and the bias-variance trade-off (Belkin et al., 2018)"
+    url: https://arxiv.org/abs/1812.11118
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import FitCapacity from '../../../components/viz/FitCapacity.tsx';
+
+A model that scores perfectly on the data it learned from can still be a poor model. A model that is too simple misses the pattern; one that is too flexible memorises the noise. Finding the middle is the oldest problem in machine learning, and almost every technique in this track is a way of handling it. This lesson shows it on one picture you can control.
+
+[How a model learns](../../foundations/how-models-learn/) already shows overfitting as it happens over time: training loss keeps falling while validation loss turns upward. Here we look at the other axis, the model itself: how flexible it is, how much data it has, and how hard it is held back.
+
+## One picture
+
+The dots below are measurements with noise: each one is the hidden pattern (the dashed line) plus a random error. The curve is a polynomial, which is a line allowed to bend. Degree 1 is a straight line; degree 12 can bend twelve ways. Drag the flexibility slider and watch both errors.
+
+<FitCapacity client:visible />
+
+Try these in order. Everything quoted is from this example data.
+
+1. **Start at degree 1** with 12 points. The line cannot follow the wave. Training error is 0.50 and test error is 0.54: both high, and close together.
+2. **Move to degree 3.** The curve follows the pattern. Training error falls to 0.14 and test error to 0.38. It does not fall to zero, and it should not, because the noise alone is about 0.30.
+3. **Go up to degree 12.** Training error shrinks to 0.04, which looks wonderful. Test error is 3.94, about ten times worse. The curve threads every dot and swings wildly between them.
+4. **Press "Get more data" until you reach 96 points.** The same degree-12 curve now has training error 0.31 and test error 0.33. Enough data tamed it.
+5. **Back at 12 points, raise the regulariser.** Test error falls from 3.94 to 0.56 at "large" and 0.36 at "larger". At "huge" it climbs again to 0.46, because the curve is now held too flat.
+
+## Underfitting and overfitting
+
+**Underfitting** is when the model is too simple for the pattern. Both errors are high, and more training does not help. **Overfitting** is when the model is so flexible that it fits the noise in the training points. Training error is low, test error is much higher, and the gap between them is the warning.
+
+Test error is the number that matters, because it answers the real question: how will the model do on data it has not seen? Training error alone only tells you how well it memorised. The test error here was measured on 400 fresh points. In your own projects it comes from held-back data (see [Getting data ready](../getting-data-ready/) and [Classical ML essentials](../../foundations/classical-ml-essentials/) on splits).
+
+## Bias and variance, in plain words
+
+Two different things can go wrong, and the picture shows both.
+
+- **Bias** is being wrong in the same way every time. A straight line fitted to a wave is off however many dots you give it. More data does not fix it.
+- **Variance** is being different every time. A wiggly curve depends on exactly which dots it saw. Give it a new set of 12 dots and the curve is completely different. The button "Show 12 other samples" draws these as faint lines. Tight bundle: low variance. Spaghetti: high variance.
+
+There is also **noise**: the random scatter in the measurements, which no model can predict. The test error splits into three parts.
+
+> typical squared error = bias squared + variance + noise
+
+The three bars under the chart show this for your current settings, averaged over 30 different training sets. At 96 points, a straight line has bias squared 0.20 and variance 0.005: nearly all its error is bias. A degree-12 curve has bias squared 0.001 and variance 0.04: nearly all of its error is variance. A degree-3 curve has both small (0.005 and 0.004), so it ends close to the noise floor.
+
+The **trade-off** is that making a model more flexible lowers bias but raises variance. The best model sits where the two together are lowest, not where either is zero.
+
+## What helps
+
+**More data.** It lowers variance. With 12 points, the degree-12 curve has a test error of 3.94; with 96 it is 0.33. It does nothing for bias: a straight line scores about 0.54 on test whether it has 12 points or 192.
+
+**A simpler model.** Fewer bends, fewer features, a shallower tree. It lowers variance and raises bias. The right amount of simplicity depends on how much data you have.
+
+**Regularisation.** This holds a flexible model back. In the demo, the regulariser slider is a ridge penalty: the model is charged for large coefficients, so it only bends where the data insists. The strength is a dial: too weak and it overfits, too strong and it underfits (you saw both). Two common versions are ridge (L2), which shrinks every weight smoothly, and lasso (L1), which pushes some weights to exactly zero, so it also drops features. Both are explained in [Classical ML essentials](../../foundations/classical-ml-essentials/), and the neural-network versions (weight decay, dropout) are in [Training deep networks](../../deep-learning/training-deep-networks/).
+
+**Cross-validation.** You need to know which setting is best without using the test set. Cross-validation splits the training data into, say, five parts, trains on four, scores on the fifth, and rotates. The average of the five scores is a steadier guide than one split. On 48 points the five-fold error is 0.58 for degree 1, 0.37 for degree 3 and 0.89 for degree 12, so it picks degree 3 without anyone looking at the test set.
+
+**Early stopping and fewer features.** Stop training when validation error stops improving, and remove columns that add noise rather than signal.
+
+## Learning curves
+
+A **learning curve** plots training and test error against the number of training points. It is the best quick diagnostic, because it tells you which problem you have and what to try next. Switch the second chart in the demo to "Learning curve".
+
+| What you see | Meaning | What to try |
+|---|---|---|
+| Both curves flatten high, close together | High bias (underfitting) | A more flexible model, better features. More data will not help |
+| Training error low, test error much higher, a wide gap that narrows with more data | High variance (overfitting) | More data, a simpler model, regularisation |
+| Both curves meet near the noise floor | About right | Stop tuning; look at the data or the target instead |
+
+In the demo, degree 1 flattens at about 0.54 however many points you add (a high-bias curve), while degree 12 starts with a test error of 78 at 12 points and reaches 0.31 at 192 (a high-variance curve that more data cures).
+
+<Callout title="Two traps">
+
+First, tuning the degree or the strength against the test set uses it up. Choose on a validation set or with cross-validation, and look at the test set once. Second, a very low training error is never evidence the model is good. Always report the error on data it did not learn from.
+
+</Callout>
+
+## Choosing the settings
+
+Degree and regulariser strength are **hyperparameters**: settings you choose, not numbers the model learns. Choosing them by trying values and checking validation error is called tuning. Doing it systematically (grid search, random search) is a topic for later; the principle is the one on this page: judge each setting on data the model did not train on.
+
+## Big networks and the textbook curve
+
+The U-shaped picture is the classical story, and it works well for the models in this track. Very large neural networks can behave differently: researchers have reported that test error can fall again after the point where the model fits the training data exactly, an effect called double descent (Belkin et al., 2018). The practical rule survives: judge a model by its error on held-out data and the gap between training and test, not by its size. [Training deep networks](../../deep-learning/training-deep-networks/) covers the regularisation tools used there.
+
+<Deep title="The code, and where the decomposition comes from">
+
+At a point x, the expected squared error of a model trained on a random training set is the sum of three terms: the squared difference between the model's average prediction and the truth (bias squared), how much its prediction varies around that average from one training set to the next (variance), and the noise variance. The demo estimates the first two by refitting on 30 fresh training sets and averaging over a grid of x values. The noise is the 0.3 squared that was added when the points were made.
+
+In scikit-learn the same experiment is a short pipeline. The penalty `alpha` is the regulariser strength, and `cv=5` is five-fold cross-validation:
+
+```python
+from sklearn.linear_model import Ridge
+from sklearn.model_selection import cross_val_score
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import PolynomialFeatures, StandardScaler
+
+# X has shape (n_points, 1); y has shape (n_points,)
+for degree in (1, 3, 12):
+    model = make_pipeline(PolynomialFeatures(degree), StandardScaler(), Ridge(alpha=1.0))
+    scores = cross_val_score(model, X, y, cv=5, scoring="neg_root_mean_squared_error")
+    print(degree, -scores.mean())
+```
+
+In the demo, the polynomial is written in a numerically steadier form (Chebyshev polynomials) and the penalty applies to each term except the constant. The idea is the same as ridge on raw powers of x. The data is invented and seeded, so the numbers above are the same every time you load the page.
+
+</Deep>
+
+## What to remember
+
+- Too simple (bias): both errors high. Too flexible (variance): training error low, test error high.
+- Judge a model by held-out error. A big gap between training and test error is the signature of overfitting.
+- More data cures variance, not bias. A simpler model or a regulariser trades a little bias for a lot less variance.
+- Cross-validation picks settings without spending the test set. Learning curves tell you whether to get more data or a different model.
+- Error never drops below the noise. Chasing it means chasing noise.
+
+Next: [Decision trees and random forests](../decision-trees-and-random-forests/) are models whose depth is the flexibility dial, and a forest is a way of averaging away variance.

@@ -1,0 +1,167 @@
+---
+title: "How computers see: convolutions, CNNs and residual networks"
+track: deep-learning
+level: intermediate
+order: 4
+summary: A picture is a grid of numbers. See why a small filter that slides over it beats a plain layer, build up from edges to objects, learn the one trick that made very deep networks trainable, and see where vision transformers and CLIP fit.
+updated: 2026-11-01
+sources:
+  - label: "Stanford CS231n: Convolutional Neural Networks for Visual Recognition"
+    url: https://cs231n.github.io/convolutional-networks/
+  - label: "Deep Residual Learning for Image Recognition, ResNet (He et al., 2015)"
+    url: https://arxiv.org/abs/1512.03385
+  - label: "Visualizing and Understanding Convolutional Networks (Zeiler and Fergus, 2013)"
+    url: https://arxiv.org/abs/1311.2901
+  - label: "An Image is Worth 16x16 Words, Vision Transformer (Dosovitskiy et al., 2020)"
+    url: https://arxiv.org/abs/2010.11929
+  - label: "Learning Transferable Visual Models From Natural Language Supervision, CLIP (Radford et al., 2021)"
+    url: https://arxiv.org/abs/2103.00020
+  - label: "CNN Explainer, an interactive tour of a small CNN (Polo Club)"
+    url: https://poloclub.github.io/cnn-explainer/
+  - label: "Dive into Deep Learning: Convolutional Neural Networks"
+    url: https://d2l.ai/chapter_convolutional-neural-networks/index.html
+  - label: "MobileNets: Efficient Convolutional Neural Networks for Mobile Vision Applications (Howard et al., 2017)"
+    url: https://arxiv.org/abs/1704.04861
+  - label: "You Only Look Once: Unified, Real-Time Object Detection (Redmon et al., 2015)"
+    url: https://arxiv.org/abs/1506.02640
+  - label: "End-to-End Object Detection with Transformers, DETR (Carion et al., 2020)"
+    url: https://arxiv.org/abs/2005.12872
+  - label: "U-Net: Convolutional Networks for Biomedical Image Segmentation (Ronneberger et al., 2015)"
+    url: https://arxiv.org/abs/1505.04597
+  - label: "Segment Anything (Kirillov et al., 2023)"
+    url: https://arxiv.org/abs/2304.02643
+  - label: "Stanford CS231n: Transfer Learning"
+    url: https://cs231n.github.io/transfer-learning/
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import PipelineFlow from '../../../components/viz/PipelineFlow.tsx';
+import ParamSavings from '../../../components/viz/ParamSavings.tsx';
+import ConvolutionLab from '../../../components/viz/ConvolutionLab.tsx';
+import ResidualBlock from '../../../components/viz/ResidualBlock.tsx';
+
+<Callout title="In plain words">
+A photo is a big grid of numbers, one for each tiny dot. To make sense of it, the computer slides a small pattern detector across the grid. One detector lights up wherever dark meets bright, which is an edge. Another lights up on a certain texture. Each makes its own map of where it found its pattern.
+
+The next layer reads those maps and finds bigger patterns made of the small ones: corners, then eyes and wheels, then faces and cars. Nobody types in the detectors. Training finds them, the same way it finds every other number in a network.
+</Callout>
+
+This lesson builds that picture one idea at a time. It assumes you know what a layer and a weight are, from [how models learn](../../foundations/how-models-learn/) and [inside a neural network](../inside-a-neural-network/). You do not need any maths beyond multiplying and adding. How very deep networks go wrong in training, and the usual fixes, are in [training deep networks](../training-deep-networks/).
+
+## A picture is a grid of numbers
+
+Each dot of a greyscale picture has one number for its brightness, often 0 for black up to 255 for white. A colour picture has three grids stacked together, one each for red, green and blue. A photo cut to 224 by 224 dots is 224 × 224 × 3 = 150,528 numbers.
+
+A model that sees has to turn those numbers into an answer such as "cat". The oldest way is to line all the numbers up in one long row and feed them to an ordinary layer, where every number connects to every unit. That works for tiny pictures, and it fails for real ones for two reasons.
+
+## Why plain layers waste weights on images
+
+The first reason is size. In a plain layer every input has its own weight to every unit, so the count is inputs × units. The second is worse: the layer has no idea that two numbers are neighbours. It sees a long row, so a cat's ear in the top-left corner and the same ear in the bottom-right are completely different patterns that it must learn separately.
+
+A **convolution** fixes both with two ideas. It is **local**: each output looks only at a small patch of neighbouring numbers. And its weights are **shared**: the same small set of weights is used at every position. Count the difference yourself.
+
+<ParamSavings client:visible />
+
+The saving is not a trick that costs accuracy. It builds in something true about pictures: a pattern means the same thing wherever it appears.
+
+## The convolution: a small filter that slides
+
+A **filter** (also called a **kernel**) is a small grid of weights, here 3 by 3. Put it over a 3 by 3 patch of the picture. Multiply each pixel by the weight above it, then add the nine results. That one number goes into a new grid called a **feature map**, at the spot where the patch was centred. Then slide the filter one pixel along and repeat until it has visited every position.
+
+Here is one position worked by hand. Take the vertical-edge filter, with −1, −2, −1 down its left column and 1, 2, 1 down its right. Put it on the right wall of the house, where the wall (brightness 5) meets the sky (brightness 8). Each row of the patch reads 5, 8, 8. The row gives −1 × 5 + 0 × 8 + 1 × 8 = 3, the middle row counts double, and the three rows add to 3 + 6 + 3 = **12**. On a patch of flat sky, every row is 8, 8, 8, so each row gives −8 + 8 = 0, and the answer is 0. The filter says nothing where nothing changes and speaks up at a vertical edge.
+
+Try it. The demo starts on exactly this position. Pick a picture and a filter, tap any cell of the feature map, and read the multiply-and-add underneath. Press "Slide it across" to watch the map fill in.
+
+<ConvolutionLab client:visible />
+
+Things to try:
+
+- Choose **Vertical edges**, then **Horizontal edges**. The house has walls and a ground line, and each filter picks out only one direction.
+- Choose **Outline** on the face. All the edges light up, but flat areas go quiet because the nine weights add up to zero.
+- Compare **Blur** and **Sharpen**. Blur averages each neighbourhood. Sharpen exaggerates the difference between a pixel and its neighbours.
+- Choose **Your own**, then change the nine boxes. Set one weight to 1 and the rest to 0, and see what the feature map shows. Then move the 1 to another box.
+
+In a real network nobody chooses these nine numbers. They start random and training adjusts them, by exactly the loop of guessing, measuring the error and nudging that you met in [how models learn](../../foundations/how-models-learn/). Early filters often end up looking like the edge detectors above, but the network found them itself.
+
+## Stride, padding and pooling
+
+Three small settings shape what comes out. You can try each in the demo.
+
+- **Padding** adds a ring of zeros around the picture. Without it, a 3 by 3 filter cannot be centred on a border pixel, so the 12 by 12 picture gives a 10 by 10 map. With one ring of padding the map stays 12 by 12.
+- **Stride** is how far the filter jumps each time. Stride 2 skips every other position, so the map is about half the size in each direction (6 by 6 with padding, 5 by 5 without).
+- **Pooling** shrinks a map by summarising each block. Max pooling with 2 by 2 blocks keeps the largest number in each block, so a 12 by 12 map becomes 6 by 6. A strong response survives, and a pattern that shifts by a pixel often leaves the pooled map unchanged.
+
+## Many filters, many layers: from edges to objects
+
+One filter finds one kind of pattern. A convolution layer uses many, say 64, and produces 64 feature maps stacked together. The next layer's filters look through all 64 maps at once, so a filter there is 3 × 3 × 64 weights. That is how a layer can combine "a vertical edge here" with "a green patch there" into something more complex.
+
+The region of the original picture that can influence one cell of a feature map is its **receptive field**. After one 3 by 3 layer, a cell sees 3 by 3 pixels. After two layers it sees 5 by 5, and after three, 7 by 7. Pooling in between makes it grow faster: a convolution, a 2 by 2 pool, then another convolution gives 8 by 8. So deeper cells see more of the picture and can recognise bigger things.
+
+<PipelineFlow
+  client:visible
+  title="What each depth tends to find"
+  stages={[
+    { title: 'Pixels', detail: 'The raw grid of numbers: brightness, or red, green and blue.' },
+    { title: 'Early layers', detail: 'Small receptive fields. Filters tend to respond to edges, corners and patches of colour, much like the hand-made filters above.' },
+    { title: 'Middle layers', detail: 'Combine edges into textures and simple shapes, such as fur, grids, curves and circles.' },
+    { title: 'Later layers', detail: 'Large receptive fields. Responses tend to be to parts and whole objects, such as an eye, a wheel or a face.' },
+    { title: 'Classifier', detail: 'A plain layer at the end turns the final maps into one score per class, such as cat, dog or car.' },
+  ]}
+  caption="A typical pattern in trained networks, not a rule. Visualisation work (for example Zeiler and Fergus, 2013) found early layers respond to simple patterns and later ones to more complete structures."
+/>
+
+A classic CNN repeats a small recipe: convolution, a non-linearity such as ReLU (which turns negative numbers into zero), and sometimes pooling. It does this many times, then finishes with a plain layer that scores the classes. Training adjusts every filter at once, using the same backpropagation as any other network.
+
+## Why very deep stacks stopped working, and the residual fix
+
+Depth helps, because deeper layers see more complex patterns. But researchers found a surprise: past a certain depth, a plain network got worse, and not just on new pictures. Its error on the training pictures went up too, so this was not overfitting. The deeper network was simply harder to train.
+
+The ResNet paper (He et al., 2015) added one idea. Instead of asking a block of layers to learn the whole output, add the block's input straight to its output. The layers only have to learn the **residual**, the correction on top of what came in. If the best correction is nothing, the weights can head towards zero, and the block passes the picture through unchanged. Draw it both ways.
+
+<ResidualBlock client:visible />
+
+The shortcut is also a straight road for the learning signal running backwards through the network, which is why very deep stacks stay trainable. The authors trained networks of up to 152 layers, 8 times deeper than the VGG nets of the time, and an ensemble of them won the 2015 ImageNet classification challenge. The same trick sits inside every transformer layer, which you can see in [inside a transformer](../../foundations/inside-a-transformer/). It is one of the most reused ideas in deep learning.
+
+## Where vision transformers and CLIP fit
+
+A **Vision Transformer** (ViT) throws out sliding filters. It cuts the picture into patches (the paper's title says 16 by 16 words), turns each into a vector and lets attention compare every patch with every other. That is the patch picture in [multimodal models](../../foundations/multimodal-models/).
+
+A CNN has locality and the same filter at every position built in. ViT has far less of that built in. The ViT authors found that on mid-sized datasets it came out a few points below ResNets of similar size, and that with datasets of 14 to 300 million images it matched or beat them. So the built-in assumptions help when data is limited, and a more flexible design can win when data is plentiful.
+
+CLIP pairs an image encoder with a text encoder and trains them together on image and caption pairs. The CLIP paper trained five ResNet image encoders and three ViT ones. So the shared image and text space you meet in multimodal models can sit on top of either kind of vision network.
+
+CNNs have not gone away. Small, efficient ones such as the MobileNets were designed for phones and embedded devices, and the denoising network in the original Stable Diffusion is built from residual blocks. You will meet that next, in [diffusion models](../diffusion-models/).
+
+<Deep title="Detection and segmentation: boxes and masks">
+Classification gives one label for a whole picture. Two harder jobs sit above it.
+
+**Object detection** finds each object and draws a box around it with a label. A box is scored against a hand-drawn one by **intersection over union (IoU)**: the area they share divided by the area they cover together. Two 10 × 10 boxes that overlap in a 5 × 10 strip share 50 and cover 150 together, so IoU = 50 / 150 = 0.33. A detection usually counts as right above some threshold, often 0.5. YOLO predicts boxes and classes in a single pass of one network, which makes it fast. DETR instead uses a transformer to output a set of boxes directly, removing hand-built steps such as non-maximum suppression.
+
+**Segmentation** labels every pixel. Semantic segmentation gives each pixel a class, and instance segmentation also separates one car from the next. U-Net, designed for biomedical images, shrinks the picture to capture context and then expands it back to recover precise outlines, with shortcuts between the two halves. Segment Anything (SAM) is promptable: you click a point or draw a box and it returns a mask, and it is trained on over a billion masks.
+</Deep>
+
+<Deep title="Using CNNs in practice: transfer learning, augmentation and failure modes">
+You rarely train a vision network from nothing. **Transfer learning** starts from a network already trained on a large dataset. You can freeze the early layers, which hold general patterns like edges, replace the last layer with one for your classes and train only that. If you have more data, you can also continue training the whole network gently. CS231n has a practical guide to when to use which.
+
+**Augmentation** makes a small dataset go further by showing each picture in slightly changed forms: flipped, cropped, brightened. The network learns that these changes do not alter the label. Choose changes that are true to your task. Flipping a photo of a cat is fine, but flipping a picture of the digit 6 may turn it into something else.
+
+Typical failure modes are lighting, camera angle or background that differ from the training pictures, and rare classes with few examples. Test on pictures that look like production, not only on a clean benchmark, as the [multimodal models](../../foundations/multimodal-models/) lesson advises. For cameras and wearables, see [edge versus cloud inference](../../edge/edge-vs-cloud-inference/).
+</Deep>
+
+<Deep title="Convolution, or cross-correlation?">
+Strictly, a mathematical convolution flips the filter before sliding it. Deep learning libraries skip the flip and call the result convolution anyway. The correct name is cross-correlation. It does not matter in practice, because the filter is learned: a network that wanted the flipped filter would simply learn the flipped numbers. The demo above does the unflipped version.
+
+The size of a feature map along one side is floor((n + 2 × padding − filter size) / stride) + 1. For n = 12, filter size 3, padding 1 and stride 2 that is floor(11 / 2) + 1 = 6.
+</Deep>
+
+## What to remember
+
+- A picture is a grid of numbers. A plain layer wastes weights on it and forgets which numbers are neighbours.
+- A convolution slides a small shared filter over the picture and, at each position, multiplies and adds. The results make a feature map.
+- Padding keeps the size, stride skips positions, pooling summarises blocks.
+- Many filters per layer and many layers let early cells find edges and later cells find parts and objects. Training learns the filters.
+- A residual connection adds a block's input to its output, which keeps very deep networks trainable. Transformers use it too.
+- Vision transformers swap sliding filters for attention over patches, and CLIP can be built on either kind of network.
+
+Next: [Diffusion models](../diffusion-models/).

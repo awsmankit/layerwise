@@ -1,0 +1,36 @@
+---
+import Base from '../../../layouts/Base.astro';
+import { worksheets } from '../../../data/worksheets';
+import { unpluggedById } from '../../../data/unplugged';
+import { withBase } from '../../../lib/url';
+const tagClass: Record<string, string> = { '10-12': 'tk-tag-a', '13-15': 'tk-tag-b', '16-18': 'tk-tag-c' };
+---
+
+<Base title="Printable worksheets" description="One A4 worksheet and answer key for each age band: 10 to 12, 13 to 15 and 16 to 18. Free to print, nothing stored about students.">
+  <div class="wrap">
+    <p class="tk-crumbs"><a href={withBase('/teach/')}>For teachers</a> / Worksheets</p>
+    <header class="page-head" style="padding-top:1.2rem">
+      <h1>Printable <span class="squig" style="--squig:#0A9F85">worksheets</span></h1>
+      <p>One worksheet and one answer key for each age band, laid out for A4. Print the worksheet for the class and the key for yourself. Nothing is stored or sent: the pages are static and the print box is your browser’s own.</p>
+    </header>
+    <ul class="tk-grid">
+      {
+        worksheets.map((w) => (
+          <li>
+            <article class="tk-card">
+              <h3>
+                <a href={withBase(`/teach/worksheets/${w.band}/`)}>{w.title}</a>
+              </h3>
+              <p>{w.strap}</p>
+              <ul class="tk-tags">
+                <li class={`tk-tag ${tagClass[w.band]}`}>Ages {w.band.replace('-', ' to ')}</li>
+                <li class="tk-tag tk-tag-d">About {w.minutes} min</li>
+              </ul>
+              <span class="tk-meta">Pairs with: {w.unplugged.map((id) => unpluggedById[id].title).join(', ')}</span>
+            </article>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</Base>

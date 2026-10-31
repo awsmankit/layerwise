@@ -1,0 +1,48 @@
+---
+import Base from '../../../layouts/Base.astro';
+import { unplugged, bands } from '../../../data/unplugged';
+import { withBase } from '../../../lib/url';
+
+const tagClass: Record<string, string> = { '10-12': 'tk-tag-a', '13-15': 'tk-tag-b', '16-18': 'tk-tag-c' };
+const bigIdeaNames = ['', 'Perception', 'Representation and reasoning', 'Learning', 'Natural interaction', 'Societal impact'];
+---
+
+<Base title="Unplugged activity cards" description="Twelve classroom activities that need no computer: sort cards like a classifier, play 20 questions as a decision tree, be a neural network, spot fake sources, cut a sentence into tokens and more. Printable, with teacher notes.">
+  <div class="wrap">
+    <p class="tk-crumbs"><a href={withBase('/teach/')}>For teachers</a> / Activity cards</p>
+    <header class="page-head" style="padding-top:1.2rem">
+      <h1>Unplugged <span class="squig" style="--squig:#0A9F85">activity cards</span></h1>
+      <p>Twelve short activities that need paper, scissors and a pencil. Each card gives the ages, the time, the materials, the steps, what to notice and questions to discuss, with cut-out cards and teacher notes to print. Nothing is stored about students, and no one needs an account.</p>
+    </header>
+
+    <p class="tk-lede">Each card says which Layerwise lesson it supports and which of the <a href={withBase('/teach/#ai4k12')}>five AI4K12 big ideas</a> it serves. The ideas are our own wording; the public resources that inspired some of them are credited at the bottom of each card.</p>
+
+    {
+      bands.map((b) => {
+        const list = unplugged.filter((a) => a.bands.includes(b.id));
+        return (
+          <section class="tk-section" id={`band-${b.id}`}>
+            <h2>{b.label}</h2>
+            <ul class="tk-grid">
+              {list.map((a) => (
+                <li>
+                  <article class="tk-card">
+                    <h3>
+                      <a href={withBase(`/teach/activities/${a.id}/`)}>{a.title}</a>
+                    </h3>
+                    <p>{a.hook}</p>
+                    <ul class="tk-tags">
+                      <li class={`tk-tag ${tagClass[a.bands[0]]}`}>Ages {a.bands.length > 1 ? `${a.bands[0].split('-')[0]} to ${a.bands[a.bands.length - 1].split('-')[1]}` : b.short.replace('-', ' to ')}</li>
+                      <li class="tk-tag tk-tag-d">{a.minutes} min</li>
+                    </ul>
+                    <span class="tk-meta">Big idea {a.bigIdea}: {bigIdeaNames[a.bigIdea]}</span>
+                  </article>
+                </li>
+              ))}
+            </ul>
+          </section>
+        );
+      })
+    }
+  </div>
+</Base>

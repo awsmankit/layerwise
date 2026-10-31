@@ -1,0 +1,387 @@
+/* Styles for the interactive components in the "audio" lesson batch. Keep every class under this batch's own prefix. */
+
+/* ---------- shared bits ---------- */
+
+.au-controls {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.2rem 1.6rem;
+}
+@media (min-width: 640px) {
+  .au-controls {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.au-controls.au-one {
+  grid-template-columns: 1fr;
+}
+.au-sliders {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0 1.6rem;
+  margin-top: 0.4rem;
+}
+@media (min-width: 640px) {
+  .au-sliders {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.au .field > span {
+  flex-wrap: wrap;
+  gap: 0.1rem 1rem;
+}
+
+.au-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+}
+.au .au-buttons .btn {
+  min-height: 44px;
+}
+.au-status {
+  font-size: 0.88rem;
+  color: var(--ink-3);
+}
+.au-hint {
+  margin-top: 0.7rem;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+.au-note {
+  margin-top: 0.8rem;
+  padding: 0.7rem 0.9rem;
+  border-left: 2px solid var(--cost);
+  background: var(--cost-wash);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+.au-label {
+  margin-top: 1.3rem;
+  font-weight: 650;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+.au-say {
+  margin-top: 0.9rem;
+  font-size: 0.98rem;
+  line-height: 1.55;
+  color: var(--ink-2);
+  min-height: 3em;
+}
+.au-say.au-bad {
+  color: var(--ink);
+}
+.au-say.au-bad::first-line {
+  color: var(--warn);
+  font-weight: 650;
+}
+.au-look {
+  margin-top: 0.7rem;
+  padding: 0.7rem 0.9rem;
+  border-left: 2px solid var(--signal);
+  background: var(--signal-wash);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+.au-axis-cap {
+  margin-top: 0.4rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--ink-3);
+}
+
+.au-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.7rem;
+}
+.au-chip-label {
+  font-size: 0.88rem;
+  color: var(--ink-3);
+  margin-right: 0.2rem;
+}
+.viz .au-chip {
+  min-height: 44px;
+  padding: 0.35rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font: 600 0.9rem var(--font-display);
+  line-height: 1.2;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.au-chip:hover {
+  border-color: var(--signal);
+}
+.viz .au-chip[aria-pressed='true'] {
+  background: var(--signal);
+  border-color: var(--signal);
+  color: var(--on-signal);
+}
+.au-chip:focus-visible,
+.au .btn:focus-visible,
+.au input[type='range']:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.au-sound-toggle {
+  margin-top: 0.4rem;
+}
+
+.au-details {
+  margin-top: 1rem;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+.au-details summary {
+  cursor: pointer;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  font-weight: 650;
+  color: var(--ink);
+}
+.au-details summary:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.au-details p {
+  margin-top: 0.5rem;
+}
+
+/* ---------- tone lab ---------- */
+
+.au-box {
+  width: 100%;
+  margin-top: 0.5rem;
+  min-width: 0;
+}
+.au-canvas {
+  display: block;
+  width: 100%;
+  background: var(--surface);
+}
+.au-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1.1rem;
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--ink-3);
+}
+.au-sw {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 0.35rem;
+}
+.au-sw-wave {
+  width: 1.2rem;
+  height: 0;
+  border-top: 2px solid var(--ink-3);
+}
+.au-sw-dot {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: var(--signal);
+}
+.au-sw-warn {
+  width: 1.2rem;
+  height: 0;
+  border-top: 3px solid var(--warn);
+}
+
+/* ---------- wagon wheel ---------- */
+
+.au-frames {
+  list-style: none;
+  margin: 0.8rem 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+@media (min-width: 640px) {
+  .au-frames {
+    grid-template-columns: repeat(8, 1fr);
+  }
+}
+.au-frames li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--line-soft);
+  background: var(--surface);
+  font-size: 0.85rem;
+  color: var(--ink-3);
+}
+.au-frames li::marker {
+  content: '';
+}
+.au-frame {
+  display: block;
+  width: 100%;
+  max-width: 84px;
+  height: auto;
+}
+.au-wheel-rim {
+  fill: none;
+  stroke: var(--ink);
+  stroke-opacity: 0.7;
+  stroke-width: 1.2;
+}
+.au-wheel-ref {
+  stroke: var(--ink-3);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+  fill: none;
+}
+.au-wheel-spoke {
+  stroke: var(--signal);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.au-wheel-dot {
+  fill: var(--signal);
+}
+.au-bad-spoke {
+  stroke: var(--warn);
+}
+.au-bad-dot {
+  fill: var(--warn);
+}
+
+/* ---------- sum of tones and mel bands (small SVGs) ---------- */
+
+.au-svg {
+  display: block;
+  width: 100%;
+  max-width: 480px;
+  height: auto;
+  margin: 0.5rem 0 0;
+  overflow: visible;
+}
+.au-frame-rect {
+  fill: var(--surface);
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.au-zero {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+.au-zero.au-solid {
+  stroke-dasharray: none;
+  stroke: var(--ink);
+  stroke-opacity: 0.6;
+}
+.au-part {
+  fill: none;
+  stroke: var(--ink-3);
+  stroke-width: 1;
+  stroke-opacity: 0.7;
+}
+.au-sum-line {
+  fill: none;
+  stroke: var(--signal);
+  stroke-width: 2.4;
+  stroke-linejoin: round;
+}
+.au-bar {
+  fill: var(--signal);
+  fill-opacity: 0.85;
+}
+.au-axis-text {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  fill: var(--ink-3);
+}
+.au-tri {
+  stroke: var(--ink);
+  stroke-opacity: 0.55;
+  stroke-width: 0.8;
+}
+.au-tri-a {
+  fill: var(--signal);
+  fill-opacity: 0.28;
+}
+.au-tri-b {
+  fill: var(--ok);
+  fill-opacity: 0.28;
+}
+
+/* ---------- live spectrogram ---------- */
+
+.au-specwrap {
+  position: relative;
+  margin-top: 0.9rem;
+  padding-left: 2.4rem;
+  max-width: 34rem;
+}
+.au-spec-box {
+  position: relative;
+}
+.au-spec-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0 1rem;
+  text-align: center;
+  font-size: 0.92rem;
+  color: #c9c4f2;
+  pointer-events: none;
+}
+.au-yaxis {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2.2rem;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.au-yaxis span {
+  position: absolute;
+  right: 0;
+  transform: translateY(50%);
+  line-height: 1;
+}
+.au-spec-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 300 / 240;
+  background: #000004;
+  border: 1px solid var(--line);
+  image-rendering: auto;
+}
+.au-mic {
+  margin-top: 1.4rem;
+  padding-top: 0.3rem;
+  border-top: 1px solid var(--line-soft);
+}
+
+@media (max-width: 420px) {
+  .au .btn {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}

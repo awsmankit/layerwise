@@ -1,9 +1,9 @@
 import { cardColors, contrast } from './color';
 
 /**
- * The site's colours, chosen so that no two are alike. Twelve colours that differ
+ * The site's colours, chosen so that no two are alike. Seventeen colours that differ
  * in lightness as well as hue (a pale pink next to a deep red, a lime next to a
- * navy) read as twelve different things where twelve bright hues blur together.
+ * navy) read as seventeen different things where seventeen bright hues blur together.
  * Every colour keeps readable text on it, softened or not; see palette.test.ts.
  */
 export const swatch = {
@@ -19,6 +19,11 @@ export const swatch = {
   forest: '#2F6B2F',
   lime: '#C5E84A',
   cocoa: '#7A4A2B',
+  mint: '#70E888',
+  slate: '#586878',
+  periwinkle: '#98A0F8',
+  peach: '#F8C8A0',
+  wine: '#600038',
 } as const;
 
 export type Swatch = keyof typeof swatch;
@@ -53,6 +58,11 @@ export const trackSwatch: Record<string, Swatch> = {
   systems: 'tangerine',
   cost: 'magenta',
   edge: 'cocoa',
+  skills: 'mint',
+  ml: 'slate',
+  'deep-learning': 'periwinkle',
+  responsible: 'peach',
+  audio: 'wine',
 };
 
 export const gameSwatch: Record<string, Swatch> = {
@@ -64,11 +74,11 @@ export const gameSwatch: Record<string, Swatch> = {
 };
 
 /**
- * For long lists of cards: an order of all twelve colours in which any card and the
+ * For long lists of cards: an order of all seventeen colours in which any card and the
  * three after it (the next in a row, and the next row in a two or three column grid)
  * are as different as the palette allows. Use cycleSwatch(index).
  */
-export const cardCycle: Swatch[] = ['red', 'turquoise', 'purple', 'navy', 'cocoa', 'lime', 'tangerine', 'sky', 'pink', 'forest', 'magenta', 'yellow'];
+export const cardCycle: Swatch[] = ['slate', 'turquoise', 'lime', 'pink', 'cocoa', 'forest', 'wine', 'tangerine', 'periwinkle', 'mint', 'peach', 'magenta', 'navy', 'sky', 'red', 'yellow', 'purple'];
 export const cycleSwatch = (index: number): string => swatch[cardCycle[index % cardCycle.length]];
 
 /** The eight layers of an AI product, top to bottom. */
