@@ -1,0 +1,131 @@
+---
+title: "RNNs and LSTMs: memory in a loop, and why attention replaced it"
+track: deep-learning
+level: intermediate
+order: 4.2
+summary: How a recurrent network reads a sequence one step at a time with a carried state, why gradients vanish over long gaps, how the gates of an LSTM keep a memory alive, and why attention took over while recurrent ideas live on in streaming models and state-space models.
+updated: 2026-11-01
+sources:
+  - label: "The Unreasonable Effectiveness of Recurrent Neural Networks (Andrej Karpathy, 2015)"
+    url: https://karpathy.github.io/2015/05/21/rnn-effectiveness/
+  - label: "Understanding LSTM Networks (Christopher Olah, 2015)"
+    url: https://colah.github.io/posts/2015-08-Understanding-LSTMs/
+  - label: "Dive into Deep Learning, 10.1 Long Short-Term Memory (LSTM)"
+    url: https://d2l.ai/chapter_recurrent-modern/lstm.html
+  - label: "Dive into Deep Learning, 10.2 Gated Recurrent Units (GRU)"
+    url: https://d2l.ai/chapter_recurrent-modern/gru.html
+  - label: "On the difficulty of training Recurrent Neural Networks (Pascanu, Mikolov and Bengio, 2012)"
+    url: https://arxiv.org/abs/1211.5063
+  - label: "Learning Phrase Representations using RNN Encoder-Decoder for Statistical Machine Translation (Cho et al., 2014)"
+    url: https://arxiv.org/abs/1406.1078
+  - label: "Sequence to Sequence Learning with Neural Networks (Sutskever, Vinyals and Le, 2014)"
+    url: https://arxiv.org/abs/1409.3215
+  - label: "Neural Machine Translation by Jointly Learning to Align and Translate (Bahdanau, Cho and Bengio, 2014)"
+    url: https://arxiv.org/abs/1409.0473
+  - label: "Attention Is All You Need (Vaswani et al., 2017)"
+    url: https://arxiv.org/abs/1706.03762
+  - label: "RWKV: Reinventing RNNs for the Transformer Era (Peng et al., 2023)"
+    url: https://arxiv.org/abs/2305.13048
+  - label: "Mamba: Linear-Time Sequence Modeling with Selective State Spaces (Gu and Dao, 2023)"
+    url: https://arxiv.org/abs/2312.00752
+  - label: "Jamba: A Hybrid Transformer-Mamba Language Model (Lieber et al., 2024)"
+    url: https://arxiv.org/abs/2403.19887
+---
+
+import RnnLstmLab from '../../../components/viz/RnnLstmLab.tsx';
+import LstmDiagram from '../../../components/viz/LstmDiagram.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+Words, speech, heartbeats and prices arrive in order, and the order carries meaning: "dog bites man" is not "man bites dog". The networks in [Inside a neural network](../inside-a-neural-network/) and [How computers see](../how-computers-see/) take an input of a fixed size. A **recurrent neural network** (RNN) handles a sequence of any length by reading it one step at a time and carrying a small memory along. When the transformer paper appeared in 2017 it described the dominant sequence models as "complex recurrent or convolutional neural networks", and then it replaced them. This lesson explains how they work, exactly where they break, what the gates of an LSTM fix, and why attention won.
+
+## The loop: a state carried from step to step
+
+At each step the network reads one input, such as a word, and combines it with a list of numbers called the **hidden state**, which holds what it has seen so far. The result is a new hidden state, and the same weights are used at every step. With one number as the state, the whole network is:
+
+new state = tanh(w × old state + 1.5 × input)
+
+Feed it a single 1, then nothing (inputs of 0), with w = 0.9. The state after each step is 0.905, 0.672, 0.541, 0.451, 0.385. The memory of that 1 is still there after five steps, but fading. A real RNN does the same with a hidden state of hundreds or thousands of numbers and weight matrices instead of one weight.
+
+Two things follow. The number of weights does not depend on the length of the sequence, because the same step repeats. And everything the network knows about the past must fit in the fixed-size hidden state. Karpathy's essay shows this working better than you might expect: character-by-character RNNs that write plausible text, code and Shakespeare.
+
+## Where it breaks: vanishing gradients
+
+Training needs to know how a mistake at step 50 should change the weights, so the loop is unrolled into 50 copies and backpropagation runs backwards through them ("backpropagation through time", see [Backpropagation from scratch](../backprop-from-scratch/)). The signal from step 50 to step 1 passes through 49 copies of the loop, and each copy multiplies it by roughly the recurrent weight (more exactly, a matrix of slopes).
+
+Repeated multiplication is unforgiving. With a factor of 0.9, the signal after 49 steps is 0.9<sup>49</sup>, about 0.006. With 0.5 it is about 2 × 10<sup>-15</sup>. With 1.1 it grows to about 107, and with 1.5 to about 4 × 10<sup>8</sup>. The first case is a **vanishing gradient** and the second an **exploding gradient**, the same problem [Training deep networks](../training-deep-networks/) met in depth, now running along time. Pascanu and colleagues analysed both and proposed clipping the gradient's size to tame explosions. Vanishing is harder: nothing is left to clip, so the network learns from words near the error and cannot learn that a word 40 steps back mattered.
+
+A second limit is the squeeze. Early translation models read a whole sentence into one fixed-length vector and decoded from it. Bahdanau and colleagues conjectured that this fixed-length vector is a bottleneck. It did not stop LSTM translation working (Sutskever and colleagues scored 34.8 BLEU against 33.3 for a phrase-based system on English to French), but it set a ceiling.
+
+## LSTM and GRU: gates keep a memory alive
+
+The **LSTM** (long short-term memory, Hochreiter and Schmidhuber, 1997) adds a second path for memory, the **cell state**, and three **gates**. A gate is a small layer whose answer is squashed to a number between 0 and 1 and then multiplied by something, so it works like a dimmer switch.
+
+<LstmDiagram client:visible />
+
+The update is two lines. First the cell: **new cell = forget × old cell + input × candidate**. The forget gate says how much of the old memory to keep, the input gate how much of the new candidate to write. Then the output: **output = output gate × tanh(cell)**. For "The keys to the old cabinet are...", a trained network can learn to write "plural subject" when it meets *keys*, hold the forget gate near 1 and the input gate near 0 for the words in between, and read the memory when the verb arrives.
+
+The belt is changed only by multiplying and adding, never squeezed through a bend at every step, and that fixes the vanishing problem. If the forget gate sits at 0.98, the signal along the belt after 48 steps is 0.98<sup>48</sup>, about 0.42, against 0.006 for the plain loop at 0.9. The network can also choose the gate: it learns when to hold and when to let go. This does not make memory unlimited. A forget gate at 0.9 still loses nearly everything over 48 steps, and the output still depends on a fixed-size state.
+
+The **GRU** (Cho et al., 2014) is a lighter cousin. It merges the forget and input gates into one update gate and merges the cell and hidden state, so it has fewer weights. Olah's tour of the variants reports that comparisons found the popular ones "all about the same", and that some other designs beat the LSTM on certain tasks.
+
+## Try it: remember the subject until the verb
+
+This lab runs a one-number RNN and a one-cell LSTM on "The keys ... are". Every weight is set by hand, so each number can be checked, and nothing is trained. The LSTM's gates here read only the current word; real LSTMs also read their previous output.
+
+<RnnLstmLab client:visible />
+
+Work through these:
+
+1. Leave the defaults (20 words between subject and verb, w = 0.9). The RNN's state at the verb is about 0.05: it cannot tell. The LSTM's is about 0.58 and leans the right way. In the strip, only 1 part in 1,018 of the learning signal reaches the subject for the RNN, against 0.42 for the LSTM.
+2. Raise the RNN's weight to 1.2. Now it holds the sign, because the state settles at a stable level, so a plain RNN can remember when its weight is tuned. Look at the strip: the learning signal to the subject is still tiny, so training would have had little to go on to find this setting.
+3. Tick **Add a distractor noun**. The word "cabinet" carries the opposite fact. The RNN has no way to refuse a word, so at any weight from 0.5 up it flips to the wrong answer. The LSTM's input gate stays near 0.01 on that word and it stays right. Gates are about choosing what to write, not only about holding on.
+4. Drag the forget gate down to 0.73 (bias 1). The LSTM now drains its cell, like the RNN. Step through the sentence to see the forget gate dip and the input gate open on the subject.
+
+## Why attention replaced recurrence
+
+Bahdanau's fix for the squeeze was to let the decoder look back at every source word instead of one vector. The transformer then made that look-back the whole mechanism and "dispensed with recurrence and convolutions entirely" (see [Attention, without the mystique](../../foundations/attention-intuition/)). Three reasons matter for builders.
+
+- **Direct access.** In an RNN, information from word 1 reaches word 50 by being copied through 49 steps. In attention, word 50 reads word 1 directly in one step.
+- **Parallel training.** An RNN's step 50 needs step 49, so the steps of one sequence cannot run at the same time. Attention computes every position together as matrix multiplications, which GPUs are built for. The transformer paper reports better translation quality that was "more parallelizable and requiring significantly less time to train".
+- **No bottleneck.** Every earlier word's representation stays available, instead of all of them squeezed into one state.
+
+| | RNN or LSTM | Attention (transformer) |
+|---|---|---|
+| Steps one layer must run in order, for n words | n | 1 (all at once) |
+| Steps between word 1 and word n | n − 1 | 1 |
+| Work for n words | grows in proportion to n | grows with n², since every pair is scored |
+| Memory kept while generating | fixed size | grows with n (the [KV cache](../../serving/kv-cache-and-memory/)) |
+
+The price is in the last two rows. For 50 words attention scores 2,500 pairs; for 4,096 words, about 16.8 million. And the cache grows with every token: [Modern LLM architecture](../modern-llm-architecture/) works out 131,072 bytes per token for Llama 3 8B, so 4,096 tokens take 512 MiB. An RNN's state would stay the same size however long the text, for example 4 KB for 1,024 numbers in 32-bit floats (an example size, not a real model's).
+
+## Where recurrence still matters
+
+- **Streaming on small devices.** One fixed-size state and one step per new sample suits hearing devices and wake-word detectors. RNNoise combines classical signal processing with a recurrent network ([Noise suppression and hearing devices](../../audio/noise-suppression-and-hearing-devices/)), and the RNN transducer is a streaming speech-recognition design ([Speech recognition](../../audio/speech-recognition/)).
+- **Recurrence returned inside new architectures.** RWKV (2023) can be trained in parallel like a transformer and run like an RNN, with constant memory and computation per token at inference; its authors report models up to 14 billion parameters on par with similarly sized transformers. State-space models such as Mamba (2023) keep a fixed-size state that is updated by input-dependent rules, with cost that grows linearly with length, and hybrids such as Jamba (2024) interleave Transformer and Mamba layers. How the evidence stacks up is still moving, and the lesson on [state-space models](../state-space-models-and-mamba/) reads it carefully. Nobody serious calls attention finished; they ask what it costs at very long lengths.
+
+<Callout title="Seeing LSTM in an old paper or tutorial">
+
+Most pre-2018 results in speech, translation and text used LSTMs or GRUs, often with attention added on top. If you read one, the useful questions are which part carried long-range information (gates, or attention), and whether the task needed streaming. Today's choice is usually a transformer unless the state size or streaming constraint decides otherwise.
+
+</Callout>
+
+<Deep title="The equations, and what the gradient really multiplies">
+
+For input x, previous output h and previous cell c, an LSTM computes f = σ(W<sub>f</sub>[h, x] + b<sub>f</sub>), i = σ(W<sub>i</sub>[h, x] + b<sub>i</sub>), g = tanh(W<sub>g</sub>[h, x] + b<sub>g</sub>), o = σ(W<sub>o</sub>[h, x] + b<sub>o</sub>), then c' = f ⊙ c + i ⊙ g and h' = o ⊙ tanh(c'). A GRU uses an update gate z and a reset gate r: h' = (1 − z) ⊙ h + z ⊙ tanh(W[r ⊙ h, x]).
+
+In a plain RNN the gradient from the last step to step t is a product of Jacobians, each W<sub>h</sub> times a diagonal matrix of tanh slopes, and tanh slopes are at most 1. If the largest singular value of W<sub>h</sub> times that bound is below 1 the product shrinks exponentially, and if W<sub>h</sub> is large enough it can grow; Pascanu et al. give this analysis. The lab's strip multiplies w × (1 − h²) per step, which is the one-number version, and, for the LSTM, the forget gate along the cell's direct path. A real LSTM also has indirect paths through the gates, which this strip ignores.
+
+The state at w = 1.2 in the lab is a stable fixed point of the loop: a point where the state stops changing, which is why it holds a sign but loses the size of the input.
+
+</Deep>
+
+## What to remember
+
+- An RNN reads a sequence one step at a time and carries a fixed-size hidden state, with the same weights at every step.
+- Training unrolls the loop, and the learning signal is multiplied once per step, so it vanishes (or explodes) over long gaps. Gradient clipping handles explosions, and vanishing is the real limit.
+- An LSTM adds a cell state edited by multiplying (forget gate) and adding (input gate), and an output gate. A forget gate near 1 gives the signal a long, steady path, and gates let it choose what to store and what to ignore. A GRU does the same with fewer parts.
+- Attention won because it gives direct access, trains in parallel, and has no single-vector bottleneck. It pays with work that grows with n² and a cache that grows with length.
+- Recurrence survives where a constant-size state and streaming matter, and it is returning inside RWKV, state-space models and hybrids.
+
+Next: [Self-supervised and transfer learning](../self-supervised-and-transfer-learning/) covers how models learn from unlabelled data and how to reuse what they learned.

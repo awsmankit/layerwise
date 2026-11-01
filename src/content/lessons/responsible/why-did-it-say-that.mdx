@@ -1,0 +1,151 @@
+---
+title: "Why did it say that? Explaining a model's answer"
+track: responsible
+level: intermediate
+order: 8
+summary: Explainability against interpretability, permutation importance and Shapley values worked by hand on a three-feature model, why attention weights and a chatbot's own reasons are not guaranteed explanations, an honest page on mechanistic interpretability, and which explanation suits a user, a builder and an auditor.
+updated: 2026-11-01
+sources:
+  - label: "NIST AI 100-1, AI Risk Management Framework 1.0: section 3.5 (Explainable and interpretable) and MEASURE 2.9"
+    url: https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf
+  - label: "Towards A Rigorous Science of Interpretable Machine Learning (Doshi-Velez and Kim, 2017)"
+    url: https://arxiv.org/abs/1702.08608
+  - label: "Stop Explaining Black Box Machine Learning Models for High Stakes Decisions and Use Interpretable Models Instead (Rudin, 2019)"
+    url: https://arxiv.org/abs/1811.10154
+  - label: "scikit-learn user guide: Permutation feature importance (version 1.9.1, read 1 November 2026)"
+    url: https://scikit-learn.org/stable/modules/permutation_importance.html
+  - label: "All Models are Wrong, but Many are Useful: model class reliance (Fisher, Rudin and Dominici, 2018)"
+    url: https://arxiv.org/abs/1801.01489
+  - label: "A Unified Approach to Interpreting Model Predictions: SHAP (Lundberg and Lee, 2017)"
+    url: https://arxiv.org/abs/1705.07874
+  - label: "Interpretable Machine Learning, chapter on Shapley values (Christoph Molnar, 3rd edition, read 1 November 2026)"
+    url: https://christophm.github.io/interpretable-ml-book/shapley.html
+  - label: "Problems with Shapley-value-based explanations as feature importance measures (Kumar and others, 2020)"
+    url: https://arxiv.org/abs/2002.11097
+  - label: "\"Why Should I Trust You?\": Explaining the Predictions of Any Classifier, LIME (Ribeiro, Singh and Guestrin, 2016)"
+    url: https://arxiv.org/abs/1602.04938
+  - label: "Attention is not Explanation (Jain and Wallace, 2019)"
+    url: https://arxiv.org/abs/1902.10186
+  - label: "Attention is not not Explanation (Wiegreffe and Pinter, 2019)"
+    url: https://arxiv.org/abs/1908.04626
+  - label: "Sanity Checks for Saliency Maps (Adebayo and others, 2018)"
+    url: https://arxiv.org/abs/1810.03292
+  - label: "Language Models Don't Always Say What They Think: Unfaithful Explanations in Chain-of-Thought Prompting (Turpin and others, 2023)"
+    url: https://arxiv.org/abs/2305.04388
+  - label: "Measuring Faithfulness in Chain-of-Thought Reasoning (Lanham and others, 2023)"
+    url: https://arxiv.org/abs/2307.13702
+  - label: "Reasoning Models Don't Always Say What They Think (Chen and others, 2025)"
+    url: https://arxiv.org/abs/2505.05410
+  - label: "Understanding intermediate layers using linear classifier probes (Alain and Bengio, 2016)"
+    url: https://arxiv.org/abs/1610.01644
+  - label: "Towards Monosemanticity: Decomposing Language Models With Dictionary Learning (Bricken and others, Anthropic, 2023)"
+    url: https://transformer-circuits.pub/2023/monosemantic-features
+  - label: "Scaling Monosemanticity: Extracting Interpretable Features from Claude 3 Sonnet (Templeton and others, Anthropic, 2024), section Limitations, Challenges, and Open Problems"
+    url: https://transformer-circuits.pub/2024/scaling-monosemanticity/
+  - label: "Neel Nanda on the race to read AI minds, part 1 (80,000 Hours podcast, recorded July 2025, published 8 September 2025)"
+    url: https://80000hours.org/podcast/episodes/neel-nanda-mechanistic-interpretability/
+  - label: "Counterfactual Explanations without Opening the Black Box: Automated Decisions and the GDPR (Wachter, Mittelstadt and Russell, 2017)"
+    url: https://arxiv.org/abs/1711.00399
+  - label: "EU AI Act, Article 86: right to explanation of individual decision-making (AI Act Service Desk, read 1 November 2026)"
+    url: https://ai-act-service-desk.ec.europa.eu/en/ai-act/article-86
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import PermutationImportanceDemo from '../../../components/viz/PermutationImportanceDemo.tsx';
+import ShapByHandLab from '../../../components/viz/ShapByHandLab.tsx';
+
+A lender's model scores Asha 53 out of 100 and the cut-off is 55. She asks why. A regulator asks the lender how the model decides. Each wants a different answer, and the available tools give some answers well and others badly.
+
+This lesson builds two standard tools by hand, then looks at three popular shortcuts that are weaker than they look. It assumes you know what features and a held-out test set are ([classical ML essentials](../../foundations/classical-ml-essentials/)) and, for one section, how attention works ([attention intuition](../../foundations/attention-intuition/)).
+
+<Callout title="Not legal advice" kind="note">
+The EU AI Act text below is quoted as the Commission's AI Act Service Desk showed it on 1 November 2026. It does not say what your product must do. Ask a lawyer.
+</Callout>
+
+## Two words that people mix up
+
+Doshi-Velez and Kim note in their abstract that there is "very little consensus on what interpretable machine learning is and how it should be measured". Here are the two senses this lesson uses.
+
+- **An interpretable model** is one a person can follow directly: a short decision tree, a linear score with a handful of weights, a rule list. Rudin argues that for high-stakes decisions you should try this first: trying to explain a black box, rather than building an interpretable model in the first place, "is likely to perpetuate bad practices and can potentially cause catastrophic harm to society". If a simple model is nearly as accurate, you can stop reading here.
+- **An explanation** is something produced about a model you cannot read directly: a feature ranking, a score per input, a sentence.
+
+NIST draws its own line. In the AI Risk Management Framework, explainability is "a representation of the mechanisms underlying AI systems' operation", and interpretability is "the meaning of AI systems' output in the context of their designed functional purposes". Its MEASURE 2.9 asks that the model is "explained, validated, and documented" and that output is "interpreted within its context". Definitions differ between sources, so when someone asks for "explainability", ask what they will do with it.
+
+## Explaining the whole model: permutation importance
+
+Take a trained model and a held-out data set. Shuffle one column, so every row gets another row's value, and score the model again. If the error barely moves, the model did not lean on that feature. If it jumps, it did. This is **permutation importance**. It works on any model, and repeating it gives a spread.
+
+<PermutationImportanceDemo client:visible />
+
+On this invented data, the average over 20 shuffles with the model that reads both income columns gives debt about +3.3 points of error, each income column about +1.0, years in the job about +0.2 and shoe size exactly 0 (example numbers from the demo, not real lending data). Read the output carefully:
+
+- **It describes this model, not the world.** scikit-learn's guide says permutation importance "does not reflect the intrinsic predictive value of a feature by itself but how important this feature is for a particular model", and that you should compute it on held-out data from a model that actually works. Fisher, Rudin and Dominici add that a variable that matters to one good model may not matter to another that fits equally well.
+- **Correlated columns share the credit.** Switch the demo to the model that reads one income column: income jumps to about +2.8. Nothing about people changed, only how the model spread its weight across two near-copies. scikit-learn suggests clustering correlated features and keeping one from each cluster.
+- **It says how much, not which way.** The number does not say that more debt lowers the score.
+
+## Explaining one answer: Shapley values
+
+For one person's score you want to split a difference, "this score minus a typical one", between the features. **Shapley values** come from game theory, where they split a team's winnings fairly between players. Lundberg and Lee's **SHAP** applies them to predictions: each feature gets "an importance value for a particular prediction". Molnar notes that Shapley values are the only attribution meeting four properties that together define a fair payout, among them *efficiency* (the values add up to the difference) and *dummy* (a feature that never changes anything gets zero).
+
+The recipe is the one in the lab. Treat an "unknown" feature as set to a typical value. Score every combination of known features. For one feature, find what it adds to each combination of the others and average those gains, weighting each by the share of arrival orders that produce it.
+
+<ShapByHandLab client:visible />
+
+For Asha (income 50, debt 25, 6 years in work) the model scores 53 against a typical 50, so there are 3 points to share out. The lab gives income +14, debt -15 and years +4, which sum to +3. Years gets +4 although the model has no term for years alone: the income-by-years interaction is worth +8, and Shapley splits it equally between the two features that make it.
+
+Three practical points:
+
+1. **The cost doubles with each feature.** Exact values need every combination, so real tools approximate. Molnar describes sampling only some combinations.
+2. **"Unknown" needs a definition.** The lab uses one typical value. Real tools average over a background data set, which for correlated features can create combinations that never occur in life and distort the values.
+3. **It is not a "what if".** Molnar warns that Shapley values cannot be used to say that earning a certain amount more would raise the score by a certain amount. Kumar and colleagues go further: "mathematical problems arise" when Shapley values are used as feature importance, and they argue the values "do not provide explanations which suit human-centric goals".
+
+For Asha, a better answer is a **counterfactual**. If the cut-off is 55 (an invented figure) and her score is 53, then with debt of 23 instead of 25 the model gives 55, because debt's slope is -1 point per thousand and it takes part in no interaction. Wachter, Mittelstadt and Russell proposed counterfactuals in 2017 as explanations that say what would need to change without opening the model. LIME (Ribeiro and colleagues) takes another route: it fits a small interpretable model locally around one prediction.
+
+## Why attention weights are not an explanation
+
+Attention weights are tempting to read as "what the model looked at". Jain and Wallace tested this on NLP tasks and found that they were "frequently uncorrelated with gradient-based measures of feature importance", and that very different attention distributions could give the same prediction. Their conclusion: standard attention "should not be treated as though" it gives explanations.
+
+Wiegreffe and Pinter replied with "Attention is not not Explanation". They argue that the claim "depends on one's definition of explanation", propose four tests, and conclude that the earlier work did not disprove attention's usefulness. Their abstract frames the question for recurrent models, so check what each paper tested before applying it to a large modern transformer.
+
+What to take from the debate: an attention map is a fact about the computation, not automatically a reason for the output, and claiming otherwise needs a test. Image saliency maps are similar: Adebayo and colleagues found some methods "independent both of the model and of the data generating process", so a convincing picture proves little.
+
+## When a language model explains itself
+
+Ask a chatbot why it answered as it did and you get fluent reasons. Are they the real ones? Turpin and colleagues reordered multiple-choice options so the answer was always "(A)". Models followed the bias, and their step-by-step reasoning rationalised the wrong answers without mentioning it. Accuracy fell by up to 36% across 13 tasks, testing GPT-3.5 and Claude 1.0. Lanham and colleagues found that reliance on stated reasoning varies by task, and that in their study larger models gave less faithful reasoning on most tasks. Chen and colleagues tested newer reasoning models in 2025: the reasoning revealed a hint the model had used in often fewer than 20% of the cases where it used it.
+
+A model's own explanation is therefore evidence, not proof. Chen and colleagues conclude that monitoring reasoning text is promising yet "not sufficient to rule them out" for undesired behaviours. If an explanation will be relied on, test it: change the input and see whether the stated reason predicts what changes.
+
+## Mechanistic interpretability: promising, unfinished
+
+**Mechanistic interpretability** tries to explain a network from the inside. Two ideas are worth knowing.
+
+- **Probes** train a simple classifier on a layer's activations to ask whether some property can be read from them. Alain and Bengio introduced linear probes in 2016. A probe shows information is present, not that the model uses it.
+- **Sparse autoencoders** try to split a layer's activations into many sparse, nameable features, because single neurons often respond to mixtures of unrelated things. Bricken and colleagues did this for a one-layer transformer in 2023. Templeton and colleagues applied it to a production model, Claude 3 Sonnet, in 2024, and listed their own limits: the training objective "is only a proxy for what we really are interested in, interpretability", and "we do not believe we have found anywhere near 'all the features'".
+
+In a July 2025 interview, Neel Nanda, who leads this work at Google DeepMind, said the ambitious vision of the field "just hasn't worked out very well" and that "this idea that we could fully understand the model hasn't really panned out". He also said the approach has produced "genuinely real-world useful things". Treat it as active research that already helps investigate models, not a button that audits a system.
+
+## Which explanation for whom
+
+| Reader | They need to | A fit | A poor fit |
+|---|---|---|---|
+| The person affected | Understand the decision, contest it, know what to change | Plain-language reasons from the real model, counterfactuals, who to appeal to | A chart of Shapley values; a chatbot's own story |
+| The reviewer or caseworker | Judge whether to trust this one output | The main factors, the model's confidence, the evidence it used | Attention heatmaps presented as reasons |
+| The builder | Debug and improve | Permutation importance on held-out data, Shapley values for single cases, error analysis, probes | One method alone: check agreement across methods |
+| The auditor | Check the system does what is claimed | Documentation, tests on slices of data, logs, a simple model as a baseline | Explanations the system generated about itself |
+
+On law: Article 86 of the EU AI Act, as the Service Desk showed it on 1 November 2026, gives a person affected by a deployer's decision based on an Annex III high-risk system (one category excepted) that has legal effects or similarly significantly affects them the right to "clear and meaningful explanations of the role of the AI system in the decision-making procedure and the main elements of the decision taken". It applies only where other EU law does not already give the right, and whether it covers a product is a legal question. Dates for the high-risk rules are in [the EU AI Act lesson](../../evals/eu-ai-act-for-engineers/).
+
+<Deep title="Checking an explanation is faithful">
+An explanation is faithful if it reflects what the model really did. Two cheap tests. Delete the features it calls important and confirm the score drops more than when you delete random ones. Or plant a model in which one feature is secretly decisive and see whether the method finds it. Adebayo and colleagues' sanity checks work in this spirit: they randomise the model and check that the explanation changes.
+</Deep>
+
+## What to remember
+
+- Ask who the explanation is for before choosing it, and use an interpretable model when it is accurate enough.
+- Permutation importance describes how one model uses its inputs on held-out data. Correlated columns share credit.
+- Shapley values split one prediction's difference from a typical case between the features, and always add up. They are not what-if statements.
+- Attention maps, saliency maps and a chatbot's own reasons are not explanations until tested.
+- Mechanistic interpretability is useful research, not a finished audit tool.
+
+Next: [running AI governance](../running-ai-governance/), where explanations, documentation and monitoring become the routine of a company.

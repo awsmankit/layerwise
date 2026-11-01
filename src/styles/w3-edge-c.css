@@ -1,0 +1,321 @@
+/* Styles for the interactive components in the wave 3 "edge-c" lesson batch. Keep every class under this batch's own prefix (ec-). */
+
+/* ---------- shared bits ---------- */
+
+.ec-note,
+.ec-small {
+  margin: 0.4rem 0 0.7rem;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+.ec-h {
+  margin: 1.4rem 0 0.5rem;
+  font: 600 1.02rem var(--font-display);
+  color: var(--ink);
+}
+.ec-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.4rem 0;
+}
+.viz .ec-row .btn {
+  min-height: 44px;
+}
+.viz .ec-bud .btn[aria-pressed='true'],
+.viz .ec-roll .btn[aria-pressed='true'] {
+  background: var(--signal-wash);
+  border-color: var(--signal);
+  color: var(--signal-ink);
+}
+.viz .ec-bud button:focus-visible,
+.viz .ec-roll button:focus-visible,
+.ec-bud select:focus-visible,
+.ec-bud input:focus-visible,
+.ec-roll input:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.ec-bud select {
+  width: 100%;
+  min-height: 44px;
+  font-size: 16px;
+  font-family: inherit;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.3rem 0.5rem;
+}
+.ec-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- On-device budget calculator (ec-bud) ---------- */
+
+.ec-src {
+  margin: 0.2rem 0 0.9rem;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+.ec-badge {
+  display: inline-block;
+  margin-right: 0.5rem;
+  padding: 0.05rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.ec-badge.datasheet {
+  border-color: var(--ok);
+  color: var(--ok);
+}
+.ec-badge.assumption {
+  border-color: var(--cost);
+  color: var(--cost);
+}
+.ec-bar {
+  position: relative;
+  display: flex;
+  height: 30px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  overflow: hidden;
+}
+.ec-seg {
+  display: block;
+  height: 100%;
+  min-width: 0;
+}
+.ec-seg.w {
+  background: var(--signal);
+}
+.ec-seg.k {
+  background: var(--cost);
+}
+.ec-seg.o {
+  background: var(--ink-3);
+  opacity: 0.7;
+}
+.ec-limit {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-left: 3px dashed var(--ink);
+}
+.ec-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 1rem;
+  margin: 0.5rem 0 0.8rem;
+  font-size: 0.85rem;
+  color: var(--ink-2);
+}
+.ec-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.ec-sw {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+}
+.ec-sw.w {
+  background: var(--signal);
+}
+.ec-sw.k {
+  background: var(--cost);
+}
+.ec-sw.o {
+  background: var(--ink-3);
+  opacity: 0.7;
+}
+.ec-sw.l {
+  background: transparent;
+  border-left: 3px dashed var(--ink);
+  border-radius: 0;
+  width: 6px;
+}
+.ec-verdict {
+  margin: 0.6rem 0 1rem;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--line);
+  border-left-width: 5px;
+  border-radius: 10px;
+  background: var(--surface);
+  font-size: 1rem;
+}
+.ec-verdict.fits {
+  border-left-color: var(--ok);
+}
+.ec-verdict.tight {
+  border-left-color: var(--cost);
+}
+.ec-verdict.no {
+  border-left-color: var(--warn);
+}
+.ec-warn {
+  margin: 0.8rem 0 0;
+  font-size: 0.9rem;
+  color: var(--cost);
+}
+.ec-cap {
+  margin: 1.2rem 0 0.3rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.viz .ec-tablewrap {
+  overflow-x: auto;
+}
+.viz .ec-table {
+  display: table;
+  overflow: visible;
+  width: 100%;
+  margin: 0;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.viz .ec-table caption {
+  text-align: left;
+  padding-bottom: 0.4rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.viz .ec-table th,
+.viz .ec-table td {
+  /* the lesson-wide phone rule gives wide tables a minimum column width; this table must fit */
+  min-width: 0 !important;
+  padding: 0.4rem 0.4rem 0.4rem 0;
+  border-bottom: 1px solid var(--line-soft);
+  text-align: left;
+  font-weight: 400;
+}
+.viz .ec-table thead th {
+  font-size: 0.8rem;
+  color: var(--ink-3);
+  font-weight: 600;
+}
+.viz .ec-table tbody th {
+  font-weight: 600;
+  color: var(--ink);
+}
+.viz .ec-table tr.on {
+  background: var(--signal-wash);
+}
+.ec-res.fits {
+  color: var(--ok);
+  font-weight: 600;
+}
+.ec-res.tight {
+  color: var(--cost);
+  font-weight: 600;
+}
+.ec-res.no {
+  color: var(--warn);
+  font-weight: 600;
+}
+@media (max-width: 560px) {
+  .viz .ec-table {
+    font-size: 0.82rem;
+  }
+  .viz .ec-table th,
+  .viz .ec-table td {
+    padding: 0.35rem 0.2rem 0.35rem 0;
+  }
+}
+
+/* ---------- Staged rollout simulator (ec-roll) ---------- */
+
+.ec-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin: 0.4rem 0 0.2rem;
+  font-size: 0.95rem;
+  color: var(--ink-2);
+  min-height: 44px;
+}
+.ec-check input {
+  width: 22px;
+  height: 22px;
+  margin-top: 0.1rem;
+  flex: none;
+  accent-color: var(--signal);
+}
+.ec-stages {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.9rem;
+}
+.ec-stages li {
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+.ec-st-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.8rem;
+  align-items: baseline;
+  font-size: 0.95rem;
+}
+.ec-st-head span {
+  color: var(--ink-2);
+  font-size: 0.9rem;
+}
+.ec-meter {
+  height: 10px;
+  margin: 0.45rem 0 0.2rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.ec-meter i {
+  display: block;
+  height: 100%;
+  background: var(--signal);
+}
+.ec-result {
+  margin: 1.1rem 0 0.9rem;
+  padding: 0.7rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  font-size: 0.97rem;
+  line-height: 1.45;
+}
+.ec-result p {
+  margin: 0;
+}
+.ec-run {
+  margin: 0.6rem 0 0;
+  padding-left: 1.3rem;
+  font-size: 0.93rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.ec-run li.halt {
+  color: var(--warn);
+}
+.ec-run li.halt b {
+  color: var(--warn);
+}

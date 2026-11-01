@@ -1,0 +1,198 @@
+/**
+ * Release history. This file is the single source of truth: the /changelog/ page,
+ * CHANGELOG.md (run `npm run changelog`) and the GitHub release notes are all made
+ * from it. Newest first. Add a release by putting a new entry at the top, bumping
+ * `version` in package.json to match, and running `npm run changelog`.
+ *
+ * Version numbers follow semantic versioning, read for a learning site:
+ *   MAJOR  the curriculum or the way learners move through it changes shape
+ *          (new topics, rebuilt learning paths).
+ *   MINOR  new lessons, labs, tools or features.
+ *   PATCH  fixes and small corrections (wording, links, layout, accessibility).
+ */
+
+export type ReleaseStats = {
+  lessons: number;
+  topics: number;
+  labs: number;
+  glossary: number;
+};
+
+export type Release = {
+  /** Semantic version without the leading "v". */
+  version: string;
+  /** ISO date the release was tagged. */
+  date: string;
+  title: string;
+  summary: string;
+  highlights: string[];
+  /** Counts in the repository at that tag. */
+  stats: ReleaseStats;
+};
+
+export const repoUrl = 'https://github.com/awsmankit/layerwise';
+
+export const releases: Release[] = [
+  {
+    version: '2.2.0',
+    date: '2026-11-01',
+    title: 'Devices and sound, MLOps, and the long tail',
+    summary: '52 new lessons, a Responsible AI path and a devices-and-sound path, and the version history you are reading.',
+    highlights: [
+      'On-device AI grows from 2 lessons to 8: inside a small device, from PyTorch to the chip, real-time on a budget, a wake-word detector, small language models on device, and shipping to a fleet.',
+      'Audio and speech: speech recognition, noise suppression and hearing devices, measuring audio quality, text-to-speech and voice cloning, and voice agents.',
+      'MLOps in System design: notebook to production, data pipelines and data quality, batch versus online inference and feature stores, testing and deploying models, monitoring and drift, and ML system-design interviews.',
+      'Applied ML: recommenders and ranking, time-series forecasting, anomaly detection, and clustering with dimensionality reduction.',
+      'Deep learning: RNNs and LSTMs, self-supervised and transfer learning, autoencoders, VAEs and GANs, encoders and decoders, state-space models and Mamba, and reinforcement learning from scratch.',
+      'Builder lessons: structured output in depth, query understanding for RAG, long context or RAG, GraphRAG, text-to-SQL, computer-use agents, UX for AI features, human-in-the-loop design, guardrails, observability for LLM apps, and semantic caching with batch APIs.',
+      'Responsible AI: explainability, governance, human oversight, where training data comes from, energy and water, medical and regulated AI, accessibility, and AI rules around the world.',
+      'Beginner lessons: a short history of AI, AI around you, how feeds and search decide, and does AI understand; plus maths without fear and a first-toolkit lesson.',
+      'Two new learning paths (“I build AI for devices and sound” and “I want to use and build AI responsibly”) and a path-aware set of forward links from older lessons.',
+      'A tested interaction pass over every lesson on a phone caught and fixed four runtime warnings, including two on lessons that were already live.',
+      'Versioning: tagged releases on GitHub, a CHANGELOG.md, and this changelog page.',
+    ],
+    stats: { lessons: 158, topics: 17, labs: 24, glossary: 844 },
+  },
+  {
+    version: '2.1.0',
+    date: '2026-11-01',
+    title: 'Builders, evals and responsible AI',
+    summary: '16 builder and expert lessons on agents, evals, responsible AI and deep learning.',
+    highlights: [
+      'Agents: designing tools for agents, agent memory and context engineering, multi-agent systems, and AI-assisted software development.',
+      'Product thinking: when not to use an LLM, choosing and comparing models, and reading real documents (parsing, OCR, tables, multimodal RAG).',
+      'Evals: building an eval dataset, and why models make things up.',
+      'Responsible AI for builders: fairness, privacy engineering, and alignment with red teaming.',
+      'Deep learning: build a tokenizer, a modern LLM architecture tour, scaling laws, and RL post-training (RLHF, verifiable rewards, GRPO), with three new practice labs.',
+      'Every lesson has a live interactive, verified sources and videos, a quiz and glossary terms.',
+    ],
+    stats: { lessons: 106, topics: 17, labs: 21, glossary: 460 },
+  },
+  {
+    version: '2.0.0',
+    date: '2026-11-01',
+    title: 'Five new topics and a teacher kit',
+    summary: 'The curriculum grows from 12 to 17 topics, with 22 new lessons and a kit for teachers.',
+    highlights: [
+      'Five new topics, each with its own colour: Skills and first projects, Classical ML and data, Deep learning, Responsible AI, and Audio and speech.',
+      'Beginner lessons written for school students: three ways a machine learns, computers that decide and plan, what an AI agent is, and four Responsible AI lessons on bias, telling real from fake, privacy and honest use at school.',
+      'Python first steps and a spam classifier you train in the browser, with runnable pads and four practice labs.',
+      'Classical ML: data preparation, regression, overfitting, trees and forests, gradient boosting, and “is the difference real?”.',
+      'Deep learning: neurons with a live playground, training deep networks, backpropagation with a lab, convolutions, and diffusion models.',
+      'Audio: how a computer hears, and spectrograms with a live Web Audio tone generator and spectrogram.',
+      'A teacher kit: plans for ages 10–12, 13–15 and 16–18, twelve unplugged activity cards, printable worksheets with answer keys, a parents’ guide, and a map against the five AI4K12 big ideas.',
+      'A new “I want to build my first model” path, and the beginner and ML-to-modern-AI paths rebuilt around the new lessons.',
+    ],
+    stats: { lessons: 90, topics: 17, labs: 18, glossary: 326 },
+  },
+  {
+    version: '1.2.0',
+    date: '2026-10-30',
+    title: 'Teach it your drawings',
+    summary: 'A hands-on drawing game, automatic video link checks, and Safari and Firefox fixes.',
+    highlights: [
+      'A “teach the computer your drawings” activity in the lesson on how a computer learns, using nearest neighbours in the browser.',
+      'A weekly check that every linked YouTube video still exists.',
+      'Safari and Firefox pass: a date format that made two pages rebuild on iPhones, a phone card layout, and blur effects on older Safari.',
+      'iPhone search opens its keyboard on the first tap, and an early tap is remembered.',
+      'A one-tap “New to AI? Start with lesson 1” link and compact cards on phones.',
+    ],
+    stats: { lessons: 68, topics: 12, labs: 13, glossary: 143 },
+  },
+  {
+    version: '1.1.0',
+    date: '2026-10-29',
+    title: 'Works on phones, with certificates',
+    summary: 'The whole site made phone-first, and a completion certificate for each learning path.',
+    highlights: [
+      'Every page fits a phone screen: wide diagrams scroll at a readable size, step-by-step diagrams stack, and wide tables scroll inside their frame.',
+      'Glossary pop-ups open on the first tap; sliders, buttons and form fields are sized for touch, and iOS no longer zooms into fields.',
+      'A sticky result bar in four games, and a search palette with a close button on touch screens.',
+      'Path completion certificates: finish every lesson in a path, type your name (kept in your browser) and download an image or print to PDF.',
+    ],
+    stats: { lessons: 68, topics: 12, labs: 13, glossary: 143 },
+  },
+  {
+    version: '1.0.0',
+    date: '2026-10-29',
+    title: 'Beginner-friendly, with videos',
+    summary: 'A beginner path simple enough for school students, regraded learning paths, and YouTube videos on every lesson.',
+    highlights: [
+      'The “I’m new to AI” path rewritten in short, simple sentences with the grown-up detail folded into optional blocks, plus new lessons on how a computer learns, how computers read words, and AI that sees and hears.',
+      'Learning paths regraded into a clear ladder from beginner to expert.',
+      'Verified YouTube videos from well-known educators linked from every lesson, and a Learning videos page.',
+      'Links to other websites open in a new tab.',
+      'A simpler homepage animation in plain words, and a fix for a React warning on lesson pages.',
+      'A new lesson on system design for LLM apps.',
+    ],
+    stats: { lessons: 68, topics: 12, labs: 13, glossary: 143 },
+  },
+  {
+    version: '0.5.0',
+    date: '2026-10-29',
+    title: 'More news sources',
+    summary: 'A tidier header and many more official news feeds.',
+    highlights: [
+      'The header trimmed to five links.',
+      'News now includes GitHub and Microsoft feeds, plus 25 more official sources, and you can search the headlines.',
+    ],
+    stats: { lessons: 64, topics: 12, labs: 13, glossary: 143 },
+  },
+  {
+    version: '0.4.0',
+    date: '2026-10-28',
+    title: 'Practice labs, libraries map and news',
+    summary: 'Coding labs in the browser, an AI libraries map, a news page that refreshes itself, and a cloud fact-check.',
+    highlights: [
+      'A Practice hub with 13 in-browser Python coding labs that check your code, and a source link checker.',
+      'An AI libraries map with status and licence for agents, RAG, vector stores and evals.',
+      'A News page that refreshes by itself, and progress that you can carry between browsers.',
+      'Case studies sorted by date, filterable by company, with company logos.',
+      'Four new lessons (including the EU AI Act for engineers and evaluating agents), the cloud track fact-checked, newer NVIDIA GPUs and DGX and rack systems, and search over labs, libraries and case studies.',
+      'Cards in every set coloured so that neighbours are plainly different.',
+    ],
+    stats: { lessons: 64, topics: 12, labs: 13, glossary: 143 },
+  },
+  {
+    version: '0.3.0',
+    date: '2026-10-27',
+    title: 'A calmer homepage and how big companies build it',
+    summary: 'The homepage redesigned around one drawing, new lessons on agent frameworks, and engineering case studies.',
+    highlights: [
+      'The homepage rebuilt around one drawing and calm outlined cards, with solid colours matching the start page.',
+      'New lessons on LangChain and LangGraph, MCP in depth, and prompt patterns.',
+      'A “How big companies build it” page of engineering write-ups on RAG, agents, serving and evals, and a Further watching page of video courses.',
+    ],
+    stats: { lessons: 60, topics: 12, labs: 0, glossary: 123 },
+  },
+  {
+    version: '0.2.0',
+    date: '2026-10-26',
+    title: 'Diagrams, a sandbox and interview prep',
+    summary: 'Hairline diagrams everywhere, a sandbox, interview prep for both sides, and teacher plans.',
+    highlights: [
+      'Hairline line diagrams across the lessons: CPU versus GPU, tokens, the transformer block, quantization, the request lifecycle, and charts for the learning rate and overfitting.',
+      'A sandbox with a recorded tool terminal and real Python in the browser.',
+      'Interview prep for candidates and interviewers, a progress page and a teachers’ page.',
+      '13 new lessons, including how models learn, inside a transformer, classical ML essentials, multimodal models, fine-tuning in practice, and one question all the way through.',
+      'Lessons are released under CC BY 4.0 and the code under MIT.',
+    ],
+    stats: { lessons: 57, topics: 12, labs: 0, glossary: 106 },
+  },
+  {
+    version: '0.1.0',
+    date: '2026-10-26',
+    title: 'First launch',
+    summary: 'Animated AI engineering lessons, games and tools, covering AWS, Azure and Google Cloud, GPUs and local inference.',
+    highlights: [
+      '44 lessons in 12 topics, from AI basics to GPUs and cloud platforms, each with interactive diagrams.',
+      'Five games: Blueprint, Cost Crunch, Fit the Model, Rack and Stack, and Incident Room.',
+      'Calculators for cost, model memory, GPUs, break-even and latency budgets.',
+      'Learning paths, a placement check, a glossary of 79 terms, a search box and an RSS feed.',
+      'Broadened from one cloud to AWS, Azure and Google Cloud side by side, plus GPU infrastructure and local inference.',
+    ],
+    stats: { lessons: 44, topics: 12, labs: 0, glossary: 79 },
+  },
+];
+
+export const latestRelease = releases[0];

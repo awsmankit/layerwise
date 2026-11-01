@@ -1,0 +1,365 @@
+/* Styles for the interactive components in the wave 4 "build-e" lesson batch. Keep every class under this batch's own prefix. */
+
+/* ---------- Guardrail tuner (wle-tuner) ---------- */
+
+.wle-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.wle-note {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  color: var(--ink-3);
+}
+.wle-group {
+  margin-bottom: 0.9rem;
+}
+.wle-label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.92rem;
+  color: var(--ink-2);
+}
+.wle-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.viz .wle-row .btn,
+.viz .wle-group > .btn {
+  min-height: 44px;
+}
+.wle-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.8rem 2rem;
+  margin-bottom: 0.9rem;
+  align-items: end;
+}
+.wle-tuner input[type='range'] {
+  width: 100%;
+}
+.wle-strip,
+.wle-curve {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 0.8rem;
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+  background: var(--surface);
+}
+.wle-mid {
+  stroke: var(--line-soft);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+.wle-band {
+  fill: var(--signal-wash);
+}
+.wle-thr {
+  stroke: var(--signal);
+  stroke-width: 2;
+}
+.wle-dot {
+  stroke-width: 1.8;
+  fill: var(--surface);
+}
+.wle-dot.wle-ok,
+.wle-key.wle-ok {
+  stroke: var(--ok);
+}
+.wle-dot.wle-bad,
+.wle-key.wle-bad {
+  stroke: var(--warn);
+}
+.wle-dot.wle-ok.is-blocked,
+.wle-key.wle-ok.is-blocked {
+  fill: var(--ok);
+}
+.wle-dot.wle-bad.is-blocked {
+  fill: var(--warn);
+}
+.wle-line {
+  fill: none;
+  stroke: var(--ink-2);
+  stroke-width: 2;
+}
+.wle-best {
+  fill: var(--ok);
+  stroke: var(--surface);
+  stroke-width: 1.5;
+}
+.wle-axis {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--ink-3);
+}
+.wle-axis span:nth-child(2) {
+  text-align: center;
+}
+.wle-legend {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1rem;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  font-size: 0.85rem;
+  color: var(--ink-2);
+}
+.wle-legend li {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.wle-key {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--ink-3);
+  background: var(--surface);
+}
+.wle-key.wle-ok {
+  border-color: var(--ok);
+}
+.wle-key.wle-bad {
+  border-color: var(--warn);
+}
+.wle-key.wle-ok.is-blocked {
+  background: var(--ok);
+}
+.wle-key.wle-bandkey {
+  border-radius: 3px;
+  border-color: transparent;
+  background: var(--signal-wash);
+  outline: 1px solid var(--signal);
+}
+.wle-result {
+  margin-top: 1rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--tint-sky);
+}
+.wle-result p {
+  margin: 0 0 0.5rem;
+  font-size: 0.96rem;
+  line-height: 1.5;
+}
+.wle-result p:last-child {
+  margin-bottom: 0;
+}
+.wle-h {
+  margin: 1.2rem 0 0.4rem;
+  font: 650 0.98rem var(--font-display);
+}
+.wle-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.4rem 2rem;
+}
+.wle-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.92rem;
+}
+.wle-list li {
+  margin: 0 0 0.45rem;
+}
+.wle-tag {
+  display: inline-block;
+  padding: 0 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 0.78rem;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.wle-small {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--ink-3);
+}
+.wle-all {
+  margin-top: 1.2rem;
+}
+.wle-all summary {
+  cursor: pointer;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  font-weight: 650;
+}
+.wle-all summary:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.wle-table-wrap {
+  overflow-x: auto;
+}
+.wle-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+.wle-table th,
+.wle-table td {
+  padding: 0.35rem 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid var(--line-soft);
+  vertical-align: top;
+}
+.wle-table tr.is-wrong td {
+  background: color-mix(in srgb, var(--warn) 12%, var(--surface));
+}
+
+/* ---------- Trace viewer (wle-trace) ---------- */
+
+.wle-ask {
+  margin: 0.6rem 0 0;
+  font-weight: 650;
+}
+.wle-spans {
+  list-style: none;
+  margin: 0.8rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+.wle-spans li {
+  margin: 0;
+}
+.viz .wle-span {
+  display: grid;
+  grid-template-columns: minmax(190px, 36%) 1fr;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  min-height: 48px;
+  padding: 0.35rem 0.6rem;
+  text-align: left;
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+  background: var(--surface);
+  cursor: pointer;
+}
+.viz .wle-span.is-child .wle-span-name {
+  padding-left: 0.8rem;
+}
+.viz .wle-span:hover {
+  border-color: var(--signal);
+}
+.viz .wle-span.is-sel {
+  border-color: var(--signal);
+  box-shadow: 0 0 0 2px var(--signal);
+  background: var(--signal-wash);
+}
+.viz .wle-span.is-err .wle-span-dur {
+  color: var(--warn);
+  font-weight: 650;
+}
+.viz .wle-span:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.wle-span-name {
+  font-size: 0.92rem;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.wle-span-dur {
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.wle-lane {
+  position: relative;
+  height: 14px;
+  border-radius: 7px;
+  background: var(--line-soft);
+}
+.wle-bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 7px;
+  background: var(--signal);
+}
+.wle-bar.wle-op-invoke_agent {
+  background: var(--ink-3);
+}
+.wle-bar.wle-op-retrieval {
+  background: var(--ok);
+}
+.wle-bar.wle-op-execute_tool {
+  background: var(--cost);
+}
+.wle-bar.wle-op-guardrail {
+  background: var(--ink-2);
+}
+@media (max-width: 560px) {
+  .viz .wle-span {
+    grid-template-columns: 1fr;
+    gap: 0.3rem;
+  }
+}
+.wle-feedback {
+  margin: 0.8rem 0 0;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--tint-sun);
+  font-size: 0.95rem;
+}
+.viz .btn.wle-done {
+  border-color: var(--ok);
+}
+.wle-detail {
+  margin-top: 1rem;
+}
+.wle-attrs {
+  margin: 0.4rem 0 0.9rem;
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+}
+.wle-attrs div {
+  display: grid;
+  grid-template-columns: minmax(150px, 45%) 1fr;
+  gap: 0.5rem;
+}
+.wle-attrs dt {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+.wle-attrs dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 560px) {
+  .wle-attrs div {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
+.wle-content {
+  margin: 0.6rem 0 0;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--tint-lilac);
+  font-size: 0.92rem;
+  overflow-wrap: anywhere;
+}

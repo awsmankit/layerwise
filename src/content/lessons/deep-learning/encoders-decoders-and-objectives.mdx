@@ -1,0 +1,119 @@
+---
+title: "Encoders, decoders and the objectives that train them"
+track: deep-learning
+level: intermediate
+order: 6.5
+summary: BERT, GPT and T5 use the same transformer parts. What differs is the attention mask and the training task. See each task on one sentence, then compute cross-entropy, perplexity, bits per byte and KL divergence by hand on a tiny example.
+updated: 2026-11-01
+sources:
+  - label: "Attention Is All You Need (Vaswani et al., 2017)"
+    url: https://arxiv.org/abs/1706.03762
+  - label: "BERT: Pre-training of Deep Bidirectional Transformers (Devlin et al., 2018)"
+    url: https://arxiv.org/abs/1810.04805
+  - label: "Improving Language Understanding by Generative Pre-Training, GPT-1 (Radford et al., 2018)"
+    url: https://cdn.openai.com/research-covers/language-unsupervised/language_understanding_paper.pdf
+  - label: "Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer, T5 (Raffel et al., 2019)"
+    url: https://arxiv.org/abs/1910.10683
+  - label: "Robust Speech Recognition via Large-Scale Weak Supervision, Whisper (Radford et al., 2022)"
+    url: https://arxiv.org/abs/2212.04356
+  - label: "Smarter, Better, Faster, Longer: ModernBERT (Warner et al., 2024)"
+    url: https://arxiv.org/abs/2412.13663
+  - label: "The Pile: An 800GB Dataset of Diverse Text for Language Modeling (Gao et al., 2020)"
+    url: https://arxiv.org/abs/2101.00027
+  - label: "Hugging Face Transformers documentation: perplexity of fixed-length models"
+    url: https://huggingface.co/docs/transformers/perplexity
+  - label: "Hugging Face LLM Course: how do Transformers work?"
+    url: https://huggingface.co/learn/llm-course/chapter1/4
+  - label: "Distilling the Knowledge in a Neural Network (Hinton et al., 2015)"
+    url: https://arxiv.org/abs/1503.02531
+---
+
+import Deep from '../../../components/ui/Deep.astro';
+import MaskLab from '../../../components/viz/MaskLab.tsx';
+import PerplexityLab from '../../../components/viz/PerplexityLab.tsx';
+import KlBars from '../../../components/viz/KlBars.tsx';
+
+When you pick a model for search, classification or chat, the useful question is rarely "which transformer". The parts are the same: attention, feed-forward layers, residual connections ([inside a transformer block](../../foundations/inside-a-transformer/)). Two choices separate the families: **which tokens may look at which** (the attention mask), and **what the model is trained to predict** (the objective). This lesson takes both in turn and then looks at the numbers that report how well an objective is being met: cross-entropy, perplexity, bits per byte and KL divergence.
+
+It assumes you know what a token is ([tokens and embeddings](../../foundations/tokens-and-embeddings/)) and that you have met the three-shapes table in the transformer lesson.
+
+## The mask is a grid
+
+Attention compares every token with others, and a **mask** switches some comparisons off. Picture a grid: each row is a token that is looking, each column a token it may look at. There are three common patterns.
+
+- **Bidirectional** (all squares open). Each token sees the whole sentence, left and right.
+- **Causal** (lower triangle). Token *i* sees tokens 1 to *i* only. For 8 tokens that is 36 open squares out of 64, since 1 + 2 + ... + 8 = 36.
+- **Prefix** (a block plus a triangle). The first *k* tokens see each other both ways and the rest look back only.
+
+What the mask permits decides what the model can be trained to do, because a token that could see its own answer would just copy it.
+
+## Three shapes, three tasks
+
+**Encoder-only (BERT): fill in the blank.** BERT hides some tokens and predicts them from the words on both sides. In the paper, 15% of token positions are chosen at random. Of those, 80% are replaced with a `[MASK]` token, 10% with a random token and 10% are left unchanged, because `[MASK]` never appears when the model is later used. The loss counts only the chosen positions. The output is one vector per token, which suits classification, search embeddings and rerankers. The Hugging Face course describes encoder-only models as good for tasks that need understanding of the input, such as sentence classification and named-entity recognition.
+
+**Decoder-only (GPT): predict the next token.** The GPT paper's objective is to maximise the sum of log P(token | the tokens before it). The mask is causal, and every position is a training example: a sequence of 8 tokens yields 7 predictions at once. Generating text is the same task repeated, which is why this shape dominates chat and code.
+
+**Encoder-decoder (T5): read it all, then write.** T5 corrupts about 15% of tokens, but replaces each run of hidden tokens with one **sentinel** (`<X>`, `<Y>`), and the target is the missing spans, each introduced by its sentinel. The paper's example hides "for inviting" and "last" in "Thank you for inviting me to your party last week"; the target is `<X> for inviting <Y> last <Z>`. Their baseline used a mean span length of 3. The encoder reads the damaged text with full attention, and the decoder writes the answer with a causal mask while also looking at every encoder position (**cross-attention**). T5 casts every task as text in, text out, with a prefix such as "translate English to German:". Whisper uses the same shape for speech: an audio encoder and a text decoder ([speech recognition](../../audio/speech-recognition/)).
+
+A **prefix LM** is one stack with a mixed mask, a middle road the T5 paper tested. Try all four on one sentence.
+
+<MaskLab client:visible />
+
+Things to try:
+
+- **Encoder-only.** Hide one word, then three. Read the "Training signal" line: only the hidden words give a signal, so most of the sentence teaches nothing on that pass. Tap different row names in the grid and see that every token has the whole row open.
+- **Decoder-only.** Tap the row names from first to last and watch the set of visible tokens grow by one each time. All 7 positions give a signal.
+- **Encoder-decoder.** Hide two neighbouring words and then two separated ones. Neighbours merge into one span with one sentinel, so the encoder's input is shorter. Note there are two grids: the encoder's open one and the decoder's triangle.
+- **Prefix.** Slide the prefix length: at 1 it is nearly causal, and at 7 nearly bidirectional.
+
+Why does this matter in practice?
+
+| Shape | Mask | Training task | Signal per sequence | Usually chosen for |
+|---|---|---|---|---|
+| Encoder-only | Bidirectional | Fill in hidden tokens | About 15% of positions | Embeddings, classification, reranking |
+| Decoder-only | Causal | Next token | Every position | Chat, code, general generation |
+| Encoder-decoder | Open encoder, causal decoder with cross-attention | Write the hidden spans | The target tokens only | Translation, speech to text, structured rewriting |
+
+An encoder gets the full context for every token, so each representation is richer, but it is not a text generator: it scores hidden tokens separately given the visible ones, and does not define a probability for a whole sentence the way a left-to-right model does. T5's comparison of architectures at base size found an encoder-decoder with a denoising task scored 83.28 on GLUE against 74.70 for a decoder-only language model on the same task (GLUE is a language-understanding benchmark). Mind the caveat: that encoder-decoder has twice the parameters at the same compute. A version sharing parameters between the two halves scored 82.81, still ahead. These are small, 2019-era experiments, not a verdict on today's large models.
+
+Encoders are not obsolete. The ModernBERT paper (December 2024) notes that encoder-only models remain widely used for retrieval and classification, and that BERT itself was often still the backbone in production pipelines, limited to 512 tokens. ModernBERT is an encoder-only model with modern improvements, trained on 2 trillion tokens with an 8,192-token context; its authors report state-of-the-art results on classification and retrieval tasks. Check the benchmarks yourself before choosing.
+
+## Measuring an objective: cross-entropy and perplexity
+
+Whichever shape, training reduces a **loss**: a number saying how wrong the predictions were. For language it is **cross-entropy**. At each position, the model gives a probability to every token in its vocabulary. The loss for that position is minus the log of the probability it gave to the token that was actually there. Probability 1 costs 0. A smaller probability costs more, and probability near 0 costs a lot.
+
+A worked example. A model gives the true next tokens probabilities 1/2, 1/4 and 1/8. In bits (logs to base 2), that is 1, 2 and 3. The average is 6 / 3 = 2 bits per token. **Perplexity** is 2 to that power, so 2² = 4: on average the model was as unsure as if it were choosing among 4 equally likely tokens. Libraries usually report natural logs (nats), where 1 bit is ln 2, about 0.693 nats. Perplexity comes out the same either way: it is 2 to the mean bits or *e* to the mean nats.
+
+<PerplexityLab client:visible />
+
+Things to try:
+
+- **Compare the three models.** The bigger model's lower perplexity comes from putting more probability on the true words. The "sure of the wrong thing" model shows what a few very low probabilities do to the average.
+- **Slide one word from 1/2 to 1/64.** One surprising token adds 5 bits to the total. Averages are dominated by the worst misses.
+- **Switch between word tokens and characters.** Perplexity per token changes a lot. Bits per byte does not.
+
+That last point matters whenever you compare models. The Hugging Face documentation points out that the tokeniser directly affects perplexity, so it should be considered when comparing models, and that perplexity is not well defined for masked language models like BERT. **Bits per byte** divides the total bits by the number of bytes of text, so any tokeniser gets the same yardstick. The Pile paper prefers it for that reason and gives the conversion: bits per byte = (tokens per byte) × loss in nats / ln 2, with 0.29335 GPT-2 tokens per byte across the Pile. For an example loss of 2.0 nats per token that is 0.29335 × 2.0 / 0.693 = about 0.85 bits per byte.
+
+## Measuring a gap: KL divergence
+
+Cross-entropy has a floor. Even a perfect model cannot go below the **entropy** of the data: the true uncertainty about the next word. Anything above is waste, and that waste is the **KL divergence**: cross-entropy = entropy + KL. It is the extra bits per token you pay for using the wrong distribution.
+
+<KlBars client:visible />
+
+With the truth at 1/2, 1/4, 1/8 and 1/8, the entropy is 1.75 bits. A model that spreads probability evenly over the four words pays 2 bits, so its KL is 0.25. A model that is nearly certain of the wrong word pays far more.
+
+KL shows up in three places you will meet again. In **training**, minimising cross-entropy on real text is the same as minimising KL from the data distribution to the model, because the entropy part is fixed. In **distillation**, a small student is trained to match a larger teacher's probabilities, as in Hinton and colleagues' paper, which is KL between two models. In **reinforcement learning from feedback**, the KL penalty keeps a tuned model close to its starting point ([RL post-training](../rl-post-training/)).
+
+<Deep title="Why lower loss is not the whole story">
+Loss is an average over tokens of web-like text, so easy tokens (punctuation, common words) dominate it and small gains can hide in the hard ones. It says how well the model predicts the data, not whether its answers are helpful, true or safe. Post-training changes behaviour in ways pretraining loss does not capture, and perplexity is not comparable across different tokenisers or on a different test set. Use it to compare runs of the same family on the same data, and use task evaluations for everything else ([evals 101](../../evals/evals-101/)).
+</Deep>
+
+## What to remember
+
+- The attention mask and the training task, not the parts, separate BERT, GPT and T5. Bidirectional, causal and prefix masks decide what a token may see.
+- Encoder-only models (BERT-style) fill in hidden tokens and give a vector per token: use them for embeddings, classification and reranking. Decoder-only models predict the next token and train on every position: use them for generation. Encoder-decoder models (T5-style, Whisper) read the whole input and then write: use them when input and output are different sequences.
+- Cross-entropy is minus the log probability of the true token. Perplexity is 2 to the mean bits (or *e* to the mean nats): the effective number of equally likely choices.
+- Compare across tokenisers with bits per byte, not perplexity. Perplexity is not defined for masked language models.
+- KL divergence is the extra bits paid for believing the wrong distribution. It appears in training, distillation and the leash in RL from feedback.
+
+Next: [scaling laws](../scaling-laws/), which are about how this loss falls as models and data grow.

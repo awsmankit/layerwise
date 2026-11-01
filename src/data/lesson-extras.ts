@@ -37,6 +37,32 @@ import { extrasW2Docs } from './extras/w2-docs';
 import { extrasW2DlA } from './extras/w2-dl-a';
 import { extrasW2DlB } from './extras/w2-dl-b';
 import { extrasW2Resp } from './extras/w2-resp';
+import { extrasW3EdgeA } from './extras/w3-edge-a';
+import { extrasW3EdgeB } from './extras/w3-edge-b';
+import { extrasW3EdgeC } from './extras/w3-edge-c';
+import { extrasW3AudioA } from './extras/w3-audio-a';
+import { extrasW3AudioB } from './extras/w3-audio-b';
+import { extrasW3MlopsA } from './extras/w3-mlops-a';
+import { extrasW3MlopsB } from './extras/w3-mlops-b';
+import { extrasW3MlopsC } from './extras/w3-mlops-c';
+import { extrasW3AppliedA } from './extras/w3-applied-a';
+import { extrasW3AppliedB } from './extras/w3-applied-b';
+import { extrasW4DlA } from './extras/w4-dl-a';
+import { extrasW4DlB } from './extras/w4-dl-b';
+import { extrasW4DlC } from './extras/w4-dl-c';
+import { extrasW4Skills } from './extras/w4-skills';
+import { extrasW4StartA } from './extras/w4-start-a';
+import { extrasW4StartB } from './extras/w4-start-b';
+import { extrasW4RespA } from './extras/w4-resp-a';
+import { extrasW4RespB } from './extras/w4-resp-b';
+import { extrasW4RespC } from './extras/w4-resp-c';
+import { extrasW4RespD } from './extras/w4-resp-d';
+import { extrasW4BuildA } from './extras/w4-build-a';
+import { extrasW4BuildB } from './extras/w4-build-b';
+import { extrasW4BuildC } from './extras/w4-build-c';
+import { extrasW4BuildD } from './extras/w4-build-d';
+import { extrasW4BuildE } from './extras/w4-build-e';
+import { extrasW4Misc } from './extras/w4-misc';
 
 export type QuizItem = {
   q: string;
@@ -493,4 +519,4 @@ const baseExtras: Record<string, Extra> = {
 };
 
 /** Core lessons plus the per-track files in ./extras. */
-export const extras: Record<string, Extra> = { ...baseExtras, ...extrasCloud, ...extrasInfra, ...extrasLocal, ...extrasCore, ...extrasModels, ...extrasEcosystem, ...extras_frameworks, ...extras_mcp, ...extras_promptpatterns, ...extras_libraries, ...extras_reasoning, ...extras_agenteval, ...extras_euai, ...extrasOps, ...extrasRetrievalServing, ...extrasStart, ...extrasW1StartA, ...extrasW1RespA, ...extrasW1RespB, ...extrasW1Skills, ...extrasW1DlA, ...extrasW1DlB, ...extrasW1MlA, ...extrasW1MlB, ...extrasW1Audio, ...extrasW2AgentsA, ...extrasW2AgentsB, ...extrasW2Product, ...extrasW2Evals, ...extrasW2Docs, ...extrasW2DlA, ...extrasW2DlB, ...extrasW2Resp };
+export const extras: Record<string, Extra> = { ...baseExtras, ...extrasCloud, ...extrasInfra, ...extrasLocal, ...extrasCore, ...extrasModels, ...extrasEcosystem, ...extras_frameworks, ...extras_mcp, ...extras_promptpatterns, ...extras_libraries, ...extras_reasoning, ...extras_agenteval, ...extras_euai, ...extrasOps, ...extrasRetrievalServing, ...extrasStart, ...extrasW1StartA, ...extrasW1RespA, ...extrasW1RespB, ...extrasW1Skills, ...extrasW1DlA, ...extrasW1DlB, ...extrasW1MlA, ...extrasW1MlB, ...extrasW1Audio, ...extrasW2AgentsA, ...extrasW2AgentsB, ...extrasW2Product, ...extrasW2Evals, ...extrasW2Docs, ...extrasW2DlA, ...extrasW2DlB, ...extrasW2Resp, ...extrasW3EdgeA, ...extrasW3EdgeB, ...extrasW3EdgeC, ...extrasW3AudioA, ...extrasW3AudioB, ...extrasW3MlopsA, ...extrasW3MlopsB, ...extrasW3MlopsC, ...extrasW3AppliedA, ...extrasW3AppliedB, ...extrasW4DlA, ...extrasW4DlB, ...extrasW4DlC, ...extrasW4Skills, ...extrasW4StartA, ...extrasW4StartB, ...extrasW4RespA, ...extrasW4RespB, ...extrasW4RespC, ...extrasW4RespD, ...extrasW4BuildA, ...extrasW4BuildB, ...extrasW4BuildC, ...extrasW4BuildD, ...extrasW4BuildE, ...extrasW4Misc };

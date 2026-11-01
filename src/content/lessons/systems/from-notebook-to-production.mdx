@@ -1,0 +1,184 @@
+---
+title: "From notebook to production: the ML lifecycle"
+track: systems
+level: intermediate
+order: 4
+summary: "Why the model is the small box in an ML system, the lifecycle stages around it, Google's three MLOps maturity levels, what changes between a notebook and a service, and the minimum you need to pin so that a model can be rebuilt."
+updated: 2026-11-01
+sources:
+  - label: "MLOps: Continuous delivery and automation pipelines in machine learning (Google Cloud Architecture Center, last reviewed 2024-08-28)"
+    url: https://docs.cloud.google.com/architecture/mlops-continuous-delivery-and-automation-pipelines-in-machine-learning
+  - label: "Hidden Technical Debt in Machine Learning Systems (Sculley et al., NeurIPS 2015)"
+    url: https://papers.nips.cc/paper/2015/hash/86df7dcfd896fcaf2674f757a2463eba-Abstract.html
+  - label: "MLOps maturity model (Azure Architecture Center, Microsoft Learn)"
+    url: https://learn.microsoft.com/en-us/azure/architecture/ai-ml/guide/mlops-maturity-model
+  - label: "MLflow Tracking (MLflow documentation)"
+    url: https://mlflow.org/docs/latest/ml/tracking/
+  - label: "MLflow Model Registry (MLflow documentation)"
+    url: https://mlflow.org/docs/latest/ml/model-registry/
+  - label: "Data versioning (DVC documentation)"
+    url: https://dvc.org/doc/start/data-management/data-versioning
+  - label: "Model Cards for Model Reporting (Mitchell et al., 2019)"
+    url: https://arxiv.org/abs/1810.03993
+  - label: "Reproducibility (PyTorch documentation)"
+    url: https://docs.pytorch.org/docs/stable/notes/randomness.html
+  - label: "Amazon SageMaker Pipelines (AWS documentation)"
+    url: https://docs.aws.amazon.com/sagemaker/latest/dg/pipelines.html
+  - label: "Model Registration Deployment with Model Registry (Amazon SageMaker AI documentation)"
+    url: https://docs.aws.amazon.com/sagemaker/latest/dg/model-registry.html
+  - label: "What are Azure Machine Learning pipelines? (Microsoft Learn)"
+    url: https://learn.microsoft.com/en-us/azure/machine-learning/concept-ml-pipelines
+  - label: "Work with registered models in Azure Machine Learning (Microsoft Learn)"
+    url: https://learn.microsoft.com/en-us/azure/machine-learning/how-to-manage-models
+  - label: "Introduction to Pipelines (Google Cloud, Gemini Enterprise Agent Platform)"
+    url: https://docs.cloud.google.com/vertex-ai/docs/pipelines/introduction
+  - label: "Introduction to Model Registry (Google Cloud, Gemini Enterprise Agent Platform)"
+    url: https://docs.cloud.google.com/vertex-ai/docs/model-registry/introduction
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import LifecycleMap from '../../../components/viz/LifecycleMap.tsx';
+
+A notebook run ends with a good number: say an AUC of 0.91 on the held-out set. Then someone asks when it can go live, who looks after it, and what happens when the data changes. The model is the part you built in a week. The system that keeps it useful is the part that takes a year. This lesson maps that system, so that the later lessons on data quality, serving, testing and monitoring each have a place to attach.
+
+It assumes you can already train and evaluate a model ([Getting data ready](../../ml/getting-data-ready/) and [Classical ML essentials](../../foundations/classical-ml-essentials/)). It is about classical, predictive ML. LLM features share much of it, with their own twists in [LLMOps in production](../../evals/llmops-in-production/).
+
+## Try it first
+
+Seven made-up failures, each starting somewhere in the lifecycle. Pick the stage where each one starts. The answer shows the cheapest control and where you would otherwise find out.
+
+<LifecycleMap client:visible />
+
+## The lifecycle
+
+Google's MLOps guide (last reviewed 2024-08-28, and aimed mainly at predictive systems) lists the steps of any ML project: extract data, analyse it, prepare it, train, evaluate, validate, serve, monitor. This lesson groups them into the six stages in the figure above. Each produces something that the next one depends on.
+
+| Stage | What it produces | A typical way it goes wrong |
+|---|---|---|
+| Data | A snapshot of raw data, with a schema | Someone upstream changes it |
+| Features | Model inputs, in training and at serving time | Two code paths compute one feature |
+| Training | A model file, plus the run that made it | Nobody can rebuild it |
+| Validation | A decision: may this model replace the current one? | Only the average was checked |
+| Release | A deployed, versioned model | No way back |
+| Monitoring | Alerts, and a trigger to start again | Nobody is looking, or labels arrive late |
+
+The arrow from monitoring back to data is what makes it a lifecycle. A model is released into a world that keeps changing, so you will build it again.
+
+## The model is the small box
+
+In 2015 a group at Google published "Hidden Technical Debt in Machine Learning Systems". Their picture is of a system where the ML code is a small box in the middle, surrounded by data collection, feature extraction, serving, configuration and monitoring. They argue that quick wins in ML are not free, because the maintenance cost arrives later, at the level of the whole system rather than the code. Four of their ideas explain most of what follows.
+
+- **Data dependencies cost more than code dependencies.** A compiler finds an unused library; nothing finds an input signal that quietly changed meaning. They call a signal that changes over time, for example one produced by another model that retrains, an unstable data dependency. A common fix is a versioned, frozen copy until the new one has been checked.
+- **Changing anything changes everything.** They call this the CACE principle. If the distribution of one feature changes, the importance of the other features can change too, so improvements are hard to isolate.
+- **Feedback loops.** A model that influences its own future training data, for example by deciding what users see, makes its behaviour hard to predict before release.
+- **Glue code and pipeline jungles.** Generic packages need code to get data in and out, and data preparation grows into an unmanageable tangle of joins and intermediate files. The paper says a mature system might be at most 5% ML code and at least 95% glue.
+
+Notice that none of these is about the algorithm. All of them are about the system around it.
+
+## Notebook versus service
+
+Most failures happen at the handover from the first column to the second.
+
+| | A notebook | A production service |
+|---|---|---|
+| Environment | Whatever is installed on one laptop | A pinned environment in a container image |
+| Inputs | A file someone downloaded | A versioned, validated dataset with a named owner |
+| Running | Cells in any order | A pipeline with parameters, rerunnable from scratch |
+| Testing | Looking at the output | Tests on feature code and data, and a model gate |
+| Serving | None | An endpoint or batch job with latency and cost targets |
+| Monitoring | None | Inputs, predictions, outcomes and system health |
+| Ownership | One person | A team that is on call |
+
+Google's guide notes that ML systems differ from ordinary software in testing (you also test data and model quality), deployment (you may deploy a whole training pipeline, not one model) and production (models decay as data changes). It adds a third letter to CI/CD: **continuous training** (CT), which means automatically retraining and serving models. The guide calls CT unique to ML systems.
+
+## Three maturity levels
+
+The same guide describes three levels by how much is automated. The levels are Google's framing, not a standard.
+
+| Level | What is automated | What it adds |
+|---|---|---|
+| 0: manual | Nothing. Notebooks, a hand-off of a model file, a new version a couple of times a year | Nothing, and no monitoring of predictions |
+| 1: pipeline automation | Training on fresh data (continuous training) | Data validation and model validation steps, triggers, a metadata store, modular containerised components, optionally a feature store |
+| 2: CI/CD automation | Building, testing and deploying the pipeline itself | Source control, test and build services, a model registry, an orchestrator, so new ideas reach production quickly |
+
+Level 1 is where most of the value sits for a team with a few models. It needs two gates that level 0 never had. A data-validation gate stops the pipeline when a new batch breaks the schema or has shifted. A model-validation gate stops a new model that is not better than the current one, or that is worse on some segment. The guide lists the triggers that start a run: on demand, on a schedule, when new data arrives, when performance degrades and when the data distribution changes.
+
+Level 2 matters when many pipelines change often. Microsoft publishes a five-level model that starts from "no MLOps" and ends at "full MLOps automated operations". The detail differs, but the ladder is the same: from manual to repeatable, then to automatic, then to watching itself.
+
+<Deep title="Where the pieces live on each cloud (as of 1 November 2026)">
+
+Each major cloud sells the pipeline and registry parts as managed services. Names change, so check the current docs.
+
+| Piece | AWS | Azure | Google Cloud |
+|---|---|---|---|
+| Platform | Amazon SageMaker AI | Azure Machine Learning | Gemini Enterprise Agent Platform (the successor to Vertex AI) |
+| Pipeline orchestration | Amazon SageMaker Pipelines | Azure Machine Learning pipelines | Pipelines (Kubeflow Pipelines or TFX definitions) |
+| Model registry | SageMaker Model Registry, with versions, approval status and lineage | Registered models in the workspace, and registries for sharing | Model Registry, with versions and aliases |
+
+Open tools fill the same slots anywhere: MLflow for tracking and a registry, DVC for data versions, and an orchestrator of your choice. Managed or not, the failures in the figure are the same.
+
+</Deep>
+
+## Pin what produced the model
+
+Versioning is the cheapest control in the figure and the one that saves most arguments. A model is the output of a function whose inputs are code, data, settings, environment and randomness. If you cannot name each input, you cannot rebuild the model, audit it or roll it back with confidence.
+
+| Pin this | How, for example |
+|---|---|
+| Code | A Git commit, and a note if the working tree was not clean |
+| Data | A hash of the exact snapshot. DVC keeps small pointer files in Git and the data in storage |
+| Settings | Parameters in a config file, logged with the run |
+| Environment | A lock file and a container image, with library versions recorded |
+| Randomness | Seeds for every random number generator you use |
+| Results | Metrics and the model file, linked to the run (an experiment tracker such as MLflow) |
+
+A minimum you can run today is a function that writes this record next to every model. It uses only the standard library, and a run record like this is what a tracker stores for you at scale.
+
+```python
+import hashlib, json, platform, subprocess, sys
+from importlib import metadata
+
+def sha256_of(path):
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+def git(*args):
+    return subprocess.run(["git", *args], capture_output=True, text=True).stdout.strip()
+
+def run_manifest(data_path, params, seed, packages):
+    return {
+        "code_commit": git("rev-parse", "HEAD"),
+        "uncommitted_changes": bool(git("status", "--porcelain")),
+        "data_sha256": sha256_of(data_path),
+        "params": params,
+        "seed": seed,
+        "python": sys.version.split()[0],
+        "platform": platform.platform(),
+        "packages": {p: metadata.version(p) for p in packages},
+    }
+
+print(json.dumps(run_manifest("train.csv", {"max_depth": 4}, 42, ["numpy"]), indent=2))
+```
+
+A model registry then stores model versions with lineage back to the run, and a movable alias such as "production" (MLflow documents aliases like `@champion` for this). Rolling back becomes moving the alias to the previous version. A **model card**, a short document of intended use, evaluation results and known limits, belongs next to each registered version.
+
+**Bit-for-bit reproduction is often out of reach.** PyTorch's documentation says completely reproducible results are not guaranteed across releases, commits or platforms, and may differ between CPU and GPU even with identical seeds. Deterministic settings can slow a run. So define "reproduced" as a tolerance. Train the same recipe with several seeds, see how far the metric moves (an example: 0.909 to 0.914), and call a rebuild good when it lands inside that spread.
+
+## Offline metric versus the real goal
+
+The metric on the held-out set is a proxy. A churn model can raise AUC and still lower revenue if the people it flags are the ones who would have stayed anyway. Write down, before training, the business measure the model exists to move and how you will see it. That decides which monitoring you need, and it is the subject of [Is the difference real?](../../ml/is-the-difference-real/) when the evidence arrives.
+
+## What to remember
+
+- In a real ML system the model is a small box. Most of the risk and effort is in data, features, serving and monitoring.
+- The stages are data, features, training, validation, release and monitoring, and monitoring feeds back into the start.
+- Google's levels run from manual (0), to automated training with data and model validation (1), to automated CI/CD of the pipeline (2). They are a framing, not a standard.
+- ML adds three things to software testing and delivery: tests on data, tests on model quality, and continuous training.
+- Pin code, data, settings, environment and seeds for every run, and register models with a link back to the run.
+- Aim for reproducibility within a measured tolerance, not bit-for-bit.
+
+Next: [Data pipelines and data quality](../data-pipelines-and-data-quality/) covers the first gate, validating data before you train on it. Later lessons cover serving, [testing and deployment](../testing-and-deploying-ml-models/) and [monitoring and drift](../monitoring-and-drift/).

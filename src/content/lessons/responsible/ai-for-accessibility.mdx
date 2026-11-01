@@ -1,0 +1,124 @@
+---
+title: "AI that helps people hear, see, read and speak"
+track: responsible
+level: basic
+order: 14
+summary: Captions, screen readers, image descriptions, voice banking and hearing aids. What AI already does well, where it still fails (accents, atypical speech, wrong alt text, sign languages), and why disabled people have to be part of the design.
+updated: 2026-11-01
+sources:
+  - label: "WHO: Deafness and hearing loss, fact sheet (3 March 2026)"
+    url: https://www.who.int/news-room/fact-sheets/detail/deafness-and-hearing-loss
+  - label: "W3C Web Accessibility Initiative: Captions/Subtitles (includes 'Automatic Captions are Not Sufficient')"
+    url: https://www.w3.org/WAI/media/av/captions/
+  - label: "W3C Web Accessibility Initiative: An alt Decision Tree (updated 13 May 2024)"
+    url: https://www.w3.org/WAI/tutorials/images/decision-tree/
+  - label: "Evaluating the Usability of Automatically Generated Captions for People who are Deaf or Hard of Hearing (Kafle and Huenerfauth, ASSETS 2017)"
+    url: https://arxiv.org/abs/1712.02033
+  - label: "Racial disparities in automated speech recognition (Koenecke et al., PNAS, 2020)"
+    url: https://pmc.ncbi.nlm.nih.gov/articles/PMC7149386/
+  - label: "Personalizing ASR for Dysarthric and Accented Speech with Limited Data (Shor et al., Interspeech 2019)"
+    url: https://arxiv.org/abs/1907.13511
+  - label: "Speech Accessibility Project, University of Illinois Urbana-Champaign (read 1 November 2026)"
+    url: https://speechaccessibilityproject.beckman.illinois.edu/
+  - label: "Understanding Blind People's Experiences with Computer-Generated Captions of Social Media Images (MacLeod, Bennett, Morris and Cutrell, CHI 2017)"
+    url: https://cs.stanford.edu/~merrie/papers/captions_chi2017.pdf
+  - label: "Captioning Images Taken by People Who Are Blind (Gurari et al., ECCV 2020)"
+    url: https://arxiv.org/abs/2002.08565
+  - label: "WebAIM: The WebAIM Million, 2026 report on the accessibility of the top 1,000,000 home pages"
+    url: https://webaim.org/projects/million/
+  - label: "WFD and WASLI Issue Statement on Signing Avatars (14 March 2018)"
+    url: https://wfdeaf.org/wfd-wasli-issue-statement-signing-avatars/
+  - label: "WFD and WASLI Statement on Use of Signing Avatars, full text (updated 14 April 2018)"
+    url: https://wasli.org/wp-content/uploads/2023/07/WFD-and-WASLI-Statement-on-Avatar-FINAL-14032018-Updated-14042018-1.pdf
+  - label: "Sign Language Recognition, Generation, and Translation: An Interdisciplinary Perspective (Bragg et al., ASSETS 2019)"
+    url: https://arxiv.org/abs/1908.08597
+  - label: "Apple Support: Create a Personal Voice on iPhone, iPad, or Mac (read 1 November 2026)"
+    url: https://support.apple.com/en-us/104993
+  - label: "W3C: Making Content Usable for People with Cognitive and Learning Disabilities"
+    url: https://www.w3.org/TR/coga-usable/
+  - label: "United Nations Audiovisual Library of International Law: Convention on the Rights of Persons with Disabilities (Stein and Lord, 2023)"
+    url: https://legal.un.org/avl/pdf/ha/crpd/crpd_e.pdf
+  - label: "NIDCD (US National Institutes of Health): Hearing aids"
+    url: https://www.nidcd.nih.gov/health/hearing-aids
+---
+
+import CaptionLab from '../../../components/viz/CaptionLab.tsx';
+import AltTextRater from '../../../components/viz/AltTextRater.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+For many people, AI is a convenience. For others it decides whether they can follow a lesson, read a web page or talk to a friend. The World Health Organization says over 5% of the world's population, 430 million people, need rehabilitation for disabling hearing loss, and projects over 700 million by 2050 (fact sheet, 3 March 2026). People who are blind, have dyslexia or have a speech disability have their own needs, covered below.
+
+This lesson covers what AI does for them, where it falls short, and who should be in the room when it is designed. It builds on [AI that sees and hears](../../start/ai-that-sees-and-hears/).
+
+## Hearing: captions from speech recognition
+
+**Captions** are a text version of the speech and the other sounds needed to follow a video, shown in time with it. The W3C Web Accessibility Initiative notes that live captions are usually made by professional real-time captioners. Speech recognition has made a cheaper option possible: the computer writes the captions. That helps most when nothing else is available, and the WHO says people who are hard of hearing can benefit from captioning alongside hearing aids and other devices.
+
+The W3C is blunt about the limit. Automatic captions "do not meet user needs or accessibility requirements, unless they are confirmed to be fully accurate", and usually need significant editing. Its example shows why:
+
+- Spoken: "Broil on high for 4 to 5 minutes. You should not preheat the oven."
+- Automatic caption: "Broil on high for 45 minutes. You should know to preheat the oven."
+
+Two small slips, and the instruction is now dangerous. A **word error rate** (WER) counts such slips, as in [measuring audio quality](../../audio/measuring-audio-quality/). Try the lab below. It uses a made-up school announcement and five made-up captions.
+
+<CaptionLab client:visible />
+
+Kafle and Huenerfauth (2017) put the same worry to a test. With 30 deaf and hard-of-hearing participants, they compared pairs of automatic captions that had identical WER. The participants preferred the captions that a measure weighting errors by how much they hurt understanding preferred. The authors note that WER has been found to correlate poorly with how people perform on many tasks. So a caption needs checking for the words that carry the meaning, not only a good average.
+
+<Deep title="Why accuracy is not the same for everyone">
+
+Koenecke and colleagues (PNAS, 2020) tested five commercial speech recognisers on interviews with 42 white and 73 Black speakers in the United States. The average WER was 0.35 for Black speakers and 0.19 for white speakers. The systems tested are from 2019 and have changed since, but the lesson holds: test on the people who will use the product, and report results by group.
+
+</Deep>
+
+### Hearing aids
+
+A hearing aid has a microphone, an amplifier and a speaker. The US National Institute on Deafness and Other Communication Disorders says it "does not completely separate the sounds you want to hear from the ones you do not want to hear". Modern devices use signal processing and, in some products, neural networks to turn down noise and keep speech. [Noise suppression and hearing devices](../../audio/noise-suppression-and-hearing-devices/) shows how, and how much delay a wearer will tolerate.
+
+## Seeing: screen readers and image descriptions
+
+A **screen reader** reads a page aloud, or sends it to a braille display. It can only read text, so a picture needs **alt text**: a short written description in the page's code. The W3C's alt decision tree asks what the picture does on this page. An image that adds meaning needs a short description of that meaning. A complex chart needs its information on the page, in the alt text or nearby. A purely decorative image gets an empty alt attribute, so the screen reader skips it.
+
+Many pages do not follow that. WebAIM's 2026 survey of one million home pages found 16.2% of images had no alt text, and 10.8% of those with alt text had questionable or repetitive text, such as "image", "graphic" or a file name. AI can draft descriptions for the rest, which is useful and risky. Try judging some.
+
+<AltTextRater client:visible />
+
+Two studies show the risk and the need. MacLeod and colleagues (CHI 2017) found that blind and visually impaired people placed a lot of trust in automatically generated captions, filling in details to make a wrong caption fit the post. In a second study with 100 participants, captions that emphasised the probability of error, rather than correctness, led people to blame the caption for a mismatch rather than assume they were missing details. Gurari and colleagues (2020) built a dataset of over 39,000 photos taken by blind people, each with five captions, because existing datasets did not represent that real use.
+
+## Reading and writing
+
+Text-to-speech, summaries and plain-language rewrites can help people with dyslexia, learning disabilities, or a second language. The W3C's guidance on cognitive and learning disabilities lists the needs: clear words, short sentences, a summary of long documents, and text-to-speech with highlighting so the reader can follow along. An AI tool can produce a first draft of each. A caution that is this lesson's own, not from those sources: simplifying text can change the meaning, so the person responsible for the page must check it.
+
+## Speaking: voice banking and atypical speech
+
+A **voice bank** is a personal synthetic voice built from recordings, for people who use a device to speak. Apple's Personal Voice, for example, asks you to read a series of sentences aloud and then processes them on the device; the voice can be used with Live Speech, Read and Speak, VoiceOver and other apps (Apple support page, read 1 November 2026). Check where the recordings go before you use any such tool, which the lesson on [your private life](../ai-and-your-private-life/) explains for chatbots.
+
+Speech recognisers are trained mostly on typical speech. Shor and colleagues (2019, Google researchers) personalised a model for people with ALS and for accented speech. Relative to the unpersonalised model, WER fell 62% for ALS. The absolute WER on a test of message-bank phrases was 10% for mild and 20% for more serious dysarthria, and 71% of the improvement came from the first five minutes of training data. This was a small research study, not a product guarantee.
+
+The Speech Accessibility Project at the University of Illinois Urbana-Champaign is collecting speech recordings from people whose speech is affected by conditions such as ALS, Parkinson's disease, cerebral palsy, Down syndrome, stroke, stuttering or hearing loss. Its page says that about 2,000 participants had submitted recordings by the end of September 2025, and that Microsoft announced accuracy gains of 18% to 60% using the data. That figure is a claim on the project's page, and I did not check it against Microsoft's own report.
+
+## Sign languages: a caution
+
+Systems that turn text into a signing avatar, or signing on video into text, are an active research area. The World Federation of the Deaf and the World Association of Sign Language Interpreters said in 2018 that signed languages are fully fledged languages, so an exact word-to-sign translation is not possible. They cautioned against avatars as a replacement for human signers, especially for live, complex or important information such as news and emergency announcements. They accepted avatars for pre-recorded, static information, such as where to check in at a hotel, if deaf people advised on the signed sentences. Bragg and colleagues (2019), reporting a workshop of experts, wrote that Deaf community involvement is essential at every level of this work. The WFD statement is from 2018, so check whether it has been updated.
+
+## Design with disabled people
+
+The disability movement's slogan is "Nothing about us without us". The UN Convention on the Rights of Persons with Disabilities turns it into a duty: Article 4(3) requires states to consult with and involve persons with disabilities in developing laws and policies, as a UN legal library note on the Convention explains. For a team building a product, it means:
+
+- Pay disabled people to help design and test, from the start, not after launch.
+- Test on the real conditions: accents, speech differences, noisy rooms, old phones.
+- Offer a human option: a captioner, an interpreter, a person who answers the phone.
+- Say honestly how accurate the tool is, and show uncertainty so people do not over-trust it.
+- Keep recordings private and give people control over their data.
+
+<Callout title="What to remember" kind="note">
+- AI captions, descriptions and voices help most when no human option is available, and are not a replacement where accuracy matters.
+- A single accuracy number hides which words are wrong. Check the words that carry the meaning.
+- Accuracy differs by accent, speech and photo type. Test with the people who will use it.
+- Alt text should say what the picture does on this page, and be empty for decoration.
+- Signing avatars and similar tools should be led by deaf signers.
+- Nothing about us without us: involve disabled people in design and testing.
+</Callout>
+
+Next: [Noise suppression and hearing devices](../../audio/noise-suppression-and-hearing-devices/) opens up the AI inside a hearing aid.

@@ -1,0 +1,423 @@
+/* Styles for the interactive components in the wave 4 "build-a" lesson batch. Keep every class under this batch's own prefix (wla-). */
+
+/* ---------- shared bits ---------- */
+
+.wla-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+.wla-label {
+  min-width: 5.4rem;
+  font-size: 0.85rem;
+  font-weight: 650;
+  color: var(--ink-3);
+}
+.viz .wla-chip {
+  min-height: 40px;
+  padding: 0.3rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font: 600 0.9rem var(--font-display);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.wla-chip:hover {
+  border-color: var(--signal);
+}
+.viz .wla-chip[aria-pressed='true'] {
+  background: var(--signal);
+  border-color: var(--signal);
+  color: var(--on-signal);
+}
+.wla-chip:focus-visible,
+.wla-cand:focus-visible,
+.wla.viz .btn:focus-visible,
+.wla-schema summary:focus-visible,
+.wla.viz input:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.viz.wla .btn {
+  min-height: 44px;
+}
+.wla-note {
+  margin: 0.3rem 0 0.8rem;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+.wla-cap {
+  margin: 0.2rem 0 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 650;
+  line-height: 1.35;
+  color: var(--ink-3);
+}
+.wla-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.8rem 0 0.4rem;
+}
+.wla-hint {
+  margin: 0.4rem 0 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--ink-3);
+}
+.wla-status {
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid var(--signal);
+  background: var(--signal-wash);
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+.wla-status.is-good {
+  border-left-color: var(--ok);
+  background: var(--tint-mint);
+  color: var(--ink);
+}
+.wla-status.is-bad {
+  border-left-color: var(--warn);
+  background: var(--tint-pink);
+  color: var(--ink);
+}
+.lesson-body .prose .viz table.wla-table {
+  display: table;
+  overflow: visible;
+  background: none;
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+  font-variant-numeric: tabular-nums;
+}
+.lesson-body .prose .viz .wla-table :is(th, td) {
+  min-width: 0;
+  padding: 0.35rem 0.4rem;
+  border-bottom: 1px solid var(--line-soft);
+  text-align: left;
+  vertical-align: top;
+}
+.wla-table thead th {
+  font-size: 0.8rem;
+  color: var(--ink-3);
+}
+.wla-table tbody th {
+  font-weight: 650;
+  color: var(--ink);
+}
+
+/* ---------- constrained decoder ---------- */
+
+.wla-schema {
+  margin: 0 0 0.8rem;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+}
+.wla-schema summary {
+  padding: 0.55rem 0.8rem;
+  min-height: 40px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.wla-schema pre {
+  margin: 0;
+  padding: 0 0.8rem 0.7rem;
+  overflow-x: auto;
+  font: 0.82rem/1.5 var(--font-mono);
+  color: var(--ink-2);
+}
+.wla-out {
+  margin: 0.4rem 0 1rem;
+}
+.wla-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  min-height: 2.2rem;
+  align-items: center;
+}
+.wla-empty {
+  font-size: 0.9rem;
+  color: var(--ink-3);
+}
+.wla-tokchip {
+  padding: 0.15rem 0.45rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--tint-sky);
+  color: var(--ink);
+  font: 600 0.88rem var(--font-mono);
+  white-space: pre;
+}
+.wla-tokchip:nth-child(even) {
+  background: var(--tint-lilac);
+}
+.wla-tokchip.is-end {
+  background: var(--surface);
+  border-style: dashed;
+}
+.viz .wla-cands {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.viz .wla-cands li {
+  margin: 0;
+  padding: 0;
+}
+.viz .wla-cands li::marker {
+  content: none;
+}
+.viz .wla-cand {
+  display: grid;
+  grid-template-columns: 6.4rem 1fr;
+  grid-template-areas: 'tok bars' 'nums nums';
+  gap: 0.2rem 0.6rem;
+  align-items: center;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+.wla-cand:hover {
+  border-color: var(--signal);
+}
+.viz .wla-cand.is-blocked {
+  border-style: dashed;
+  background: transparent;
+  color: var(--ink-3);
+  cursor: not-allowed;
+}
+.wla-cand.is-blocked:hover {
+  border-color: var(--line);
+}
+.viz .wla-tok {
+  grid-area: tok;
+  padding: 0;
+  background: none;
+  border: 0;
+  font: 700 0.92rem var(--font-mono);
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.wla-cand.is-blocked .wla-tok {
+  text-decoration: line-through;
+}
+.wla-bars {
+  grid-area: bars;
+  display: grid;
+  gap: 3px;
+}
+.wla-bar {
+  display: block;
+  height: 7px;
+  border-radius: 4px;
+  min-width: 2px;
+}
+.wla-bar-raw {
+  background: var(--ink-3);
+  opacity: 0.55;
+}
+.wla-bar-after {
+  background: var(--signal);
+}
+.wla-nums {
+  grid-area: nums;
+  font-size: 0.85rem;
+  line-height: 1.35;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.wla-nums b {
+  color: var(--ink);
+}
+.wla-cand.is-blocked .wla-nums b {
+  color: var(--warn);
+}
+.wla-sum {
+  margin-top: 1.1rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--line-soft);
+}
+
+/* ---------- query lab ---------- */
+
+.wla-ask {
+  margin: 0.3rem 0 0.9rem;
+}
+.wla-input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--ink);
+  font: 500 16px var(--font-body);
+}
+.viz .wla-chat {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0 0 0.4rem;
+  padding: 0;
+  list-style: none;
+}
+.viz .wla-chat li {
+  margin: 0;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: var(--ink-2);
+}
+.viz .wla-chat li::marker {
+  content: none;
+}
+.wla-who {
+  display: inline-block;
+  margin-right: 0.3rem;
+  font: 700 0.72rem var(--font-display);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.wla-q {
+  margin: 0;
+  padding: 0.5rem 0.7rem;
+  border: 1.5px solid var(--signal);
+  border-radius: var(--r-sm);
+  background: var(--signal-wash);
+  font: 600 1rem/1.4 var(--font-display);
+  color: var(--ink);
+}
+.wla-chip[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.wla-sent {
+  margin: 0.6rem 0 0.8rem;
+}
+.viz .wla-queries {
+  margin: 0;
+  padding-left: 1.3rem;
+  font: 0.86rem/1.5 var(--font-mono);
+  color: var(--ink-2);
+}
+.viz .wla-queries li {
+  margin: 0.1rem 0;
+  overflow-wrap: anywhere;
+}
+.viz .wla-hits {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: hit;
+}
+.viz .wla-hits li {
+  position: relative;
+  display: block;
+  margin: 0;
+  padding: 0.45rem 0.7rem 0.5rem 2rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  counter-increment: hit;
+}
+.viz .wla-hits li::marker {
+  content: none;
+}
+.viz .wla-hits li::before {
+  content: counter(hit);
+  position: absolute;
+  left: 0.6rem;
+  top: 0.45rem;
+  font: 700 0.85rem var(--font-mono);
+  color: var(--ink-3);
+}
+.viz .wla-hits li.is-right {
+  border-color: var(--ok);
+  background: var(--tint-mint);
+}
+.wla-hit-t {
+  font: 700 0.92rem var(--font-display);
+  color: var(--ink);
+}
+.wla-badge {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0 0.45rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font: 600 0.75rem var(--font-display);
+  color: var(--ink-3);
+}
+.wla-badge.is-right {
+  border-color: var(--ok);
+  color: var(--ink);
+}
+.wla-hit-x {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--ink-2);
+}
+.lesson-body .prose .viz .wla-grid :is(th, td) {
+  padding: 0.3rem 0.25rem;
+  text-align: center;
+}
+.lesson-body .prose .viz .wla-grid :is(th, td):first-child {
+  width: 4.2rem;
+  text-align: left;
+  font-size: 0.78rem;
+  line-height: 1.25;
+}
+.lesson-body .prose .viz .wla-grid thead th {
+  font-size: 0.72rem;
+  letter-spacing: -0.02em;
+  padding-inline: 0;
+}
+.wla-cell.is-full {
+  background: var(--tint-mint);
+}
+.wla-cell.is-zero {
+  background: var(--tint-pink);
+}
+.wla-cell.is-here {
+  outline: 2px solid var(--signal);
+  outline-offset: -2px;
+  font-weight: 800;
+}
+.wla-mean td,
+.wla-mean th {
+  border-top: 1.5px solid var(--line);
+  font-weight: 700;
+}
+@media (min-width: 561px) {
+  .lesson-body .prose .viz .wla-grid :is(th, td):first-child {
+    width: 9rem;
+    font-size: 0.88rem;
+  }
+}

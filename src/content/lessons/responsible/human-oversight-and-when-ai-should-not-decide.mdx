@@ -1,0 +1,150 @@
+---
+title: "Human oversight, and when AI should not decide"
+track: responsible
+level: intermediate
+order: 10
+summary: Why "a person checks it" is not the same as oversight, what automation bias and alert fatigue do to reviewers, three tests for decisions that should not be delegated, design patterns that make review real, and what the EU AI Act and GDPR say about human oversight. A simulator lets you tune a review policy and see missed errors against workload. Not legal advice.
+updated: 2026-11-01
+sources:
+  - label: "Parasuraman and Manzey (2010), Complacency and bias in human use of automation: an attentional integration (Human Factors; abstract on PubMed)"
+    url: https://pubmed.ncbi.nlm.nih.gov/21077562/
+  - label: "Goddard, Roudsari and Wyatt (2012), Automation bias: a systematic review of frequency, effect mediators, and mitigators (JAMIA)"
+    url: https://pmc.ncbi.nlm.nih.gov/articles/PMC3240751/
+  - label: "Dratsch and others (2023), Automation Bias in Mammography: The Impact of Artificial Intelligence BI-RADS Suggestions on Reader Performance (Radiology; abstract on PubMed)"
+    url: https://pubmed.ncbi.nlm.nih.gov/37129490/
+  - label: "Ancker and others (2017), Effects of workload, work complexity, and repeated alerts on alert fatigue in a clinical decision support system (BMC Medical Informatics and Decision Making)"
+    url: https://pmc.ncbi.nlm.nih.gov/articles/PMC5387195/
+  - label: "Buçinca, Malaya and Gajos (2021), To Trust or to Think: Cognitive Forcing Functions Can Reduce Overreliance on AI in AI-assisted Decision-making"
+    url: https://arxiv.org/abs/2102.09692
+  - label: "Green (2022), The Flaws of Policies Requiring Human Oversight of Government Algorithms"
+    url: https://arxiv.org/abs/2109.05067
+  - label: "Guo and others (2017), On Calibration of Modern Neural Networks"
+    url: https://arxiv.org/abs/1706.04599
+  - label: "EU AI Act Article 14: human oversight (AI Act Service Desk, read 1 November 2026)"
+    url: https://ai-act-service-desk.ec.europa.eu/en/ai-act/article-14
+  - label: "EU AI Act Article 26: obligations of deployers of high-risk AI systems (AI Act Service Desk, read 1 November 2026)"
+    url: https://ai-act-service-desk.ec.europa.eu/en/ai-act/article-26
+  - label: "AI Act Service Desk: timeline for the implementation of the EU AI Act (read 1 November 2026)"
+    url: https://ai-act-service-desk.ec.europa.eu/en/ai-act/timeline/timeline-implementation-eu-ai-act
+  - label: "European Commission: Are there restrictions on the use of automated decision-making? (GDPR, read 1 November 2026)"
+    url: https://commission.europa.eu/law/law-topic/data-protection/information-business-and-organisations/dealing-requests-individuals/are-there-restrictions-use-automated-decision-making_en
+  - label: "Court of Justice of the EU, press release 186/23 on Case C-634/21 SCHUFA Holding (Scoring), 7 December 2023"
+    url: https://curia.europa.eu/site/upload/docs/application/pdf/2023-12/cp230186en.pdf
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import OversightSim from '../../../components/viz/OversightSim.tsx';
+
+<Callout title="Not legal advice" kind="note">
+The legal parts of this lesson describe what the EU AI Act's text and the European Commission's own pages say, as read on 1 November 2026. They do not tell you what your product must do, and other countries differ. Ask a lawyer or your data-protection officer.
+</Callout>
+
+"A human checks every output" is the most common safety promise in AI products. It is also the one that fails most quietly: a person who clicks Approve two hundred times a day is a signature, not oversight. This lesson is about making the person real, and about decisions where even a real person should not be asked to catch the machine's mistakes.
+
+## Three words for where the person sits
+
+The terms are used loosely, so here is how this lesson uses them.
+
+- **In the loop:** the system proposes, and a person approves each decision before it takes effect. A refund agent that waits for a click is in the loop. See [agents and tool use](../../rag-agents/agents-and-tool-use/) for how the pause is built.
+- **On the loop:** the system acts, and a person watches, samples and can step in or stop it. A moderation queue that removes posts and gets audited afterwards is on the loop.
+- **Out of the loop:** nobody looks before or while it acts. That can be fine for a playlist and is not fine for a loan.
+
+Neither is automatically safer: in the loop needs time, evidence and freedom to say no, and on the loop needs somebody really watching.
+
+## Why a person in the loop is not enough
+
+**Automation bias** is the tendency to over-rely on automated advice, including accepting it when it is wrong. Parasuraman and Manzey reviewed the research and concluded that it produces both omission errors (missing something the machine did not flag) and commission errors (following a wrong flag), that it appears in novices and experts, and that it "cannot be prevented by training or instructions". Goddard and colleagues' systematic review of 74 studies found that workload, task complexity and time pressure make it worse, and that useful mitigators include emphasising user accountability, showing confidence levels, and giving information instead of a recommendation.
+
+A concrete case: Dratsch and colleagues asked 27 radiologists to read mammograms with a purported AI that suggested a category, and 12 of 40 test suggestions were wrong. Readers scored about 80% correct when the suggestion was right and far lower when it was wrong: 19.8%, 24.8% and 45.5% for inexperienced, moderately experienced and very experienced readers. It is one experiment with a staged AI, not a measurement of any product, but even the most experienced readers followed wrong advice.
+
+**Alert fatigue** is the other half. Ancker and colleagues studied 112 primary-care clinicians. About a quarter of drug alerts and a third of reminders were repeats for the same patient within a year. The chance of accepting a reminder fell by 30% for each additional reminder in an encounter, and by 10% for each five-point rise in the share of repeats. Raw workload alone did not predict acceptance, and new alerts did not decline steadily over time. Repetition and low-value alerts were the problem, so the fix is fewer and better alerts, not more willpower.
+
+Explanations do not rescue this on their own. Buçinca and colleagues found in an experiment with 199 people that adding explanations did not reduce over-reliance, while "cognitive forcing" designs did, such as making people decide first and see the AI's answer afterwards. The designs that worked best were also the ones people liked least. Green surveyed 41 policies requiring human oversight of government algorithms and argued that people often cannot perform the oversight asked of them, so the rule can give "a false sense of security". His answer is institutional: justify the algorithm and its oversight with evidence before use, with public review.
+
+## What meaningful review looks like
+
+A useful test: if the reviewer approves everything, does anything change? Meaningful review has these properties.
+
+1. **Time and load.** Few enough items, with enough minutes each, that attention is not spent. Limit approvals per hour and rotate people.
+2. **Evidence, not just a verdict.** Show the source, the inputs and what the system was unsure about. Where possible, show information before the recommendation.
+3. **A cheap, safe way to say no.** Rejecting should take one click and cost the reviewer nothing. If saying yes is the path of least resistance, yes is what you will get.
+4. **Authority and training.** The reviewer knows the limits of the system and can override and stop it.
+5. **A feedback measure.** Track reject and edit rates, time per item and later reversals. A reject rate near zero is a warning sign, not good news.
+6. **Limits in code.** Hard limits (amount caps, permission checks) that do not depend on anyone's attention.
+
+<Deep title="Calibration: when 'low confidence' means something">
+Confidence-based escalation sends only uncertain items to a person. That works only if the confidence score is informative: errors must really cluster among the low-confidence items. Guo and colleagues found that modern neural networks are often poorly calibrated, meaning their stated confidence does not match how often they are right, and that simple post-processing such as temperature scaling often helps. For language models, a verbalised or token-based confidence needs the same test. Measure on a labelled sample how the error rate varies with the score before you build a routing rule on it. The simulator below assumes a score that works, so its targeted policies look better than they would with a weak one.
+</Deep>
+
+## Three tests for decisions you should not hand over
+
+Ask three questions before delegating a decision, even with a person in the loop.
+
+- **What does a mistake cost, and can it be undone?** A wrong film recommendation costs a minute. A wrong loan refusal, benefit stop, diagnosis or hiring rejection can change a life, and some harms cannot be reversed. The higher and less reversible the cost, the more the person must decide with the system as an input.
+- **Can the affected person understand and challenge it?** If someone is refused something, they need to know a decision was made, on what, and how to contest it. GDPR Article 22, as the Commission describes it, says people should not be subject to decisions based solely on automated processing that have legal or similarly significant effects, with limited exceptions, and that organisations must arrange human intervention and let people express their view and contest the decision. If you cannot offer a real appeal, do not automate the decision.
+- **Is there a reliable ground truth?** Fraud and spelling have eventual facts to check against. "Culture fit", "risk of reoffending" or "good essay" often do not, so there is nothing to measure the system or the reviewer against, and bias hides easily. Where the label is itself a human judgement, treat the model as one more opinion at most.
+
+Also ask whether a rule or a spreadsheet would do: see [when not to use an LLM](../../systems/when-not-to-use-an-llm/).
+
+A subtle case: in its SCHUFA judgment (C-634/21, 7 December 2023; the press release is what was read here) the Court of Justice of the EU held that a credit score must be regarded as an automated individual decision, in so far as the lender attributes to it a determining role. A person who nominally decides but follows the number may not remove the automation. Each setup depends on its facts.
+
+## Design patterns
+
+| Pattern | What it does | Watch out for |
+|---|---|---|
+| Confidence-based escalation | Only uncertain or high-impact items go to a person | A poorly calibrated score; people stop checking what is not sent |
+| Commit first | The reviewer records their own answer, then sees the AI's | Slower, and people rate it lower, so measure the gain |
+| Second reviewer | Two independent people for the highest stakes | Not independent if both see the same AI suggestion first |
+| Sampled audit | A random slice of everything, including unflagged items, is re-checked later | Needs a fixed budget and a place for findings to go |
+| Appeals and contestability | The affected person can ask for human reconsideration | Slow queues; the appeal must go to someone with authority |
+| Limits and stop | Approval caps, rate limits, a stop button | Do not make approval the only control |
+| Review the reviewers | Track reject rates and time per item | Targets that reward rejecting or approving distort behaviour |
+
+## Try it: the review desk
+
+The simulator plants errors in a batch of AI recommendations and lets you choose who looks at what. Every setting is illustrative, chosen to show interactions. It is not a measurement of any system and cannot predict yours.
+
+<OversightSim client:visible />
+
+With the defaults of 400 items, 8% wrong and 30% bias, the averages (computed by the lesson's code and checked in its tests) are:
+
+| Policy | Items reviewed | Hours | Chance of noticing | Errors caught (of 32) |
+|---|---|---|---|---|
+| Review everything | 400 | 10.0 | 25% | 8.1 |
+| Low-confidence only | 80 | 2.0 | 50% | 9.4 |
+| Low and medium | 280 | 7.0 | 25% | 7.6 |
+| Random 25% sample | 100 | 2.5 | 44% | 3.5 |
+
+In this toy model, reviewing everything catches fewer errors than reviewing the 80 riskiest items: an overloaded reviewer's attention drops, and the errors sit where the review goes. Cut the batch to 40 items and the order flips. Switch commit-first on and every policy improves. Nothing here says which policy to choose for your case. It says to measure your own error rates, reviewer behaviour and score quality.
+
+## What the EU AI Act says, at a high level
+
+As of 1 November 2026, the AI Act's Article 14 (as shown on the Commission's AI Act Service Desk) says high-risk AI systems must be designed so that people can effectively oversee them while in use, with the aim of preventing or minimising risks to health, safety or fundamental rights. Oversight measures must be "commensurate with the risks, level of autonomy and context of use". The people assigned oversight must be enabled, as appropriate and proportionate, to:
+
+- understand the system's capacities and limitations and monitor its operation, including anomalies;
+- stay aware of the tendency to rely too much on its output (the text names it **automation bias**);
+- interpret the output correctly;
+- decide not to use the system, or to disregard, override or reverse its output;
+- intervene or stop it through a "stop" button or similar procedure that brings it to a halt in a safe state.
+
+For certain remote biometric identification systems (Annex III point 1(a)), Article 14(5) adds that no action or decision may be taken on the basis of an identification unless it has been separately verified and confirmed by at least two competent people, with an exception for some law enforcement, migration, border and asylum uses. Article 26(2) tells deployers to assign human oversight to people with "the necessary competence, training and authority, as well as the necessary support". Those words describe the list above almost exactly: a rubber stamp fails them.
+
+On timing, the Service Desk timeline, which says it reflects the Digital Omnibus on AI amendments, gives 2 December 2027 for the rules for high-risk systems in Annex III and 2 August 2028 for high-risk AI embedded in regulated products. Check the current dates before you plan: they have already moved once. See [the EU AI Act for engineers](../../evals/eu-ai-act-for-engineers/) for the wider picture. Whether a system is high-risk is a question for your lawyer.
+
+See also [fairness](../fairness-for-builders/) and, for the beginner version, [using AI without getting burned](../../start/using-ai-without-getting-burned/).
+
+## What I could not check
+
+The SCHUFA point rests on the Court's press release, not the full judgment. Parasuraman and Manzey's paper is behind a paywall, so only its abstract was read. No study tests the simulator's settings.
+
+## What to remember
+
+- "Human in the loop" names a position, not a safeguard. It protects only if the person has time, evidence, authority and a cheap way to say no.
+- Automation bias affects experts as well as novices, and training alone does not remove it. Design the task so people think before they see the answer.
+- Repeated, low-value alerts wear reviewers down. Reduce them before you add reviewers.
+- Do not delegate decisions that are high-stakes, hard to reverse, impossible to contest, or lacking a reliable ground truth.
+- Measure the reviewers: reject rates, time per item and later reversals tell you whether oversight is real.
+- Where the EU AI Act's high-risk rules apply, Article 14 asks for oversight in this practical sense. Legal scope is for your lawyer.
+
+Next: [Where the data comes from](../where-the-data-comes-from/), on what AI is trained on, and who has a say in that.

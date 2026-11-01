@@ -1,0 +1,511 @@
+/* Styles for the interactive components in the wave 3 "mlops-a" lesson batch. Keep every class under this batch's own prefix. */
+
+/* ---------- Lifecycle map: where does the failure start? (mo1-map) ---------- */
+
+.mo1-map .mo1-dots {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0 0 0.9rem;
+  padding: 0;
+}
+.mo1-map .mo1-dots li {
+  margin: 0;
+}
+.viz .mo1-dot {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.viz .mo1-dot[aria-current='step'] {
+  border-color: var(--signal);
+  background: var(--signal-wash);
+  color: var(--signal-ink);
+  box-shadow: 0 0 0 2px var(--signal);
+}
+.viz .mo1-dot.is-correct {
+  border-color: var(--ok);
+}
+.viz .mo1-dot.is-close {
+  border-color: var(--cost);
+}
+.viz .mo1-dot.is-wrong {
+  border-color: var(--warn);
+}
+.viz .mo1-dot:focus-visible,
+.viz .mo1-stage:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.mo1-case {
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--tint-sky);
+}
+.mo1-case-title {
+  margin: 0;
+  font: 650 1.02rem var(--font-display);
+}
+.mo1-story {
+  margin: 0.4rem 0 0;
+  font-size: 0.97rem;
+  line-height: 1.5;
+}
+.mo1-ask {
+  margin: 0.6rem 0 0;
+  font-weight: 650;
+}
+.mo1-map .mo1-stages {
+  list-style: none;
+  margin: 0.8rem 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.5rem;
+}
+.mo1-map .mo1-stages li {
+  margin: 0;
+}
+.viz .mo1-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 52px;
+  padding: 0.5rem 0.7rem;
+  text-align: left;
+  font-size: 0.95rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  cursor: pointer;
+}
+.viz .mo1-stage:hover:not([disabled]) {
+  border-color: var(--signal);
+}
+.viz .mo1-stage[disabled] {
+  opacity: 0.55;
+  cursor: default;
+}
+.viz .mo1-stage.is-picked.is-correct,
+.viz .mo1-stage.is-home {
+  border-color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 14%, var(--surface));
+}
+.viz .mo1-stage.is-picked.is-close {
+  border-color: var(--cost);
+  background: var(--cost-wash);
+}
+.viz .mo1-stage.is-picked.is-wrong {
+  border-color: var(--warn);
+  background: color-mix(in srgb, var(--warn) 12%, var(--surface));
+}
+.mo1-stage-n {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.mo1-stage-label {
+  flex: 1;
+  font-weight: 600;
+}
+.mo1-pin {
+  flex: none;
+  padding: 0.1rem 0.45rem;
+  border-radius: 99px;
+  background: var(--ok);
+  color: var(--surface);
+  font-size: 0.76rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.mo1-result {
+  margin-top: 0.8rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  min-height: 3.2rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+.mo1-result p {
+  margin: 0.35rem 0 0;
+}
+.mo1-result p:first-child {
+  margin-top: 0;
+}
+.mo1-hint {
+  color: var(--ink-3);
+}
+.mo1-verdict.is-correct b {
+  color: var(--ok);
+}
+.mo1-verdict.is-close b {
+  color: var(--cost);
+}
+.mo1-verdict.is-wrong b {
+  color: var(--warn);
+}
+.mo1-tag {
+  padding: 0.05rem 0.45rem;
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.mo1-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+}
+.viz .mo1-nav .btn,
+.viz .mo1-summary .btn {
+  min-height: 44px;
+}
+.mo1-score {
+  flex: 1 1 200px;
+  font-size: 0.88rem;
+  color: var(--ink-2);
+}
+.mo1-summary {
+  margin-top: 1rem;
+}
+.mo1-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  margin-bottom: 0.8rem;
+}
+.mo1-table th,
+.mo1-table td {
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid var(--line-soft);
+  text-align: left;
+  vertical-align: top;
+}
+.mo1-table th {
+  font-size: 0.82rem;
+  color: var(--ink-3);
+}
+@media (max-width: 560px) {
+  .mo1-sum thead {
+    display: none;
+  }
+  .mo1-sum,
+  .mo1-sum tbody,
+  .mo1-sum tr,
+  .mo1-sum td {
+    display: block;
+  }
+  .mo1-sum tr {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .mo1-sum td {
+    border: 0;
+    padding: 0.1rem 0;
+  }
+  .mo1-sum td:first-child {
+    font-weight: 650;
+  }
+  .mo1-sum td:nth-child(2)::before {
+    content: 'Starts at: ';
+    color: var(--ink-3);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .viz .mo1-stage,
+  .viz .mo1-dot {
+    transition: none;
+  }
+}
+
+/* ---------- Data-validation lab (mo1-val) ---------- */
+
+.mo1-val-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.viz .mo1-val-presets .btn,
+.viz .mo1-val-actions .btn {
+  min-height: 44px;
+}
+.viz .mo1-val-presets .btn[aria-pressed='true'] {
+  background: var(--signal-wash);
+  border-color: var(--signal);
+  color: var(--signal-ink);
+}
+.mo1-val-note {
+  margin: 0.5rem 0 0.8rem;
+  font-size: 0.92rem;
+  color: var(--ink-2);
+}
+.mo1-val-rules {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.6rem;
+}
+.mo1-val-rule {
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  min-width: 0;
+}
+.mo1-val-rule.is-off {
+  background: transparent;
+  border-style: dashed;
+}
+.mo1-val-rule.is-off .mo1-val-desc {
+  opacity: 0.6;
+}
+.mo1-val-check {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 44px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.mo1-val-check input {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  accent-color: var(--signal);
+}
+.mo1-val-check input:focus-visible,
+.mo1-val-slider input:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.mo1-val-slider {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--ink-2);
+}
+.mo1-val-slider b {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.mo1-val-slider input {
+  display: block;
+  width: 100%;
+  min-height: 32px;
+  margin-top: 0.2rem;
+}
+.mo1-val-desc {
+  margin: 0.3rem 0 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--ink-2);
+}
+.mo1-val-score {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.6rem;
+  margin: 1rem 0 0.6rem;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--tint-sky);
+  font-size: 1.02rem;
+}
+.mo1-val-score b {
+  font-size: 1.25rem;
+  font-variant-numeric: tabular-nums;
+}
+.mo1-val .mo1-val-days {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+  gap: 0.35rem;
+}
+.mo1-val .mo1-val-days li {
+  margin: 0;
+}
+.viz .mo1-val-day {
+  width: 100%;
+  min-height: 44px;
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.viz .mo1-val-day.is-caught {
+  background: color-mix(in srgb, var(--ok) 22%, var(--surface));
+  border-color: var(--ok);
+}
+.viz .mo1-val-day.is-missed {
+  background: var(--tint-sun);
+  border-color: var(--cost);
+  border-style: dashed;
+}
+.viz .mo1-val-day.is-false {
+  background: color-mix(in srgb, var(--warn) 20%, var(--surface));
+  border-color: var(--warn);
+}
+.viz .mo1-val-day[aria-pressed='true'] {
+  box-shadow: 0 0 0 2px var(--signal);
+}
+.viz .mo1-val-day:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.mo1-val-legend {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1rem;
+  margin: 0.6rem 0 0.9rem;
+  padding: 0;
+  font-size: 0.82rem;
+  color: var(--ink-2);
+}
+.viz .mo1-val-legend li {
+  margin: 0;
+}
+.mo1-val-legend i {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-right: 0.3rem;
+  vertical-align: -2px;
+  border: 1.5px solid var(--line);
+  border-radius: 4px;
+}
+.mo1-val-legend i.is-caught {
+  background: color-mix(in srgb, var(--ok) 22%, var(--surface));
+  border-color: var(--ok);
+}
+.mo1-val-legend i.is-missed {
+  background: var(--tint-sun);
+  border: 1.5px dashed var(--cost);
+}
+.mo1-val-legend i.is-false {
+  background: color-mix(in srgb, var(--warn) 20%, var(--surface));
+  border-color: var(--warn);
+}
+.mo1-val-story {
+  font-size: 0.82rem;
+  color: var(--ink-2);
+}
+.mo1-val-faults td.is-ok {
+  color: var(--ok);
+  font-weight: 600;
+}
+.mo1-val-faults td.is-bad {
+  color: var(--warn);
+  font-weight: 650;
+}
+.mo1-val-inspect {
+  margin-top: 1rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.mo1-val-h {
+  margin: 0 0 0.5rem;
+  font: 650 1rem var(--font-display);
+}
+.mo1-val-scroll {
+  overflow-x: auto;
+}
+.mo1-val-rows th,
+.mo1-val-rows td {
+  font-variant-numeric: tabular-nums;
+}
+.mo1-val-stats {
+  margin: 0.6rem 0 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 0.3rem 1rem;
+  font-size: 0.9rem;
+}
+.mo1-val-stats div {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.25rem 0.4rem;
+  border-radius: 6px;
+}
+.mo1-val-stats div.is-fail {
+  background: color-mix(in srgb, var(--warn) 16%, transparent);
+  outline: 1px solid var(--warn);
+}
+.mo1-val-stats dt {
+  color: var(--ink-2);
+}
+.mo1-val-stats dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.mo1-val-verdict {
+  margin: 0.6rem 0 0;
+  font-weight: 650;
+}
+.mo1-val-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+.mo1-val-seed {
+  flex: 1 1 220px;
+  font-size: 0.85rem;
+  color: var(--ink-2);
+}
+@media (max-width: 560px) {
+  .mo1-fl thead {
+    display: none;
+  }
+  .mo1-fl,
+  .mo1-fl tbody,
+  .mo1-fl tr,
+  .mo1-fl td {
+    display: block;
+  }
+  .mo1-fl tr {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .mo1-fl td {
+    border: 0;
+    padding: 0.1rem 0;
+  }
+  .mo1-fl td:nth-child(2)::before {
+    content: 'Days: ';
+    color: var(--ink-3);
+  }
+}
+
+@media (max-width: 560px) {
+  .mo1-val-rows th,
+  .mo1-val-rows td {
+    padding: 0.25rem 0.3rem;
+    font-size: 0.78rem;
+    overflow-wrap: anywhere;
+  }
+}

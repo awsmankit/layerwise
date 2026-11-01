@@ -1,0 +1,133 @@
+---
+title: "Real-time on a budget: blocks, deadlines, latency and power"
+track: edge
+level: intermediate
+order: 3
+summary: Why audio and sensor models are judged against a deadline and not an average speed. How block size, look-ahead and compute add up to delay, why the slowest block is the one that counts, what always-on inference costs in power, and how to measure all of it honestly.
+updated: 2026-11-01
+sources:
+  - label: "Real-time audio programming 101: time waits for nothing (Ross Bencina)"
+    url: http://www.rossbencina.com/code/real-time-audio-programming-101-time-waits-for-nothing
+  - label: "Tolerable hearing aid delays, V: open canal fittings (Stone et al., Ear and Hearing, 2008)"
+    url: https://pubmed.ncbi.nlm.nih.gov/18469715/
+  - label: "MDN: AudioWorkletProcessor.process() (audio is processed in blocks of 128 frames)"
+    url: https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletProcessor/process
+  - label: "LiteRT for Microcontrollers overview (Google AI Edge)"
+    url: https://developers.google.com/edge/litert/microcontrollers/overview
+  - label: "MLPerf Tiny Benchmark (Banbury et al., 2021)"
+    url: https://arxiv.org/abs/2106.07597
+  - label: "MLPerf Tiny repository and README (MLCommons)"
+    url: https://github.com/mlcommons/tiny
+  - label: "MLPerf Tiny inference rules, version 1.2 draft (MLCommons)"
+    url: https://github.com/mlcommons/tiny/blob/master/benchmark/MLPerfTiny_Rules.adoc
+  - label: "EEMBC EnergyRunner, the energy measurement framework used by MLPerf Tiny (EEMBC)"
+    url: https://github.com/eembc/energyrunner
+---
+
+import BlockBudget from '../../../components/viz/BlockBudget.tsx';
+import BenchmarkLies from '../../../components/viz/BenchmarkLies.tsx';
+import Deep from '../../../components/ui/Deep.astro';
+
+A web request is slow or fast, and an average is a fair way to describe it. A hearing device, a voice trigger or a motion sensor is different. It works on a stream, and a stream does not wait. This lesson covers what follows from that: deadlines, delay, power, and measuring them without fooling yourself. It builds on [from PyTorch to the chip](../from-pytorch-to-the-chip/). Benchmark details are as of 1 November 2026.
+
+## A deadline, not a speed
+
+Digital audio reaches your code in blocks of a fixed number of samples. A block of `B` samples at `R` samples a second lasts `B / R` seconds, and your code must have the output for that block ready before it has finished playing. Ross Bencina's article on real-time audio gives the arithmetic: 256 samples at 44,100 samples a second is a block every 5.8 ms, and "your callback would have to compute each and every buffer in less than 5.8 milliseconds". His cardinal rule is "If you don't know how long it will take, don't do it."
+
+Some blocks you will meet: 160 samples at 16 kHz (the 10 ms hop of the speech front end in the [spectrogram lesson](../../audio/spectrograms-and-the-mel-scale/)) is 10 ms; 32 samples at 16 kHz is 2 ms; and a browser AudioWorklet is called once per block of 128 frames, which MDN says is fixed, so 2.67 ms at 48 kHz.
+
+Miss the deadline once and the speaker has no samples: an audible click or dropout. So the number that matters is the slowest block you will ever meet, not the average. Sensor pipelines are the same: a 100 Hz accelerometer processed in 10 ms hops has a 10 ms deadline.
+
+## Where the delay comes from
+
+Delay and deadline are linked, because the block size sets both. For a simple double-buffered pipeline, the worst case from sound in to sound out has four parts:
+
+1. **Fill.** A sample waits for its block to fill: up to one block.
+2. **Slot.** The block is processed during the next block's time and played after it: one more block. Your compute must fit inside this slot.
+3. **Look-ahead.** A frame-based model with window `N` and hop `H` needs `N - H` samples more before its output is complete, and a non-causal model that waits for `k` future frames adds `k` hops. A causal model, which uses only the past, adds none of the second kind.
+4. **Everything else.** Converters, drivers, a wireless link.
+
+This is a simplified model; real systems buffer differently. Worked numbers from it:
+
+| Setup | Fill | Slot | Look-ahead | Total |
+|---|---|---|---|---|
+| 16 kHz, 32-sample blocks, 64-sample window | 2 ms | 2 ms | 2 ms | 6 ms |
+| 16 kHz, 160-sample blocks, 160-sample window | 10 ms | 10 ms | 0 | 20 ms |
+| 16 kHz, 160-sample blocks, 400-sample window | 10 ms | 10 ms | 15 ms | 35 ms |
+| Same, plus 2 look-ahead frames | 10 ms | 10 ms | 35 ms | 55 ms |
+| 48 kHz, 128-sample blocks | 2.67 ms | 2.67 ms | 0 | 5.33 ms |
+
+Whether 35 ms is fine or far too slow depends on the product. For captioning it is nothing. For sound that is played into the ear while the wearer also hears the room directly, delay matters: in one lab study of simulated open-canal hearing aids, listeners rated a delay of about 5 to 6 ms as just acceptable for the simulated hearing losses tested (Stone et al., 2008). That is one study of one kind of fitting. Other fittings and situations tolerate more, but it explains why this field works with blocks of a few samples and avoids look-ahead.
+
+<BlockBudget client:visible />
+
+Start with "Speech frames", which totals 35 ms. Shrink only the block to 32 samples and the total is 27 ms, because the 400-sample window still overhangs. Shrink the window to 64 as well and it falls to 6 ms. Meanwhile the deadline has fallen from 10 ms to 2 ms and the model's time per inference has not changed, so the deadline now sits close to it and any slow block overruns.
+
+## Compute must fit inside the slot
+
+The share of the processor a model uses is its time per inference divided by the block period. A 1.5 ms model in 10 ms blocks uses 15%. In 2 ms blocks it uses 75%. The model's time per inference did not change, because a model sees a whole window each time. Only how often it runs changed: 100 times a second became 500.
+
+Averages hide the real risk. Real chips have slow blocks, from an interrupt, a cache miss while fetching weights, a clock or voltage change, another task, or thermal throttling. A model that usually takes 1 ms but occasionally takes 4 ms is fine in a 10 ms block and fails in a 2 ms block, even though its average is the same. Rare is not safe at this rate: at 100 blocks a second, 0.1% of blocks missing is one glitch every 10 seconds. So real-time work looks at the 99th and 99.9th percentiles and the worst case, not the mean. (Edge or cloud inference said to budget for p99; for an audible deadline that is a minimum.)
+
+Four habits keep the slow tail short:
+
+- **Bound everything.** Bencina lists what must stay out of the audio callback: blocking calls such as locks, memory allocation, file and network access, because their time is not bounded. LiteRT for Microcontrollers is built to the same rule: its overview says the core runtime needs no operating system, no standard C or C++ library and no dynamic memory allocation.
+- **Plan memory ahead.** Reserve the activation arena once, at start-up, as the [small-device lesson](../inside-a-small-device/) describes.
+- **Carry state.** A streaming model keeps what it needs from earlier blocks (a recurrent state, or the last few frames of each convolution's input) so each block computes only the new samples.
+- **Test under load**, with the rest of the product running and at the worst temperature you support.
+
+## Power: the same loop, in milliwatts
+
+Power follows the rate of work. If one inference costs `E` microjoules and runs `R / B` times a second, the model draws `(R / B) x E` microwatts, on top of the idle power. Shrinking the block raises it directly.
+
+An example with made-up numbers: 100 inferences a second at 50 µJ each is 5 mW. Halve the block and it is 10 mW. On a battery holding 100 mWh, 5 mW lasts 20 hours and 10 mW lasts 10, from the model alone. The widget above runs the same sum.
+
+So a smaller hop buys lower delay at a cost in compute and energy, which is the central trade-off of real-time edge inference. Running slower can allow a lower voltage and so less energy per operation, while running fast and then sleeping can also win. Which is better depends on the chip, so measure. Sustained work also heats the chip, and a chip that gets hot slows itself down to protect itself. That is why a short test can flatter a model.
+
+## Measuring it honestly
+
+One benchmark number depends on choices that are easy to make without noticing. Try this with 600 invented run times: a slow start, a settled stretch, a later slowdown as the device heats.
+
+<BenchmarkLies client:visible />
+
+The quick test reports a figure far from what a user would get after a few minutes. Pick "Warmed up" and it is closer, but still short of the heat-soaked figure. A tail statistic shows what a mean hides. A sound method has these parts:
+
+- **Warm up, and say so.** Discard the first runs, because of lazy initialisation and cold caches, but report that you did.
+- **Run long enough to reach steady state**, including any thermal slowdown the product would meet.
+- **Report the distribution**: median, and the 99th percentile or worst case. Do not report only a mean.
+- **Record the conditions:** clock, power mode, temperature, software versions, other load.
+- **Time the whole path** you ship (features, model, decision logic), not only the model.
+- **Measure energy at the supply** over a long window with a power monitor, and divide by the inferences.
+- **Report accuracy next to speed.**
+
+### What MLPerf Tiny does
+
+MLPerf Tiny (Banbury et al., 2021) is the public benchmark for this class of device. As the paper describes version 0.5, it has four tasks: keyword spotting, visual wake words, image classification and anomaly detection. Each has a fixed dataset, reference model and quality target. For example, keyword spotting uses a depthwise-separable CNN on Speech Commands and must reach 90% top-1 accuracy. It measures latency, energy and accuracy. For latency, the runner performs five runs, each lasting at least 10 seconds and 10 iterations, and the score is the median of the five. Energy uses the same procedure and is reported in microjoules per inference. The paper's harness is built on EEMBC's EnergyRunner framework (the rules draft says that runner is being phased out in favour of an MLCommons one), and submitted results are reviewed by the other submitters and a review committee.
+
+It has two divisions. In the closed division everyone runs the same model and may only quantise it, with the supplied calibration data. In the open division the model and training can change, so results are not directly comparable, but each submission must say how it differs and the accuracy is still measured.
+
+To read a published result without being fooled, ask:
+
+- Is it closed or open division? Only closed results compare like with like.
+- Did it meet the accuracy target, and on the same test data?
+- What is excluded? In the paper's version 0.5, pre- and post-processing, which includes feature extraction, are outside the timed region, and the rules text I read says the same for version 1.2.
+- On which board, clock and runtime? A result tells you about that combination, not the chip alone.
+- Does it resemble your workload? The paper lists streaming inputs as a limitation: feeding a stream from a host computer adds transfer delays.
+
+As of 1 November 2026 the repository README lists a fifth benchmark, a larger image classifier, and the rules draft lists a streaming wake-word task judged by counts of false positives and false negatives, whose training README says it is in progress. I quote no results here; take numbers from the current results pages.
+
+<Deep title="The arithmetic, in one place">
+
+Period of a block: `B / R` seconds. Worst-case delay in the simple double-buffered model: `2B/R + (N - B)/R + kB/R + other`, where `N` is the window and `k` the look-ahead frames. Processor load: `t_inference / (B / R)`. Deadline-miss rate over `n` blocks: the number of blocks with `t_block > B / R`, divided by `n`. Average inference power in microwatts: `(R / B) x E_inference` with `E` in microjoules. Percentiles use the nearest-rank method here: the value at position `ceil(p x n)` of the sorted times. The functions are in `src/lib/realtime-budget.ts` and are covered by unit tests.
+
+</Deep>
+
+## What to remember
+
+- A block of `B` samples at `R` Hz is a deadline of `B / R`. Missing it is an audible glitch, so the slowest block matters, not the average.
+- Delay is roughly two blocks plus the algorithm's look-ahead plus fixed delays. Smaller blocks cut delay and raise compute load and power by the same factor.
+- Keep real-time code bounded: no blocking, no allocation, a fixed memory arena, state carried between blocks.
+- A model's cost per inference is set by the model and chip. Halving the hop doubles the number of inferences.
+- Benchmark with warm-up, steady state, percentiles, recorded conditions and measured energy. Read published results by division, accuracy target and what is excluded.
+
+Next: [a TinyML wake-word detector](../tinyml-wake-word-detector/).

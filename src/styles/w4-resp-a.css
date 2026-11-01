@@ -1,0 +1,372 @@
+/* Styles for the interactive components in the wave 4 "resp-a" lesson batch. Keep every class under this batch's own prefix (wra-). */
+
+/* ---------- shared bits ---------- */
+
+.wra-h {
+  margin: 1.3rem 0 0.4rem;
+  font: 600 1.02rem var(--font-display);
+  color: var(--ink);
+}
+.wra-note {
+  margin: 0 0 0.8rem;
+  font-size: 0.95rem;
+  color: var(--ink-2);
+  line-height: 1.5;
+}
+.wra-small {
+  margin: 0.35rem 0 0;
+  font-size: 0.88rem;
+  color: var(--ink-2);
+  line-height: 1.45;
+}
+.wra-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.wra-actions {
+  margin-top: 0.8rem;
+}
+.viz .wra-row .btn,
+.viz .wra-opts .btn {
+  min-height: 44px;
+}
+.viz .wra-row .btn[aria-pressed='true'],
+.viz .wra-opts .btn[aria-pressed='true'] {
+  background: var(--signal-wash);
+  border-color: var(--signal);
+  color: var(--signal-ink);
+}
+.viz .wra-row .btn:focus-visible,
+.viz .wra-opts .btn:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.wra-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin: 0.7rem 0 0;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: var(--ink);
+  cursor: pointer;
+  min-height: 44px;
+  align-items: center;
+}
+.wra-check input {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  accent-color: var(--signal);
+}
+.wra-check input:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.wra-result {
+  margin-top: 1rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+.wra-result p {
+  margin: 0;
+}
+.wra-result p + p {
+  margin-top: 0.35rem;
+}
+.wra-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin-top: 0.4rem;
+}
+.wra-scroll:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.wra-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.92rem;
+  font-variant-numeric: tabular-nums;
+}
+.wra-table th,
+.wra-table td {
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid var(--line-soft);
+  text-align: right;
+  white-space: nowrap;
+}
+.wra-table thead th {
+  background: var(--surface);
+  font-weight: 650;
+}
+.wra-table tbody th,
+.wra-table tfoot th {
+  text-align: left;
+  font-weight: 600;
+}
+.wra-table tfoot th,
+.wra-table tfoot td {
+  border-top: 2px solid var(--line);
+  border-bottom: 0;
+  font-weight: 700;
+}
+.wra-hidden td {
+  color: var(--ink-3);
+}
+@media (max-width: 480px) {
+  .wra-table th,
+  .wra-table td {
+    padding: 0.4rem 0.35rem;
+    font-size: 0.86rem;
+  }
+  .wra-work th,
+  .wra-work td {
+    white-space: normal;
+  }
+  .wra-work tbody th {
+    min-width: 5.5rem;
+  }
+}
+
+/* ---------- bars (Shapley values, permutation importance) ---------- */
+
+.wra-bars {
+  list-style: none;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+.wra-bars li {
+  display: grid;
+  grid-template-columns: minmax(7.5rem, 11rem) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.92rem;
+}
+.wra-bar-name {
+  color: var(--ink);
+  font-weight: 600;
+  line-height: 1.25;
+}
+.wra-bar-name small,
+.wra-bar-val small {
+  display: block;
+  font-weight: 400;
+  font-size: 0.78rem;
+  color: var(--ink-3);
+  line-height: 1.25;
+}
+.wra-bar-track {
+  position: relative;
+  display: block;
+  height: 18px;
+  border-radius: 4px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.wra-bars:not(.wra-bars-pos) .wra-bar-track::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  left: 50%;
+  border-left: 1px solid var(--ink-3);
+}
+.wra-bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 3px;
+}
+.wra-pos {
+  background: var(--signal);
+}
+.wra-neg {
+  background: var(--warn);
+}
+.wra-range {
+  position: absolute;
+  top: 6px;
+  height: 6px;
+  min-width: 2px;
+  background: var(--ink);
+  opacity: 0.55;
+  border-radius: 3px;
+}
+.wra-bar-val {
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+  color: var(--ink);
+  text-align: right;
+  min-width: 3.2rem;
+}
+@media (max-width: 480px) {
+  .wra-bars li {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.2rem 0.6rem;
+  }
+  .wra-bars li .wra-bar-track {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}
+
+/* ---------- model card builder ---------- */
+
+.wra-facts {
+  margin: 0.4rem 0 1rem;
+  padding: 0.6rem 0.9rem;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  background: var(--tint-sun);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+.wra-facts summary {
+  cursor: pointer;
+  font-weight: 650;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+}
+.wra-facts summary:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.wra-facts ul {
+  margin: 0.5rem 0 0.2rem;
+  padding-left: 1.2rem;
+}
+.wra-facts li {
+  margin: 0.25rem 0;
+}
+.wra-sec {
+  margin: 0.8rem 0 0;
+  padding: 0.6rem 0.9rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  min-width: 0;
+}
+.wra-sec legend {
+  padding: 0 0.4rem;
+  font: 600 1rem var(--font-display);
+  color: var(--ink);
+}
+.wra-sec.wra-complete {
+  background: var(--tint-mint);
+}
+.wra-sec.wra-partial,
+.wra-sec.wra-weak {
+  background: var(--tint-sun);
+}
+.wra-sec.wra-missing {
+  background: var(--tint-pink);
+}
+.wra-badge {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.05rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  font: 600 0.78rem var(--font-display);
+  color: var(--ink-2);
+}
+.wra-stmt {
+  min-width: 0;
+}
+.wra-why {
+  margin: 0.25rem 0 0 2rem;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  color: var(--ink-2);
+}
+.wra-why.wra-flag {
+  color: var(--ink);
+  border-left: 3px solid var(--warn);
+  padding-left: 0.6rem;
+}
+.wra-why.wra-miss {
+  margin-left: 0;
+  font-weight: 600;
+  color: var(--ink);
+}
+.wra-pre {
+  margin: 0.8rem 0 0;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink);
+  font: 0.85rem/1.5 var(--font-mono);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.wra-pre:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+
+/* ---------- incident triage ---------- */
+
+.wra-incident {
+  margin: 1rem 0 0;
+  padding: 0.2rem 0 0.9rem;
+  border-bottom: 1px solid var(--line-soft);
+}
+.wra-incident .wra-h {
+  margin-top: 0.6rem;
+}
+.wra-report {
+  margin: 0 0 0.6rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.wra-opts {
+  display: grid;
+  gap: 0.5rem;
+}
+.viz .wra-opts .btn {
+  text-align: left;
+  justify-content: flex-start;
+  height: auto;
+  white-space: normal;
+  line-height: 1.3;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+.wra-reveal {
+  margin-top: 0.6rem;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+.wra-reveal p {
+  margin: 0;
+}
+.wra-lines {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  font-variant-numeric: tabular-nums;
+}
+.wra-lines li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.2rem 0;
+  border-top: 1px solid var(--line-soft);
+}

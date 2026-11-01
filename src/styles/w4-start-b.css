@@ -1,0 +1,263 @@
+/* Styles for the interactive components in the wave 4 "start-b" lesson batch. Keep every class under this batch's own prefix (wsb-). */
+
+/* ---------- FeedBuilder ---------- */
+
+.wsb-lead {
+  margin: 0 0 0.9rem;
+  color: var(--ink-2);
+}
+.wsb-lead b {
+  color: var(--ink);
+}
+.wsb-signals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+.wsb-sig,
+.wsb-btn {
+  min-height: 44px;
+  padding: 0.4rem 0.85rem;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.wsb-sig.is-on,
+.wsb-btn.is-on {
+  background: var(--signal-wash);
+  border-color: var(--signal);
+  color: var(--signal-ink);
+}
+.wsb-sig.is-on::before {
+  content: '\2713\00a0';
+}
+.wsb-sig:focus-visible,
+.wsb-btn:focus-visible,
+.wsb-like:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.wsb-feed {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+.wsb-post {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: start;
+  gap: 0.6rem;
+  padding: 0.55rem 0.6rem;
+  border: 1px solid var(--line-soft);
+  border-left: 5px solid var(--ink-3);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  opacity: 0.72;
+}
+.wsb-post.is-top {
+  opacity: 1;
+  border-color: var(--line);
+  border-left-width: 5px;
+}
+.wsb-rank {
+  min-width: 1.5em;
+  font-weight: 700;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+  padding-top: 0.1rem;
+}
+.wsb-title {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.3rem 0.4rem;
+}
+.wsb-name {
+  font-weight: 650;
+  color: var(--ink);
+}
+.wsb-chip {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: capitalize;
+  padding: 0.05rem 0.45rem;
+  border-radius: 99px;
+  border: 1px solid var(--line);
+  color: var(--ink-2);
+  background: var(--tint-lilac);
+}
+.wsb-friend {
+  background: var(--tint-sun);
+}
+.wsb-ad {
+  background: var(--tint-sun);
+  color: var(--ink);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.wsb-why {
+  margin: 0.2rem 0 0;
+  font-size: 0.9rem;
+  color: var(--ink-2);
+  line-height: 1.35;
+}
+.wsb-why-k {
+  color: var(--ink-3);
+}
+.wsb-like {
+  min-width: 64px;
+  min-height: 44px;
+  padding: 0.3rem 0.6rem;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.wsb-like.is-liked {
+  background: var(--tint-pink);
+  border-color: var(--warn);
+}
+.wsb-t-football { border-left-color: var(--ok); }
+.wsb-t-gaming { border-left-color: var(--signal); }
+.wsb-t-baking { border-left-color: var(--warn); }
+.wsb-t-animals { border-left-color: #c28a00; }
+.wsb-t-space { border-left-color: #1f7fbf; }
+.wsb-t-music { border-left-color: #b13a8f; }
+.wsb-t-ad { border-left-color: var(--ink-3); border-style: dashed; border-left-style: solid; }
+.wsb-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+}
+.wsb-count {
+  margin: 0.8rem 0 0;
+  font-size: 0.98rem;
+  min-height: 3.2em;
+}
+@media (max-width: 420px) {
+  .wsb-post {
+    grid-template-columns: auto 1fr;
+  }
+  .wsb-like {
+    grid-column: 2;
+    justify-self: start;
+  }
+}
+
+/* ---------- MythFact ---------- */
+
+.wsb-mf-count {
+  margin: 0 0 0.5rem;
+  color: var(--ink-3);
+  font-size: 0.92rem;
+}
+.wsb-mf-card {
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+}
+.wsb-mf-statement {
+  margin: 0 0 1rem;
+  font-size: 1.15rem;
+  font-weight: 650;
+  line-height: 1.35;
+  color: var(--ink);
+}
+.wsb-mf-choices {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+.wsb-mf-choice {
+  min-height: 52px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--ink);
+  background: var(--surface);
+  border: 2px solid var(--line);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.wsb-mf-myth { background: var(--tint-pink); }
+.wsb-mf-fact { background: var(--tint-mint); }
+.wsb-mf-choice.is-picked {
+  border-color: var(--ink);
+  box-shadow: var(--hard);
+}
+.wsb-mf-choice:disabled:not(.is-picked) {
+  opacity: 0.55;
+  cursor: default;
+}
+.wsb-mf-choice:focus-visible,
+.wsb-mf-feedback a:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.wsb-mf-feedback {
+  min-height: 4.5em;
+  margin-top: 0.9rem;
+}
+.wsb-mf-feedback p {
+  margin: 0 0 0.5rem;
+}
+.wsb-mf-verdict.is-right { color: var(--ok); }
+.wsb-mf-verdict.is-miss { color: var(--warn); }
+.wsb-mf-src {
+  font-size: 0.9rem;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+.wsb-mf-next {
+  margin-top: 0.4rem;
+}
+.wsb-mf-next:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.wsb-mf-score {
+  margin: 0 0 0.3rem;
+  font-size: 1.2rem;
+}
+.wsb-mf-note {
+  margin: 0 0 0.8rem;
+  color: var(--ink-2);
+}
+.wsb-mf-recap {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+.wsb-mf-recap li {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--line-soft);
+  border-left: 5px solid var(--ink-3);
+  border-radius: var(--r-sm);
+  font-size: 0.95rem;
+}
+.wsb-mf-recap li.is-right { border-left-color: var(--ok); }
+.wsb-mf-recap li.is-miss { border-left-color: var(--warn); }
+.wsb-mf-tag {
+  font-weight: 700;
+  margin-right: 0.3rem;
+}

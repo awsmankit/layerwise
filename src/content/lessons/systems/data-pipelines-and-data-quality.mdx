@@ -1,0 +1,145 @@
+---
+title: "Data pipelines and data quality: validate before you train"
+track: systems
+level: intermediate
+order: 5
+summary: "The checks that stop bad data reaching a model (schema, range, distribution, volume), why thresholds trade missed faults against false alarms, leakage between pipelines, data contracts and lineage, and how to get labels you can trust, including LLM-assisted labelling."
+updated: 2026-11-01
+sources:
+  - label: "Data Validation for Machine Learning (Breck et al., SysML 2019)"
+    url: https://mlsys.org/Conferences/2019/doc/2019/167.pdf
+  - label: "Rules of Machine Learning: Best Practices for ML Engineering (Google), training-serving skew"
+    url: https://developers.google.com/machine-learning/guides/rules-of-ml
+  - label: "TensorFlow Data Validation (TFX guide)"
+    url: https://www.tensorflow.org/tfx/guide/tfdv
+  - label: "GX Core overview (Great Expectations documentation)"
+    url: https://docs.greatexpectations.io/docs/core/introduction/gx_overview
+  - label: "Open Data Contract Standard"
+    url: https://bitol-io.github.io/open-data-contract-standard/latest/
+  - label: "About OpenLineage"
+    url: https://openlineage.io/docs/
+  - label: "AWS Glue Data Quality (AWS documentation)"
+    url: https://docs.aws.amazon.com/glue/latest/dg/glue-data-quality.html
+  - label: "Data Quality in Microsoft Purview Unified Catalog (Microsoft Learn)"
+    url: https://learn.microsoft.com/en-us/purview/unified-catalog-data-quality
+  - label: "Auto data quality overview (Google Cloud, Knowledge Catalog)"
+    url: https://docs.cloud.google.com/dataplex/docs/data-quality-overview
+  - label: "Snorkel: Rapid Training Data Creation with Weak Supervision (Ratner et al., 2017)"
+    url: https://arxiv.org/abs/1711.10160
+  - label: "Confident Learning: Estimating Uncertainty in Dataset Labels (Northcutt et al.)"
+    url: https://arxiv.org/abs/1911.00068
+  - label: "ChatGPT Outperforms Crowd-Workers for Text-Annotation Tasks (Gilardi et al., 2023)"
+    url: https://arxiv.org/abs/2303.15056
+  - label: "Label Studio documentation"
+    url: https://labelstud.io/guide/
+  - label: "MLOps: Continuous delivery and automation pipelines in machine learning (Google Cloud Architecture Center)"
+    url: https://docs.cloud.google.com/architecture/mlops-continuous-delivery-and-automation-pipelines-in-machine-learning
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import ValidationLab from '../../../components/viz/ValidationLab.tsx';
+
+Breck and colleagues at Google describe an outage that began as a harmless refactoring. A change in the serving code made a lookup fail, and the failure value, -1, was written into one integer feature for a slice of the traffic. The model kept predicting, a little worse on that slice. Because served data becomes the next day's training data, the next model learned from the broken values. The training code saw nothing wrong, because -1 is a valid integer. Their point is that a model's accuracy is a poor fire alarm: aggregate metrics can look fine while a slice quietly suffers. Data needs its own checks, run before anything is trained.
+
+This lesson follows [From notebook to production](../from-notebook-to-production/), where validating data is the first gate of an automated pipeline. It covers the checks, their trade-offs, two pipeline traps, and labels, which are data too.
+
+## Try it first
+
+Below is a month of made-up order data with six faults planted on known days. Switch rules on, move their thresholds and watch which faults each setting catches and how many alarms it raises on the clean days. Tap any day to see its batch.
+
+<ValidationLab client:visible />
+
+## Four kinds of check
+
+| Check | What it looks at | Catches | Misses |
+|---|---|---|---|
+| Schema | Columns present, types, allowed categories | A renamed column, text in a number column, a new spelling | A valid-looking but wrong value |
+| Range | Values against allowed limits, with a tolerance | -1 in a count, pence for pounds | Anything inside the limits |
+| Distribution | A batch's statistics against a reference | A unit change, a slow drift, a shifted category mix | Faults that leave the statistics alone |
+| Volume and freshness | Row counts, newest timestamp | An outage, a stalled feed, a duplicated batch | Everything about the contents |
+
+No single kind is enough. In the lab's first random set, "Schema-style only" catches four of the six faults and lets the outage and the slow drift through. The drift is the instructive one: every individual value is plausible, and only the daily mean moves. The paper's authors make the same point from production: errors often reflect a bug in code and show up as structure in the data, such as one value pinned across a slice, so checks that look at columns and distributions find them where a model metric does not.
+
+A rule you have never seen fail may not work. Plant a fault on purpose, as the lab does, and confirm the check fires.
+
+## Thresholds trade misses against false alarms
+
+Every threshold is a choice. Press "Too loose" and the pipeline is silent while faults go through. Press "Too tight" and most ordinary days raise an alert. The paper's authors warn about the second case directly: on-call engineers tend to ignore alerts that are spammy or not actionable, which lets real errors through, so alerts need high precision and enough context to find the cause.
+
+Varying only the mean-amount rule, with the others at their defaults, over 30 random months of the lab's invented data (example numbers, reproduced by the lesson's unit tests):
+
+| Allowed distance of the daily mean | Average false alarm days in a month | Slow drift caught |
+|---|---|---|
+| 2 standard errors | about 2.3 | 30 of 30 months, on average 0.7 days after it starts |
+| 4 standard errors | about 0.1 | 30 of 30 months, on average 2.5 days in |
+| 10 standard errors | none | 3 of 30 months, in its last days |
+
+Use the lab's "different random weeks" button to see the same effect. The first row is noisy, the last is blind, and the right setting sits between, which depends on how costly a miss is compared with an interruption.
+
+**Distance, not significance.** A classic significance test asks whether two distributions differ at all. With enough rows, almost any difference is "significant". Breck et al. report that a chi-squared test was too sensitive and not informative at the scale of ML data, and used a plain distance between distributions instead: for categories, the largest change in any value's probability. The same applies to the lab's mean rule. Four standard errors is 4.4 pounds (10% of the mean) with 120 rows a day, but only 0.048 pounds (about 0.1%) with a million rows a day. Decide how big a shift matters to the model, not only whether it is detectable. [Monitoring and drift](../monitoring-and-drift/) goes further into PSI and KS tests.
+
+## Where to run the checks, and what to do when one fails
+
+Put checks at three points: when data arrives (a contract with the producer), before training (a gate that can stop the pipeline), and at serving (compare what the model receives with what it trained on). Google's guide says that for schema problems the pipeline should stop and the data science team should investigate, and that large statistical shifts are a reason to retrain.
+
+When a check fails:
+
+- **Stop, and keep serving the last good model.** A day without a retrain is cheaper than training on a broken day.
+- **Quarantine, do not silently drop.** Keep the bad rows with a reason and a count, so the owner can fix the source.
+- **Repair only deterministic problems**, such as stray whitespace, and log every repair.
+- **Alert the owner of the source**, with the check that failed and a sample of rows.
+
+## Two traps between pipelines
+
+**Training-serving skew.** Google's Rules of ML names three causes: a discrepancy between how training and serving handle data, a change in the data between training and serving, and a feedback loop between model and algorithm. Its recommended cure is to save the features used at serving time and log them for training (Rule 29), and to measure the difference between training and serving explicitly. The mirror trap is copying a pipeline: Rule 6 warns that the old pipeline may drop data you need.
+
+**Leakage in time.** A feature must be computed as of the moment of the prediction. Suppose a customer ordered on days 1, 10 and 25, and you want to predict, on day 10, whether they will order again within 20 days. The "total orders" column in a table exported later says 3. On day 10 the true value was 2, and the third order is the very event you are predicting.
+
+| Feature value for the day-10 row | Orders counted | What it knows |
+|---|---|---|
+| As of day 10 (correct) | 2 | Only the past |
+| From the latest export (leaky) | 3 | The answer |
+
+A model trained on the leaky column scores well offline and fails live. Build training sets with point-in-time joins, which take each row's value as it stood at that row's time. [The next lessons](../batch-vs-online-inference-and-feature-stores/) return to this with feature stores.
+
+## Contracts, lineage and tools
+
+A **data contract** is an explicit agreement between the team that produces a dataset and the teams that use it: schema, meaning of fields, quality expectations, freshness, who owns it and how changes are announced. The Open Data Contract Standard defines a platform-neutral YAML format with sections for schema, quality, service levels, roles and more. Contracts move the check upstream: the producer finds out they broke a consumer before the consumer finds out.
+
+**Lineage** answers "which datasets and jobs produced this table?" OpenLineage is an open standard whose core model has datasets, jobs and runs. It turns a bad-data incident from detective work into a graph walk.
+
+<Deep title="Tools for checks (as of 1 November 2026)">
+
+Open-source: Great Expectations describes data with tests, called Expectations, and runs them as validations; TensorFlow Data Validation, from the system in the Breck paper, infers a schema and checks validity, training-serving skew and drift. Managed: AWS Glue Data Quality (built on the open-source Deequ, with rules written in its Data Quality Definition Language), Microsoft Purview Unified Catalog data quality, and Google Cloud's auto data quality in Knowledge Catalog (formerly Dataplex Universal Catalog), which validates tables in BigQuery and other sources against rules. The ideas in this lesson apply to all of them; features and names change, so read each vendor's current documentation.
+
+</Deep>
+
+## Labels are data too
+
+A supervised model cannot be better than its labels. Three habits help.
+
+1. **Write guidelines with examples**, including the borderline cases, before anyone labels.
+2. **Measure agreement.** Have two people label the same items and compute Cohen's kappa, which discounts agreement expected by chance ([Building an eval dataset](../../evals/building-an-eval-dataset/) works an example). Take 50 support tickets labelled urgent or not. If the two labellers agree on 40, that is 80%, but if each marks 30% urgent, chance alone gives 58% agreement and kappa is 0.52. Read the disagreements, tighten the guideline, relabel. In this example agreement rising to 47 of 50 gives a kappa of 0.85.
+3. **Hunt for label errors.** Confident learning flags examples where a model, trained out of sample, confidently disagrees with the given label. Review those first.
+
+If labels are costly, active learning picks the most useful items to label next, and weak supervision (Snorkel) lets experts write labelling functions whose noisy votes are combined, rather than labelling each item by hand.
+
+**LLM-assisted labelling.** A model can pre-label items for people to confirm, or label whole datasets. Gilardi et al. (2023) reported that ChatGPT's zero-shot accuracy beat crowd workers on four of five tasks on 2,382 tweets, at under $0.003 per annotation. That is one study, one model version and specific tasks, so treat it as a reason to test, not a result to rely on. To use an LLM as a labeller:
+
+- Label a gold sample by hand, 200 or more items, and score the LLM against it **per class**. Raw agreement hides rare classes: with 20 urgent items among 200, an LLM that agrees on 94% can still catch only 12 of the 20 urgent ones (recall 60%, precision 75%, kappa 0.63). These are example numbers.
+- Do not grade a model on labels made by the same model, or you measure its agreement with itself. [LLM-as-judge pitfalls](../../evals/llm-as-judge-pitfalls/) covers the same bias.
+- Keep humans on the cases where the LLM is unsure or disagrees with a second prompt, and re-check the gold sample when the model version changes.
+- Remember that sending text to an outside API is a data transfer: check the terms and privacy rules first ([Privacy engineering for AI](../../responsible/privacy-engineering-for-ai/)).
+
+## What to remember
+
+- Validate data before training and stop the pipeline when a check fails. Model metrics notice data faults late and only on average.
+- Use schema, range, distribution and volume checks together. Each misses what another finds, and a check you have not seen fire is unproven.
+- Thresholds trade missed faults against false alarms. Alerts that fire daily get ignored.
+- With big data, almost any difference is significant. Decide the size of shift that matters.
+- Compute every feature as of prediction time, and use one code path for training and serving.
+- Contracts move checks upstream; lineage finds the source. Quarantine bad rows rather than dropping them silently.
+- Measure label quality with agreement, review disagreements, and score an LLM labeller against human gold labels, class by class.
+
+Next: [Batch vs online inference and feature stores](../batch-vs-online-inference-and-feature-stores/) shows how to serve features without skew.

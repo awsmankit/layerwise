@@ -1,0 +1,397 @@
+/* Styles for the interactive components in the wave 3 "audio-a" lesson batch. Keep every class under this batch's own prefix. */
+
+/* ---------- shared bits ---------- */
+
+.aua-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.2rem;
+}
+.viz .aua-pick {
+  min-height: 44px;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.92rem;
+}
+.viz .aua-pick.on {
+  background: var(--signal);
+  border-color: var(--signal);
+  color: var(--on-signal);
+}
+.aua-hint {
+  margin-top: 0.7rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+.aua-label {
+  margin-top: 1.3rem;
+  font-weight: 650;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+.aua-say {
+  margin-top: 0.8rem;
+  font-size: 0.98rem;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+.aua-axis-cap {
+  margin-top: 0.4rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--ink-3);
+}
+.aua-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+}
+.aua .btn {
+  min-height: 44px;
+}
+.aua .btn:focus-visible,
+.aua button:focus-visible,
+.aua input[type='range']:focus-visible,
+.aua select:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.aua-controls {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.3rem 1.6rem;
+  margin-top: 0.6rem;
+}
+@media (min-width: 640px) {
+  .aua-controls {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.aua .field > span {
+  flex-wrap: wrap;
+  gap: 0.1rem 1rem;
+}
+.aua-note {
+  margin-top: 0.8rem;
+  padding: 0.7rem 0.9rem;
+  border-left: 2px solid var(--cost);
+  background: var(--cost-wash);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+.aua-scroll {
+  overflow-x: auto;
+  margin-top: 0.5rem;
+  padding-bottom: 0.3rem;
+}
+
+/* ---------- CTC toy ---------- */
+
+.aua-grid {
+  display: grid;
+  gap: 3px;
+  min-width: max-content;
+  align-items: stretch;
+}
+.aua-rowgroup {
+  display: contents;
+}
+.aua-corner {
+  display: block;
+}
+.aua-colhead,
+.aua-rowhead {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.aua-rowhead {
+  justify-content: flex-start;
+  font-weight: 650;
+  color: var(--ink-2);
+}
+.viz .aua-cell {
+  min-height: 40px;
+  min-width: 40px;
+  padding: 0;
+  border: 1px solid var(--line-soft);
+  border-radius: 2px;
+  color: var(--ink);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.viz .aua-cell:hover {
+  border-color: var(--signal);
+}
+.viz .aua-cell.on {
+  border: 2px solid var(--ink);
+  font-weight: 800;
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--ink);
+}
+.aua-steps {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+.aua-line {
+  display: grid;
+  grid-template-columns: 7.2rem 1fr;
+  gap: 0.6rem;
+  align-items: center;
+}
+.aua-line.aua-dim {
+  opacity: 0.6;
+}
+@media (max-width: 480px) {
+  .aua-line {
+    grid-template-columns: 1fr;
+    gap: 0.2rem;
+  }
+}
+.aua-step {
+  font-size: 0.85rem;
+  font-weight: 650;
+  color: var(--ink-2);
+}
+.aua-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  min-height: 32px;
+  align-items: center;
+}
+.aua-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 32px;
+  padding: 0 0.3rem;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--surface);
+  font: 650 0.92rem var(--font-display);
+}
+.aua-chip.aua-blank {
+  color: var(--ink-3);
+  border-style: dashed;
+}
+.aua-chip.aua-out {
+  background: var(--tint-mint);
+  border-color: var(--ok);
+}
+.aua-ph {
+  font-size: 0.85rem;
+  color: var(--ink-3);
+}
+.aua-table-wrap {
+  overflow-x: auto;
+  margin-top: 0.8rem;
+}
+.aua-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+.aua-table th,
+.aua-table td {
+  padding: 0.45rem 0.6rem;
+  border-bottom: 1px solid var(--line-soft);
+  text-align: left;
+}
+.aua-table thead th {
+  font-size: 0.8rem;
+  color: var(--ink-3);
+  font-weight: 600;
+}
+.aua-text {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* ---------- noise lab ---------- */
+
+.aua-spec {
+  margin-top: 1rem;
+}
+.aua-spec-cap {
+  margin: 0.7rem 0 0.25rem;
+  font-size: 0.85rem;
+  color: var(--ink-2);
+  font-weight: 600;
+}
+.aua-canvas {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--line-soft);
+  background: #000;
+}
+.aua-bands {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 0.2rem;
+  margin-top: 0.8rem;
+  max-width: 28rem;
+}
+.aua-band {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+.aua-band input[type='range'] {
+  writing-mode: vertical-lr;
+  direction: rtl;
+  width: 40px;
+  height: 120px;
+  margin: 0;
+}
+.aua-band-val,
+.aua-band-name {
+  font-size: 0.78rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.aua-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+@media (min-width: 640px) {
+  .aua-lab .aua-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .aua-beam .aua-stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.aua-stats > div {
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--line-soft);
+  background: var(--surface);
+}
+.aua-stats dt {
+  font-size: 0.76rem;
+  color: var(--ink-3);
+  line-height: 1.3;
+}
+.aua-stats dd {
+  margin: 0.1rem 0 0;
+  font: 650 1.05rem var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
+.aua-stats .aua-main {
+  border-color: var(--signal);
+  background: var(--signal-wash);
+}
+.aua-status {
+  font-size: 0.88rem;
+  color: var(--ink-3);
+}
+
+/* ---------- directional microphones ---------- */
+
+.aua-beam-body {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.8rem;
+  align-items: center;
+  margin-top: 0.8rem;
+}
+@media (min-width: 720px) {
+  .aua-beam-body {
+    grid-template-columns: minmax(0, 340px) 1fr;
+    gap: 2rem;
+  }
+}
+.aua-polar {
+  width: 100%;
+  max-width: 340px;
+  height: auto;
+  margin-inline: auto;
+}
+.aua-ring {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.aua-ring-soft {
+  stroke: var(--line-soft);
+  stroke-dasharray: 3 4;
+}
+.aua-shape {
+  fill: var(--signal-wash);
+  stroke: var(--signal);
+  stroke-width: 2.2;
+  fill-rule: nonzero;
+}
+.aua-dot {
+  fill: var(--ink);
+}
+.aua-svgtext {
+  font: 600 16px var(--font-display);
+  fill: var(--ink-2);
+}
+
+/* ---------- delay budget ---------- */
+
+.aua-bar {
+  position: relative;
+  display: flex;
+  height: 26px;
+  margin-top: 1rem;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  overflow: hidden;
+}
+.aua-seg {
+  height: 100%;
+}
+.aua-seg-win {
+  background: var(--signal);
+}
+.aua-seg-look {
+  background: var(--cost);
+}
+.aua-seg-other {
+  background: var(--ink-3);
+}
+.aua-mark {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--warn);
+  opacity: 0.85;
+}
+.aua-bar-scale {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.2rem;
+  font-size: 0.78rem;
+  color: var(--ink-3);
+}
+.aua-marklist {
+  margin: 0.6rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.aua-marklist li + li {
+  margin-top: 0.3rem;
+}
+.aua-marklist li.aua-over {
+  color: var(--ink);
+}
+.aua-marklist li.aua-over b {
+  color: var(--warn);
+}

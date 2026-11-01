@@ -1,0 +1,64 @@
+---
+import Base from '../layouts/Base.astro';
+import { releases, repoUrl } from '../data/releases';
+
+const tag = (v: string) => `v${v}`;
+const anchor = (v: string) => `v${v.replaceAll('.', '-')}`;
+const dateLabel = (iso: string) => new Date(iso + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+---
+
+<Base title="What's new" description="Every version of Layerwise, newest first: what was added, fixed and changed, with links to the tagged releases on GitHub.">
+  <div class="wrap">
+    <header class="page-head">
+      <h1>What’s <span class="squig" style="--squig:#FFC233">new</span></h1>
+      <p>Every version of Layerwise, newest first. Each one is tagged and published on GitHub, so you can see exactly what changed and when.</p>
+    </header>
+
+    <div class="cl-policy">
+      <h2>How versions work</h2>
+      <ul>
+        <li><b>Major</b> (2.0.0): the curriculum or the way you move through it changes shape, such as new topics or rebuilt learning paths.</li>
+        <li><b>Minor</b> (2.1.0): new lessons, labs, tools or features.</li>
+        <li><b>Patch</b> (2.1.1): fixes and small corrections to wording, links, layout or accessibility.</li>
+      </ul>
+    </div>
+
+    <ul class="cl-jump" aria-label="Jump to a version">
+      {releases.map((r) => <li><a href={`#${anchor(r.version)}`}>v{r.version}</a></li>)}
+    </ul>
+
+    <ol class="cl-list">
+      {
+        releases.map((r, i) => {
+          const prev = releases[i + 1];
+          return (
+            <li class:list={['cl-rel', i === 0 && 'is-latest']} id={anchor(r.version)}>
+              <h2 class="cl-head">
+                <span class="cl-ver"><a href={`#${anchor(r.version)}`}>v{r.version}</a></span>
+                <span class="cl-date">{dateLabel(r.date)}</span>
+                {i === 0 && <span class="cl-new">Latest</span>}
+              </h2>
+              <p class="cl-title">{r.title}</p>
+              <p class="cl-summary">{r.summary}</p>
+              <ul class="cl-hl">
+                {r.highlights.map((h) => <li>{h}</li>)}
+              </ul>
+              <ul class="cl-stats" aria-label="At this release">
+                <li>{r.stats.lessons} lessons</li>
+                <li>{r.stats.topics} topics</li>
+                <li>{r.stats.labs} labs</li>
+                <li>{r.stats.glossary} glossary terms</li>
+              </ul>
+              <p class="cl-links">
+                <a href={`${repoUrl}/releases/tag/${tag(r.version)}`} target="_blank" rel="noopener noreferrer">Release on GitHub<span class="sr-only"> (opens in a new tab)</span></a>
+                {prev && (
+                  <a href={`${repoUrl}/compare/${tag(prev.version)}...${tag(r.version)}`} target="_blank" rel="noopener noreferrer">Compare with v{prev.version}<span class="sr-only"> (opens in a new tab)</span></a>
+                )}
+              </p>
+            </li>
+          );
+        })
+      }
+    </ol>
+  </div>
+</Base>

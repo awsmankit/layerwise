@@ -1,0 +1,167 @@
+---
+title: "Testing and deploying ML models: gates, canaries and safe rollouts"
+track: systems
+level: intermediate
+order: 7
+summary: What to test when behaviour comes from data, how CI, CD and continuous training fit together, and how shadow, canary and A/B releases trade user exposure against time to detect a regression.
+updated: 2026-11-01
+sources:
+  - label: "The ML Test Score: A Rubric for ML Production Readiness and Technical Debt Reduction (Breck et al., 2017)"
+    url: https://research.google/pubs/the-ml-test-score-a-rubric-for-ml-production-readiness-and-technical-debt-reduction/
+  - label: "MLOps: Continuous delivery and automation pipelines in machine learning (Google Cloud Architecture Center)"
+    url: https://cloud.google.com/architecture/mlops-continuous-delivery-and-automation-pipelines-in-machine-learning
+  - label: "Rules of Machine Learning: Best Practices for ML Engineering (Martin Zinkevich, Google)"
+    url: https://developers.google.com/machine-learning/guides/rules-of-ml
+  - label: "Practical Guide to Controlled Experiments on the Web: Listen to Your Customers not to the HiPPO (Kohavi, Henne and Sommerfield, KDD 2007)"
+    url: https://exp-platform.com/Documents/GuideControlledExperiments.pdf
+  - label: "How Not To Run an A/B Test (Evan Miller, 2010)"
+    url: https://www.evanmiller.org/how-not-to-run-an-ab-test.html
+  - label: "Large-Scale Validation and Analysis of Interleaved Search Evaluation (Chapelle, Joachims, Radlinski and Yue, 2012)"
+    url: https://www.cs.cornell.edu/people/tj/publications/chapelle_etal_12a.pdf
+  - label: "Shadow tests (Amazon SageMaker AI documentation)"
+    url: https://docs.aws.amazon.com/sagemaker/latest/dg/shadow-tests.html
+  - label: "Perform safe rollout of new deployments for real-time inference (Azure Machine Learning, Microsoft Learn)"
+    url: https://learn.microsoft.com/en-us/azure/machine-learning/how-to-safely-rollout-online-endpoints
+  - label: "Deploy a model to an endpoint (Google Cloud, Gemini Enterprise Agent Platform)"
+    url: https://docs.cloud.google.com/vertex-ai/docs/general/deployment
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import PipelineFlow from '../../../components/viz/PipelineFlow.tsx';
+import RolloutSim from '../../../components/viz/RolloutSim.tsx';
+
+Ordinary software does what its code says, so tests check the code. A trained model does what its data taught it, and the code may be perfect while the model is worse than last week's. Shipping one safely needs tests for more kinds of thing, a gate that compares the new model with the one in production, and a release that limits how many users meet a mistake. This lesson covers the tests, the delivery loop, and the statistics of the release.
+
+## What the ML Test Score asks for
+
+In 2017 a Google team published a rubric of 28 tests and monitoring needs for ML systems, drawn from interviews with maintainers of 36 real systems. The tests fall into four groups of seven: **data**, **model development**, **ML infrastructure** and **monitoring**. Each is written as an assertion that should be true, and checked often.
+
+| Group | Examples from the paper |
+|---|---|
+| Data | Feature expectations are captured in a schema. All input feature code is tested. The data pipeline has appropriate privacy controls. |
+| Model | Offline and online metrics correlate. A simpler model is not better. Model quality is sufficient on important data slices. |
+| Infrastructure | Training is reproducible. The full pipeline is integration tested. Models are canaried before serving. Models can be rolled back quickly. |
+| Monitoring | Data invariants hold for inputs. Training and serving are not skewed. Prediction quality has not regressed. |
+
+Scoring is simple. Half a point per test run manually with documented results, a full point if it runs automatically and repeatedly. Add up each group and take the **minimum** of the four, so a team cannot hide a weak group behind a strong one. In the paper's reading of the final score, 0 means "more of a research project than a productionized system" and above 5 is "exceptional levels of automated testing and monitoring". The paper reports that no test was implemented by more than 80% of the Google teams it surveyed.
+
+The paper leaves ordinary good practice (unit tests, a release process) out of scope, and says it still applies. This lesson covers monitoring only where it meets release; [Monitoring and drift](../monitoring-and-drift/) takes the rest.
+
+## Three layers of tests
+
+**Code.** Feature code needs unit tests like any code, and the paper stresses why: bugs in features are almost impossible to see once they are in both training and test data. Two ML-specific tests from the paper are cheap and catch many mistakes. Train for a single step on random data and check that it runs. Check that a model can restore from a checkpoint after a crash. The paper warns against "golden tests" that compare a partly trained model with an old one, because they are hard to maintain and say little when they fail.
+
+```python
+def test_orders_last_7d():
+    orders = [(1, 20.0), (3, 20.0), (9, 20.0)]          # (day, value)
+    assert orders_last_7d(orders, today=10) == 2         # days 3 and 9; day 1 is too old
+
+def test_one_training_step_runs():
+    model, batch = tiny_model(), random_batch(n=8)       # sketch: your own helpers
+    loss = train_one_step(model, batch)
+    assert math.isfinite(loss)
+```
+
+**Data.** Schema, range and distribution checks run on every new batch, as the [data quality lesson](../data-pipelines-and-data-quality/) shows. Their output decides whether training should run at all.
+
+**Model behaviour.** A single accuracy number hides where the model is worse. Test slices (new users, a region, a device), compare with a very simple baseline, and write behavioural checks that state what must not change, for example that a prediction does not flip when an irrelevant field is edited. Google's guide asks the same of its validation step: better than the current model, and consistent across segments of the data.
+
+## The gate: compare with the champion, slice by slice
+
+A **model validation gate** sits between training and release. It evaluates the candidate and the current production model, the **champion**, on the same held-out data, and passes the candidate only if it clears every rule. The paper suggests two kinds of threshold: absolute (error for a slice must be under 5%) to catch large drops, and incremental (a slice may not drop more than 1 point against the last release) to catch slow decay.
+
+Example numbers, with new users making up 20% of cases:
+
+| | Champion | Candidate | Change |
+|---|---|---|---|
+| Overall accuracy | 90.2 | 90.7 | +0.5 |
+| New users | 88.9 | 84.1 | -4.8 |
+| Returning users | 90.5 | 92.4 | +1.9 |
+
+The candidate is better overall, and a gate that only looks at the headline would pass it. A slice-aware gate fails it, on both the floor (84.1 is below 85) and the drop (more than 1 point).
+
+```python
+def passes_gate(champion, candidate, floor=85.0, max_drop=1.0):
+    if candidate["overall"] <= champion["overall"]:
+        return False, "not better overall"
+    for name, score in candidate["slices"].items():
+        if score < floor or score < champion["slices"][name] - max_drop:
+            return False, f"slice {name} fails"
+    return True, "ok"
+```
+
+## CI, CD and continuous training
+
+Google's MLOps guide defines the three loops for ML. **Continuous integration** is no longer only testing code: it also tests and validates data, data schemas and models. **Continuous delivery** is no longer about one package, but about a system, the training pipeline, that deploys another service, the model. **Continuous training** (CT) is the property unique to ML: automatically retraining and serving models. The guide lists the triggers that start a run: on demand, on a schedule, when new training data arrives, when performance degrades, and when the data distribution changes.
+
+<PipelineFlow
+  title="One path from a commit to every user"
+  stages={[
+    { title: 'Commit', detail: 'Code, pipeline definition or settings change. Unit tests for feature code and a one-step training smoke test run in seconds.' },
+    { title: 'Pipeline run', detail: 'A commit or a trigger (schedule, new data, drift) starts the training pipeline: data validation first, then training on a pinned data snapshot.' },
+    { title: 'Gate', detail: 'The candidate is compared with the champion, overall and by slice, and checked for loading into the real serving binary.' },
+    { title: 'Registry', detail: 'A passing model is registered as a new version linked to the run that made it. Production points at one version through an alias.' },
+    { title: 'Shadow', detail: 'The new version sees a copy of live traffic. Users see only the champion. Technical faults appear here.' },
+    { title: 'Canary or A/B', detail: 'A small share of users get the new version and an automatic check compares them with the control group. Stop on a regression.' },
+    { title: 'Everyone', detail: 'The alias moves. The previous version stays registered, so rollback is moving the alias back.' },
+  ]}
+  caption="Not every team needs every stage. The order is the point: each stage is cheaper and safer than the one after it."
+  client:visible
+/>
+
+Rollback deserves practice. The ML Test Score asks that models can be rolled back quickly and safely, and notes that operators should rehearse it in normal conditions because it is an emergency procedure. With a registry alias, rollback is a one-line change, but only if the old version, its feature definitions and its serving container still exist.
+
+## Three ways to release
+
+| Strategy | What users see | What it measures well | What it cannot do |
+|---|---|---|---|
+| **Shadow** | Only the old model. The new one gets a copy of every request. | Latency, errors, crashes, output format, agreement with the old model, accuracy against known outcomes | Show how users react to the new outputs |
+| **Canary** | The new model, for a small share of users | Real outcomes for those users, and the blast radius is limited | Give a precise business measurement quickly |
+| **A/B test** | The new model, for a planned share (often half) | The effect on the business metric, with proper statistics | Protect users on its own: half of them are exposed |
+
+Each major cloud has a form of these (as of 1 November 2026). Amazon SageMaker AI shadow tests route a copy of inference requests to a shadow variant in the same endpoint; only the production variant's responses are returned, and you may log or discard the shadow's. Azure Machine Learning documents a blue-green rollout on an online endpoint: deploy the new version with no traffic, test it, mirror a percentage of live traffic (mirroring, also called shadowing, does not change what clients receive), then shift a small share and then all of it. Google's Gemini Enterprise Agent Platform (the successor to Vertex AI) lets you deploy two models to one endpoint, serve a small percentage of traffic to the new one and raise its split gradually. For ranking and search there is a fourth option, **interleaving**: merge the results of two rankers into one list and credit the clicks, so each user compares both. Chapelle and colleagues, studying it on commercial search engines, describe it as a paired comparison designed so clicks can be read as fair judgments of the two rankers.
+
+## The statistics of a safe rollout
+
+Exposure grows linearly with traffic. Evidence grows more slowly, because the size of a difference you can detect shrinks with the square root of the sample. Take a bad-outcome rate of 5% and ask how many cases each group needs for a fixed-sample test with a 5% false-alarm level and an 80% chance of catching a real rise ([Is the difference real?](../../ml/is-the-difference-real/) derives the formula).
+
+| New model's true rate | Rise | Cases per group |
+|---|---|---|
+| 13% | 8 points | 201 |
+| 8% | 3 points | 1,061 |
+| 6% | 1 point | 8,159 |
+
+Computed with this site's tested code, for two equal groups. A rise 8 times smaller needs about 40 times as many cases. A big regression is visible in a tiny canary within hours; a subtle one needs a great deal of traffic, and a canary will not settle it quickly. Four cautions from the experimentation literature:
+
+- **Do not peek carelessly.** Checking an ongoing test and stopping when it first looks significant inflates false positives; Evan Miller's note shows how badly. A canary that checks every hour for a halt needs a strict threshold, or it will cry wolf.
+- **Run long enough to cover a cycle.** Kohavi and colleagues warn that novelty and primacy effects mean some experiments need to run for multiple weeks, even when the sample is large enough in hours.
+- **Ramp up in steps.** Their example ramps a treatment from 0.1% to 0.5%, 2.5%, 10% and then 50%, analysing at each step so egregious problems stop early. A/A tests, with identical experiences in both groups, check the experiment system itself: about 5% should look significant at a 95% level.
+- **Add guardrail metrics.** Alongside the target metric, watch latency, error rate and a few things the change must not hurt.
+
+Outcomes often arrive late. A fraud label may take weeks, so a canary cannot judge accuracy at once. Watch fast proxies (rate of flagged transactions, latency, output validity) and treat the slow label as a later check.
+
+## Try the simulator
+
+Pick a strategy and a hidden problem, then watch the z statistic against the halt line. The panel under the chart repeats the rollout 200 times with different random numbers, so you see rates, not one lucky run.
+
+<RolloutSim client:visible />
+
+With the defaults (5% canary, 2,000 requests an hour, halt at z = 3, outcomes known at once), the 3-point bug is caught in all 200 runs, at a median of hour 5, after about 500 real requests were answered by the bad model. A one-point drop is caught in 99% of runs, at a median of hour 35, after about 3,600 requests. A 1% canary catches the one-point drop in only about half of the 168 hours simulated. A 72-hour A/B test at 50% catches both, but only at the end, after 72,000 requests, 1,000 an hour for 72 hours, went to the new model. In the shadow runs, the behavioural problem is almost never seen. Set the halt line to 1.64 with nothing wrong and about one rollout in three halts for no reason. These figures come from the example simulation and the default seed; yours will differ in detail.
+
+<Callout title="Choose by what you are afraid of">
+
+Afraid the new model will crash or be slow: shadow first, because nobody is exposed. Afraid it will hurt users in a way offline tests cannot see: a small canary with a guardrail check. Need to know whether it improves the business: an A/B test of planned length, sized beforehand, started after a canary has shown it is safe. Most teams use all three in that order.
+
+</Callout>
+
+## What to remember
+
+- Test three layers: code (feature functions, a one-step training run), data (schema and distribution checks), and model behaviour (slices, baselines, behavioural checks).
+- The ML Test Score has 28 tests in four groups, and the score is the minimum across groups.
+- A release gate compares the candidate with the champion by slice, with an absolute floor and a maximum drop. A better headline number can hide a worse slice.
+- CI tests code, data and models; CD ships a pipeline; CT retrains automatically on a trigger. Keep rollback one step away and rehearse it.
+- Shadow exposes no one but cannot see user reaction. Canary limits harm. A/B measures effect. Detecting a subtle regression takes far more traffic than detecting a large one.
+- Decide thresholds and run length before looking, include guardrail metrics, and remember that late labels delay every strategy.
+
+Next: [Monitoring and drift](../monitoring-and-drift/) covers what to watch once the model is live.

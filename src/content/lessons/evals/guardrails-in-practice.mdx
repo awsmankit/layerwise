@@ -1,0 +1,150 @@
+---
+title: "Guardrails in practice: layers, thresholds and false positives"
+track: evals
+level: intermediate
+order: 3.5
+summary: How input and output guardrails are built, what each layer costs in blocked users and added delay, why the base rate decides whether a filter is useful, and how to test one like any other classifier.
+updated: 2026-11-01
+sources:
+  - label: "Amazon Bedrock Guardrails (AWS documentation, read 1 November 2026)"
+    url: https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails.html
+  - label: "How Amazon Bedrock Guardrails works (AWS documentation)"
+    url: https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-how.html
+  - label: "Configure streaming response behavior to filter content (Amazon Bedrock)"
+    url: https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-streaming.html
+  - label: "Guardrails and controls overview in Microsoft Foundry (Microsoft Learn)"
+    url: https://learn.microsoft.com/en-us/azure/foundry/guardrails/guardrails-overview
+  - label: "Content streaming (Microsoft Foundry, Microsoft Learn)"
+    url: https://learn.microsoft.com/en-us/azure/foundry/openai/concepts/content-streaming
+  - label: "What is Azure AI Content Safety? (Microsoft Learn)"
+    url: https://learn.microsoft.com/en-us/azure/ai-services/content-safety/overview
+  - label: "Model Armor overview (Google Cloud)"
+    url: https://cloud.google.com/security-command-center/docs/model-armor-overview
+  - label: "Safety settings (Gemini API, Google AI for Developers)"
+    url: https://ai.google.dev/gemini-api/docs/safety-settings
+  - label: "Moderation (OpenAI API documentation)"
+    url: https://developers.openai.com/api/docs/guides/moderation
+  - label: "Llama Guard: LLM-based Input-Output Safeguard for Human-AI Conversations (Inan et al., 2023)"
+    url: https://arxiv.org/abs/2312.06674
+  - label: "Constitutional Classifiers: Defending against Universal Jailbreaks across Thousands of Hours of Red Teaming (Sharma et al., 2025)"
+    url: https://arxiv.org/abs/2501.18837
+  - label: "The Attacker Moves Second: Stronger Adaptive Attacks Bypass Defenses Against LLM Jailbreaks and Prompt Injections (Nasr et al., 2025)"
+    url: https://arxiv.org/abs/2510.09023
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import GuardrailTuner from '../../../components/viz/GuardrailTuner.tsx';
+
+A guardrail is a check that sits beside a model: it looks at what goes in, what comes out, or what a tool is about to do, and blocks, changes or flags it. [LLM application security](../llm-security/) explains why the real security boundary is permissions in your own code. Guardrails are the other layer: they catch a lot of ordinary misuse and mistakes cheaply, and they have costs that are easy to miss. This lesson is about those costs, and how to set and test a guardrail on purpose.
+
+## Where checks sit
+
+Think of four places a check can run.
+
+- **User input.** Before the model sees it: injection attempts, personal data, off-topic or disallowed requests.
+- **Tool calls.** What an agent proposes to send to a tool, before it runs.
+- **Tool results.** What comes back from a tool or a web page, before the model reads it.
+- **Model output.** Before the user sees it: harmful content, leaked data, broken format, unsupported claims.
+
+Microsoft's guardrails documentation names exactly these four intervention points for Foundry (as of 1 November 2026, the two tool points are in preview and apply to agents only). Most simple apps only use the first and last.
+
+## The layers, cheapest first
+
+| Layer | Good at | Weak at | Typical delay (order of magnitude, not a measurement) |
+|---|---|---|---|
+| Rules: regex, blocklists, length and schema checks | Exact known patterns, formats, hard limits | Paraphrase, other languages, any word that has an innocent use | Microseconds to milliseconds |
+| Detectors for personal data and secrets | Structured identifiers, with pattern and statistical detection | Context ("is this number a card or an order ID?") | Milliseconds |
+| Moderation classifier: a trained model that returns a score per category | Broad categories such as hate or violence, at a steady price | Your own policy, borderline cases, adversarial input | Tens of milliseconds |
+| Safety model, such as Llama Guard (a Llama 2 7B model fine-tuned to classify prompts and responses against a taxonomy you can change) | Custom policies, since the taxonomy can be changed | Speed and cost; it is a language model | Hundreds of milliseconds, GPU time |
+| LLM-as-guard: a general model asked "is this allowed?" | Nuance, new policies in plain words | Cost, delay, its own mistakes and its own injectability | Seconds, a full model call |
+
+The pattern that follows: run the cheap layers on everything, and spend the expensive layer only on the grey zone the cheap ones could not settle. That is a cascade. You will build one in the tuner below.
+
+## Two kinds of mistake, and the base rate
+
+A guardrail makes two kinds of mistake. A **false positive** blocks a harmless request, and a real person gets a refusal for asking how to "kill a stuck process". A **false negative** lets a bad request through. Lowering the threshold trades one for the other, as in [choosing a threshold from the cost of errors](../../foundations/classical-ml-essentials/).
+
+The trap is the base rate. Suppose these are **example numbers**: 1 request in 100 is really bad, and the guardrail catches 95% of bad requests and wrongly blocks 2% of good ones. Out of 100,000 requests:
+
+| | Count |
+|---|---|
+| Bad requests | 1,000 |
+| Bad requests caught (95%) | 950 |
+| Bad requests missed | 50 |
+| Good requests | 99,000 |
+| Good requests blocked (2%) | 1,980 |
+| All blocks | 2,930 |
+| Blocks that were right | 950, or 32% |
+
+Two blocks in three hit an innocent user, even though the filter "is right 98% of the time". Cut the false-positive rate to 0.2% and there are 198 wrong blocks and 83% of blocks are right. If instead 10% of traffic is bad, the same filter's blocks are right 84% of the time (9,500 of 11,300). This is the counting argument from [Is the difference real?](../../ml/is-the-difference-real/), and it is why a guardrail that looked excellent on a balanced test set can annoy users in production.
+
+## Tune one
+
+The tuner has 40 invented prompts: 14 plain, 12 that look risky but are fine, 8 bad and obvious, 6 bad and sneaky. Each has a made-up risk score from a toy classifier. Move the threshold, add the rule layer or the second-look judge, and watch both mistakes. Then change the traffic mix.
+
+<GuardrailTuner client:visible />
+
+What it shows, if you play with it:
+
+- With the classifier alone there is no threshold that blocks the sneaky prompts without also blocking some innocent ones: the two score ranges overlap. That overlap is the real limit, and a slider cannot remove it.
+- The judge helps most when it only sees the grey band. It lowers the cheapest cost, and it costs delay: once more than 5% of requests reach it, the 95th-percentile delay jumps to the judge's time. Average delay hides this, so look at the tail.
+- The blunt word list blocks nine benign prompts in the set and only two bad ones. A narrow rule that matches a known phrase blocks almost nothing wrongly, and misses every paraphrase.
+- With only 14 bad prompts, a recall of 64% has a 95% interval from about 39% to 84%. [An interval belongs on every score](../../ml/is-the-difference-real/); a 40-prompt set cannot tell a good guardrail from a mediocre one.
+
+## The delay budget
+
+Add the layers' delay to the model's own time to first token. Two design habits keep it under control. Run independent checks **in parallel**: Amazon's documentation says Bedrock Guardrails evaluates the input in parallel for each configured policy. And put cheap checks first so most requests never reach the expensive layer. Count the delay at the 95th percentile, not the mean, and decide up front which checks block the response (a harmful-content check) and which can run alongside or after it (logging, a grounding score).
+
+## Streaming output
+
+A full output check needs the whole answer, but a streamed answer is already on screen. The managed services show the trade-off clearly, as of 1 November 2026:
+
+- **Amazon Bedrock Guardrails** has a synchronous default that buffers chunks and scans them before sending, which adds delay but is more accurate, and an asynchronous mode that sends chunks at once and scans in the background. In asynchronous mode chunks "may contain inappropriate content until guardrails scan completes", and masking of sensitive information is not supported.
+- **Microsoft Foundry** buffers and evaluates by default. Its asynchronous filter returns tokens before results are ready; Microsoft documents that a signal is guaranteed within a window of about 1,000 characters. Microsoft's own page also reports a test in which a blocklisted term in roughly the last 15 to 30 words of a streamed reply reached the client, while the same reply was blocked when not streamed. If that is unacceptable, its advice is to avoid streaming or add your own filtering of the final segment.
+
+Test your own setup on your own traffic: the end of the stream is where the gaps tend to be.
+
+## Managed guardrails on the three clouds
+
+As of 1 November 2026, from each vendor's documentation. Names and features change, so check before you commit.
+
+| | AWS | Azure | Google Cloud |
+|---|---|---|---|
+| Service | Amazon Bedrock Guardrails | Guardrails in Microsoft Foundry, using classification models from Azure AI Content Safety | Model Armor, and safety settings in the Gemini API |
+| What it checks | Content filters (hate, insults, sexual, violence, misconduct, prompt attack), denied topics, word filters, sensitive information, contextual grounding, Automated Reasoning checks | Hate, sexual, self-harm and violence with blocking levels; prompt attacks; indirect attacks; protected material; PII (preview); task adherence | Model Armor: harm categories, prompt injection and jailbreak detection, Sensitive Data Protection, and scanning of document text and images. Gemini API: harassment, hate speech, sexually explicit, dangerous content, jailbreak |
+| How you tune it | Filter strength per category, safeguard tiers (Standard or Classic) | Blocking level Off, Low, Medium or High per category; a default guardrail is applied to models | Model Armor templates with confidence thresholds; Gemini API thresholds from block-few to block-most |
+| Use without the vendor's model | The ApplyGuardrail API checks text without calling a model | Azure AI Content Safety APIs are standalone | Model Armor says it works for AI in Google Cloud or on other clouds |
+
+Three details worth knowing. AWS notes that the models behind its filters are updated periodically, so retest guardrails after updates. Gemini's thresholds act on the probability that content is unsafe, not its severity, a distinction Google's page explains with an example. And in the Gemini API the extra filters are off by default for Gemini 2.5 and later, with a fixed set of core protections that cannot be adjusted. Outside the big three, OpenAI documents a moderation endpoint that returns scores and flags, and says it is free to use.
+
+## What a guardrail does not promise
+
+The published numbers need careful reading. The Constitutional Classifiers paper reports that in over 3,000 estimated hours of red-teaming nobody found a universal jailbreak against an early classifier-guarded model, with a 0.38% absolute increase in refusals on production traffic and 23.7% more inference cost. A different paper, "The Attacker Moves Second", reports that adaptive attacks bypassed 12 recent defences with success above 90% for most, though most had reported near-zero success under their authors' own tests. Both can be true: defences look strong against the attacks their authors tried, and weaker against an attacker who studies the defence.
+
+Treat a guardrail as a filter that raises the cost of misuse, never as the control that makes an action safe. Anything that must not happen, such as sending data out or spending money, belongs behind permissions and confirmation in code.
+
+<Deep title="Layering is not free safety">
+
+Stacking layers multiplies false positives as well as catches. If three independent layers each wrongly block 1% of good requests, about 3% of them are blocked. Layers are also rarely independent: the same oddly worded request may fool all of them, because their training data and attack surface overlap. Measure the whole stack on one labelled set, not each layer alone.
+
+</Deep>
+
+## Test a guardrail like any classifier
+
+1. **Build a labelled set** with three groups: benign requests that look risky (the ones that will annoy users), clear violations, and sneaky violations (paraphrase, other languages, obfuscation, instructions hidden in documents). Build it as in [Building an eval dataset](../building-an-eval-dataset/), and add real blocked and missed cases from production.
+2. **Report recall and false-positive rate per group, with intervals.** Reweight to your real traffic mix before you quote a blocked-users figure, as the tuner does.
+3. **Pick the threshold from the costs**, then retest after any model, policy or vendor update.
+4. **Watch it in production.** Track the block rate per category, sample both blocked and allowed requests for human review, and alert on sudden change. See [LLMOps in production](../llmops-in-production/).
+5. **Design the refusal.** Say what was blocked in plain words and offer a way forward or an appeal; log the decision, with the layer that made it, in the trace.
+
+## What to remember
+
+- A guardrail is a classifier. It has a threshold, two kinds of error and a base rate, and all three decide whether it helps.
+- When bad requests are rare, most blocks can still be wrong. Count with real numbers.
+- Layer cheap checks first, spend the expensive one on the grey zone, and measure delay at the tail.
+- Streaming forces a choice between delay and exposure. Test the end of the stream.
+- Vendor guardrails differ in names, categories and tuning. Read the current docs and retest after updates.
+- Strong results against known attacks do not mean strong results against an adaptive attacker. Put the hard limits in permissions.
+
+Next: [LLM application security](../llm-security/) covers the permission boundary that guardrails cannot replace.

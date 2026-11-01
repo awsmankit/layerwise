@@ -1,0 +1,454 @@
+/* Styles for the interactive components in the wave 4 "build-b" lesson batch. Keep every class under this batch's own prefix (wlb-). */
+
+/* ---------- shared bits ---------- */
+
+.wlb-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+.wlb-label {
+  min-width: 4.6rem;
+  font-size: 0.85rem;
+  font-weight: 650;
+  color: var(--ink-3);
+}
+.viz .wlb-chip {
+  min-height: 40px;
+  padding: 0.3rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font: 600 0.9rem var(--font-display);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.wlb-chip:hover {
+  border-color: var(--signal);
+}
+.viz .wlb-chip[aria-pressed='true'] {
+  background: var(--signal);
+  border-color: var(--signal);
+  color: var(--on-signal);
+}
+.viz .wlb-chip-quiet {
+  border-style: dashed;
+}
+.wlb-chip:focus-visible,
+.wlb.viz input:focus-visible,
+.wlb-adv summary:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.wlb-note {
+  margin: 0.2rem 0 0.9rem;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+.wlb-fine {
+  margin: 0.4rem 0 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--ink-3);
+}
+.wlb-sliders {
+  display: grid;
+  gap: 0.2rem;
+  margin: 0.5rem 0;
+}
+.wlb-slide {
+  display: block;
+  margin: 0.4rem 0;
+  font-size: 0.95rem;
+  color: var(--ink-2);
+}
+.wlb-slide b {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.wlb-slide input {
+  display: block;
+  width: 100%;
+}
+.wlb-h {
+  margin: 0 0 0.35rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* ---------- long-context calculator ---------- */
+
+.wlb-adv {
+  margin: 0.6rem 0 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  padding: 0.2rem 0.8rem 0.7rem;
+}
+.wlb-adv summary {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 650;
+  color: var(--ink);
+}
+.wlb-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+}
+.wlb-num {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.82rem;
+  color: var(--ink-3);
+}
+.wlb-num input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 500 16px var(--font-display);
+}
+.wlb-bars {
+  list-style: none;
+  margin: 1rem 0;
+  padding: 0;
+  display: grid;
+  gap: 0.9rem;
+}
+.wlb-barhead {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.2rem 0.8rem;
+  align-items: baseline;
+}
+.wlb-barname {
+  font-weight: 700;
+  color: var(--ink);
+}
+.wlb-barname small {
+  display: block;
+  font-weight: 500;
+  font-size: 0.82rem;
+  color: var(--ink-3);
+}
+.wlb-barval {
+  font-weight: 700;
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.wlb-track {
+  height: 14px;
+  margin: 0.3rem 0;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  overflow: hidden;
+}
+.wlb-fill {
+  height: 100%;
+  background: var(--ink-3);
+  border-radius: 999px;
+  transition: width 0.35s var(--ease);
+}
+.wlb-bar.is-best .wlb-fill {
+  background: var(--ok);
+}
+.wlb-barmeta {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--ink-3);
+}
+.wlb-calc,
+.wlb-caveat {
+  margin: 0.9rem 0;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.wlb-calc p {
+  margin: 0.3rem 0;
+}
+.wlb-calc b {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.wlb-notes {
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+.wlb-n {
+  padding: 0.45rem 0.7rem;
+  border-left: 3px solid var(--line);
+  background: var(--paper);
+  font-size: 0.93rem;
+  line-height: 1.45;
+}
+.wlb-n-ok {
+  border-left-color: var(--ok);
+}
+.wlb-n-warn {
+  border-left-color: var(--warn);
+}
+.wlb-n-info {
+  border-left-color: var(--signal);
+}
+
+/* ---------- graph lab ---------- */
+
+.wlb-q {
+  margin: 0.3rem 0 0.6rem;
+  padding: 0.5rem 0.8rem;
+  border-left: 3px solid var(--signal);
+  background: var(--signal-wash);
+  font-weight: 600;
+  color: var(--ink);
+}
+.wlb-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0.4rem 0 0;
+}
+.wlb-edge {
+  stroke: var(--line);
+  stroke-width: 1.5;
+}
+.wlb-edge.is-on {
+  stroke: var(--signal);
+  stroke-width: 3;
+}
+.wlb-node rect {
+  fill: var(--surface);
+  stroke: var(--line);
+  stroke-width: 1.5;
+  transition: fill 0.25s;
+}
+.wlb-node text {
+  fill: var(--ink);
+  font: 600 13px var(--font-display);
+}
+.wlb-node.wlb-seed rect,
+.wlb-pill.wlb-seed {
+  fill: var(--signal);
+  stroke: var(--ink);
+  stroke-width: 2.5;
+}
+.wlb-node.wlb-seed text {
+  fill: var(--on-signal);
+}
+.wlb-node.wlb-h1 rect {
+  fill: var(--tint-mint);
+}
+.wlb-node.wlb-h2 rect {
+  fill: var(--tint-sun);
+}
+.wlb-node.wlb-h3 rect {
+  fill: var(--tint-pink);
+}
+.wlb-node.wlb-c0 rect {
+  fill: var(--tint-lilac);
+}
+.wlb-node.wlb-c1 rect {
+  fill: var(--tint-sun);
+}
+.wlb-node.wlb-c2 rect {
+  fill: var(--tint-mint);
+}
+.wlb-key {
+  margin: 0.3rem 0 0.8rem;
+  font-size: 0.82rem;
+  color: var(--ink-3);
+  text-align: center;
+}
+.wlb-pills {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0.5rem 0;
+}
+.wlb-pillhead {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--ink-3);
+}
+.wlb-pillrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.wlb-pill {
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+.wlb-pill small {
+  font-weight: 500;
+  color: inherit;
+  opacity: 0.8;
+}
+.wlb-pill.wlb-seed {
+  background: var(--signal);
+  color: var(--on-signal);
+  border: 2px solid var(--ink);
+}
+.wlb-pill.wlb-h1 {
+  background: var(--tint-mint);
+}
+.wlb-pill.wlb-h2 {
+  background: var(--tint-sun);
+}
+.wlb-pill.wlb-h3 {
+  background: var(--tint-pink);
+}
+.wlb-pill.wlb-c0 {
+  background: var(--tint-lilac);
+}
+.wlb-pill.wlb-c1 {
+  background: var(--tint-sun);
+}
+.wlb-pill.wlb-c2 {
+  background: var(--tint-mint);
+}
+.wlb-cols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin-top: 0.6rem;
+}
+@media (max-width: 720px) {
+  .wlb-cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.wlb-card {
+  padding: 0.6rem 0.8rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  min-width: 0;
+}
+.wlb-card h4 {
+  margin: 0 0 0.4rem;
+  font-size: 1rem;
+  color: var(--ink);
+}
+.wlb-small {
+  margin: 0.2rem 0 0.4rem;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+.wlb-chunks,
+.wlb-edges {
+  list-style: none;
+  margin: 0.3rem 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: var(--ink-2);
+}
+.wlb-chunks li {
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  overflow-wrap: anywhere;
+}
+.wlb-chunks li.is-needed {
+  border-color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 10%, transparent);
+}
+.wlb-edges li em {
+  font-style: normal;
+  font-weight: 700;
+  color: var(--signal-ink);
+}
+.wlb-cid {
+  display: inline-block;
+  padding: 0 0.35rem;
+  border-radius: 6px;
+  background: var(--signal-wash);
+  font: 700 0.8rem var(--font-mono);
+  color: var(--ink);
+}
+.wlb-cid.wlb-c0 {
+  background: var(--tint-lilac);
+}
+.wlb-cid.wlb-c1 {
+  background: var(--tint-sun);
+}
+.wlb-cid.wlb-c2 {
+  background: var(--tint-mint);
+}
+.wlb-tag {
+  font-style: normal;
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: var(--ok);
+}
+.wlb-empty {
+  margin: 0.3rem 0;
+  font-size: 0.9rem;
+  color: var(--ink-3);
+}
+.wlb-verdict {
+  margin: 0.5rem 0 0;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+.wlb-verdict .is-good {
+  color: var(--ok);
+}
+.wlb-verdict .is-bad {
+  color: var(--warn);
+}
+
+/* lists inside the figures: undo the prose list indent */
+.viz .wlb-bars,
+.viz .wlb-notes,
+.viz .wlb-chunks,
+.viz .wlb-edges {
+  margin-left: 0;
+  padding-left: 0;
+}
+.viz .wlb-bars li,
+.viz .wlb-notes li,
+.viz .wlb-edges li {
+  padding-left: 0;
+  margin-top: 0;
+}
+.viz .wlb-notes li.wlb-n {
+  padding: 0.45rem 0.7rem;
+}
+.viz .wlb-chunks li {
+  padding: 0.3rem 0.5rem;
+  margin-top: 0;
+}

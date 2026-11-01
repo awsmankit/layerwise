@@ -1,0 +1,139 @@
+---
+title: "Medical and regulated AI: from model to device"
+track: responsible
+level: advanced
+order: 13
+summary: Why medicine and other regulated areas ask for more than a good test score. Intended use and risk class, what clinical validation involves (external and prospective studies, prevalence, calibration, subgroups, workflow), what the FDA and the EU say about AI in medical devices, hearing aids as one concrete example, and monitoring after release, with a validation lab that computes it.
+updated: 2026-11-01
+sources:
+  - label: "FDA: Artificial Intelligence in Software as a Medical Device (read 1 November 2026 with a fetch tool; the FDA site blocks scripted requests)"
+    url: https://www.fda.gov/medical-devices/software-medical-device-samd/artificial-intelligence-software-medical-device
+  - label: "FDA: Artificial Intelligence-Enabled Medical Devices, and its list of authorised devices (read 1 November 2026 with a fetch tool)"
+    url: https://www.fda.gov/medical-devices/artificial-intelligence-enabled-medical-devices/list-artificial-intelligence-enabled-medical-devices
+  - label: "FDA: Good Machine Learning Practice for Medical Device Development: Guiding Principles (read 1 November 2026 with a fetch tool)"
+    url: https://www.fda.gov/medical-devices/artificial-intelligence-enabled-medical-devices/good-machine-learning-practice-medical-device-development-guiding-principles
+  - label: "Federal Register, 4 December 2024: final guidance on a Predetermined Change Control Plan for AI-Enabled Device Software Functions (read through the Federal Register API)"
+    url: https://www.federalregister.gov/documents/2024/12/04/2024-28361/marketing-submission-recommendations-for-a-predetermined-change-control-plan-for-artificial
+  - label: "MDCG 2019-11 rev.1: Guidance on qualification and classification of software in the MDR and IVDR (June 2025), including Rule 11"
+    url: https://health.ec.europa.eu/latest-updates/update-mdcg-2019-11-rev1-qualification-and-classification-software-regulation-eu-2017745-and-2025-06-17_en
+  - label: "MDCG 2025-6 and AIB 2025-1: FAQ on the interplay between the MDR and IVDR and the AI Act (June 2025)"
+    url: https://health.ec.europa.eu/latest-updates/mdcg-2025-6-faq-interplay-between-medical-devices-regulation-vitro-diagnostic-medical-devices-2025-06-19_en
+  - label: "21 CFR 800.30: Over-the-counter hearing aid controls (eCFR, read through the eCFR API, 1 November 2026)"
+    url: https://www.ecfr.gov/current/title-21/chapter-I/subchapter-H/part-800/subpart-D/section-800.30
+  - label: "21 CFR 874.3300: Air-conduction hearing aid (eCFR)"
+    url: https://www.ecfr.gov/current/title-21/chapter-I/subchapter-H/part-874/subpart-D/section-874.3300
+  - label: "21 CFR 874.3305: Wireless air-conduction hearing aid (eCFR)"
+    url: https://www.ecfr.gov/current/title-21/chapter-I/subchapter-H/part-874/subpart-D/section-874.3305
+  - label: "21 CFR 874.3325: Self-fitting air-conduction hearing aid (eCFR)"
+    url: https://www.ecfr.gov/current/title-21/chapter-I/subchapter-H/part-874/subpart-D/section-874.3325
+  - label: "WHO: Ethics and governance of artificial intelligence for health (2021)"
+    url: https://www.who.int/publications/i/item/9789240084759
+  - label: "External Validation of a Widely Implemented Proprietary Sepsis Prediction Model in Hospitalized Patients (Wong and others, JAMA Internal Medicine, 2021)"
+    url: https://pubmed.ncbi.nlm.nih.gov/34152373/
+  - label: "Artificial intelligence versus clinicians: systematic review of design, reporting standards, and claims of deep learning studies (Nagendran and others, BMJ, 2020)"
+    url: https://pubmed.ncbi.nlm.nih.gov/32213531/
+  - label: "Calibration: the Achilles heel of predictive analytics (Van Calster and others, BMC Medicine, 2019)"
+    url: https://pubmed.ncbi.nlm.nih.gov/31842878/
+  - label: "Underdiagnosis bias of artificial intelligence algorithms applied to chest radiographs in under-served patient populations (Seyyed-Kalantari and others, Nature Medicine, 2021)"
+    url: https://pubmed.ncbi.nlm.nih.gov/34893776/
+  - label: "The Clinician and Dataset Shift in Artificial Intelligence (Finlayson and others, New England Journal of Medicine, 2021)"
+    url: https://pubmed.ncbi.nlm.nih.gov/34260843/
+  - label: "TRIPOD+AI statement: updated guidance for reporting clinical prediction models that use regression or machine learning methods (Collins and others, BMJ, 2024)"
+    url: https://pubmed.ncbi.nlm.nih.gov/38626948/
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import ClinicalValidationLab from '../../../components/viz/ClinicalValidationLab.tsx';
+
+<Callout title="Not regulatory, legal or medical advice">
+This lesson describes what regulators' own pages and documents say, as read on 1 November 2026. Rules and guidance change, and which rules apply to a particular product is a question for regulatory specialists. Some official sites block scripts: the FDA pages were read with a fetch tool, the eCFR and Federal Register through their APIs, and the EU Medical Devices Regulation itself (EUR-Lex) could not be read, so EU statements below come from European Commission guidance. All numbers in the lab are invented.
+</Callout>
+
+A recommendation engine that is wrong costs someone a bad film. A model that helps decide whether a patient has a disease can cost them their health. That is the whole difference, and it changes what you must show before and after release.
+
+## Why regulated domains differ
+
+- **Harm.** Errors fall on people who did not choose the model, often when they are least able to check it.
+- **Accountability.** Someone has to answer for the product: a named manufacturer, a clinician using it, a regulator that can ask questions.
+- **Validation.** A benchmark score is a claim. A regulated product needs evidence, for a stated use, in the setting where it will be used, that a third party can examine.
+
+The same pattern appears wherever the law puts AI in a high-risk class, such as credit, hiring and schooling in the EU's Annex III ([EU AI Act for engineers](../../evals/eu-ai-act-for-engineers/)). Medicine is the oldest and most developed case.
+
+## The product is the device, not the model
+
+The FDA says it plainly on its AI page: it "does not regulate AI as such; it regulates medical devices, including AI-enabled medical devices". A device includes software intended for diagnosis, treatment or prevention of disease. What the FDA looks at is the device's **intended use** and its technological characteristics, which decide the route to market: 510(k) clearance, De Novo classification or premarket approval.
+
+The EU works the same way in its own terms. The Commission-endorsed guidance MDCG 2019-11 (revision 1, June 2025) says software is qualified and classified by its **intended purpose**, and quotes Rule 11 of the Medical Devices Regulation (MDR). Software that provides information used for diagnostic or therapeutic decisions is class IIa, unless those decisions could cause death or irreversible deterioration (class III) or serious deterioration or a surgical intervention (class IIb). Software that monitors physiological processes is IIa, or IIb for vital parameters where variations could cause immediate danger. All other software is class I.
+
+How the AI Act fits, per the June 2025 FAQ (MDCG 2025-6): an AI system is high-risk under Article 6(1) if it is, or is a safety component of, a medical device and the device needs a conformity assessment by a notified body. Classes IIa, IIb and III do; class I devices that need no notified body do not. High-risk status does not change the MDR class, and one set of technical documentation can serve both laws. The AI Act adds requirements on data governance, transparency, human oversight and post-market monitoring. That FAQ predates the 2026 change to the Act's dates; [the EU lesson](../../evals/eu-ai-act-for-engineers/) reports 2 August 2028 for AI built into regulated products, so check the current dates.
+
+| | United States (FDA) | European Union |
+|---|---|---|
+| What decides the route | Intended use and technological characteristics: 510(k), De Novo or PMA | Intended purpose and MDR classification (software Rule 11); notified body for IIa and above |
+| AI-specific material I read | Final guidance on predetermined change control plans (4 December 2024). A draft on AI-enabled device software lifecycle management, listed as a draft on the FDA page. Good machine learning practice principles | MDCG 2025-6: the AI Act's high-risk rules layered on the MDR, with one technical file |
+| What I could not read | The full guidance texts (I read the Federal Register summary) | The MDR itself, and any EU page on planned model updates |
+
+On the FDA's list of AI-enabled devices (over 1,600 devices as of September 2026, per its AI page), the FDA says the list "is not a comprehensive resource": devices were identified mainly by AI-related terms in their public summaries. In the entries I could read, radiology dominated.
+
+## What clinical validation looks like
+
+A held-out test set from your own hospital is **technical validation**. It is necessary and not enough. Clinical validation asks whether the tool works for its intended use, with real patients and real workflows. A ladder, from cheapest to most convincing:
+
+1. **Write the intended use first.** Which condition, which patients, which decision, which user, which setting. Every later number is a number for that.
+2. **Retrospective test on held-out data.** Cheap, and it measures one population at one place and time.
+3. **External validation** on other sites, devices and periods. The Epic Sepsis Model, widely deployed in US hospitals, was tested on 38,455 hospitalisations at Michigan Medicine by Wong and colleagues (2021). It scored an AUC of 0.63, missed 1,709 of 2,552 patients with sepsis (67%) and alerted on 18% of all hospitalisations. Their conclusion was poor discrimination and calibration, and a risk of alert fatigue.
+4. **Prospective evaluation in the workflow.** Does it run in real time, do clinicians act on it, does the outcome improve? A 2020 BMJ review of deep-learning studies (Nagendran and colleagues) found that of 81 non-randomised studies, 9 were prospective and 6 were tested in a real clinical setting, and 58 were at high risk of bias. The field has moved since, but the shape of the problem has not.
+5. **Monitoring after release**, below.
+
+Reporting guidance exists for the studies: TRIPOD+AI (BMJ, 2024) for prediction models. The WHO's 2021 guidance on the ethics of AI for health is the broad ethical frame.
+
+### Four numbers a single score hides
+
+- **Predictive values move with prevalence.** Sensitivity and specificity describe the model. PPV and NPV describe the model in a population. Lower the prevalence and PPV falls, with the same model.
+- **Calibration.** Does "30%" mean about 30 in 100? A model can rank well and still state wrong probabilities in a new place, and Van Calster and colleagues call calibration the Achilles heel of predictive analytics.
+- **Subgroups.** An average can hide a group the model fails. Seyyed-Kalantari and colleagues found chest X-ray classifiers underdiagnosed under-served groups, including female, Black and low-income patients, more often; later commentaries argue that dataset differences complicate how to read such gaps. The lesson is to report by group, and to say why (see [Fairness for builders](../fairness-for-builders/)).
+- **Workflow.** Alerts that interrupt too often get ignored, and a confident score can make a tired reviewer agree. See [Human oversight](../human-oversight-and-when-ai-should-not-decide/).
+
+<ClinicalValidationLab client:visible />
+
+The lab's default setting shows the point. The model catches 78% of cases and clears 91% of healthy patients, at both clinics. Per 10,000 patients, clinic A (20% prevalence) flags 2,268 and about 69 of every 100 flagged have the condition. Clinic B (2% prevalence) flags 1,028, and about 15 of every 100 do. Same model, same rule. The calibration table shows why a risk of "80 to 100%" can mean 50% at the second clinic, and the subgroup table shows 85% sensitivity on one scanner type and 60% on the other, hidden inside the 78%.
+
+<Deep title="Why prevalence changes calibration">
+
+If the model's score has the same distribution for sick and healthy patients at both clinics, only the prior odds differ: 20 in 100 is odds of 1 to 4, and 2 in 100 is odds of about 1 to 49. Bayes' rule multiplies the prior odds by the same likelihood ratio at both places, so every posterior odds at the second clinic is about 12 times smaller than at the first. Adding the difference of the two log-odds to every stated risk (a shift of about -2.5) fixes the calibration. This is the simplest case. Real shifts also change who the patients are, how the scanner is set up and how the condition is labelled, and no formula fixes those.
+
+</Deep>
+
+## Hearing aids as one concrete domain
+
+The US Code of Federal Regulations shows how one product family can sit in different places (the eCFR text, read through its API, 1 November 2026).
+
+- An **air-conduction hearing aid** (21 CFR 874.3300) is class I with general controls and is exempt from premarket notification, subject to the requirements in 21 CFR 800.30 (over-the-counter) or 21 CFR 801.422.
+- A **wireless air-conduction hearing aid** (874.3305) is class II with special controls: electromagnetic compatibility, electrical and thermal safety, exposure to non-ionising radiation, and wireless functions.
+- A **self-fitting** hearing aid (874.3325), where software lets the user derive their own settings, is class II. Its special controls include clinical data evaluating the self-fitting strategy, specified and tested electroacoustic parameters (including latency, maximum output, distortion and self-generated noise), software verification, validation and hazard analysis, and usability testing.
+- An **over-the-counter hearing aid** (800.30) is defined as air-conduction, for people aged 18 or older, to compensate for perceived mild to moderate hearing impairment, with controls the user can use to customise it without a licensed person.
+
+Look at what this says. Software that lets users configure their own hearing raises the evidence asked for, and latency, which [the hearing-devices lesson](../../audio/noise-suppression-and-hearing-devices/) treats as a design constraint, appears as something to specify and test. I did not read anything in these sources that sets AI-specific rules for noise reduction in hearing aids, and I did not read an EU page that classifies hearing aids, so I state no EU class. Which route applies to a real product is a question for specialists.
+
+The engineering lesson is independent of the law. An on-chip noise reducer is a model plus a quantised runtime plus microphones plus a listener. A change to any of them changes what the listener hears, so each change needs a re-test with the right measures ([Quantization for edge](../../edge/quantization-for-edge/), [Measuring audio quality](../../audio/measuring-audio-quality/)). The regulatory machinery for planned updates is the next section.
+
+## After release
+
+A model that was valid on day one meets new hospitals, new devices and new patients. Finlayson and colleagues call the mismatch between training data and later data **dataset shift**, and ask for monitoring, a governance committee and a way for front-line staff to flag a suspected shift ([Monitoring and drift](../../systems/monitoring-and-drift/)).
+
+For planned changes, the FDA's final guidance on a **predetermined change control plan** (PCCP, 4 December 2024) describes what a marketing submission can include: the planned modifications to the AI function, the methodology to develop, validate and implement them, and an assessment of their impact. The FDA reviews the plan with the submission so that those changes can be made without a new submission each time. Anything outside the plan is a separate question. In the EU, the FAQ says the AI Act's post-market monitoring system is key for high-risk systems that keep learning, and that updates must be communicated to patients or users, deployers and notified bodies as necessary. Whether a given change is covered is for the manufacturer and the regulator.
+
+[Running AI governance](../running-ai-governance/) turns this into the habits a company needs: an inventory, risk tiers, review gates and incident reporting.
+
+## What to remember
+
+- Regulators regulate the product and its intended use, not "AI". Write the intended use first; every number depends on it.
+- A held-out score is technical validation. Clinical validation needs external, ideally prospective, evidence in the real workflow.
+- Sensitivity and specificity travel with the model; PPV, NPV and calibration travel with the population.
+- Report by subgroup, and read an overall number as an average of unequal parts.
+- In the EU, medical-device AI is high-risk under the AI Act when a notified body is involved; the MDR class decides, not the AI Act. Check the current dates.
+- Software that configures a hearing aid, or any model change after release, is a change someone must be able to justify with evidence.
+- Validity decays: plan monitoring and a change process before you ship.
+
+Next: [Running AI governance](../running-ai-governance/) covers the organisational side: inventories, risk tiers, model cards and incident handling.

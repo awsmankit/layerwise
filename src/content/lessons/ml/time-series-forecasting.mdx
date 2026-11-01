@@ -1,0 +1,124 @@
+---
+title: "Time-series forecasting: beat the seasonal-naive baseline first"
+track: ml
+level: intermediate
+order: 8
+summary: Forecasting values that arrive in time order. Naive and seasonal-naive baselines, trend and seasonality, MAE, MAPE and MASE and where they mislead, exponential smoothing and ARIMA in a paragraph each, boosted trees on lag features, rolling-origin backtests instead of random splits, leakage through time, and what the papers on forecasting foundation models actually claim. Two labs with invented series.
+updated: 2026-11-01
+sources:
+  - label: "Forecasting: Principles and Practice, 3rd edition (Hyndman and Athanasopoulos): The forecaster's toolbox and simple methods"
+    url: https://otexts.com/fpp3/simple-methods.html
+  - label: "Forecasting: Principles and Practice: Evaluating point forecast accuracy (MAE, MAPE, MASE)"
+    url: https://otexts.com/fpp3/accuracy.html
+  - label: "Forecasting: Principles and Practice: Time series cross-validation"
+    url: https://otexts.com/fpp3/tscv.html
+  - label: "Forecasting: Principles and Practice: Exponential smoothing"
+    url: https://otexts.com/fpp3/expsmooth.html
+  - label: "Forecasting: Principles and Practice: ARIMA models"
+    url: https://otexts.com/fpp3/arima.html
+  - label: "scikit-learn: TimeSeriesSplit"
+    url: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.TimeSeriesSplit.html
+  - label: "A note on the validity of cross-validation for evaluating autoregressive time series prediction (Bergmeir, Hyndman and Koo, 2018)"
+    url: https://robjhyndman.com/publications/cv-time-series/
+  - label: "M5 accuracy competition: Results, findings, and conclusions (Makridakis, Spiliotis and Assimakopoulos, 2022)"
+    url: https://ideas.repec.org/a/eee/intfor/v38y2022i4p1346-1364.html
+  - label: "Introduction to the M5 forecasting competition Special Issue (notes the LightGBM-based winning entry)"
+    url: https://pmc.ncbi.nlm.nih.gov/articles/PMC9232271/
+  - label: "Chronos: Learning the Language of Time Series (Ansari and others, 2024)"
+    url: https://arxiv.org/abs/2403.07815
+  - label: "A decoder-only foundation model for time-series forecasting (Das and others, 2023), the TimesFM paper"
+    url: https://arxiv.org/abs/2310.10688
+  - label: "Are Transformers Effective for Time Series Forecasting? (Zeng, Chen, Zhang and Xu, 2022)"
+    url: https://arxiv.org/abs/2205.13504
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import ForecastLab from '../../../components/viz/ForecastLab.tsx';
+import RollingBacktest from '../../../components/viz/RollingBacktest.tsx';
+
+Shops order stock, grids balance power, and hospitals plan beds, all from a forecast: a number or a range for some time that has not happened yet. **Time-series forecasting** predicts the next values of something measured at regular times, such as daily sales or hourly electricity load.
+
+It looks like ordinary prediction on a table, and that is exactly the trap. Rows have an order. You only ever get one history. And the future you are scored on is not available when you train. Most forecasting mistakes come from forgetting one of those three facts.
+
+## Baselines first
+
+Before building anything clever, write down the dullest forecasts there are. The Hyndman and Athanasopoulos textbook uses four as benchmarks, and says any method you develop should be compared against them:
+
+- **Mean:** every future value equals the average of the history.
+- **Naive:** every future value equals the last observation.
+- **Seasonal naive:** each future value equals the last observed value from the same season, such as the same month last year.
+- **Drift:** the naive forecast plus the average change seen so far.
+
+A series is usually described by three parts. **Trend** is the slow rise or fall. **Seasonality** is a pattern that repeats on a fixed calendar, such as a busy summer. **Noise** is what is left over and cannot be forecast. A seasonal-naive forecast copies the seasonal pattern and the previous level in one move, and it is surprisingly hard to beat when a series is strongly seasonal. If your model cannot do clearly better, you have built a slow way to copy last year.
+
+## Measuring the error
+
+You compare a forecast with what happened using an error measure. The most common are listed below, with the cautions from the textbook.
+
+- **MAE** (mean absolute error) is the average size of the miss, in the series' own units. It is easy to explain, and is only comparable between series with the same units.
+- **RMSE** squares the misses first, so a few big ones dominate.
+- **MAPE** (mean absolute percentage error) is unit-free, so it is popular. But it is undefined if any actual value is zero, huge when values are near zero, and lopsided: a forecast of 50 for an actual of 100 scores 50%, while a forecast of 100 for an actual of 50 scores 100%, for the same miss of 50.
+- **MASE** (mean absolute scaled error) divides your MAE by the average error that the seasonal-naive method makes on the training data. Below 1 means you are doing better than that baseline did in training. It has no division by the actual values, so zeros are fine, and it can be compared across series.
+
+On the default series in the lab below, Holt-Winters has a test MAE of 3.10. Seasonal naive on the 84 training months has an average error of 7.22. So MASE is 3.10 divided by 7.22, or 0.43. The lab also shows a simpler, more direct number: your error divided by the seasonal-naive error on the same test months.
+
+## Classical methods in a paragraph each
+
+**Exponential smoothing** forecasts with weighted averages of past values, with weights that decay exponentially as observations get older. Holt's method adds a trend term, and Holt-Winters adds a seasonal term too. These methods describe trend and seasonality directly.
+
+**ARIMA** models aim instead at the autocorrelations in the data: each value is related to the ones before it. The "AR" part forecasts from a linear combination of past values, "I" is differencing (working with changes between steps to remove a trend), and "MA" uses past forecast errors. Both families are fast to fit and can give prediction intervals, which makes them hard to dislodge as benchmarks.
+
+## Machine learning on lag features
+
+To use a general-purpose model such as gradient boosting, you reshape the series into a table. Each row is one time step. The inputs are **lag features**: the value one step ago, two steps ago, a year ago, plus the month. The target is the value now. To look several steps ahead, either feed each prediction back in as the next lag, or train a separate model per horizon.
+
+One trap catches most people. Trees predict by averaging training values, so they cannot go beyond the range they were trained on. On a series that keeps climbing, a tree trained on raw levels flattens out. The fix is to remove the trend first: predict the **change from the same month last year** and add it back. The lab has both versions.
+
+<ForecastLab client:visible />
+
+Over 100 invented series (trend 0.5, seasonal swing 1, noise 4, a 12-month horizon), the average MASE was about 1.03 for seasonal naive, 2.05 for naive, 1.95 for the flat 12-month average, 0.55 for Holt-Winters, 0.90 for boosted trees on levels and 0.77 for boosted trees on the yearly change. These come from this lab's code and test, on data built from a straight trend plus a fixed season, which is the case exponential smoothing is made for. They say nothing about your data.
+
+Real results can go the other way. In the M5 competition (Makridakis, Spiliotis and Assimakopoulos, 2022), the task was to forecast 42,840 related Walmart unit-sales series, with prices, promotions and holidays as extra inputs. The paper reports that all the top methods were pure machine-learning ones, significantly better than the statistical benchmarks, and the special-issue introduction says the winning submission was built from LightGBM models. It also notes that methods using only the series' own history cannot account for promotions and special days. The lesson is about the setting: many related series and useful outside information favour learned models, while one short, regular series often favours exponential smoothing.
+
+## Backtesting: never shuffle time
+
+A forecast is only worth what it would have scored on data it had not seen. In ordinary machine learning you shuffle rows into train and test sets. For time series, shuffling means training on the future to predict the past.
+
+The fix is the **rolling-origin backtest**, which the textbook calls time series cross-validation. Pick an origin, train on everything before it, forecast the next stretch, and score it. Move the origin forward and repeat, then average. The training window grows, and every forecast is made only from the past. scikit-learn's `TimeSeriesSplit` does the same, with test sets always later than the training data.
+
+<RollingBacktest client:visible />
+
+On the lab's default series, with a 12-month horizon and nine origins, the average error was 6.7 for seasonal naive, 4.0 for Holt-Winters and about 5.5 for each boosted-tree version. Per-origin errors vary a lot (Holt-Winters ranged from 2.9 to 6.0), which is why one split is a thin basis for a choice.
+
+Is random splitting always wrong? Not always, and the nuance is worth knowing. Bergmeir, Hyndman and Koo show that ordinary K-fold cross-validation is valid for purely autoregressive models whose errors are uncorrelated, and in the lab, a random split with honest lag features gave 4.8 against 4.6 for the rolling origin. But random splitting says little about forecasts several steps ahead, can struggle when a series changes level, and hides leaks. A rolling origin is the safe default.
+
+## Leakage in time
+
+**Leakage** is information in your inputs that would not exist at forecast time. In time series it is easy to introduce:
+
+- A rolling average that includes the current row. Forgetting to shift it by one step is the classic. In the lab's panel, a 3-month rolling average that ended on the month being predicted drove the shuffled-split error to 0.0, from 4.8 without it. The honest rolling-origin error was 4.6.
+- Scaling, filling gaps or choosing settings with the whole series before splitting.
+- A feature known only afterwards, such as the actual weather, when at forecast time you only have a weather forecast. Calendar features such as holidays are fine because they are known in advance.
+- Data that is later corrected. Train on what was known at the time, not on the cleaned history.
+
+## Foundation models for time series
+
+Recent papers train one large model on many series, then forecast new ones with no further training, called **zero-shot**. Chronos scales each series, turns values into tokens from a fixed vocabulary by quantising them, and trains T5-family language models, from 20 million to 710 million parameters, to predict the next tokens. Its authors report, across 42 datasets, that it significantly outperforms other methods on datasets that were in its training collection, and has comparable and occasionally superior zero-shot performance on new datasets compared with models trained specifically on them. TimesFM is a patched-decoder attention model pretrained on a large time-series corpus. Its authors report zero-shot accuracy that comes close to that of state-of-the-art supervised models on public datasets.
+
+Treat those as claims from the authors' own benchmarks, and keep two cautions in view. First, results on datasets that overlap the training collection say little about your series. Second, the field has a history of benchmark surprises: Zeng and colleagues found that very simple one-layer linear models beat sophisticated transformer forecasters on nine real datasets for long-horizon forecasting. The practical rule is the same as for every other method. Add a foundation model as one more candidate, run the same rolling-origin backtest, and compare it with seasonal naive and exponential smoothing on your own data.
+
+<Deep title="Beyond a single number: prediction intervals">
+A point forecast hides how unsure it is. A prediction interval gives a range expected to contain the real value with a stated probability, and decisions such as how much safety stock to hold depend on its width. Classical methods can produce intervals from their error model. Chronos is described as a probabilistic model. If you quote an interval, check it in the backtest too: count how often the real value fell inside it, and compare with the stated probability.
+</Deep>
+
+## What to remember
+
+- Beat the naive and seasonal-naive baselines first. If you cannot, nothing more complicated is worth shipping.
+- Use MASE or a ratio to seasonal naive for comparing methods. MAPE misleads near zero and treats over-forecasts and under-forecasts unequally.
+- Exponential smoothing models trend and season directly. ARIMA models autocorrelation. Both are strong, cheap benchmarks.
+- For machine learning, build lag features, and remove trend first because trees cannot extrapolate beyond what they saw.
+- Evaluate with a rolling-origin backtest that only ever trains on the past. A shuffled split can look fine and still hide leaks.
+- Foundation models for time series are promising on their authors' benchmarks. Test them on your data against simple baselines.
+
+Next: [Anomaly detection](../anomaly-detection/)

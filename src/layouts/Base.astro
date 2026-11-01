@@ -13,6 +13,7 @@ import '../styles/diagrams.css';
 import '../styles/landing.css';
 import '../styles/footer.css';
 import '../styles/certificate.css';
+import '../styles/changelog.css';
 import '../styles/w1-start-a.css';
 import '../styles/w1-resp-a.css';
 import '../styles/w1-resp-b.css';
@@ -30,9 +31,36 @@ import '../styles/w2-docs.css';
 import '../styles/w2-dl-a.css';
 import '../styles/w2-dl-b.css';
 import '../styles/w2-resp.css';
+import '../styles/w3-edge-a.css';
+import '../styles/w3-edge-b.css';
+import '../styles/w3-edge-c.css';
+import '../styles/w3-audio-a.css';
+import '../styles/w3-audio-b.css';
+import '../styles/w3-mlops-a.css';
+import '../styles/w3-mlops-b.css';
+import '../styles/w3-mlops-c.css';
+import '../styles/w3-applied-a.css';
+import '../styles/w3-applied-b.css';
+import '../styles/w4-dl-a.css';
+import '../styles/w4-dl-b.css';
+import '../styles/w4-dl-c.css';
+import '../styles/w4-skills.css';
+import '../styles/w4-start-a.css';
+import '../styles/w4-start-b.css';
+import '../styles/w4-resp-a.css';
+import '../styles/w4-resp-b.css';
+import '../styles/w4-resp-c.css';
+import '../styles/w4-resp-d.css';
+import '../styles/w4-build-a.css';
+import '../styles/w4-build-b.css';
+import '../styles/w4-build-c.css';
+import '../styles/w4-build-d.css';
+import '../styles/w4-build-e.css';
+import '../styles/w4-misc.css';
 import '../styles/w1-teach.css';
 import SearchPalette from '../components/ui/SearchPalette.tsx';
 import { site, nav, footerGroups } from '../site';
+import { latestRelease } from '../data/releases';
 import { swatch, trackSwatch } from '../lib/palette';
 import { withBase } from '../lib/url';
 
@@ -171,7 +199,7 @@ const trackStyle = track ? `--track:${track.color};--on-track:${track.on}` : und
       </div>
       <div class="wrap foot-base">
         <p>
-          Lessons and teaching material: <a href={site.contentLicence.url} rel="license noopener">{site.contentLicence.label}</a>, reuse freely with credit. Code: <a href={`${site.repo}/blob/main/LICENSE`} rel="noopener">MIT</a>.
+          Lessons and teaching material: <a href={site.contentLicence.url} rel="license noopener">{site.contentLicence.label}</a>, reuse freely with credit. Code: <a href={`${site.repo}/blob/main/LICENSE`} rel="noopener">MIT</a>. <a href={withBase('/changelog/')} title="What's new in each version">v{latestRelease.version}</a>.
         </p>
         <a class="foot-top" href="#top">Back to top <span aria-hidden="true">↑</span></a>
       </div>

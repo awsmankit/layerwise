@@ -1,0 +1,120 @@
+---
+title: "Anomaly detection: finding the rare, odd one out"
+track: ml
+level: intermediate
+order: 9
+summary: z-scores and why they get fooled, robust and IQR rules, isolation forests, reconstruction error, seasonal series, the base-rate arithmetic that makes most alerts false, and choosing a threshold by what mistakes cost.
+updated: 2026-11-01
+sources:
+  - label: "scikit-learn user guide: Novelty and outlier detection"
+    url: https://scikit-learn.org/stable/modules/outlier_detection.html
+  - label: "scikit-learn: IsolationForest"
+    url: https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.IsolationForest.html
+  - label: "Isolation Forest (Liu, Ting and Zhou, ICDM 2008)"
+    url: https://cs.nju.edu.cn/zhouzh/zhouzh.files/publication/icdm08b.pdf
+  - label: "Extended Isolation Forest (Hariri, Carrasco Kind and Brunner)"
+    url: https://arxiv.org/abs/1811.02141
+  - label: "NIST/SEMATECH e-Handbook of Statistical Methods: Detection of outliers (z-scores and modified z-scores)"
+    url: https://www.itl.nist.gov/div898/handbook/eda/section3/eda35h.htm
+  - label: "Deep Learning for Anomaly Detection: A Survey (Chalapathy and Chawla, 2019)"
+    url: https://arxiv.org/abs/1901.03407
+  - label: "MLPerf Tiny Benchmark (Banbury et al., 2021): the anomaly detection task"
+    url: https://arxiv.org/abs/2106.07597
+  - label: "Forecasting: Principles and Practice, 3rd edition: STL decomposition (Hyndman and Athanasopoulos)"
+    url: https://otexts.com/fpp3/stl.html
+  - label: "Forecasting: Principles and Practice, 3rd edition: Dealing with outliers and missing values"
+    url: https://otexts.com/fpp3/missing-outliers.html
+  - label: "The base-rate fallacy and the difficulty of intrusion detection (Axelsson, ACM TISSEC, 2000)"
+    url: https://doi.org/10.1145/357830.357849
+  - label: "Alarm fatigue: a patient safety concern (Sendelbach and Funk, AACN Advanced Critical Care, 2013)"
+    url: https://pubmed.ncbi.nlm.nih.gov/24153215/
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import AnomalyLab from '../../../components/viz/AnomalyLab.tsx';
+import SeasonalAnomaly from '../../../components/viz/SeasonalAnomaly.tsx';
+
+A bearing on a factory fan starts to hum differently. One card payment in ten thousand is stolen. A server's traffic at 3 am looks like its traffic at 3 pm. **Anomaly detection** is the job of noticing such cases: things that are rare and unlike the rest. It looks like classification, but the usual tools mislead, because anomalies are rare, many kinds have never been seen, and a wrong alert costs somebody's attention. This lesson builds up from one-line statistical rules to isolation forests, then deals with the arithmetic that decides whether a detector is usable at all.
+
+## What counts as anomalous
+
+Three kinds are worth telling apart. A **point anomaly** is a single value far from the rest, such as a 52 where readings are all about 20. A **contextual anomaly** is normal in general and wrong in context: a daytime level of traffic arriving at 03:00. A **collective anomaly** is a run or pattern that is odd although each point is ordinary, such as a flat line from a stuck sensor.
+
+The scikit-learn guide draws a second distinction. In **outlier detection** the training data already contains some outliers, and the method fits the dense region while ignoring them. In **novelty detection** the training data is clean and you ask whether a new point is unlike it. The guide calls these unsupervised and semi-supervised anomaly detection, and notes that for outlier detection the anomalies should not form a dense cluster of their own. When labels exist but are rare, a supervised model may do better, but the labelled anomalies you have are never all the anomalies you will meet.
+
+An anomaly is not the same as an error or as something important. It is a point the data say is unusual; deciding what it means is human work.
+
+## One column: z-scores, and how they get fooled
+
+The **z-score** of a value is how many standard deviations it is from the mean. A common rule flags |z| above 3. It has two traps.
+
+Ten sensor readings (made up): 20.1, 19.8, 20.3, 20.0, 19.9, 20.2, 20.1, 19.7, **45.0** and **52.0**. The two faults drag the mean to 25.7 and inflate the standard deviation to 11.5. Their z-scores are only 1.68 and 2.29. Neither passes 3, so the faults hide each other. This is **masking**. The NIST handbook adds a second warning: with the sample standard deviation, the largest possible z-score in n values is (n - 1) divided by the square root of n, which is 2.85 for n = 10, so |z| > 3 can never fire on ten values.
+
+The fix is to use statistics that outliers cannot move. The **median** is the middle value, and the **MAD** (median absolute deviation) is the median distance from it. The **modified z-score** of Iglewicz and Hoaglin is 0.6745 times (x minus the median) divided by the MAD, and the NIST handbook reports their advice to treat values above 3.5 as potential outliers. For the ten readings the median is 20.1 and the MAD 0.2, so the faults score 84 and 108. The **IQR rule** (Tukey's fences) is similar in spirit: flag anything more than 1.5 interquartile ranges beyond the quartiles, here above 20.8.
+
+All three rules look at one column at a time and assume a roughly bell-shaped spread. For several columns, a point can be ordinary in each and strange together.
+
+## Many columns: isolation forests
+
+The **isolation forest** (Liu, Ting and Zhou, 2008) uses a different idea: anomalies are few and different, so they are easy to cut off. Pick a column at random, pick a random cut between that column's smallest and largest value in the region, and keep the side the point is on. Repeat until the point is alone. An ordinary point deep in the crowd needs many cuts. An odd one needs few.
+
+Try it below. Press "Isolate an anomaly" and then "Isolate an ordinary point" and compare the number of cuts. "Cut again at random" shows that one try is noisy and that the average is what counts.
+
+A **forest** is many such random trees, each built on a small random sample. The score uses the average number of cuts E[h] needed, divided by c(n), the average for an unsuccessful search in a binary tree of n points (about 10.24 for a 256-point sample), and then turned into a score of 2 raised to the power of minus E[h]/c(n). A path as long as c(n) scores 0.5, a typical point. In the example, an average of 4 cuts scores 0.76 and 12 cuts scores 0.44. Near 1 means very odd. scikit-learn describes the forest as producing noticeably shorter paths for anomalies. If the trees are limited to a very shallow depth they cannot tell most points apart, and the lab's depth slider shows the scores bunching together.
+
+<AnomalyLab client:visible />
+
+The lab shows where each method breaks, on made-up data with 1,000 points:
+
+- **One group, 20 anomalies (2%).** z >= 3 and the robust score both flag 16 points, all real, and miss 4. The isolation forest at 0.6 catches 19 but flags 11 ordinary points.
+- **Two groups, 50 anomalies (5%).** Half sit in the empty gap between the groups, where each coordinate looks ordinary. z >= 3 catches 30% of the anomalies. The isolation forest at 0.6 catches 48%, at a price of 8 false alarms. The gap points score only a little above ordinary points, so isolation forests are not a cure-all. The Extended Isolation Forest paper describes artefacts that come from cutting along single columns.
+- **Loud outliers, 100 anomalies (10%).** Many large values inflate the plain standard deviation. z >= 3 catches 66 of 100. The robust score catches all 100.
+
+<Deep title="Other methods you will meet">
+**Distance and density**: the k-nearest-neighbour distance, or the local outlier factor, which compares a point's density with its neighbours', handle groups of different density. **One-class models** such as a one-class SVM learn the boundary of "normal" from clean data (novelty detection). **Reconstruction error** trains an autoencoder, a network squeezing the input through a narrow middle layer, on normal data only; anything it reconstructs badly is flagged. The MLPerf Tiny benchmark uses exactly this for machine sounds: a fully connected autoencoder with an 8-unit bottleneck over log-mel spectrogram windows, whose reconstruction error is the anomaly score and which needs a further threshold, evaluated by area under the ROC curve. The benchmark paper notes that for early detection of machine faults, failure types are many and failures rare, so data is often available only for normal operation. Chalapathy and Chawla survey deep methods. On plain tables, simpler methods are often competitive, and a good baseline is a robust score per column.
+</Deep>
+
+## Time and seasons
+
+On a series, "normal" depends on the time. In the lab below, a week of hourly traffic follows a daily cycle with about 30 requests at 03:00 and about 170 at 15:00. One planted anomaly is a value of 100 at 03:00: ordinary as a number, alarming for that hour. A plain z-score of the raw values gives it a score under 1, so it is invisible.
+
+The fix is to remove what is expected first. The seasonal score here subtracts, from each value, the median of the same hour on the other days, and then applies the robust score to what is left. Forecasting texts call the left-over the remainder; Hyndman and Athanasopoulos decompose a series into trend-cycle, seasonal and remainder, and anomalies live in the remainder. Move the threshold: at 3.0 the plain score flags only the loudest spike, the seasonal score at 5 flags exactly the three planted anomalies, and at 3 it also flags hours that are only noise. The idea of "forecast, then flag what the forecast could not explain" is the next step in [Time-series forecasting](../time-series-forecasting/).
+
+<SeasonalAnomaly client:visible />
+
+## The base-rate problem
+
+Suppose a detector catches 90% of true anomalies, and wrongly flags 1% of ordinary events. It sounds good. Run it on 100,000 events a day where 1 in 10,000 is a real anomaly, which is 10 a day:
+
+| False alarm rate | Real alerts (90% of 10) | False alerts | All alerts | Share that is real |
+|---|---|---|---|---|
+| 1% | 9 | 1,000 | 1,009 | 0.9% |
+| 0.1% | 9 | 100 | 109 | 8.3% |
+| 0.01% | 9 | 10 | 19 | 47% |
+
+These are example numbers, worked out by counting, as in the base-rate section of [Is the difference real?](../is-the-difference-real/). Even a false alarm rate of 0.01% leaves half the alerts false. Axelsson made this argument for intrusion detection in 2000: for reasonable assumptions, the false alarm rate is the limiting factor, and keeping alerts trustworthy needs a very low one. Check the lab's note: with its z >= 3 rule on the 0.5% data, 8 of 1,000 points were flagged and 5 were real. Apply that same recall and false alarm rate to a stream where only 1 event in 10,000 is anomalous and you get about 31 alerts a day, under 4% real.
+
+False alarms have a human cost. A 2013 review of clinical monitoring (Sendelbach and Funk) reports research showing that 72% to 99% of clinical alarms are false and that the volume leads to alarm fatigue, which means alarms get ignored. The same thing happens to security and operations teams.
+
+## Choosing a threshold by cost
+
+No threshold is right in general. Pick one from the costs of the two mistakes. Count a missed anomaly as costing m false alarms. Total cost is then m times the misses plus the false alarms. In the lab's one-group data with 2% anomalies and m = 20, z >= 3 misses 4 anomalies, costing 80. The cheapest z threshold, about 2.35, costs 12. Press "Set the cheapest threshold" and then slide m: a larger m pushes the threshold down and alerts up.
+
+Two practical versions of the same idea. First, an **alert budget**: a team can review perhaps 20 alerts a day, so set the threshold to produce about that many and measure the precision you get. Second, **tier the response**: a cheap automatic action for a mild score, a page to a person only for a high one. Remember that "normal" moves with time. If the process changes, the scores drift upward and alert volume jumps, which is a signal of [drift](../../systems/monitoring-and-drift/) to separate from a real anomaly.
+
+## Keeping a human in the loop
+
+An alert nobody can act on is noise. Show what triggered it: which column had the large z-score, which seasonal hour it departs from, what the nearest normal examples look like. Record the reviewer's verdict next to every alert. Those verdicts are exactly the labels you lacked, and once you have enough of them you can add a supervised model on top of the unsupervised score, and measure precision and recall properly (see [Classical ML essentials](../../foundations/classical-ml-essentials/) on imbalance). A common design is this loop: an unsupervised score proposes, a person disposes, and the labels flow back.
+
+## What to remember
+
+- Anomalies are rare, often unlabelled and of unseen kinds. Plain accuracy is the wrong yardstick: if 1 event in 1,000 is anomalous, predicting "normal" for everything is 99.9% accurate and useless.
+- A z-score is fooled by the very outliers it looks for (masking). Use the median and MAD, or IQR fences, and 3.5 on the modified z-score as a starting point.
+- Per-column rules miss combinations. Isolation forests score points by how few random cuts isolate them; they are a good default for tables, not a cure-all.
+- Reconstruction error from an autoencoder trained on normal data is the deep version of the same idea, and still needs a threshold.
+- On a series, remove the seasonal pattern first, then flag the remainder.
+- When anomalies are rare, most alerts are false even for good detectors. Compute precision from the base rate before you launch.
+- Choose the threshold from the cost of a miss against a false alarm, or from an alert budget, and keep humans and their feedback in the loop.
+
+Next: [Monitoring and drift](../../systems/monitoring-and-drift/)

@@ -1,7 +1,7 @@
 {
   "name": "ai-learning-site",
   "type": "module",
-  "version": "0.0.1",
+  "version": "2.2.0",
   "engines": {
     "node": ">=22.23.4"
   },
@@ -16,7 +16,9 @@
     "headlines": "node scripts/fetch-headlines.mjs",
     "check-sources": "node scripts/check-source-links.mjs",
     "check-libraries": "node scripts/check-libraries.mjs",
-    "check-videos": "node scripts/check-videos.mjs"
+    "check-videos": "node scripts/check-videos.mjs",
+    "changelog": "node scripts/changelog.mjs",
+    "changelog:check": "node scripts/changelog.mjs --check"
   },
   "dependencies": {
     "@astrojs/markdown-satteri": "^0.4.5",

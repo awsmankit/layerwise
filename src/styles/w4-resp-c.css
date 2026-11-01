@@ -1,0 +1,383 @@
+/* Styles for the interactive components in the wave 4 "resp-c" lesson batch. Keep every class under this batch's own prefix (wrc-). */
+
+/* ---------- shared bits ---------- */
+
+.wrc-h {
+  margin: 1.4rem 0 0.4rem;
+  font: 650 1.02rem var(--font-display);
+  color: var(--ink);
+}
+.wrc-note {
+  margin: 0 0 0.8rem;
+  font-size: 0.95rem;
+  color: var(--ink-2);
+}
+.wrc-small {
+  margin: 0.4rem 0 0;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  color: var(--ink-2);
+}
+.wrc-pills,
+.wrc-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.4rem 0 0.6rem;
+}
+.viz .wrc-pills .btn,
+.viz .wrc-tabs .btn {
+  min-height: 44px;
+  text-align: left;
+}
+.viz .wrc .btn[aria-pressed='true'],
+.viz.wrc .btn[aria-pressed='true'] {
+  background: var(--signal-wash);
+  border-color: var(--signal);
+  color: var(--signal-ink);
+}
+.viz.wrc .btn:focus-visible,
+.viz.wrc input:focus-visible,
+.viz.wrc summary:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.wrc-tabs {
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid var(--line-soft);
+  margin-bottom: 0.9rem;
+}
+.wrc-field {
+  max-width: 28rem;
+  margin: 0.4rem 0 0.4rem;
+}
+.wrc-field input[type='number'] {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 0.2rem;
+  padding: 0.4rem 0.6rem;
+  font: 500 1rem var(--font-display);
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+.wrc input[type='range'] {
+  display: block;
+  width: 100%;
+  min-height: 32px;
+  margin-top: 0.2rem;
+}
+.wrc-controls {
+  margin-top: 0.8rem;
+}
+.wrc-result {
+  margin: 0.8rem 0 0;
+  padding: 0.6rem 0.8rem;
+  border-left: 3px solid var(--signal);
+  background: var(--signal-wash);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+/* ---------- footprint calculator ---------- */
+
+.wrc-results {
+  margin: 0.4rem 0 0;
+  display: grid;
+  gap: 0.5rem;
+}
+.wrc-row {
+  display: grid;
+  grid-template-columns: minmax(9rem, 12rem) 1fr;
+  gap: 0.2rem 1rem;
+  padding: 0.5rem 0;
+  border-top: 1px solid var(--line-soft);
+}
+.wrc-row dt {
+  color: var(--ink-2);
+  font-size: 0.92rem;
+}
+.wrc-row dd {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.wrc-range {
+  font-weight: 650;
+  font-size: 1.08rem;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.wrc-mid {
+  font-size: 0.85rem;
+  color: var(--ink-3);
+}
+.wrc-axis {
+  margin: 1rem 0 0;
+  padding: 0 0.6rem 1.6rem;
+  position: relative;
+}
+.wrc-track {
+  position: relative;
+  height: 22px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: repeating-linear-gradient(90deg, transparent 0, transparent calc(8.333% - 1px), var(--line-soft) calc(8.333% - 1px), var(--line-soft) 8.333%);
+}
+.wrc-bar {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  background: var(--signal-wash);
+  border: 2px solid var(--signal);
+  border-radius: 3px;
+  box-sizing: border-box;
+}
+.wrc-pin {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 3px;
+  margin-left: -1px;
+  background: var(--ink);
+}
+.wrc-tick {
+  position: absolute;
+  top: 100%;
+  width: 1px;
+  height: 6px;
+  background: var(--ink-2);
+}
+.wrc-ticklabels {
+  position: relative;
+  margin-top: 8px;
+  height: 1.2rem;
+  font-size: 0.8rem;
+  color: var(--ink-2);
+}
+.wrc-ticklabels span {
+  position: absolute;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+.wrc-ticklabels span:first-child {
+  transform: translateX(-20%);
+}
+.wrc-ticklabels span:last-child {
+  transform: translateX(-80%);
+}
+.wrc-compare {
+  margin: 0.8rem 0 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.wrc-compare b {
+  color: var(--ink);
+}
+.wrc-details {
+  margin-top: 1rem;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+.wrc-details summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  font-weight: 650;
+  cursor: pointer;
+}
+.wrc-details ul {
+  margin: 0.2rem 0 0.4rem;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.4rem;
+  color: var(--ink-2);
+  line-height: 1.45;
+}
+
+/* ---------- validation lab ---------- */
+
+.wrc-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin-top: 0.8rem;
+}
+.wrc-card {
+  min-width: 0;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+.wrc-cardh {
+  margin: 0;
+  font: 650 1rem var(--font-display);
+}
+.wrc-counts {
+  margin: 0.6rem 0 0.2rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.3rem 0.8rem;
+}
+.wrc-counts div {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+}
+.wrc-counts dt {
+  color: var(--ink-2);
+}
+.wrc-counts dd {
+  margin: 0;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+.wrc-flagbar {
+  display: flex;
+  height: 16px;
+  margin: 0.4rem 0 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.wrc-flag-true {
+  background: var(--ok);
+}
+.wrc-flag-false {
+  background: repeating-linear-gradient(135deg, var(--warn) 0 4px, transparent 4px 8px);
+}
+.viz .wrc-metrics {
+  display: table;
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.viz .wrc-metrics th,
+.viz .wrc-metrics td {
+  padding: 0.3rem 0.3rem;
+  border-top: 1px solid var(--line-soft);
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+  vertical-align: baseline;
+}
+.wrc-metrics th {
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.wrc-metrics td:nth-child(2) {
+  font-weight: 650;
+}
+.wrc-metrics td:last-child {
+  font-size: 0.8rem;
+  color: var(--ink-3);
+}
+.wrc-metrics .wrc-moves td:nth-child(2) {
+  color: var(--signal-ink);
+}
+.wrc-cals {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin-top: 0.4rem;
+}
+.wrc-scroll {
+  overflow-x: auto;
+  min-width: 0;
+}
+.viz .wrc-table {
+  display: table;
+  table-layout: fixed;
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  font-variant-numeric: tabular-nums;
+}
+.wrc-table caption {
+  text-align: left;
+  font-weight: 650;
+  padding: 0.3rem 0;
+  color: var(--ink);
+}
+.viz .wrc-table th,
+.viz .wrc-table td {
+  padding: 0.35rem 0.4rem;
+  border-top: 1px solid var(--line-soft);
+  text-align: left;
+  vertical-align: middle;
+}
+.viz .wrc-table thead th {
+  font-size: 0.8rem;
+  color: var(--ink-3);
+  font-weight: 600;
+  border-top: 1px solid var(--line);
+}
+.viz .wrc-table tbody th {
+  font-weight: 600;
+}
+.viz .wrc-table th:first-child {
+  width: 31%;
+}
+.wrc-table tr.wrc-off td {
+  background: color-mix(in srgb, var(--warn) 14%, transparent);
+}
+.wrc-table tr.wrc-total th,
+.wrc-table tr.wrc-total td {
+  border-top: 1px solid var(--ink-2);
+  font-weight: 700;
+}
+.wrc-mini {
+  position: relative;
+  display: block;
+  height: 6px;
+  margin-top: 3px;
+  background: var(--line-soft);
+  border-radius: 3px;
+}
+.wrc-mini i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--signal);
+  border-radius: 3px;
+}
+.wrc-mini em {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  background: var(--ink);
+}
+
+/* ---------- phones ---------- */
+
+@media (max-width: 700px) {
+  .wrc-cards,
+  .wrc-cals {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 560px) {
+  .wrc-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .wrc-table {
+    font-size: 0.82rem;
+  }
+  .viz .wrc-table th,
+  .viz .wrc-table td {
+    padding: 0.3rem 0.25rem;
+  }
+  .wrc-ticklabels {
+    font-size: 0.78rem;
+  }
+  .viz .wrc-pills .btn,
+  .viz .wrc-tabs .btn {
+    flex: 1 1 100%;
+  }
+}

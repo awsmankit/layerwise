@@ -1,0 +1,155 @@
+---
+title: Small language models on phones and laptops
+track: edge
+level: advanced
+order: 4
+summary: "The memory budget, the speed ceiling and the runtimes for running a language model on a phone, tablet or laptop; what small models are good for, when to fall back to the cloud, and what on-device does and does not do for privacy."
+updated: 2026-11-01
+sources:
+  - label: "Gemini Nano and AICore (Android Developers, page dated 2026-10-29)"
+    url: https://developer.android.com/ai/gemini-nano
+  - label: "ML Kit GenAI APIs overview (Google for Developers)"
+    url: https://developers.google.com/ml-kit/genai
+  - label: "Foundation Models framework (Apple Developer Documentation)"
+    url: https://developer.apple.com/documentation/foundationmodels
+  - label: "Apple Intelligence Foundation Language Models: Tech Report 2025 (Li et al., 2025)"
+    url: https://arxiv.org/abs/2507.13575
+  - label: "Phi Silica in the Windows App SDK (Microsoft Learn)"
+    url: https://learn.microsoft.com/en-us/windows/ai/apis/phi-silica
+  - label: "MobileLLM: Optimizing Sub-billion Parameter Language Models for On-Device Use Cases (Liu et al., 2024)"
+    url: https://arxiv.org/abs/2402.14905
+  - label: "Phi-3 Technical Report: A Highly Capable Language Model Locally on Your Phone (Abdin et al., 2024)"
+    url: https://arxiv.org/abs/2404.14219
+  - label: "Overview of memory management (Android Developers)"
+    url: https://developer.android.com/topic/performance/memory-overview
+  - label: "Qwen2.5-3B-Instruct model card and config (Qwen team, Hugging Face)"
+    url: https://huggingface.co/Qwen/Qwen2.5-3B-Instruct
+  - label: "Phi-3-mini-4k-instruct model card and config (Microsoft, Hugging Face)"
+    url: https://huggingface.co/microsoft/Phi-3-mini-4k-instruct
+  - label: "iPad Pro tech specs (Apple)"
+    url: https://www.apple.com/ipad-pro/specs/
+  - label: "MacBook Pro (14-inch, M4, 2024) tech specs (Apple Support)"
+    url: https://support.apple.com/en-us/121552
+  - label: "Jetson Orin family specifications (NVIDIA)"
+    url: https://www.nvidia.com/en-us/autonomous-machines/embedded-systems/jetson-orin/
+  - label: "Snapdragon X Elite product brief (Qualcomm)"
+    url: https://docs.qualcomm.com/doc/87-71417-1/87-71417-1_REV_F_Snapdragon_X_Elite_Product_Brief.pdf
+  - label: "Snapdragon 8 Elite product brief (Qualcomm)"
+    url: https://www.qualcomm.com/content/dam/qcomm-martech/dm-assets/documents/Snapdragon-8-Elite-SM8750-3-AB-Product-Brief.pdf
+  - label: "Deploying LLMs to ExecuTorch (PyTorch documentation)"
+    url: https://docs.pytorch.org/executorch/stable/llm/getting-started.html
+  - label: "LiteRT-LM (Google AI Edge, GitHub)"
+    url: https://github.com/google-ai-edge/LiteRT-LM
+  - label: "llama.cpp (GitHub)"
+    url: https://github.com/ggml-org/llama.cpp
+  - label: "MLX (Apple machine learning research, GitHub)"
+    url: https://github.com/ml-explore/mlx
+  - label: "ONNX Runtime generate() API (Microsoft)"
+    url: https://onnxruntime.ai/docs/genai/
+  - label: "OpenVINO GenAI (Intel, GitHub)"
+    url: https://github.com/openvinotoolkit/openvino.genai
+  - label: "KleidiAI: micro-kernels for Arm CPUs (Arm, GitHub)"
+    url: https://github.com/arm-software/kleidiai
+  - label: "WebLLM (MLC)"
+    url: https://webllm.mlc.ai/
+  - label: "Transformers.js (Hugging Face)"
+    url: https://huggingface.co/docs/transformers.js
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import OnDeviceBudget from '../../../components/viz/OnDeviceBudget.tsx';
+
+A language model small enough to live on your phone is no longer a demo. Phone and PC platforms now ship one as a system service. Whether your own model fits, how fast it can go and when it should hand over to a bigger one are mostly arithmetic and a few hard limits, and this lesson works through them. It builds on [quantization for the edge](../quantization-for-edge/) and on [the memory maths for local models](../../local/memory-math-for-local-models/). Product statements are as of 1 November 2026, from each vendor's own pages, and they change quickly.
+
+## How small is small
+
+There is no fixed line. These are the sizes the cited papers and model cards give:
+
+| Model | Size | What the source says |
+|---|---|---|
+| MobileLLM (Meta researchers, 2024) | 125M and 350M studied in detail | In the authors' study, deep and thin networks with shared embeddings and grouped-query attention gave the best baseline at sub-billion size |
+| Phi-3-mini (Microsoft, 2024) | 3.8B | 4-bit quantised it occupies about 1.8 GB and ran at over 12 tokens per second on an iPhone 14 |
+| Apple's on-device model (2025) | about 3B | Compressed to 2 bits per weight with quantisation-aware training; embeddings at 4 bits, KV cache at 8 bits |
+| Qwen2.5-3B (Qwen team) | 3.09B | 36 layers, 16 query heads and 2 key-value heads, 32,768-token context |
+
+Google's Gemini Nano is the model behind Android's on-device generative features, but Google's developer page does not state its parameter count, so this lesson does not either.
+
+## The memory budget
+
+Two things use memory: the weights and the KV cache. The weights are parameters times bits divided by eight. Phi-3-mini at 4 bits is 3.8 billion times 0.5 bytes, which is 1.9 GB, close to the 1.8 GB its report gives. The KV cache, covered in [the KV cache lesson](../../serving/kv-cache-and-memory/), is 2 x layers x KV heads x head dimension x bytes per value, for every token in context.
+
+On a phone the cache can matter as much as the weights, and the number of KV heads decides it. Two real configurations, at 16-bit values:
+
+- **Phi-3-mini** has 32 layers and 32 key-value heads of dimension 96: 393,216 bytes per token. At its 4,096-token context that is 1.61 GB, nearly as much as its 4-bit weights.
+- **Qwen2.5-3B** has 36 layers and only 2 key-value heads of dimension 128: 36,864 bytes per token. At 8,192 tokens that is 0.30 GB.
+
+That is a factor of 10.7 per token from grouped-query attention alone. Apple's report adds two more tricks: sharing the cache between two blocks of layers, which it says cuts cache memory by 37.5%, and storing the cache at 8 bits.
+
+Then comes the part a laptop lesson does not have: **how much of the RAM is yours.** Android's documentation says memory an app modifies stays resident and cannot be paged out, and that the system can terminate the processes holding the most memory when it runs short. Unmodified memory-mapped files, such as code, can be paged out and read again, so a model loaded as a read-only mapping can stall under pressure instead of crashing. Treat a share of RAM as untouchable, and measure the real limit on the target device.
+
+<OnDeviceBudget client:visible />
+
+Try Qwen2.5 3B at 4.5 bits on the invented phone: about 1.74 GB of weights plus 0.15 GB of cache at 4,096 tokens, so it fits easily. Switch to 16-bit and it no longer does. Then pick Phi-3-mini and drag the context up: the cache grows ten times as fast.
+
+## Speed: decode reads everything, every token
+
+Generating one token reads every weight, plus the whole cache, once. So the ceiling on decode speed is
+
+```text
+tokens per second  <=  memory bandwidth / (weights + KV cache)
+```
+
+A traceable data point: Phi-3-mini's 1.8 GB at more than 12 tokens per second means the iPhone 14 run streamed at least 21.6 GB/s of weights (12 x 1.8, if each token reads every weight once). The calculator's presets give the other side: bandwidth you can read off a vendor page. Apple lists 153 GB/s for the M5 iPad Pro and 120 GB/s for the M4 MacBook Pro; NVIDIA lists 102 GB/s for the Jetson Orin Nano 8 GB; Qualcomm's Snapdragon X Elite brief gives 135 GB/s. That last one checks out from its other lines: 8,448 mega-transfers per second on 8 channels of 16 bits (a 128-bit bus) is 8,448 x 16 bytes, about 135 GB/s. I did not find a phone figure on the vendor pages checked. Qualcomm's Snapdragon 8 Elite brief gives memory speed and capacity (LPDDR5X, up to 24 GB) but not bandwidth, so the phone preset above is invented and says so.
+
+Prompt processing differs. Prefill handles many tokens at once and is limited by compute, which is where an NPU or GPU helps most; decode is limited by memory whichever chip does it. Which processor runs what is up to the runtime and the device: Microsoft's page says Phi Silica runs on the NPU of Copilot+ PCs, and on a supported GPU elsewhere, using speculative decoding on the NPU. See [inside a small device](../inside-a-small-device/) for the hardware and [from PyTorch to the chip](../from-pytorch-to-the-chip/) for how a model is mapped onto it. Sustained decoding also produces heat, so measure over minutes, not one reply (see [real-time on a budget](../real-time-on-a-budget/)).
+
+<Deep title="Why real speed is below the ceiling">
+Compute, cache misses, dequantisation work, threading and thermal limits all cost time, and the ceiling treats a tied embedding table as if it were read in full. The efficiency slider in the calculator is an assumption, not a measurement. The honest number is one you measure with your runtime, your quantisation format and your prompts.
+</Deep>
+
+## Ways to run one
+
+As of 1 November 2026:
+
+| Route | What it gives you | Watch for |
+|---|---|---|
+| **Android: Gemini Nano** through AICore and ML Kit GenAI | A system-managed model. Google's page says AICore handles distribution and updates and the model does not count against your app's size or memory budget; ML Kit offers prompting plus task APIs such as summarisation and proofreading | Token limits, device support and capability limits, which is why Google offers a hybrid API that can fall back to cloud Gemini models |
+| **Apple: Foundation Models framework** | The on-device model behind Apple Intelligence, with guided generation, tool calling and adapters. Apple's documentation lists iOS 26.0 as the first version and requires a device that supports Apple Intelligence | Availability by device and region; Apple's own page says to use Private Cloud Compute or a server model when you need more reasoning or context |
+| **Windows: Phi Silica** | A system model on Copilot+ PCs and supported GPUs | Microsoft's page says it is being replaced by a model called Aion Instruct, with retail rollout planned for January 2027, and that LoRAs must be re-trained |
+| **Your own model in your app** | Full control of model, prompts and fine-tuning. Open runtimes include LiteRT-LM (Google), ExecuTorch (PyTorch), llama.cpp, MLX (Apple silicon), MLC LLM, ONNX Runtime GenAI and OpenVINO GenAI (Intel); Arm's KleidiAI supplies optimised CPU kernels | You ship and update the weights, and you test on every device class |
+| **In the browser** | WebLLM uses WebGPU; Transformers.js uses ONNX Runtime | Download size and GPU support differ by browser and machine |
+
+Two patterns recur. The platform model is free of download cost and memory worry, but you cannot choose or freeze it, and the Windows case shows it can be swapped under you. Your own model gives control, at the price of everything in [shipping to a fleet](../shipping-to-a-fleet/).
+
+## What small models are for
+
+Small models are good at narrow, well-specified work: summarising a message, rewriting, extracting fields, classifying intent, picking a tool and its arguments. Apple's documentation names summarisation, entity extraction, refinement and similar tasks. A talk by Google's Cormac Brick reports a 270-million-parameter model going from 46% to over 90% accuracy on eight of ten function-calling tasks after fine-tuning on synthetic data: one speaker's reported result, but it shows the pattern. MobileLLM's authors report API-calling accuracy close to a 7B model.
+
+They are weak at world knowledge. The Phi-3 report says the model "simply does not have the capacity to store too much 'factual knowledge'" and suggests pairing it with a search engine. Long context, open-ended reasoning and rare languages are the other usual weak spots.
+
+The common way to specialise is a **LoRA adapter** over one shared base model. Apple's report describes a toolkit for rank-32 adapters and says each adapter is compatible with a single base-model version, so a new base model means training new adapters. Microsoft's Phi Silica notice says the same thing.
+
+## When to fall back to the cloud
+
+Keep the device path for what it is good at and decide per request, as in [model routing and fallbacks](../../systems/model-routing-and-fallbacks/):
+
+- **No model.** The device lacks the hardware, the model has not downloaded or the OS evicted it. Google's hybrid API exists for this case.
+- **Too hard.** The task needs reasoning, knowledge or context the small model lacks. A confidence or validity check on the output can trigger a retry in the cloud.
+- **Too long.** The input would not fit the on-device context.
+- **Not allowed.** Some data must not leave the device. Then the right fallback may be a refusal or a simpler local function, not the cloud. Ask the user before a silent upgrade sends their text away.
+
+Evaluate on the real device. Quantisation, the runtime and the thermal state all change output, so a score from a desktop run does not carry over.
+
+## Privacy, honestly
+
+On-device inference removes the network path. Google's page says AICore has no direct internet access and that on-device prompts involve no server calls. That is a real benefit for sensitive text. It does not remove app logs, crash reports, backups, prompt injection, or a user who shares the output. See [privacy engineering for AI](../../responsible/privacy-engineering-for-ai/) and [private and air-gapped AI](../../local/private-and-air-gapped-ai/).
+
+## What to remember
+
+- Weights are parameters x bits / 8. The KV cache is 2 x layers x KV heads x head dimension x bytes, per token; grouped-query attention and an 8-bit cache shrink it.
+- On a phone, the usable share of RAM is smaller than the spec sheet, and the system can kill a large process.
+- Decode speed is bounded by memory bandwidth divided by bytes read per token. Prefill is where compute units help most.
+- Platform models are convenient and can change under you; your own model is controllable and yours to update.
+- Small models suit narrow tasks, especially fine-tuned; keep facts and long reasoning for retrieval or the cloud, and plan the fallback.
+- Next: [shipping to a fleet](../shipping-to-a-fleet/).

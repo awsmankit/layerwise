@@ -1,0 +1,145 @@
+---
+title: "How much power does AI use? Energy, water and what you can do"
+track: responsible
+level: basic
+order: 12
+summary: Where AI's electricity goes (training, everyday use, cooling and idle machines), how to estimate it with power times time, what the best public measurements say and why they disagree by a hundred times or more, how much water is involved, and what people and builders can do. Includes a calculator that gives ranges, never one number.
+updated: 2026-11-01
+sources:
+  - label: "IEA: Key Questions on Energy and AI (World Energy Outlook special report, April 2026), read as the PDF: data-centre totals, per-query ranges, Figure 2.1 and Box 2.1"
+    url: https://iea.blob.core.windows.net/assets/3179f7f8-01f6-4dd6-bffa-c9f7b73f1dc9/KeyQuestionsonEnergyandAI.pdf
+  - label: "Google: Measuring the environmental impact of AI inference (22 August 2025)"
+    url: https://cloud.google.com/blog/products/infrastructure/measuring-the-environmental-impact-of-ai-inference
+  - label: "Google: Measuring the environmental impact of delivering AI at Google Scale (the technical paper behind that post, August 2025)"
+    url: https://arxiv.org/abs/2508.15734
+  - label: "Sam Altman: The Gentle Singularity (2025), the OpenAI per-query figures in a parenthesis"
+    url: https://blog.samaltman.com/the-gentle-singularity
+  - label: "Epoch AI: How much energy does ChatGPT use? (7 February 2025)"
+    url: https://epoch.ai/gradient-updates/how-much-energy-does-chatgpt-use
+  - label: "Mistral AI: Our contribution to a global environmental standard for AI (22 July 2025)"
+    url: https://mistral.ai/news/our-contribution-to-a-global-environmental-standard-for-ai
+  - label: "AI Energy Score v2: Refreshed Leaderboard, now with Reasoning (Luccioni and Gamazaychikov, Hugging Face, 4 December 2025)"
+    url: https://huggingface.co/blog/sasha/ai-energy-score-v2
+  - label: "Power Hungry Processing: Watts Driving the Cost of AI Deployment? (Luccioni, Jernite and Strubell, FAccT 2024)"
+    url: https://arxiv.org/abs/2311.16863
+  - label: "Estimating the Carbon Footprint of BLOOM, a 176B Parameter Language Model (Luccioni, Viguier and Ligozat, 2022)"
+    url: https://arxiv.org/abs/2211.02001
+  - label: "Making AI Less Thirsty: Uncovering and Addressing the Secret Water Footprint of AI Models (Li, Yang, Islam and Ren; version 5, March 2025)"
+    url: https://arxiv.org/abs/2304.03271
+  - label: "The ML.ENERGY Benchmark: Toward Automated Inference Energy Measurement and Optimization (Chung and others, 2025)"
+    url: https://arxiv.org/abs/2505.06371
+  - label: "Meta: Llama 3.1 model card, Hardware and Software section (training energy and emissions)"
+    url: https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/MODEL_CARD.md
+  - label: "US Department of Energy: report on data-centre electricity demand (Lawrence Berkeley National Laboratory, December 2024)"
+    url: https://www.energy.gov/articles/doe-releases-new-report-evaluating-increase-electricity-demand-data-centers
+  - label: "Ember: Global Electricity Review 2026 (global average carbon intensity of electricity in 2025)"
+    url: https://ember-energy.org/latest-insights/global-electricity-review-2026/electricity-demand-and-supply-trends/
+  - label: "IPCC Fifth Assessment Report, Working Group III, Annex III, Table A.III.2: emissions of electricity supply technologies"
+    url: https://www.ipcc.ch/site/assets/uploads/2018/02/ipcc_wg3_ar5_annex-iii.pdf
+  - label: "Google Data Centers: power usage effectiveness (fleet average, 2025)"
+    url: https://datacenters.google/efficiency/
+  - label: "NVIDIA H100 Tensor Core GPU: specifications (maximum thermal design power)"
+    url: https://www.nvidia.com/en-us/data-center/h100/
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import FootprintCalculator from '../../../components/viz/FootprintCalculator.tsx';
+
+Every AI answer is made by chips that run on electricity, and the chips get hot. So the questions "how much power?" and "how much water?" are fair ones. The honest answer is a range, and the range is wide.
+
+<Callout title="How to read this lesson">
+Every figure here has a date and a source, and most are a company's own measurement. They count different things, so they cannot be lined up like a league table. Where a number looks precise, check what it leaves out.
+</Callout>
+
+## Watts and watt-hours
+
+A **watt** (W) measures power, how fast energy is used. A **watt-hour** (Wh) is energy: one watt used for one hour. A 10 W LED bulb that stays on for 6 minutes uses 1 Wh. A thousand watt-hours is a **kilowatt-hour** (kWh), the unit on an electricity bill. Heating one litre of water from 20 to 100 degrees Celsius takes about 93 Wh (4.186 joules per gram per degree, times 1,000 grams, times 80 degrees, divided by 3,600), roughly one kettle boil.
+
+## Where the energy goes
+
+**Training** teaches a model, once. It is a huge job done on thousands of chips for weeks. Meta's model card for Llama 3.1 405B reports 30.84 million GPU hours on chips rated at up to 700 W each. Multiply them (power times time) and you get about 21.6 GWh, roughly a year of electricity for 2,000 US homes. Meta reports 8,930 tonnes of CO2-equivalent for it on a **location-based** count (the carbon of the grid where the chips ran) and 0 on a **market-based** count (which credits renewable electricity the company buys). Both are legitimate, and they answer different questions.
+
+**Inference** is every later use, each answer from a model that has already been trained. One answer is small, and there are billions. The IEA's April 2026 report says the balance of AI-related energy use has already shifted decisively from training to inference.
+
+**Overhead** is everything besides the chips doing sums: cooling, power conversion, idle machines kept ready for busy moments, and the host computers around the GPUs. Data-centre builders summarise cooling and power overhead as **power usage effectiveness** (PUE): total facility energy divided by the energy used by the computers. Google reports a fleet average of 1.09 for 2025, and says that is 83% less overhead energy than the industry average (its own claim). There is a fourth cost that the electricity bill does not show: making the chips and servers in the first place.
+
+<Deep title="Idle machines and the BLOOM study">
+
+Luccioni and colleagues measured BLOOM, a 176-billion-parameter model trained in France in 2022. The training itself used 433,196 kWh, which at about 57 grams of CO2e per kWh gives 24.7 tonnes. Counting the idle power of the computers that ran it and the manufacture of the equipment, they estimate 50.5 tonnes. When they ran BLOOM as a live service, a cloud server handled 230,768 requests and used 914 kWh, about 4 Wh a request. Even in ten-minute stretches with almost no requests it used about 0.28 kWh, because the model sits in memory and the machine stays on. That older, unbatched set-up is far less efficient than the 2025 disclosures below, and it shows why how busy a chip is matters as much as how big the model is.
+
+</Deep>
+
+## Estimating it yourself
+
+There are two ways, and both come down to power times time.
+
+1. **Power times time.** A chip drawing 700 W for one hour uses 0.7 kWh. Divide by the number of answers it gave in that hour. If one chip gave 3,000 short answers in an hour (an invented number for the example), that is about 0.23 Wh each, before overhead.
+2. **Tokens times energy per token.** If a reply is 400 tokens (an example) and a measured prompt uses 0.24 Wh, each token cost about 0.6 milliwatt-hours. A reasoning model that writes 300 to 800 times more tokens spends roughly in proportion, which is what the measurements below show.
+
+Then the carbon: multiply energy by how much carbon the electricity carries.
+
+## What the best public measurements say
+
+| Source and date | What it reports | What it counts, and what it leaves out |
+|---|---|---|
+| Google, 22 August 2025 | Median Gemini Apps text prompt: 0.24 Wh, 0.03 g CO2e, 0.26 mL of water. Narrower, chips-only: 0.10 Wh | Whole serving system, including idle machines and cooling. Not training, not your device. Google says it has not been independently verified |
+| OpenAI (Sam Altman's blog, 2025) | Average ChatGPT query about 0.34 Wh and 0.000085 US gallons of water (about 0.32 mL) | No method given in the post |
+| Epoch AI, February 2025 | About 0.3 Wh for a typical GPT-4o query, ten times less than an older 3 Wh claim | An outside estimate built from stated assumptions |
+| Mistral, 22 July 2025 | A 400-token reply from Le Chat: 1.14 g CO2e and 45 mL of water | A life-cycle study: also counts building the servers and the electricity behind them. Mistral calls it a first approximation |
+| AI Energy Score v2, 4 December 2025 | Reasoning on uses about 30 times more energy than off, on average. The same model: 150 to 700 times | GPU energy only, open models, benchmark prompts |
+| IEA, April 2026 | Simple text queries use less electricity than a television over the same time. Image generation about ten times more per request. Video, reasoning and agents far more | Indicative GPU figures, drawn from the benchmark above. Not production measurements |
+| Luccioni and others, FAccT 2024 | Per 1,000 requests: text classification about 2 Wh, text generation about 47 Wh, image generation about 2,900 Wh | 2023 experiments on research hardware. Old numbers, useful for the ratios |
+
+The IEA's own check is worth knowing. Take a generous 1 Wh per query and 10 billion queries a day, about the number of web searches worldwide: that is roughly 3.6 TWh a year, under 1% of the electricity data centres use. Short text answers are not where the electricity goes. Video, long reasoning and agents that make many model calls are the growth, and they are harder to measure.
+
+### Why the numbers disagree
+
+- **What is counted.** Chips only, the whole server, the whole data centre, or the whole life cycle. Google's two figures differ by more than two times for exactly this reason.
+- **What was asked.** A short question and a long document, or a reply with ten times the words.
+- **Which model.** Mistral says impacts are roughly proportional to model size for the same amount of text.
+- **How busy the chip is.** Many requests sharing a chip costs less each than one request alone.
+- **Measured or estimated, and when.** Per-query energy has fallen fast: Google reports a 33 times drop over the 12 months to May 2025. The 2025 figures are probably already out of date.
+- **Who is telling you.** Most per-query figures are a company reporting on itself.
+
+## The big picture
+
+Totals are estimates too, with ranges. The IEA estimates data centres used about 415 TWh in 2024 (around 1.5% of the world's electricity), almost 500 TWh in 2025, and in its base case about 950 TWh by 2030, around 3% of global demand. It expects electricity use by AI-focused data centres to roughly triple by then. For the United States, a Lawrence Berkeley National Laboratory report (December 2024, summarised by the US Department of Energy) puts data centres at 176 TWh in 2023, 4.4% of US electricity, and between 325 and 580 TWh by 2028. A range that wide is the scientists telling you that the future depends on choices not yet made.
+
+## Water
+
+Many data centres cool their chips by evaporating water, so water leaves the site as vapour. More water is used by the power stations that make the electricity, and by the factories that make the chips. Which of those is counted changes the answer enormously. Google's 0.26 mL and OpenAI's roughly 0.32 mL per query are on-site cooling figures. Mistral's 45 mL for a 400-token reply is roughly 140 to 170 times larger, because it counts the wider chain. For training, Li and colleagues estimated that GPT-3 in Microsoft's US data centres could directly evaporate about 700,000 litres of fresh water. Their method is an estimate, and the paper stresses that water use depends on where and when a data centre runs.
+
+## Try it
+
+The calculator below uses ranges from the sources above and nothing else. Change the numbers and watch the bar. The tab for one training run reproduces the Meta figures and lets you move the grid.
+
+<FootprintCalculator client:visible />
+
+## What people can do
+
+Compare with your own life first. As an example, 20 short text replies a day at the middle of the range (about 0.3 Wh each) is about 2.2 kWh a year, around 0.02% of the 10,500 kWh a typical US home uses (Epoch AI's figure). Image and video generation and long reasoning answers cost far more per request, so they are the choices worth making on purpose.
+
+- **Ask on purpose.** One clear question instead of ten retries. Turn reasoning off when a quick answer will do.
+- **Choose the smaller tool.** A search, a calculator or a small classifier often does the job for a tiny fraction of the energy.
+- **Support honest numbers.** Prefer products that publish their measurements and say what they count.
+
+## What builders can do
+
+- **Use the smallest model that passes your tests.** Routing easy requests to a small model and sending only hard ones to a big one is the biggest lever ([Cost levers](../../cost/cost-levers/), [Model routing](../../systems/model-routing-and-fallbacks/)).
+- **Cut tokens.** Shorter outputs, trimmed prompts and a cap on reasoning ([Where the tokens go](../../cost/where-the-tokens-go/)). Energy follows tokens.
+- **Cache and batch.** Busy chips waste less, and repeated prompts need not be computed twice ([Inference optimisation](../../serving/inference-optimisation/)).
+- **Shrink the model.** Lower-precision weights move fewer bytes ([Quantization](../../serving/quantization/)), and a model that runs on the device removes the data-centre trip ([Edge versus cloud](../../edge/edge-vs-cloud-inference/)).
+- **Pick the place and the chip.** Electricity carries from about 12 g of CO2e per kWh (nuclear and onshore wind, IPCC medians) to about 820 (coal): a spread of almost 70 times. The world average in 2025 was 458 g per kWh (Ember). Chips with more work per watt help too ([What a GPU is](../../infra/gpu-basics/)).
+- **Measure it.** Do not guess. Open tools such as the ML.ENERGY Benchmark and the AI Energy Score measure energy per request. The ML.ENERGY authors report that automatic tuning sometimes saves more than 40% without changing what the model computes.
+
+## What to remember
+
+- A watt-hour is energy; a typical short AI reply is a fraction of one, and published figures for it run from about 0.05 to about 1 Wh depending on what is counted.
+- Training is a one-off cost, use is a running cost, and overhead (cooling, idle machines, building the hardware) is a third.
+- Reasoning, images, video and agents can cost tens to hundreds of times more per request than a short text reply.
+- Water figures differ by more than 100 times depending on whether the water behind the electricity and the chips is counted.
+- Any single-number claim ("a query uses X") is missing its boundary, its date or its source.
+- Smaller models, fewer tokens, busy chips and cleaner grids are the levers.
+
+Next: [Medical and regulated AI](../medical-and-regulated-ai/) looks at what happens when an AI system is part of a medical device and has to show it works.

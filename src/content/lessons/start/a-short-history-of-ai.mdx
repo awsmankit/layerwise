@@ -1,0 +1,107 @@
+---
+title: A short history of AI
+track: start
+level: basic
+order: 1.2
+summary: AI is more than 70 years old. Tap through the big moments, from Turing's question to chatbots, and see why it had two "winters" and what finally made it work.
+updated: 2026-11-01
+sources:
+  - label: "Alan Turing (1950), Computing Machinery and Intelligence, Mind (copy hosted by UMBC)"
+    url: https://courses.cs.umbc.edu/471/papers/turing.pdf
+  - label: "McCarthy, Minsky, Rochester and Shannon (1955), A proposal for the Dartmouth summer research project on artificial intelligence"
+    url: http://jmc.stanford.edu/articles/dartmouth/dartmouth.pdf
+  - label: "Joseph Weizenbaum (1966), ELIZA, Communications of the ACM (copy hosted by Stanford)"
+    url: https://web.stanford.edu/class/linguist238/p36-weizenabaum.pdf
+  - label: "Wikipedia: AI winter"
+    url: https://en.wikipedia.org/wiki/AI_winter
+  - label: "Wikipedia: Lighthill report"
+    url: https://en.wikipedia.org/wiki/Lighthill_report
+  - label: "Wikipedia: Xcon (the expert system)"
+    url: https://en.wikipedia.org/wiki/Xcon
+  - label: "IBM: Deep Blue"
+    url: https://www.ibm.com/history/deep-blue
+  - label: "Wikipedia: ImageNet"
+    url: https://en.wikipedia.org/wiki/ImageNet
+  - label: "Krizhevsky, Sutskever and Hinton (2012), ImageNet classification with deep convolutional neural networks"
+    url: https://www.cs.toronto.edu/~kriz/imagenet_classification_with_deep_convolutional.pdf
+  - label: "Silver et al. (2016), Mastering the game of Go with deep neural networks and tree search, Nature"
+    url: https://www.nature.com/articles/nature16961
+  - label: "Google DeepMind: AlphaGo"
+    url: https://deepmind.google/research/alphago/
+  - label: "Vaswani et al. (2017), Attention is all you need"
+    url: https://arxiv.org/abs/1706.03762
+  - label: "OpenAI (30 November 2022), Introducing ChatGPT (archived copy)"
+    url: https://web.archive.org/web/20221130180000/https://openai.com/blog/chatgpt/
+  - label: "Wikipedia: History of artificial intelligence"
+    url: https://en.wikipedia.org/wiki/History_of_artificial_intelligence
+---
+
+import ShortHistory from '../../../components/viz/ShortHistory.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+AI is not new. People have worked on it for more than 70 years. There were big hopes, big disappointments and a few big surprises.
+
+Tap through the timeline to see the main moments. Then read why things went up, down and up again.
+
+## The timeline
+
+<ShortHistory client:visible />
+
+## Two big ideas
+
+Look at the colours in the timeline. Early on, people tried to write down the rules of thinking by hand. A rule says "if this, then that". The expert systems of the 1980s were big lists of rules like that. People who knew a job well wrote them.
+
+Later, people did something different. They gave computers lots of examples and let them find the rules. This is **machine learning**, and you met it in [What AI actually is](../what-is-ai-in-plain-english/). Rules are easy to read, but someone must think of every case. Learning needs a lot of examples.
+
+## Why there were winters
+
+An **AI winter** is a time when money and interest in AI drop. In the 1970s, a British report said AI had not delivered what its researchers had promised. In the 1980s, expert systems turned out to be costly to keep up to date. They could also make strange mistakes on questions nobody had planned for.
+
+Each time, hopes had run ahead of what the programs could do. When the results came later than promised, the money went away. Learning from examples was also hard back then. Big piles of examples and fast computers were much harder to get.
+
+## Why learning took off
+
+Around 2010 three things came together.
+
+- **Data.** Huge piles of examples, such as ImageNet's millions of labelled photos.
+- **Fast chips.** Graphics chips, called **GPUs**, can do thousands of small sums at the same time. That suits training a neural network.
+- **Better methods.** Deep neural networks, which have many layers, could finally be trained well.
+
+In 2012 a network called AlexNet used all three. It won the ImageNet contest by a wide margin. Many researchers then switched to deep learning.
+
+## From chess to chatbots
+
+Deep Blue beat the chess champion in 1997 mostly by looking ahead very fast. It did not learn like AlexNet. AlphaGo, in 2016, mixed both ideas: neural networks to pick promising moves, and search to look ahead. You can try look-ahead yourself in [Computers that decide and plan](../computers-that-decide-and-plan/).
+
+Then came the transformer in 2017, and ChatGPT in 2022. A chatbot like that is still learning from examples. It simply learned from a huge amount of writing. [How a chatbot answers](../how-a-chatbot-answers/) shows how it works.
+
+## What stayed the same
+
+Some things did not change in 70 years.
+
+- People still choose the goal, the examples and the tests.
+- Good examples still matter most. Missing examples still mean wrong answers.
+- Big promises still need checking.
+
+<Callout title="A habit for reading AI news">
+
+When you read a big claim about AI, ask two questions. What can it do today? And who tested it?
+
+</Callout>
+
+<Deep title="For grown-ups: dates, caveats and what we left out">
+
+The two winters are usually dated roughly 1974 to 1980 and 1987 to 2000, but sources differ, and funding fell at different times in different countries. Wikipedia's "AI winter" article gives the commonly cited causes. The term itself first appeared in 1984, as the topic of a panel discussion at an AI conference.
+
+Neural networks are almost as old as the field. The 1955 Dartmouth proposal already lists "neuron nets" as a topic. They only worked well at scale once data and GPUs arrived.
+
+AlexNet's 15.3 per cent is a "top-5" error rate: the program is allowed five guesses per photo, and an error means the right label was not among them. The runner-up scored 26.2 per cent in the same contest. The AlphaGo paper describes training on human expert games and on games of self-play, combined with a tree search.
+
+Eleven or twelve events cannot cover the whole story. Many researchers and countries, and whole areas such as robotics, speech and early neural networks, are missing. The timeline stays with the story of how we got to learning machines and chatbots.
+
+</Deep>
+
+## Next
+
+Next: [How a computer learns from examples](../how-computers-learn/), where you teach a computer to sort fruit by turning a dial.

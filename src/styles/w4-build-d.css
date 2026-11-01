@@ -1,0 +1,476 @@
+/* Styles for the interactive components in the wave 4 "build-d" lesson batch. Keep every class under this batch's own prefix (wld-). */
+
+/* ---------- shared bits (UxExplorer and ReviewQueueSim) ---------- */
+
+.wld-lead {
+  margin: 0 0 1rem;
+  color: var(--ink-2);
+}
+.wld-lead b {
+  color: var(--ink);
+}
+.wld-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.8rem 1.6rem;
+  margin-bottom: 1rem;
+}
+.wld-fs {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.wld-fs legend {
+  padding: 0;
+  margin-bottom: 0.2rem;
+  font-weight: 650;
+  font-size: 0.92rem;
+  color: var(--ink-2);
+}
+.wld-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  min-height: 44px;
+  padding: 0.35rem 0;
+  font-size: 0.95rem;
+  color: var(--ink);
+  cursor: pointer;
+}
+.wld-check input {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin: 0.1rem 0 0;
+  accent-color: var(--signal);
+}
+.wld-check small {
+  display: block;
+  margin-top: 0.1rem;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  color: var(--ink-3);
+}
+.wld-check input:focus-visible,
+.wld-field input:focus-visible,
+.wld-scrub input:focus-visible,
+.wld-btn:focus-visible,
+.wld-cite:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.wld-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+.wld-btn {
+  min-height: 44px;
+  padding: 0.4rem 0.9rem;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.wld-btn[aria-pressed='true'] {
+  background: var(--signal-wash);
+  border-color: var(--signal);
+  color: var(--signal-ink);
+}
+.wld-verdict {
+  margin: 0.9rem 0 0;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--signal-wash);
+  color: var(--ink);
+  font-size: 0.95rem;
+}
+
+/* ---------- UxExplorer ---------- */
+
+.wld-scrub {
+  margin: 0 0 0.8rem;
+}
+.wld-scrub label {
+  display: block;
+  margin-bottom: 0.2rem;
+  font-size: 0.92rem;
+  color: var(--ink-2);
+}
+.wld-scrub label b {
+  color: var(--ink);
+}
+.wld-scrub input,
+.wld-field input {
+  width: 100%;
+  min-height: 32px;
+  accent-color: var(--signal);
+}
+.wld-card {
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+}
+.wld-cardhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+.wld-ai {
+  padding: 0.05rem 0.45rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 650;
+  color: var(--ink-3);
+}
+.wld-wait {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0.4rem 0;
+  min-height: 3.2rem;
+  color: var(--ink-2);
+}
+.wld-spin {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border: 3px solid var(--line-soft);
+  border-top-color: var(--signal);
+  border-radius: 50%;
+  animation: wld-turn 0.9s linear infinite;
+}
+@keyframes wld-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wld-spin {
+    animation: none;
+  }
+}
+.viz .wld-claims {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.15rem;
+}
+.viz .wld-claims li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.15rem 0.5rem;
+  padding: 0.25rem 0.4rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+.viz .wld-claims li.is-wrong {
+  outline: 2px solid var(--warn);
+  outline-offset: -2px;
+}
+.wld-claimtext {
+  flex: 1 1 8rem;
+  min-width: 0;
+}
+.wld-flag,
+.wld-wrongtag {
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 650;
+  background: var(--cost-wash);
+  color: var(--cost);
+  border: 1px solid var(--cost);
+}
+.wld-wrongtag {
+  background: transparent;
+  color: var(--warn);
+  border-color: var(--warn);
+}
+.wld-cite {
+  min-width: 44px;
+  min-height: 44px;
+  margin-block: -0.6rem;
+  padding: 0 0.3rem;
+  font-weight: 650;
+  font-size: 0.9rem;
+  color: var(--signal-ink);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.wld-source {
+  flex-basis: 100%;
+  padding: 0.35rem 0.5rem;
+  border-left: 3px solid var(--signal);
+  background: var(--signal-wash);
+  font-size: 0.85rem;
+  color: var(--ink-2);
+}
+.wld-more,
+.wld-foot {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+  color: var(--ink-3);
+}
+.wld-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+}
+.wld-pill {
+  padding: 0.2rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 0.85rem;
+  color: var(--ink-2);
+}
+
+.wld-bars {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0.4rem 0 1rem;
+}
+.wld-barrow {
+  display: grid;
+  grid-template-columns: 6.2rem 1fr 4.6rem;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.88rem;
+}
+.wld-barname {
+  color: var(--ink-2);
+}
+.wld-bartotal {
+  text-align: right;
+  font-weight: 650;
+}
+.wld-bar {
+  display: flex;
+  height: 24px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--surface);
+}
+.wld-seg {
+  display: block;
+  height: 100%;
+  border-right: 1px solid var(--line);
+  transition: width 0.35s var(--ease);
+}
+@media (prefers-reduced-motion: reduce) {
+  .wld-seg {
+    transition: none;
+  }
+}
+.wld-seg-wait {
+  background: var(--tint-sun);
+}
+.wld-seg-read {
+  background: var(--tint-sky);
+}
+.wld-seg-check {
+  background: var(--tint-lilac);
+}
+.wld-seg-fix {
+  background: var(--tint-mint);
+}
+.wld-seg-late {
+  background: var(--tint-pink);
+}
+.wld-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.85rem;
+  color: var(--ink-2);
+}
+.wld-legend li {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.wld-swatch {
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+}
+
+.wld-table {
+  width: 100%;
+  margin: 0;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.wld-table caption {
+  text-align: left;
+  padding-bottom: 0.3rem;
+  font-weight: 600;
+  font-size: 0.82rem;
+  color: var(--ink-3);
+}
+.wld-table th,
+.wld-table td {
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--line-soft);
+  text-align: left;
+  vertical-align: top;
+}
+.wld-table thead th {
+  background: var(--signal-wash);
+}
+.wld-table tbody th {
+  font-weight: 500;
+  color: var(--ink-2);
+}
+.wld-table td {
+  white-space: nowrap;
+}
+
+/* ---------- ReviewQueueSim ---------- */
+
+.wld-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 0.5rem 1.6rem;
+  margin-bottom: 0.8rem;
+}
+.wld-field label {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.9rem;
+  color: var(--ink-2);
+}
+.wld-field label b {
+  color: var(--ink);
+  font-weight: 650;
+}
+.wld-fig {
+  margin: 0.8rem 0;
+}
+.wld-fig figcaption {
+  margin-bottom: 0.35rem;
+  font-size: 0.88rem;
+  color: var(--ink-2);
+}
+.wld-hist,
+.wld-qs {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  height: 90px;
+  padding: 0.3rem;
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+}
+.wld-hcol,
+.wld-qcol {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column-reverse;
+}
+.wld-hbar {
+  display: block;
+  width: 100%;
+}
+.wld-hbar-sent {
+  background: var(--signal);
+}
+.wld-hbar-auto {
+  border: 1px solid var(--ink-3);
+  border-bottom: 0;
+  background: transparent;
+  box-sizing: border-box;
+}
+.wld-hbar-auto[style*='height: 0%'] {
+  border: 0;
+}
+.wld-qbar {
+  display: block;
+  width: 100%;
+  background: var(--signal);
+  min-height: 1px;
+}
+.wld-qbar.is-over {
+  background: var(--warn);
+}
+.wld-haxis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.2rem;
+  font-size: 0.78rem;
+  color: var(--ink-3);
+}
+.wld-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.5rem;
+  margin: 0.8rem 0 0;
+}
+.wld-stats > div {
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+}
+.wld-stats > div.is-bad {
+  border-color: var(--warn);
+}
+.wld-stats dt {
+  font-size: 0.8rem;
+  color: var(--ink-3);
+}
+.wld-stats dd {
+  margin: 0.1rem 0 0;
+  font-weight: 650;
+  font-size: 1.15rem;
+  color: var(--ink);
+}
+.wld-stats dd small {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--ink-3);
+}
+
+@media (max-width: 420px) {
+  .wld-barrow {
+    grid-template-columns: 1fr auto;
+  }
+  .wld-barrow .wld-bar {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  .wld-bartotal {
+    grid-row: 1;
+    grid-column: 2;
+  }
+  .wld-table td {
+    white-space: normal;
+  }
+}

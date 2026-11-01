@@ -1,0 +1,150 @@
+---
+title: "Voice agents: streaming speech, turn-taking and the latency budget"
+track: audio
+level: advanced
+order: 7
+summary: How a real-time voice agent is built. Cascade versus speech-to-speech models, where the milliseconds go, how people time their turns, voice-activity detection and endpointing, barge-in and echo, phone-line constraints, evaluation, and the consent questions of recording a call.
+updated: 2026-11-01
+sources:
+  - label: "Universals and cultural variation in turn-taking in conversation (Stivers et al., PNAS 2009)"
+    url: https://pmc.ncbi.nlm.nih.gov/articles/PMC2705608/
+  - label: "ITU-T Recommendation G.114: One-way transmission time (2003, in force; PDF read 1 November 2026)"
+    url: https://www.itu.int/rec/T-REC-G.114-200305-I/en
+  - label: "Voice agents (OpenAI API docs, read 1 November 2026)"
+    url: https://developers.openai.com/api/docs/guides/voice-agents
+  - label: "Voice activity detection in the Realtime API (OpenAI API docs, read 1 November 2026)"
+    url: https://developers.openai.com/api/docs/guides/realtime-vad
+  - label: "Turn detection and interruptions (LiveKit Agents docs, read 1 November 2026)"
+    url: https://docs.livekit.io/agents/logic/turns/
+  - label: "Preemptive speech generation (LiveKit Agents docs, read 1 November 2026)"
+    url: https://docs.livekit.io/agents/multimodality/audio/
+  - label: "Pipecat: introduction (open-source voice pipeline framework, read 1 November 2026)"
+    url: https://docs.pipecat.ai/overview/introduction
+  - label: "Gemini Live API on Vertex AI, Google Cloud (page last updated 2026-10-30)"
+    url: https://cloud.google.com/vertex-ai/generative-ai/docs/live-api
+  - label: "Gemini Live API overview, Gemini API (page last updated 2026-10-06)"
+    url: https://ai.google.dev/gemini-api/docs/live
+  - label: "Live API capabilities guide, Gemini API (preview notice, voice activity detection and interruptions; read 1 November 2026)"
+    url: https://ai.google.dev/gemini-api/docs/live-guide
+  - label: "Voice Live API for real-time voice agents, Microsoft Foundry (page last updated 2026-10-26)"
+    url: https://learn.microsoft.com/en-us/azure/ai-services/speech-service/voice-live
+  - label: "Amazon Nova 2 Sonic: speech-to-speech, Amazon Nova developer guide (read 1 November 2026)"
+    url: https://docs.aws.amazon.com/nova/latest/nova2-userguide/using-conversational-speech.html
+  - label: "Moshi: a speech-text foundation model for real-time dialogue (Defossez et al., 2024)"
+    url: https://arxiv.org/abs/2410.00037
+  - label: "Full-Duplex-Bench v1.5: Evaluating Overlap Handling for Full-Duplex Speech Models (Lin et al., ICASSP 2026)"
+    url: https://arxiv.org/abs/2507.23159
+  - label: "RFC 3551: RTP profile for audio and video conferences (PCMU and PCMA, section 4.5)"
+    url: https://www.rfc-editor.org/rfc/rfc3551
+  - label: "RFC 6716: Definition of the Opus audio codec"
+    url: https://www.rfc-editor.org/rfc/rfc6716
+  - label: "Twilio Media Streams: WebSocket messages (audio is mulaw at 8000 Hz; read 1 November 2026)"
+    url: https://www.twilio.com/docs/voice/media-streams/websocket-messages
+  - label: "MDN: MediaTrackConstraints echoCancellation"
+    url: https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints/echoCancellation
+  - label: "AI Act Article 50: transparency obligations (EU AI Act Service Desk)"
+    url: https://ai-act-service-desk.ec.europa.eu/en/ai-act/article-50
+  - label: "18 U.S. Code section 2511: interception of communications (Cornell LII mirror of the US Code)"
+    url: https://www.law.cornell.edu/uscode/text/18/2511
+  - label: "European Commission: principles of the GDPR"
+    url: https://commission.europa.eu/law/law-topic/data-protection/information-business-and-organisations/principles-gdpr_en
+---
+
+import VoiceBudget from '../../../components/viz/VoiceBudget.tsx';
+import VoiceEndpoint from '../../../components/viz/VoiceEndpoint.tsx';
+import Deep from '../../../components/ui/Deep.astro';
+
+A chatbot can take two seconds to start answering and nobody minds: the text is on a screen and the reader sets the pace. A voice agent cannot. The caller hears silence, cannot skim, and expects the rhythm of a person. This lesson builds on [speech recognition](../speech-recognition/) and [text to speech](../text-to-speech-and-voice-cloning/) and covers what changes when they meet a language model in a live conversation. Product details are as of 1 November 2026 and cited to each vendor's page, because they change often.
+
+## Two architectures, and a third
+
+| | Cascade | Speech-to-speech | Full duplex, separate backend |
+|---|---|---|---|
+| Path | Streaming recognition, then a text model, then streaming synthesis | One model: audio in, audio out | A live voice model listens and speaks at once; another model does the reasoning and tools |
+| Strength | Every part is replaceable and inspectable; text-level checks are easy | Fewer stages; tone and timing can carry through | Keeps talking while backend work runs |
+| Cost | More stages to keep fast; interruptions are your job | Less visibility | Newest, least settled |
+
+OpenAI's voice-agents guide lists exactly these three. Full duplex means the model listens while it speaks, as people do. Moshi, an open research model, was an early public example: its paper reports a theoretical latency of 160 ms (200 ms in practice) against several seconds for a typical cascade.
+
+Each big cloud documents a managed speech-to-speech service on a streaming connection. **AWS:** Amazon Nova Sonic and Nova 2 Sonic, through a bidirectional streaming API in Amazon Bedrock (Nova 2 lists a connection limit of 8 minutes, with a documented renewal pattern). **Azure:** the Voice Live API in Microsoft Foundry, which wraps recognition, a model of your choice and synthesis behind one WebSocket interface. **Google Cloud:** the Gemini Live API, a stateful WebSocket taking 16 kHz audio in and returning 24 kHz; Google's Gemini API guide marks it preview, while the Vertex AI page lists some Live models as generally available. Open-source frameworks, [LiveKit Agents](https://docs.livekit.io/agents/) and [Pipecat](https://docs.pipecat.ai/overview/introduction), sit above any of these. Names and status move quickly; the concepts below do not.
+
+## The latency budget
+
+Start from people. Stivers and colleagues timed the gap between one speaker finishing and the next starting in ten languages. The mean was 208 ms, and every language's own mean fell within about 250 ms of that, from +7 ms (Japanese) to +469 ms (Danish). In every language the most common gap was between 0 and 200 ms. The paper describes speakers using grammar, intonation and context to project when the other person's turn will end, so they can start almost at once. An agent cannot reply before it knows you are done.
+
+The network gets little of this. The ITU's G.114 says one-way delay (mouth to ear) below 150 ms is essentially transparent for most applications, and recommends not exceeding 400 ms for general network planning.
+
+After the caller stops, six things happen in a cascade: the system waits to confirm the turn is over; the recogniser finalises the last words; the model produces a first token (long prompts slow this; [prompt caching](../../llm/context-window-and-caching/) helps); the model writes enough for a first speakable clause; synthesis makes its first audio; and the network and player buffer deliver it. Move the sliders. Every stage time is an invented example; only the two human lines come from the study.
+
+<VoiceBudget client:visible />
+
+Things to notice:
+
+- **The naive cascade lands near 2.9 seconds**, about 14 times the human mean, and the language model is the biggest block.
+- **Streaming and a short first clause matter more than a faster model.** The tuned preset speaks after 8 tokens, not 20. Waiting for the whole reply is the costliest habit.
+- **The turn-confirmation wait is a floor.** In the tuned cascade, 400 of 1,200 ms is waiting. Speculative generation hides some of it: LiveKit's docs describe starting the model before the end of the turn is confirmed, holding speech until it is, and discarding the work if the user carries on. They say it raises token use, is less favourable when users speak at length, and is on by default.
+- **A phone line adds delay you do not control.** Speech-to-speech removes two stages, not the wait: it must still decide you have finished.
+
+<Deep title="Measure the tail, not the average">
+
+A mean hides the calls that hurt. OpenAI's guide says to compare the median and 95th percentile across similar calls, holding caller, recording, model, prompt and transport fixed. Measure from the user's last word to the first audible sound at the client, not the first byte the server sent, because buffering and playback are part of what the caller hears. Measure a filler such as "let me check" separately from the answer after it.
+
+</Deep>
+
+## Turn-taking: voice activity detection and endpointing
+
+**Voice activity detection** (VAD) says whether someone is speaking in each short slice of audio; [speech recognition](../speech-recognition/) introduced it. In conversation it has a harder job, **endpointing**: deciding that a pause is the end of the turn, not a breath, a hesitation or someone reading out a number.
+
+A silence-only rule has no right setting. OpenAI's server VAD documents the knobs: a loudness `threshold`, `prefix_padding_ms` and `silence_duration_ms` (its example uses 500 ms). Drag the slider and watch six invented speakers.
+
+<VoiceEndpoint client:visible />
+
+Things to notice:
+
+- At 300 ms four of six are cut off, including the person reading a phone number. At 1,200 ms nobody is, but every answer arrives 1.2 seconds late.
+- The toy meaning-aware rule uses scripted flags. Real systems judge from words and sound. OpenAI's `semantic_vad` scores how likely the user is done from the words said and waits longer when that is low; LiveKit's default turn detector predicts end of turn from meaning and acoustics on top of VAD. Both exist because silence alone fails in both directions.
+- **Noise is the other half.** A fan or a second voice triggers VAD, and [noise suppression](../noise-suppression-and-hearing-devices/) in front of it helps both turn detection and recognition.
+
+## Barge-in, backchannels and echo
+
+**Barge-in** means the caller can interrupt. When VAD hears speech during the agent's speech, the agent stops at once, cancels synthesis and generation in flight, and remembers only what the caller heard. LiveKit truncates the history to the portion the user heard; Google's Live API cancels and discards the ongoing generation, keeping only what was already sent to the client.
+
+Two things go wrong. **Backchannels**: "mm-hm" is not an interruption, and an agent that treats it as one stutters. LiveKit documents an adaptive mode for telling them apart, and Full-Duplex-Bench v1.5 tests four overlap cases (interruption, backchannel, talking to others, background speech), finding that the five systems it examined either respond quickly or hold the floor. **Echo**: if the speaker's output reaches the microphone, the agent hears itself and interrupts itself. Echo cancellation subtracts the known output from the microphone signal. Browsers offer it (MDN documents an `echoCancellation` capture constraint) and Azure's Voice Live lists it as an option. Test speakerphone and car use first.
+
+## Telephony: a different audio world
+
+The traditional phone codec is G.711, which RFC 3551 defines as PCMU (mu-law) and PCMA (A-law) at 8 bits per sample. At 8,000 samples a second that is 64 kbit/s, and the sample rate keeps pitches only up to 4 kHz (see [how a computer hears](../how-a-computer-hears/)). Twilio's Media Streams documentation says its streamed audio is always mu-law at 8,000 Hz.
+
+- **Your recogniser was probably trained on wider audio.** Resampling phone audio up to 16 kHz gives the right shape but no information above 4 kHz. Test on real phone recordings.
+- **Packets add delay.** RFC 3551 gives 20 ms per packet as the PCMU default.
+- **Where you control both ends, use Opus** (RFC 6716), which scales from 6 kbit/s narrowband speech to full band and supports frames from 2.5 ms.
+- **Call quality is not yours to fix.** Dropouts and noise reach the recogniser as they are.
+
+For transport, vendors document WebRTC for browser and app clients and WebSockets for trusted servers; Google recommends ephemeral tokens, not API keys, in a client. Phone calls usually need a telephony provider that bridges to your agent. Keep keys and tool execution on your server.
+
+## When things go wrong
+
+The caller cannot scroll back. Read back names and numbers ("that is 0 7 7 1 2 3, correct?"). Say something short while a slow tool runs (Amazon documents asynchronous tool handling for this). Prompt after dead air, reconnect with the conversation state, and hand off to a person with context. Let people repeat, spell or switch language. And treat speech as untrusted input to a model with tools: the rules in [LLM security](../../evals/llm-security/) apply, and a spoken request should not authorise a risky action without confirmation.
+
+## Evaluating a voice agent
+
+Judge the call and the task, not just the words. OpenAI's guide separates four measurements: task and tool outcomes (was the right appointment saved?), conversational timing (audible response time, unwanted silence, overlap, yielding), speech and language (accents, noise, names, numbers) and session reliability. It builds up from synthetic single-turn speech, to replayed human recordings, to a simulated caller, and pairs scores with human listening. Score the recognition stage with [word error rate](../measuring-audio-quality/) on audio that sounds like your callers.
+
+## Recording, consent and disclosure
+
+This is not legal advice; rules differ by country, state and sector. As of 1 November 2026:
+
+- **Saying it is an AI.** Article 50(1) of the EU AI Act requires systems meant to interact directly with people to be designed so they are told they are dealing with an AI, unless that is obvious to a reasonably well-informed person; [the EU AI Act for engineers](../../evals/eu-ai-act-for-engineers/) gives the dates. A 2024 US FCC ruling, covered in [text to speech](../text-to-speech-and-voice-cloning/), treats AI-generated voices in robocalls as "artificial or prerecorded".
+- **Recording.** The US federal wiretap statute (18 U.S.C. 2511(2)(d)) says interception is not unlawful where one party has consented, unless the purpose is criminal or tortious. State laws and other countries differ, and some need everyone's consent. I could not read state statutes directly (the sites I tried block scripts), so check each place your callers are.
+- **Personal data.** A recording of an identifiable caller is generally personal data. The Commission's GDPR summary lists purpose limitation, data minimisation and storage limitation: record only what you need, say why, delete on a schedule, and redact card numbers before storing transcripts. See [privacy engineering for AI](../../responsible/privacy-engineering-for-ai/).
+
+## What to remember
+
+- A voice agent is a latency problem. People leave about 200 ms between turns on average (Stivers et al., 2009); a cascade must fit recognition, a model, synthesis and the network after the caller stops.
+- Stream every stage and speak the first clause. Speculative generation hides endpointing time at the price of wasted model calls.
+- Cascade gives control and visibility; speech-to-speech gives fewer stages. Check each vendor's current page.
+- Endpointing trades cut-offs against delay; meaning-aware detection helps but is imperfect.
+- Barge-in needs fast cancellation, history truncated to what was heard, and echo cancellation.
+- Phone audio is 8 kHz mu-law with its own delays: test on it, and handle consent and disclosure before launch.
+
+Next: [UX for AI features](../../systems/ux-for-ai-features/) looks at designing the interface around a system like this, voice included.

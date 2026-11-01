@@ -1,0 +1,129 @@
+---
+title: Text to speech and voice cloning
+track: audio
+level: intermediate
+order: 6
+summary: How text becomes sound. The classic pipeline (normalisation, sounds, prosody, spectrogram, vocoder), neural codec language models that clone a voice from seconds of audio, streaming and latency, voice banking and screen readers, the fraud and consent risks, and how to evaluate a voice.
+updated: 2026-11-01
+sources:
+  - label: "Natural TTS Synthesis by Conditioning WaveNet on Mel Spectrogram Predictions, Tacotron 2 (Shen et al., 2018)"
+    url: https://arxiv.org/abs/1712.05884
+  - label: "WaveNet: A Generative Model for Raw Audio (van den Oord et al., 2016)"
+    url: https://arxiv.org/abs/1609.03499
+  - label: "HiFi-GAN: Generative Adversarial Networks for Efficient and High Fidelity Speech Synthesis (Kong et al., 2020)"
+    url: https://arxiv.org/abs/2010.05646
+  - label: "FastSpeech 2: Fast and High-Quality End-to-End Text to Speech (Ren et al., 2020)"
+    url: https://arxiv.org/abs/2006.04558
+  - label: "VITS: Conditional Variational Autoencoder with Adversarial Learning for End-to-End Text-to-Speech (Kim et al., 2021)"
+    url: https://arxiv.org/abs/2106.06103
+  - label: "Neural Codec Language Models are Zero-Shot Text to Speech Synthesizers, VALL-E (Wang et al., 2023)"
+    url: https://arxiv.org/abs/2301.02111
+  - label: "High Fidelity Neural Audio Compression, EnCodec (Defossez et al., 2022)"
+    url: https://arxiv.org/abs/2210.13438
+  - label: "Moshi: a speech-text foundation model for real-time dialogue (Defossez et al., 2024)"
+    url: https://arxiv.org/abs/2410.00037
+  - label: "eSpeak NG README: a compact formant synthesiser"
+    url: https://github.com/espeak-ng/espeak-ng
+  - label: "NVDA user guide: eSpeak NG is built into the screen reader"
+    url: https://www.nvaccess.org/files/nvda/documentation/userGuide.html
+  - label: "Voice banking for people living with motor neurone disease: views and expectations (Cave and Bloch, 2021)"
+    url: https://pubmed.ncbi.nlm.nih.gov/33350040/
+  - label: "Apple Support: Create a Personal Voice (accessed 1 November 2026)"
+    url: https://support.apple.com/en-us/104993
+  - label: "FBI Internet Crime Complaint Center: Criminals Use Generative Artificial Intelligence to Facilitate Financial Fraud (3 December 2024)"
+    url: https://www.ic3.gov/PSA/2024/PSA241203
+  - label: "US Federal Communications Commission: Declaratory Ruling FCC 24-17 on AI-generated voices in robocalls (February 2024)"
+    url: https://docs.fcc.gov/public/attachments/FCC-24-17A1.pdf
+  - label: "AI Act Article 50: transparency obligations (EU AI Act Service Desk)"
+    url: https://ai-act-service-desk.ec.europa.eu/en/ai-act/article-50
+  - label: "AudioSeal: Proactive Detection of Voice Cloning with Localized Watermarking (San Roman et al., ICML 2024)"
+    url: https://arxiv.org/abs/2401.17264
+  - label: "Stuck in the MOS pit: a critical analysis of MOS test methodology in TTS evaluation (Kirkland et al., SSW 2023)"
+    url: https://www.isca-archive.org/ssw_2023/kirkland23_ssw.html
+---
+
+import TtsPipeline from '../../../components/viz/TtsPipeline.tsx';
+import CodecBudget from '../../../components/viz/CodecBudget.tsx';
+import Deep from '../../../components/ui/Deep.astro';
+
+Text to speech (TTS) turns written words into sound. It is how a screen reader speaks a web page, how an assistant answers, and how an audiobook can be made without a studio. It is also how a few seconds of someone's voice can be used to say things they never said. This lesson covers how it works, where it fails, and how to build and judge it responsibly. It assumes [spectrograms and the mel scale](../spectrograms-and-the-mel-scale/); [measuring audio quality](../measuring-audio-quality/) covers the metrics used at the end.
+
+## The classic pipeline
+
+A text-to-speech system has to answer four questions before any sound exists.
+
+1. **What are the words?** Text normalisation rewrites "12", "Dr." and "£5" as words someone would say. Many cases are ambiguous: "St." can be street or saint.
+2. **How is each word pronounced?** Letters to sounds (grapheme to phoneme) uses a pronunciation dictionary, plus a learned model for names and new words. English spelling is a poor guide, which is why rules alone fail.
+3. **How is it said?** **Prosody** is duration, pitch and loudness: where the stress falls, which words are held, whether the sentence rises like a question. One text can be said many ways, so a model must pick one. The FastSpeech 2 paper names this the one-to-many mapping problem, and VITS adds a stochastic duration predictor so the same text can come out with different rhythms.
+4. **What does it sound like?** An **acoustic model** predicts a mel spectrogram from sounds and prosody, and a **vocoder** turns that spectrogram into a waveform.
+
+Step through all five stages below with a toy system. The toy is not neural and does not sound natural. Its spelling rules and formant values are simple and made up, so it mispronounces many words. That makes the stages easy to see.
+
+<TtsPipeline client:visible />
+
+A spectrogram is not enough to recover sound exactly, because it drops the phase, so the vocoder fills that in. Tacotron 2 paired a network that predicts mel spectrograms from characters with a WaveNet vocoder, and reported a mean opinion score of 4.53 against 4.58 for professionally recorded speech. That comparison holds only within that paper's own listening test (see the evaluation section). WaveNet generates the waveform one sample at a time, each conditioned on all the previous ones, which makes generation slow. HiFi-GAN is a generative adversarial network vocoder: its paper reports 22.05 kHz audio generated 167.9 times faster than real time on a V100 GPU, and a small version 13.4 times faster than real time on a CPU. Later systems fuse the stages, as VITS does, or skip the spectrogram.
+
+<Deep title="Why the toy uses formants">
+
+A voice is a buzz from the vocal folds, filtered by the throat and mouth. The filter has resonances called formants, and moving them makes "ee" into "ah". The toy builds that source-filter model directly. Formant synthesis is far from dead: the eSpeak NG README describes it as compact, clear and usable at high speeds, but less natural than larger systems built on recordings, and NVDA, a free screen reader, ships with it built in (per its user guide). The toy's formant values are rounded teaching numbers within ranges typical for adult male voices.
+
+</Deep>
+
+## Neural codec language models
+
+A newer idea skips the spectrogram and treats speech as a language. A **neural audio codec** such as EnCodec compresses audio into a stream of discrete codes. With residual vector quantisation (RVQ), each frame gets several codes: the first captures the broad shape, and each further one refines what the previous left over. EnCodec at 24 kHz makes 75 frames a second, with codebooks of 1,024 entries, which is 10 bits a code.
+
+VALL-E trains a language model to predict those codes from text and, for cloning, from the codes of a short recording of the target speaker. Its paper uses 8 quantizers (6 kbit/s), 60,000 hours of English speech, and reports that it can synthesise personalised speech for an unseen speaker from only a 3-second enrolled recording. An autoregressive model writes the first code of each frame; a non-autoregressive model fills in the other seven.
+
+<CodecBudget client:visible />
+
+Ten seconds of speech at 75 frames a second and 8 quantizers is 750 x 8 = 6,000 codes, so the cost grows with duration and with quality. The authors list failures that follow from the autoregressive design: some words may be unclear, missed or duplicated, and the training data, mostly audiobook reading, covers accents and speaking styles thinly. Hold on to that: a clean voice can still say the wrong words, which is why evaluation must check content.
+
+## Streaming and latency
+
+A voice assistant must start talking before the whole reply exists. Two numbers matter. **Time to first audio** is how long from the request until sound begins. **Real-time factor** (RTF) is generation time divided by audio duration. An RTF above 1 can never keep up; well under 1 leaves headroom for a network and a slow device.
+
+Streaming works by chunking: text arrives in pieces (often from a language model), is cut at sentence or clause boundaries, and each chunk is synthesised and queued while the previous one plays. The catch is prosody. Whether a sentence is a question may depend on its last word, so synthesising too early risks the wrong intonation, and every chunk boundary risks an audible seam.
+
+Here is an example budget, with made-up numbers: language model first token 300 ms, wait for a first clause 400 ms, synthesis of that clause 150 ms, network and buffering 80 ms: 930 ms before the first sound. Every stage is a place to save time, and sentence chunking usually matters most. The Moshi paper reports that a typical cascade of recogniser, language model and synthesiser has a latency of several seconds, against response times of a few hundred milliseconds in natural conversation; Moshi generates speech tokens directly and reports a theoretical latency of 160 ms, 200 ms in practice. For on-device synthesis, see [real time on a budget](../../edge/real-time-on-a-budget/).
+
+## Voice cloning: what it enables, and who it can hurt
+
+The VALL-E authors say plainly that synthesising speech that keeps a speaker's identity carries risks of misuse, such as spoofing voice identification or impersonating a specific speaker, and suggest building a detector. The harms are already documented. The FBI's December 2024 public notice says criminals use AI-generated audio to impersonate public figures or relatives to elicit payments, including short clips of a loved one's voice in a fake crisis, and to get into bank accounts. The practical lesson: a voice is not a password, and a call that sounds like family is not proof of anything. [Real or fake?](../../responsible/real-or-fake/) gives the plain-language habits (call back on a known number, use a safe word).
+
+Laws differ by country and change, and this is not legal advice. Two public examples as of 1 November 2026. In the United States, a 2024 Federal Communications Commission ruling says the Telephone Consumer Protection Act's restrictions on an "artificial or prerecorded voice" cover AI technologies that generate human voices, so such robocalls generally need the called party's prior consent. In the EU, Article 50 of the AI Act requires providers of systems that generate synthetic audio to mark outputs in a machine-readable way, and deployers of systems that make audio deepfakes to disclose them, with exceptions; [the EU AI Act for engineers](../../evals/eu-ai-act-for-engineers/) explains the dates. Some places also protect a person's voice or likeness, privacy and biometric data. Ask a lawyer before you ship.
+
+If you build a system that can clone voices, treat these as minimum controls:
+
+- **Consent from the speaker.** Record it, state the permitted uses, and allow withdrawal. Have the speaker read a random phrase live to show they are present, rather than accepting an uploaded clip.
+- **No third-party or public-figure voices** unless you can show their permission.
+- **Rate limits and abuse monitoring**, and logs you can use to investigate misuse.
+- **Marking.** Add a watermark to outputs. AudioSeal is a published speech watermark built for localised detection of AI-generated audio. Add provenance metadata where your platform supports it (the C2PA ideas in [real or fake?](../../responsible/real-or-fake/)). Neither stops a determined attacker, and a missing mark proves nothing.
+- **Disclosure.** Tell listeners when a voice is synthetic.
+
+## Accessibility: voices people rely on
+
+For a blind person, a screen reader's voice is the interface, and it is used all day. The priorities differ from an audiobook's: clarity and speed can matter more than warmth, and the eSpeak NG README says its speech "is clear, and can be used at high speeds".
+
+**Voice banking** is the other side of cloning. People expecting to lose their voice, for example through motor neurone disease, can record speech now to build a synthetic voice for a speech-generating device later. In an interview study of 12 people with motor neurone disease in England, preserving identity was the main reason people banked their voice, but few understood how a voice bank is used on such a device or how different it sounds from natural speech; the authors suggest professionals let people listen to one first. Platforms now build this in: as of 1 November 2026 Apple's documentation describes recording a series of sentences to create a Personal Voice, processed on the device. The technology is the same as the scam's. What differs is whose voice it is, who decided, and who controls it.
+
+## Evaluating a voice
+
+[Measuring audio quality](../measuring-audio-quality/) has the details; here is the TTS checklist.
+
+- **Naturalness by listening test.** Report a MOS with its confidence interval, the scale and the question asked. The "Stuck in the MOS pit" survey found most TTS papers omit those details and that they change scores, so never compare MOS across papers.
+- **Content by round trip.** Run a recogniser over the output and compute the word error rate against the input text. It catches skipped and repeated words that a nice voice hides. Normalise numbers carefully.
+- **Hard cases.** Build a test list of numbers, dates, names, abbreviations and words whose pronunciation depends on meaning ("read", "lead").
+- **Speaker similarity** for cloning, by listeners and by a speaker-embedding model.
+- **Latency:** time to first audio and real-time factor on your target hardware.
+- **Safety:** does it refuse unconsented clones, and does the watermark survive compression?
+
+## What to remember
+
+- A classic TTS system normalises text, converts words to sounds, plans prosody, predicts a spectrogram and runs a vocoder. Neural codec models instead predict discrete audio codes with a language model.
+- A short recording can be enough to imitate a voice, so cloning needs consent, marking and abuse controls. A voice is not a password.
+- Streaming trades first-audio latency against prosody and seams. Measure time to first audio and real-time factor.
+- Voice cloning technology also gives people their own voice back. Design for the person whose voice it is.
+- Judge a voice by listening test, a round-trip error rate and hard cases, and say how.
+
+Next: [Real or fake?](../../responsible/real-or-fake/) shows how to check a voice you cannot trust, and what labels can and cannot prove.

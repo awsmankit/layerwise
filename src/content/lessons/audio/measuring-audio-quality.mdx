@@ -1,0 +1,158 @@
+---
+title: Measuring audio quality
+track: audio
+level: intermediate
+order: 5
+summary: Word error rate and how edit distance computes it, the pitfalls that make two WERs incomparable, listening tests and mean opinion scores with their confidence intervals, objective metrics such as STOI, DNSMOS and SI-SDR, and why you should report several.
+updated: 2026-11-01
+sources:
+  - label: "jiwer: word error rate, match error rate, word information lost and character error rate by minimum edit distance (README, including the empty-reference rule)"
+    url: https://github.com/jitsi/jiwer
+  - label: "From WER and RIL to MER and WIL: improved evaluation measures for connected speech recognition (Morris, Maier and Green, Interspeech 2004)"
+    url: https://www.isca-archive.org/interspeech_2004/morris04_interspeech.html
+  - label: "Robust Speech Recognition via Large-Scale Weak Supervision, Whisper (Radford et al., 2022): section 3.2 on text normalisation and its risk of overfitting, section 4.4"
+    url: https://arxiv.org/abs/2212.04356
+  - label: "OpenAI Whisper source code: the English text normaliser"
+    url: https://github.com/openai/whisper/blob/main/whisper/normalizers/english.py
+  - label: "Racial disparities in automated speech recognition (Koenecke et al., PNAS, 2020)"
+    url: https://pmc.ncbi.nlm.nih.gov/articles/PMC7149386/
+  - label: "ITU-T P.800: methods for subjective determination of transmission quality"
+    url: https://www.itu.int/rec/T-REC-P.800
+  - label: "ITU-T P.808: subjective evaluation of speech quality with a crowdsourcing approach"
+    url: https://www.itu.int/rec/T-REC-P.808
+  - label: "An Open Source Implementation of ITU-T Recommendation P.808 with Validation (Naderi and Cutler, 2020)"
+    url: https://arxiv.org/abs/2005.08138
+  - label: "ITU-T P.835: subjective test methodology for speech systems with noise suppression"
+    url: https://www.itu.int/rec/T-REC-P.835
+  - label: "ITU-R BS.1534 (MUSHRA): subjective assessment of intermediate quality level of audio systems"
+    url: https://www.itu.int/rec/R-REC-BS.1534
+  - label: "Stuck in the MOS pit: a critical analysis of MOS test methodology in TTS evaluation (Kirkland et al., SSW 2023)"
+    url: https://www.isca-archive.org/ssw_2023/kirkland23_ssw.html
+  - label: "ITU-T P.862 (PESQ): the page records its deletion on 5 January 2024 and points to P.863"
+    url: https://www.itu.int/rec/T-REC-P.862
+  - label: "ITU-T P.863: perceptual objective listening quality prediction (POLQA)"
+    url: https://www.itu.int/rec/T-REC-P.863
+  - label: "pystoi: Short-Time Objective Intelligibility, with the references to Taal et al. (2010, 2011)"
+    url: https://github.com/mpariente/pystoi
+  - label: "DNSMOS P.835: a non-intrusive perceptual objective speech quality metric to evaluate noise suppressors (Reddy et al., 2021)"
+    url: https://arxiv.org/abs/2110.01763
+  - label: "The VoiceMOS Challenge 2022 (Huang et al.)"
+    url: https://arxiv.org/abs/2203.11389
+  - label: "UTMOS: UTokyo-SaruLab system for VoiceMOS Challenge 2022 (Saeki et al.)"
+    url: https://arxiv.org/abs/2204.02152
+  - label: "SDR, half-baked or well done? (Le Roux et al., 2018): scale-invariant SDR"
+    url: https://arxiv.org/abs/1811.02508
+  - label: "Microsoft DNS Challenge repository: P.835 scores (SIG, BAK, OVRL) reported with word accuracy"
+    url: https://github.com/microsoft/DNS-Challenge
+  - label: "ITU-T P.1401: statistical evaluation of objective quality prediction models"
+    url: https://www.itu.int/rec/T-REC-P.1401
+  - label: "The Clarity Prediction Challenge (CPC2): predicting hearing-aid speech intelligibility for a given listener"
+    url: https://claritychallenge.org/docs/cpc2/cpc2_intro
+  - label: "Wikipedia: Mean opinion score (the 1 to 5 absolute category rating scale)"
+    url: https://en.wikipedia.org/wiki/Mean_opinion_score
+---
+
+import WerCalculator from '../../../components/viz/WerCalculator.tsx';
+import MosSimulator from '../../../components/viz/MosSimulator.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+A speech recogniser writes "four" where the speaker said "for". A noise suppressor makes the hiss vanish and the voice sound like it is underwater. A synthetic voice reads a sentence perfectly and sounds like a robot. Each is a failure, and no single number captures all three. This lesson covers the numbers people use, what each one measures, and how to avoid being fooled by them. It builds on [speech recognition](../speech-recognition/) and the [spectrograms](../spectrograms-and-the-mel-scale/) the models read.
+
+## Word error rate, by counting edits
+
+**Word error rate** (WER) asks how many word edits turn what the system wrote (the hypothesis) into what was said (the reference). An edit is a **substitution** (S, a wrong word), a **deletion** (D, a missing word) or an **insertion** (I, an extra word).
+
+WER = (S + D + I) / N, where N is the number of words in the reference.
+
+There can be many ways to match two sentences, so WER uses the cheapest. That is the **edit distance** (Levenshtein distance) computed over words: a table where each cell holds the fewest edits needed to match the first i reference words with the first j hypothesis words. Fill it from the corner, then walk back to read off which words were matched, swapped, dropped or added. The walk-back is the alignment, and the interactive below shows it.
+
+Take "she sells sea shells by the sea shore every day" (10 words) against "she sells see shells by the shore every day today". One swap, one drop, one addition: (1 + 1 + 1) / 10 = 0.30. Two things follow from the formula. The count can exceed N, so WER can exceed 100%. And a tie between alignments can split the same total differently between S, D and I, so compare totals, not the split.
+
+<WerCalculator client:visible />
+
+A few relatives are worth knowing. **Character error rate** (CER) does the same over characters, and suits languages written without spaces. **Match error rate** (MER) divides by every aligned position, so it cannot exceed 1. **Word information lost** (WIL) is a related, bounded measure; all three come from Morris and colleagues (2004), and the jiwer package computes them.
+
+## Why two WERs may not be comparable
+
+The score depends on choices outside the model.
+
+**Normalisation.** "Five", "5", "5." and "Five," are different strings to an edit distance. Before scoring, evaluators usually lower-case, strip punctuation, and decide how to write numbers and contractions. The Whisper paper reports that its normaliser, built by inspecting where plain WER penalised harmless differences, cut WER by up to 50 percent on some datasets, usually because a quirk such as references that split contractions with a space. It also warns that building a normaliser this way risks overfitting to one system's style, and checks it against an independently developed one. Use a published normaliser, state it, and apply it to both sides. Never normalise the hypothesis only.
+
+**What counts as a word.** Disfluencies ("um"), false starts and spelled-out numbers are policy decisions. A meeting summary can drop fillers; a legal record may not. Languages without spaces need CER or a segmenter.
+
+**All words weigh the same.** "Fifteen" heard as "fifty" costs the same as "the" heard as "a". Score the terms that matter (names, doses, commands) separately.
+
+**Averages hide the short ones.** Pooling and averaging disagree. Two utterances, one of 2 words with 1 error and one of 98 words with 2 errors: the average of the two rates is (50% + 2.04%) / 2, about 26%, while the pooled rate is 3 / 100 = 3%. Pooled (total errors over total words) is what jiwer reports, and it stops tiny utterances dominating.
+
+**Who is speaking.** A 2020 study of five commercial recognisers found an average WER of 0.35 for Black speakers against 0.19 for white speakers on matched interview data. Always break results down by speaker group, accent, device and noise level, and attach an interval ([Is the difference real?](../../ml/is-the-difference-real/)).
+
+**Silence.** With an empty reference, N is zero and WER is undefined. The jiwer package (version 4) accepts empty references and scores empty against empty as zero error, which is right for correctly ignored silence. To test for invented text on silent audio, count the inserted words directly.
+
+The practice lab [Write the WER calculator](../../../practice/wer-edit-distance/) has you build the edit-distance table, the walk-back and the S, D, I counts in pure Python, checked against hand-worked cases. To build a real evaluation set, [building an eval dataset](../../evals/building-an-eval-dataset/) covers sampling and labelling.
+
+## Listening tests and the mean opinion score
+
+Many things worth measuring are about how audio sounds, and for those people are the ground truth. In a **mean opinion score** (MOS) test, listeners rate clips, most often on the 1 to 5 **absolute category rating** scale (Bad, Poor, Fair, Good, Excellent) used in ITU-T P.800 tests. The MOS is the mean of the ratings for a system.
+
+Test design matters as much as the maths.
+
+- **Same clips, random order, every system.** Add a hidden natural-speech reference and a deliberately poor anchor, so you can tell whether listeners are using the scale sensibly. The MUSHRA method (ITU-R BS.1534) is built around a hidden reference and anchors, for codecs at intermediate quality.
+- **Ask one question.** "Overall quality" and "naturalness" give different scores. A survey of text-to-speech papers from 2021 and 2022 found most did not report the scale labels, increments or instructions, and showed in their own tests that changing the increment or the instruction shifted scores for some systems. A MOS is comparable only within one test, not across papers.
+- **Noise suppressors need three questions.** ITU-T P.835 has listeners rate the speech, the background noise and the overall quality separately, because a suppressor can trade one against another. The ITU page for P.835 shows an in-force revision dated July 2026.
+- **Crowdsourcing is standardised.** ITU-T P.808 covers listening tests run remotely. Its open-source implementation includes environment checks, a headset test, and gold and trapping questions to catch inattentive raters.
+
+### How many listeners?
+
+A MOS is a mean of whole numbers from a handful of people, so it has an uncertainty. With ratings r and n listeners, the 95% interval is the mean plus or minus t x s / sqrt(n), where s is the spread of the ratings and t is a value from Student's t distribution (about 2.26 for 10 listeners, close to 2 for large samples). Halving the interval takes four times the listeners.
+
+Two things make real tests smaller than you expect. Listeners differ in harshness, which adds spread to every system. And you usually want the difference between two systems, not each score. If the same listeners rate both systems, the harshness appears in both ratings and cancels in the difference: a paired comparison.
+
+<MosSimulator client:visible />
+
+With the starting settings (B really 0.4 stars better, harshness spread 0.6, rating wobble 0.8; all invented), repeating the whole test 200 times gave an interval that reliably favoured B in 10 of 200 tests with 5 listeners, 30 with 10, 59 with 20, 112 with 40, 161 with 80 and 199 with 160. A real gap of 0.4 stars needs dozens of listeners to be seen. Set A and B equal and a test will occasionally declare a winner anyway: that is the false alarm rate you accepted with a 95% interval.
+
+## Objective metrics: cheap proxies with a catch
+
+Listening tests are slow and costly, so engineers use computed scores as proxies. Each was built for a purpose and checked on certain audio.
+
+| Metric | Needs a clean reference? | What it estimates | Watch for |
+|---|---|---|---|
+| WER, CER | Yes (a transcript) | Whether the words survive | Normalisation; says nothing about sound quality |
+| PESQ (ITU-T P.862) | Yes | Speech quality as a listener would rate it | The ITU page lists P.862 as deleted on 5 January 2024 and points to P.863; its title scopes it to narrow-band telephone networks and codecs |
+| POLQA (ITU-T P.863) | Yes | Listening quality, the successor | Replaces PESQ; the ITU page lists it as in force |
+| STOI | Yes | Intelligibility of noisy or processed speech | Predicts intelligibility, not pleasantness |
+| SI-SDR | Yes | Signal-level distortion of a separated or enhanced signal | Ignores how the error sounds |
+| DNSMOS (P.808 and P.835 versions) | No | A learned guess at MOS, and at speech, noise and overall scores | Trained on ratings of noise-suppression clips; check it on yours |
+| UTMOS and other learned MOS | No | A learned guess at MOS for synthetic speech | Weaker on unseen speakers and systems |
+
+Some details support those cautions. STOI's own documentation describes it as an intrusive measure correlated with the intelligibility of speech degraded by noise, noise reduction and binary masking. The SI-SDR paper argues that the older SDR was widely misused and proposes the scale-invariant version. The DNSMOS P.835 paper reports correlations of 0.94 for speech and 0.98 for noise and overall quality against its own human ratings, on its own test conditions. The VoiceMOS Challenge found predicting MOS hard for unseen speakers, listeners and systems.
+
+The lesson from all of these is the same. A learned metric inherits the audio, listeners and conditions it was trained on. Before trusting any metric, collect human ratings on a few dozen clips from your own conditions and check how well the metric ranks them. ITU-T P.1401 describes statistical procedures for evaluating objective predictors.
+
+<Callout kind="edge" title="Hearing devices are a special case">
+A metric tuned on listeners with typical hearing says little about a listener with hearing loss. The Clarity Prediction Challenges exist because, in their own words, developing better hearing aids needs an automatic model that takes the hearing-aid output and the listener's characteristics, such as an audiogram, and estimates the intelligibility that listener would score in a test. For a hearing product, test with the people it is for, and treat computed scores as screening.
+</Callout>
+
+## Report several, and say how
+
+A single number invites optimising for it. A suppressor can raise a signal-to-noise score by removing speech along with noise, and a recogniser can be tuned to its normaliser. The Deep Noise Suppression Challenge, for one, reported P.835 listening scores together with word accuracy in its ICASSP 2023 edition.
+
+| Task | Lead with | Add |
+|---|---|---|
+| Speech recognition | WER with a published normaliser | CER, key-term accuracy, WER by group and noise, behaviour on silence |
+| Noise suppression | A P.835-style listening test | Intelligibility or word accuracy, DNSMOS as a cheap check, delay and compute |
+| Speech synthesis | MOS (naturalness) with an interval | WER of a recogniser on the output, latency, a check for the voice and prosody you need |
+| Separation or enhancement | SI-SDR plus listening | Intelligibility, artefacts such as musical noise |
+
+State the normaliser, the test conditions, the listener count and the interval every time.
+
+## What to remember
+
+- WER = (S + D + I) / N from a minimum edit alignment. It can exceed 1, is undefined for an empty reference, and weighs every word equally.
+- Two WERs are comparable only with the same normaliser, word policy and data. Pool errors across utterances, and break results down by group.
+- A MOS comes from a listening test and is comparable only within that test. Report the interval: a gap of a few tenths of a star needs dozens of listeners, and pairing listeners across systems helps.
+- Objective metrics are proxies built for one job and validated on certain audio. As of 1 November 2026 the ITU lists PESQ (P.862) as deleted, with P.863 as the successor.
+- Check any metric against human ratings on your own data, and report several.
+
+Next: [Text to speech and voice cloning](../text-to-speech-and-voice-cloning/) turns text into sound, and uses MOS and WER to judge the result.

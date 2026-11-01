@@ -40,12 +40,13 @@ export default function BoostingSteps() {
   const r = Math.min(round, MAX_ROUNDS);
   const next = r < MAX_ROUNDS ? model.trees[r] : null;
 
-  const sx = (x: number) => ML + (x / 10) * (W - ML - MR);
-  const sy1 = (v: number) => H1 - MB - ((v - Y_LO) / (Y_HI - Y_LO)) * (H1 - MT - MB);
-  const sy2 = (v: number) => H2 - MB - ((v + R_LIM) / (2 * R_LIM)) * (H2 - MT - MB);
+  const r2 = (v: number) => Math.round(v * 100) / 100; // fixed precision so server and browser draw identical coordinates
+  const sx = (x: number) => r2(ML + (x / 10) * (W - ML - MR));
+  const sy1 = (v: number) => r2(H1 - MB - ((v - Y_LO) / (Y_HI - Y_LO)) * (H1 - MT - MB));
+  const sy2 = (v: number) => r2(H2 - MB - ((v + R_LIM) / (2 * R_LIM)) * (H2 - MT - MB));
   const lossMax = Math.max(validLoss[0], trainLoss[0]) * 1.05;
-  const sx3 = (k: number) => ML + (k / MAX_ROUNDS) * (W - ML - MR);
-  const sy3 = (v: number) => H3 - MB - (v / lossMax) * (H3 - MT - MB);
+  const sx3 = (k: number) => r2(ML + (k / MAX_ROUNDS) * (W - ML - MR));
+  const sy3 = (v: number) => r2(H3 - MB - (v / lossMax) * (H3 - MT - MB));
 
   const predAt = (x: number) => boostPredict(model, x, r);
   const predPath = useMemo(

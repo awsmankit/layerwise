@@ -1,0 +1,456 @@
+/* Styles for the interactive components in the wave 3 "edge-b" lesson batch. Keep every class under this batch's own prefix. */
+
+/* ---------- shared bits ---------- */
+
+.eb-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+}
+.eb-chip-label {
+  font-size: 0.88rem;
+  color: var(--ink-3);
+  margin-right: 0.2rem;
+}
+.viz .eb-chip {
+  min-height: 44px;
+  padding: 0.35rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font: 600 0.9rem var(--font-display);
+  line-height: 1.2;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.viz .eb-chip:hover:not([disabled]) {
+  border-color: var(--signal);
+}
+.viz .eb-chip[aria-pressed='true'] {
+  background: var(--signal);
+  border-color: var(--signal);
+  color: var(--on-signal);
+}
+.viz .eb-chip[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.eb-chip:focus-visible,
+.eb .btn:focus-visible,
+.eb input[type='range']:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.eb .field > span {
+  flex-wrap: wrap;
+  gap: 0.1rem 1rem;
+}
+.eb .field {
+  margin-top: 0.7rem;
+}
+
+.eb-cols {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0 2rem;
+  margin-top: 0.6rem;
+}
+@media (min-width: 700px) {
+  .eb-cols {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.eb-set {
+  margin: 0;
+  padding: 0.2rem 0 0.4rem;
+  border: 0;
+  min-width: 0;
+}
+.eb-set legend {
+  padding: 0;
+  font-weight: 650;
+  font-size: 0.95rem;
+}
+.eb-h {
+  margin-top: 1.6rem;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 650;
+}
+.eb-hint {
+  margin-top: 0.7rem;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+.eb-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+}
+.eb .eb-buttons .btn {
+  min-height: 44px;
+}
+.eb-say {
+  margin-top: 0.9rem;
+  font-size: 0.98rem;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+.eb-say.eb-bad {
+  color: var(--ink);
+  border-left: 3px solid var(--warn);
+  padding-left: 0.7rem;
+}
+.eb-look {
+  margin-top: 0.6rem;
+  padding: 0.7rem 0.9rem;
+  border-left: 2px solid var(--signal);
+  background: var(--signal-wash);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+.eb-axis {
+  margin-top: 0.4rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--ink-3);
+}
+
+.eb-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1.1rem;
+  margin: 0.7rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.86rem;
+  color: var(--ink-2);
+}
+.eb-legend li {
+  margin: 0;
+  padding: 0;
+}
+.eb-legend li::marker {
+  content: '';
+}
+.eb-sw {
+  display: inline-block;
+  width: 0.9rem;
+  height: 0.9rem;
+  margin-right: 0.35rem;
+  vertical-align: -0.12rem;
+  border: 1px solid var(--line);
+}
+span.eb-dot {
+  display: inline-block;
+  width: 0.8rem;
+  height: 0.8rem;
+  margin-right: 0.35rem;
+  vertical-align: -0.08rem;
+  border-radius: 50%;
+}
+span.eb-dot.eb-dot-ok {
+  background: var(--ok);
+}
+span.eb-dot.eb-dot-no {
+  background: var(--warn);
+}
+
+/* ---------- svg pieces ---------- */
+
+.eb-svg {
+  display: block;
+  width: 100%;
+  max-width: 640px;
+  height: auto;
+  margin-top: 0.7rem;
+}
+.eb-t {
+  font: 12.5px var(--font-display);
+  fill: var(--ink-3);
+}
+.eb-grid {
+  stroke: var(--line-soft);
+  stroke-width: 1;
+  fill: none;
+}
+.eb-axis-line {
+  stroke: var(--line);
+  stroke-width: 1;
+  fill: none;
+}
+.eb-line {
+  fill: none;
+  stroke: var(--signal);
+  stroke-width: 1.2;
+  stroke-linejoin: round;
+}
+.eb-line-bold {
+  stroke-width: 2;
+}
+.eb-thr {
+  stroke: var(--cost);
+  stroke-width: 1.6;
+  stroke-dasharray: 5 3;
+  fill: none;
+}
+.eb-win {
+  fill: var(--signal-wash);
+}
+.eb-ref {
+  stroke: var(--ok);
+  stroke-width: 1.6;
+  stroke-dasharray: 5 3;
+  fill: none;
+}
+.eb-rep {
+  stroke: var(--ink);
+  stroke-width: 2;
+  fill: none;
+}
+.eb-dot-ok {
+  fill: var(--ok);
+  stroke: var(--surface);
+  stroke-width: 1.5;
+}
+.eb-dot-no {
+  fill: var(--warn);
+  stroke: var(--surface);
+  stroke-width: 1.5;
+}
+.eb-ev-kw {
+  fill: var(--ok);
+  fill-opacity: 0.22;
+  stroke: var(--ok);
+  stroke-width: 1;
+}
+.eb-ev-kw.eb-ev-miss {
+  fill: var(--warn);
+  fill-opacity: 0.16;
+  stroke: var(--warn);
+  stroke-dasharray: 3 2;
+}
+.eb-ev-other {
+  fill: var(--ink-3);
+  fill-opacity: 0.22;
+}
+.eb-sw-kw {
+  background: color-mix(in srgb, var(--ok) 30%, transparent);
+  border-color: var(--ok);
+}
+.eb-sw-miss {
+  background: color-mix(in srgb, var(--warn) 22%, transparent);
+  border: 1px dashed var(--warn);
+}
+.eb-sw-other {
+  background: color-mix(in srgb, var(--ink-3) 30%, transparent);
+}
+.eb-sw-win {
+  background: var(--signal-wash);
+  border-color: var(--signal);
+}
+.eb-sw-rep {
+  height: 0;
+  border: 0;
+  border-top: 2px solid var(--ink);
+  vertical-align: 0.25rem;
+}
+.eb-sw-ref {
+  height: 0;
+  border: 0;
+  border-top: 2px dashed var(--ok);
+  vertical-align: 0.25rem;
+}
+.eb-sw-mark {
+  width: 0;
+  border: 0;
+  border-left: 3px solid var(--ink);
+}
+.eb-strip {
+  margin-top: 0.4rem;
+}
+.eb-strip-box {
+  fill: var(--signal-wash);
+  stroke: var(--signal);
+  stroke-width: 1;
+}
+.eb-tick-kw {
+  stroke: var(--ok);
+  stroke-width: 2.4;
+}
+.eb-tick-kw.eb-tick-miss {
+  stroke: var(--warn);
+}
+.eb-tick-other {
+  stroke: var(--ink-3);
+  stroke-width: 1.6;
+}
+.eb-curve {
+  fill: none;
+  stroke: var(--ink-3);
+  stroke-width: 1.4;
+}
+.eb-curve-dot {
+  fill: var(--ink-3);
+}
+.eb-dot-now {
+  fill: none;
+  stroke: var(--signal);
+  stroke-width: 3;
+}
+
+.eb-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+  font-size: 0.9rem;
+  color: var(--ink-2);
+}
+
+/* ---------- block budget ---------- */
+
+.eb-stack {
+  position: relative;
+  display: flex;
+  height: 34px;
+  margin-top: 0.7rem;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+.eb-seg {
+  display: block;
+  height: 100%;
+  min-width: 0;
+  box-shadow: inset -1px 0 0 var(--line);
+}
+.eb-seg-fill {
+  background: var(--tint-sky);
+}
+.eb-seg-slot {
+  background: var(--tint-lilac);
+}
+.eb-seg-look {
+  background: var(--tint-sun);
+}
+.eb-seg-other {
+  background: var(--tint-pink);
+}
+.eb-mark {
+  position: absolute;
+  top: -6px;
+  bottom: -6px;
+  width: 3px;
+  margin-left: -1px;
+  background: var(--ink);
+}
+.eb-bars {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 110px;
+  margin-top: 0.9rem;
+  border-bottom: 1px solid var(--line);
+}
+.eb-bar {
+  flex: 1 1 0;
+  min-width: 2px;
+  background: var(--signal);
+  opacity: 0.85;
+}
+.eb-bar.eb-miss {
+  background: var(--warn);
+  opacity: 1;
+}
+.eb-deadline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 2px dashed var(--ink);
+  pointer-events: none;
+}
+.eb-deadline i {
+  position: absolute;
+  right: 0;
+  bottom: 2px;
+  padding: 0 0.3rem;
+  background: var(--paper);
+  font: normal 600 0.78rem var(--font-display);
+  color: var(--ink);
+}
+.eb-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+  margin: 0.9rem 0 0;
+}
+@media (min-width: 560px) {
+  .eb-stats {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+.eb-stats div {
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--line-soft);
+  background: var(--surface);
+}
+.eb-stats dt {
+  font-size: 0.8rem;
+  color: var(--ink-3);
+}
+.eb-stats dd {
+  margin: 0;
+  font-weight: 650;
+  font-size: 1.05rem;
+}
+.eb-stats .eb-over {
+  border-color: var(--warn);
+}
+.eb-stats .eb-over dd {
+  color: var(--warn);
+}
+
+/* ---------- pipeline view ---------- */
+
+.eb-two {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.9rem;
+  margin-top: 1rem;
+}
+@media (min-width: 700px) {
+  .eb-two {
+    grid-template-columns: 2.2fr 1fr;
+  }
+}
+.eb-fig {
+  margin: 0;
+  min-width: 0;
+}
+.eb-fig figcaption {
+  margin-top: 0.4rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--ink-3);
+}
+.eb-canvas {
+  display: block;
+  width: 100%;
+  background: #000;
+  border: 1px solid var(--line-soft);
+}
+.eb-score {
+  margin-top: 0.8rem;
+}
+.eb-fig .eb-svg {
+  max-width: none;
+}

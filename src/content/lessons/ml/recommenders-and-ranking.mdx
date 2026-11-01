@@ -1,0 +1,137 @@
+---
+title: "Recommenders and ranking: from 'most popular' to retrieve-then-rank"
+track: ml
+level: intermediate
+order: 7
+summary: How feeds, playlists and search results are ordered. The most-popular baseline, collaborative filtering, matrix factorisation, the two-stage retrieve-then-rank design, cold start, how to score a ranked list (precision at k, recall at k, NDCG), and how feedback loops and fairness change what gets shown. Two labs with invented data.
+updated: 2026-11-01
+sources:
+  - label: "Google Machine Learning course: Recommendation systems (overview, candidate generation, matrix factorisation, deep neural network models)"
+    url: https://developers.google.com/machine-learning/recommendation
+  - label: "Matrix Factorization Techniques for Recommender Systems (Koren, Bell and Volinsky, IEEE Computer, 2009)"
+    url: https://datajobs.com/data-science-repo/Recommender-Systems-%5BNetflix%5D.pdf
+  - label: "Deep Neural Networks for YouTube Recommendations (Covington, Adams and Sargin, RecSys 2016)"
+    url: https://research.google/pubs/deep-neural-networks-for-youtube-recommendations/
+  - label: "Neural Collaborative Filtering vs. Matrix Factorization Revisited (Rendle, Krichene, Zhang and Anderson, 2020)"
+    url: https://arxiv.org/abs/2005.09683
+  - label: "Embedding-based Retrieval in Facebook Search (Huang and others, 2020)"
+    url: https://arxiv.org/abs/2006.11632
+  - label: "Embedding-Based Retrieval for Airbnb Search (Airbnb Engineering)"
+    url: https://airbnb.tech/ai-ml/embedding-based-retrieval-for-airbnb-search/
+  - label: "How Algorithmic Confounding in Recommendation Systems Increases Homogeneity and Decreases Utility (Chaney, Stewart and Engelhardt, 2017)"
+    url: https://arxiv.org/abs/1710.11214
+  - label: "Multisided Fairness for Recommendation (Burke, 2017)"
+    url: https://arxiv.org/abs/1707.00093
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import RecommenderLab from '../../../components/viz/RecommenderLab.tsx';
+import NdcgCalculator from '../../../components/viz/NdcgCalculator.tsx';
+import FeedbackLoopSim from '../../../components/viz/FeedbackLoopSim.tsx';
+
+A feed, a playlist, a "customers also bought" strip and a search results page all do the same job: out of a huge catalogue, choose a short list and put it in a good order. That is not a yes-or-no question about each item. It is a **ranking** problem, and it brings its own methods, its own scores and its own failure modes.
+
+This lesson climbs a ladder: the dullest list that works, then personal taste, then the two-stage design that keeps production systems fast. It ends with how to score a ranked list, and why recommenders change the very data they learn from.
+
+## The ratings table, and the baseline to beat
+
+Put the people down the side and the items across the top. Each filled cell is a rating, a play or a purchase. Most cells are blank, because nobody has seen everything. That grid is the **user-item matrix**, and nearly every method below is a way of guessing the blank cells that matter.
+
+The first method needs no learning. Count how many people liked each item and show everyone the top of that list. This **most-popular baseline** is strong, because popular things are popular for a reason. It is also the same list for every person, so it cannot tell a fan of space films from a fan of baking shows. Any fancier method has to beat it.
+
+## Collaborative filtering: people who liked this also liked that
+
+**Collaborative filtering** uses only behaviour. It needs no description of the items. If two films are liked by the same people, they are "close", whatever they are about. Koren, Bell and Volinsky describe two families: neighbourhood methods, which compare items or people directly, and latent factor models, covered next.
+
+An **item-item** neighbourhood method works like this. Take two films and the ratings four people gave them (an example, not real data):
+
+| Person | Film A | Film B |
+|---|---|---|
+| 1 | 5 | 4 |
+| 2 | 4 | 5 |
+| 3 | 2 | 1 |
+| 4 | 1 | 2 |
+
+The cosine of the angle between the two columns is 44 divided by 46, about 0.96: the same people like both and dislike both. To score a film you have not rated for someone, take a weighted average of their own ratings of similar films. In practice each rating is first centred on that person's own average, because some people give everything a 4 or 5.
+
+## Matrix factorisation: taste dimensions nobody named
+
+**Matrix factorisation** gives every person and every item a short list of k numbers, then predicts a rating from how well the two lists line up. The prediction is a global average, plus how generous this person is, plus how well-liked this item is, plus the **dot product** of the two lists. Example numbers: average 3.6, person bias +0.3, film bias +0.4, person vector (0.8, -0.5), film vector (0.9, 0.2). The dot product is 0.8 x 0.9 + (-0.5) x 0.2 = 0.62, so the prediction is 3.6 + 0.3 + 0.4 + 0.62 = 4.92.
+
+Nobody names the numbers. Training finds them by comparing predictions with the cells that are filled in and nudging the vectors, much as in [How a model learns](../../foundations/how-models-learn/). Two details matter. The error is summed over observed cells only, and the vectors are kept small with a penalty, or the model memorises the table. Google's course explains why scoring the blank cells as zero is also wrong: with sparse data it pushes every prediction towards zero.
+
+<RecommenderLab client:visible />
+
+On the default table in the lab (12 people, 14 films, all invented), the most-popular list found 5 of the 12 hidden favourites in its top 3. Item-item similarity and matrix factorisation with k = 2 found 8 each. A random pick would find about 38%, or 4 to 5 of 12.
+
+That is one tiny table, so it proves little: one person is 8 points. Averaged over 200 invented tables made by the same generator, the hit rates are about 38% for random picks, 53% for most-popular, 54% for item-item and 60% for matrix factorisation (k = 2). Those figures come from this lab's own code and test, not from a real service. Try k = 0 in the lab: with no taste factors, only the biases remain, and every person gets the same list. Then tick "brand new" to see what personalisation loses with no history.
+
+<Callout title="Dot product is a strong default">
+Rendle and colleagues re-ran the experiments of a well-known paper that replaced the dot product with a small neural network. With properly tuned settings, the plain dot product beat the learned similarity, and it allows fast nearest-neighbour search. They suggest the dot product as the default way to combine two embeddings.
+</Callout>
+
+## Cold start
+
+Everything above needs history. A new person has no ratings, and a new film has no viewers. This is the **cold-start problem**, and plain collaborative filtering cannot solve it, because there is nothing to compare. Google's course notes that a matrix factorisation model can only be asked about people and items it saw in training.
+
+Common answers, in rough order of effort: fall back to popularity, ask new people a few questions, or use what you know about the item (genre, text, an image embedding) so a new item can be placed near similar ones from day one. The two-tower design below does this naturally. Deliberate exposure for new items helps too.
+
+## Two stages: retrieve, then rank
+
+A catalogue may hold millions of items, and you have a few hundred milliseconds. You cannot run a heavy model on every item. So real systems work as a funnel. Google's course describes three stages:
+
+1. **Candidate generation** cuts a huge corpus to a much smaller set, using a fast model.
+2. **Scoring** ranks those candidates with a richer, slower model that can use more features, and picks about 10 to show.
+3. **Re-ranking** applies final rules: drop things the person has already rejected, boost fresh items, keep the list diverse and fair.
+
+Illustrative sizes, not from any one company: a million items, 500 candidates, 50 scored in full, 10 shown.
+
+The usual first stage is a **two-tower model**. One neural network turns the person and their context into a vector, another turns an item into a vector, and the score is their dot product. Because item vectors do not depend on the person, they can be computed ahead of time and searched with an approximate nearest-neighbour index. The same trick powers [retrieval for RAG](../../rag-agents/vector-search-and-retrieval-metrics/), and the same second-stage idea (a heavier model reorders the survivors) appears there as reranking.
+
+Real write-ups show the design choices:
+
+- **Airbnb** (read 1 November 2026) describes a listing tower run offline in a daily batch job, so only the query tower runs at search time. Positives are booked listings. Negatives are listings people saw or saved but did not book, because random negatives made the task too easy. The team chose an inverted-file index over HNSW because listings change often, and reports a statistically significant gain in bookings in an A/B test, without publishing the size.
+- **YouTube** (Covington and colleagues, 2016) describes a deep candidate-generation model followed by a separate deep ranking model. **Facebook** describes embedding-based retrieval for search, served alongside a traditional inverted index.
+- Netflix has written about a [foundation model for recommendation](https://netflixtechblog.com/foundation-model-for-personalized-recommendation-1a0bd8e02d39). Its site refuses automated readers, so this is a link to open, not a summary.
+
+<Deep title="What the dot product and the two towers give up">
+A two-tower model scores a person and an item without ever letting them interact before the final dot product. It cannot learn "this person likes this director only in comedies" unless the towers' vectors happen to encode it. That is why a second-stage ranker, which sees person and item features together and only handles a few hundred candidates, adds accuracy the first stage cannot. Google's course makes the matching trade-off: matrix factorisation is usually better for large corpora because it scales and is cheap to query, while deep models can personalise more and use more features but cost more to train and query.
+
+Training matters as much as architecture. Training on positives alone lets embeddings from unrelated groups end up in the same region, which Google calls folding. Negative sampling, including hard negatives such as Airbnb's seen-but-not-booked listings, pushes them apart.
+</Deep>
+
+## Scoring a ranked list
+
+Accuracy on single items is the wrong lens. What matters is whether good items are near the top. Three scores are standard. **Precision at k** is the share of the top k that are relevant. **Recall at k** is the share of all relevant items that appear in the top k. **NDCG at k** (normalised discounted cumulative gain) uses graded relevance and rewards putting the best items first.
+
+Worked example with relevance grades from 0 to 3. A list returns grades 3, 2, 3, 0, 1, 2 in that order. Each grade is divided by log2(rank + 1), which discounts lower ranks: 3 + 1.262 + 1.5 + 0 + 0.387 + 0.712 gives a DCG of 6.861. The best ordering of the same grades (3, 3, 2, 2, 1, 0) gives 7.141. NDCG at 6 is 6.861 divided by 7.141, which is 0.961. A perfect ordering scores 1.
+
+<NdcgCalculator client:visible />
+
+Offline scores are only a proxy. The usual set-up hides one liked item per person and asks whether the model finds it, as the lab does. But the logged data came from whatever recommender ran before, so it only covers what that system showed. Real teams add measures beyond accuracy (variety, novelty, how much of the catalogue is ever shown) and confirm with an online A/B test on behaviour such as clicks, watch time or return visits. [Is the difference real?](../is-the-difference-real/) covers how to read those tests.
+
+## Feedback loops and filter bubbles
+
+A recommender shapes what people see, people click what they see, and the system learns from those clicks. Items shown more get more clicks, which gets them shown more. That is a **feedback loop**. The narrowing it can cause in what one person is shown is called a **filter bubble**.
+
+Chaney, Stewart and Engelhardt simulated systems trained on data from users who were already being steered by recommendations. In their simulations, behaviour became more homogeneous without any gain in usefulness. That is a simulation result, not a measurement of any real platform. The toy below shows the mechanism in the simplest setting.
+
+<FeedbackLoopSim client:visible />
+
+Over 300 invented runs with the "clicks per showing" rule, the genuinely best film ended among the three most-shown films in about a third of runs with no random exposure, which is no better than luck for 3 of 10 films. With 20% of slots filled at random, it did in about 89%. Ranking by total clicks stayed near a third even with 20% random slots: a film that is rarely shown cannot collect clicks, so small amounts of random exposure never catch up. Real systems use more careful exploration than random slots, but the lesson holds: if you only learn from what you show, you must sometimes show something else.
+
+## Fairness: who is the list fair to?
+
+Burke argues that fairness in recommendation can be **multisided**: the people receiving lists and the creators, sellers or hosts whose items fill them can each be treated unfairly, and the two can pull against each other. A popularity-heavy ranker can starve small providers of exposure. Re-ranking is one place to act, for example by capping how often one provider appears. The metrics are in [Fairness for builders](../../responsible/fairness-for-builders/). Decide whom you are measuring fairness for before choosing a method.
+
+## What to remember
+
+- Recommending is ranking: choose a short list and order it. Start with a most-popular baseline and beat it before adding complexity.
+- Collaborative filtering uses behaviour only. Matrix factorisation gives every person and item k hidden numbers and scores by their dot product.
+- Cold start is the weak spot of collaborative methods: use popularity, a few questions, item features and some deliberate exposure.
+- Production systems work in stages: fast retrieval of candidates (often a two-tower model with nearest-neighbour search), a richer ranker, then re-ranking rules.
+- Score ranked lists with precision at k, recall at k and NDCG, then check with an online A/B test. Offline scores inherit the old system's biases.
+- A recommender changes its own training data. Plan exploration, watch for loops, and decide whose fairness you measure.
+
+Next: [Time-series forecasting](../time-series-forecasting/)

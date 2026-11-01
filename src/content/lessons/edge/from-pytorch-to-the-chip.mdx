@@ -1,0 +1,122 @@
+---
+title: "From PyTorch to the chip: formats, runtimes and compilers"
+track: edge
+level: intermediate
+order: 2.5
+summary: The software layers between a trained model and a device's accelerator (model files, runtimes, delegates and compilers), how unsupported operators cut a model into slow pieces, and how to choose and check a route.
+updated: 2026-11-01
+sources:
+  - label: "LiteRT overview (Google AI Edge)"
+    url: https://ai.google.dev/edge/litert
+  - label: "LiteRT NPU acceleration: vendors, ahead-of-time and on-device compilation (Google AI Edge, page dated 12 October 2026)"
+    url: https://ai.google.dev/edge/litert/next/npu
+  - label: "LiteRT: operator compatibility when converting TensorFlow models (Google AI Edge)"
+    url: https://ai.google.dev/edge/litert/conversion/tensorflow/ops_compatibility
+  - label: "ExecuTorch: model export and lowering (PyTorch documentation, version 1.5)"
+    url: https://docs.pytorch.org/executorch/stable/using-executorch-export.html
+  - label: "ExecuTorch Arm Cortex-M backend (PyTorch documentation)"
+    url: https://docs.pytorch.org/executorch/stable/backends/arm-cortex-m/arm-cortex-m-overview.html
+  - label: "ExecuTorch Arm Ethos-U backend (PyTorch documentation)"
+    url: https://docs.pytorch.org/executorch/stable/backends/arm-ethos-u/arm-ethos-u-overview.html
+  - label: "ONNX Runtime execution providers"
+    url: https://onnxruntime.ai/docs/execution-providers/
+  - label: "Core ML Tools: model prediction and compute units (Apple)"
+    url: https://apple.github.io/coremltools/docs-guides/source/model-prediction.html
+  - label: "Core ML Tools guide (Apple)"
+    url: https://apple.github.io/coremltools/docs-guides/
+  - label: "Apache TVM overview"
+    url: https://tvm.apache.org/docs/get_started/overview.html
+  - label: "LiteRT for Microcontrollers (Google AI Edge)"
+    url: https://www.tensorflow.org/lite/microcontrollers
+---
+
+import OpPartition from '../../../components/viz/OpPartition.tsx';
+import RuntimeChooser from '../../../components/viz/RuntimeChooser.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+You trained a model in PyTorch. The chip in your product has never heard of PyTorch. Between the two sit up to four layers of software, and most "fast on my laptop, slow on the device" problems live in the joins between them. This lesson is a map of those layers, an explanation of the failure that costs the most speed (unsupported operators), and a way to choose and check a route. Product details are as of 1 November 2026, read from each project's own documentation, and they change with every release.
+
+## Four layers
+
+| Layer | What it is | Examples |
+|---|---|---|
+| Framework | Where you define and train the model | PyTorch, TensorFlow, JAX |
+| Model file | A frozen description of the graph and weights, shaped for devices | `.tflite` (LiteRT), `.pte` (ExecuTorch), `.onnx` (ONNX), a Core ML model |
+| Runtime | The library inside your app or firmware that loads the file and runs it | LiteRT, ExecuTorch, ONNX Runtime, Core ML, LiteRT for Microcontrollers |
+| Accelerator back end | Code that runs chosen operators on a specific chip | ExecuTorch backends (XNNPACK, Core ML, Vulkan, Qualcomm, MediaTek, Arm Ethos-U); ONNX Runtime execution providers (CUDA, TensorRT, OpenVINO, Qualcomm QNN); Core ML's CPU, GPU and Neural Engine; LiteRT NPU support for Google Tensor, Qualcomm, MediaTek, Intel and Samsung |
+
+The last layer has four names for one idea. ExecuTorch says backend or delegate, ONNX Runtime says execution provider, Core ML says compute unit, and LiteRT's NPU documentation says accelerator, with vendor-specific compilers behind it. Learn to ask the same question of each: which operators does it run, and what happens to the rest?
+
+A **compiler** works differently from a runtime. A runtime interprets your graph and calls prebuilt kernels. A compiler such as Apache TVM takes the model, optimises the graph (for example by fusing operators) and generates code for the target. Its documentation says it imports models from frameworks such as PyTorch and ONNX and that its runtime works on mobile, edge devices and bare metal. Compilers are worth reaching for when no runtime ships kernels for your chip.
+
+## Converting: where operators go missing
+
+Conversion is the first place a model can fail. The LiteRT documentation says its converter "supports a limited number of TensorFlow operations used in common inference models", so not every model converts directly. You can include select TensorFlow operators, but then you must change the runtime you ship, which narrows your deployment options. On the PyTorch side, ExecuTorch export starts from `torch.export` with example inputs, and the documentation says to export in evaluation mode so that batch norm and dropout take their inference behaviour.
+
+Two habits save weeks. Check your operators against the converter's list before you commit to an architecture, and keep the model simple where the hardware is simple: a layer type that is exotic for the converter is often exotic for the chip as well.
+
+## Partitioning: how a model gets cut up
+
+Even when conversion succeeds, an accelerator will not run every operator. Runtimes handle that by **partitioning**: they ask the back end which parts of the graph it can run, give it those parts, and run the rest on the CPU.
+
+- ONNX Runtime calls a provider's `GetCapability()` to allocate nodes or subgraphs, and you list providers in priority order, for example CUDA then CPU, meaning "use CUDA where capable, otherwise the CPU".
+- ExecuTorch identifies the partitions a backend supports when it builds the `.pte` file. The documentation says the rest "are executed using the portable fallback implementation on CPU", which allows partial acceleration "but may have negative performance implications". You can also list several partitioners in priority order.
+- Core ML, if you do not specify compute units, may use all those available (the Neural Engine, the CPU and the GPU). You can restrict it with the `compute_units` argument.
+
+Fallback is a good default, because the model still runs. It is also the hidden cost. Each boundary between accelerator and CPU means moving or synchronising data, and one unsupported operator in the middle splits a model into two accelerator partitions with a CPU gap between them. Try it below. The model is a small transformer block; the example accelerator supports matrix multiplies, adds and reshapes but not layer norm, softmax or GELU. All times are examples, not measurements.
+
+<OpPartition client:visible />
+
+With the starting settings the CPU-only run takes 29.1 ms. A 10 times faster accelerator might promise 2.9 ms, but the unsupported operators cut the block into four accelerator partitions with eight hand-offs: 2.2 ms on the CPU, 2.69 ms on the accelerator and 2.4 ms of hand-offs, 7.29 ms in all, a 4.0 times gain. With every operator supported it would take 3.51 ms. Raise the hand-off cost and the split version loses ground; at about 3.0 ms per hand-off it is no faster than not delegating. Now switch to the audio CNN, where only softmax is unsupported. Because it is the last operator there is a single partition, and the model barely suffers.
+
+That suggests the remedies, roughly in order of cost:
+
+1. **Move the boundary.** Keep an unsupported operator at the start or end of the graph, where it does not split the accelerator's work into two partitions.
+2. **Swap the operator** for one the accelerator supports, and retrain or re-check accuracy.
+3. **Fuse or rewrite** it using supported operators, if the runtime or compiler offers that.
+4. **Write a custom kernel** for the accelerator. LiteRT, for example, documents custom operators and a path for creating a new accelerator, at the price of owning that code.
+5. **Change runtime or chip.** Sometimes the cheapest fix.
+
+ExecuTorch's Arm Cortex-M backend, documented as beta, works the other way. It is an operator library rather than a delegate: quantised subgraphs are swapped for CMSIS-NN kernels, and unsupported operators fall back to portable fp32 kernels. The cost there is not a hand-off but a slow, mixed-precision island.
+
+<Callout kind="edge" title="Quantisation is part of support">
+Some accelerators run only quantised models. The ExecuTorch documentation says its Arm Ethos-U backend targets quantised models on the Ethos-U55, U65 and U85. A float operator in a quantised graph is therefore not merely slow on such a chip; it may be a fallback. Quantise first, then count partitions.
+</Callout>
+
+## Compile ahead of time, or on the device
+
+The LiteRT NPU documentation describes two options. **Ahead-of-time (AOT)** compilation is "best suited for large, complex models where the target SoC is known", and cuts start-up cost and memory use. **On-device (just-in-time)** compilation suits small models and platform-agnostic distribution, at a higher first-run cost. LiteRT supports both for several NPU vendors, and on Android describes delivering AOT-compiled models to the right devices through Google Play AI Packs.
+
+ExecuTorch has the same trade-off in another form: the `.pte` file is built for one backend, so deploying to Core ML on iOS and an Arm CPU on Android means building one file for each. The practical consequence is a build and test matrix: one artefact per chip family, each needing its own accuracy and latency check. [Shipping to a fleet](../shipping-to-a-fleet/) covers how to deliver and roll back that many variants.
+
+## Choose a route
+
+Pick where your model comes from and where it must run. The list is a starting point taken from each project's documentation, and every entry says what to check.
+
+<RuntimeChooser client:visible />
+
+## Check the result
+
+A converted model is a new model. Before you trust it:
+
+- **Pin versions** of the framework, converter, runtime and back end, and re-run the checks below whenever any of them changes. A converter upgrade can change the graph it emits.
+- **Check parity.** Run a fixed set of representative inputs through the source model and the converted one and compare outputs. For a quantised model the outputs will differ by design, so also compare the task metric (for example word error rate or false rejects), and set a tolerance you can defend.
+- **Look at the partitions.** Count them, and find the operators on the CPU. The ExecuTorch and LiteRT documentation both list profiling and benchmarking tools; use them rather than guessing.
+- **Measure on the device** under realistic load and temperature, as in the [previous lesson on fitting a model](../quantization-for-edge/).
+
+<Deep title="Why a compiler can beat prebuilt kernels">
+
+A runtime with prebuilt kernels is limited to the shapes and fusions its authors wrote by hand. A compiler sees the whole graph, so it can fuse a convolution, its bias and its activation into one pass over memory (saving the data movement discussed in [inside a small device](../inside-a-small-device/)), choose data layouts for the target, and search for fast schedules. The price is build complexity and the work of tuning and validating generated code. Apache TVM's documentation lists search-based auto-tuning (MetaSchedule) among its tools, which is a good sign of both the power and the cost.
+
+</Deep>
+
+## What to remember
+
+- Four layers connect a framework to a chip: model file, runtime and accelerator back end; compilers generate code for the target instead.
+- Each runtime uses a different word (delegate, provider, backend, compute unit) for the same idea: run what the chip supports, fall back for the rest.
+- An unsupported operator in the middle of a graph costs two hand-offs, and can erase most of an accelerator's speed-up. Count the partitions.
+- Some accelerators need quantised models, and one `.pte` or compiled file usually targets one chip family.
+- After conversion, pin versions, check outputs and the task metric, and measure on the device.
+
+Next: [real-time on a budget](../real-time-on-a-budget/).

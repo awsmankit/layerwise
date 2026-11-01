@@ -1,0 +1,148 @@
+---
+title: Semantic caching and batch APIs
+track: cost
+level: intermediate
+order: 1.5
+summary: Two ways to stop paying full price for model calls. A semantic cache reuses answers to similar questions, at the risk of serving the wrong one. A batch API trades waiting time for a discount. How each works, what the vendors document today, how rate limits and queues fit in, and a worked saving estimate.
+updated: 2026-11-01
+sources:
+  - label: "vCache: Verified Semantic Prompt Caching (Schroeder et al., 2025)"
+    url: https://arxiv.org/abs/2502.03771
+  - label: "GPTCache: open-source semantic cache for LLM queries (repository)"
+    url: https://github.com/zilliztech/GPTCache
+  - label: "Optimize LLM response costs and latency with effective caching (AWS Database Blog, 2 February 2026)"
+    url: https://aws.amazon.com/blogs/database/optimize-llm-response-costs-and-latency-with-effective-caching/
+  - label: "llm-semantic-cache-lookup policy, Azure API Management (page last updated 2026-08-19)"
+    url: https://learn.microsoft.com/en-us/azure/api-management/azure-openai-semantic-cache-lookup-policy
+  - label: "SemanticCacheLookup policy, Apigee, Google Cloud (read 1 November 2026)"
+    url: https://cloud.google.com/apigee/docs/api-platform/reference/policies/semantic-cache-lookup-policy
+  - label: "Batch processing, Claude Platform docs (read 1 November 2026)"
+    url: https://platform.claude.com/docs/en/build-with-claude/batch-processing
+  - label: "Batch API, OpenAI API docs (read 1 November 2026)"
+    url: https://developers.openai.com/api/docs/guides/batch
+  - label: "Batch API, Gemini API docs (page last updated 2026-09-17)"
+    url: https://ai.google.dev/gemini-api/docs/batch-api
+  - label: "Batch inference with Gemini, Google Cloud (page last updated 2026-10-30)"
+    url: https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/batch-prediction-gemini
+  - label: "Amazon Bedrock pricing (batch inference at a lower price for select models; read 1 November 2026)"
+    url: https://aws.amazon.com/bedrock/pricing/
+  - label: "Process multiple prompts with batch inference, Amazon Bedrock User Guide"
+    url: https://docs.aws.amazon.com/bedrock/latest/userguide/batch-inference.html
+  - label: "Azure OpenAI Global Batch, Microsoft Foundry docs (read 1 November 2026)"
+    url: https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/batch
+  - label: "Prompt caching, Claude Platform docs (read 1 November 2026)"
+    url: https://platform.claude.com/docs/en/build-with-claude/prompt-caching
+  - label: "Rate limits, Claude Platform docs (read 1 November 2026)"
+    url: https://platform.claude.com/docs/en/api/rate-limits
+  - label: "Rate limits, OpenAI API docs (read 1 November 2026)"
+    url: https://developers.openai.com/api/docs/guides/rate-limits
+  - label: "RFC 6585: Additional HTTP status codes (429 Too Many Requests)"
+    url: https://www.rfc-editor.org/rfc/rfc6585
+  - label: "RFC 9110: HTTP semantics (Retry-After, section 10.2.3)"
+    url: https://www.rfc-editor.org/rfc/rfc9110
+---
+
+import SemanticCacheSim from '../../../components/viz/SemanticCacheSim.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+[Cost levers, ranked](../cost-levers/) lists "cache answers" and "batch the work that can wait" as two rows of a table. Each hides a trap. A cache that answers the wrong question is worse than no cache, and a batch discount that arrives a day late is no use to a user waiting on a screen. This lesson opens both rows. Vendor terms are as of 1 November 2026 and tied to each vendor's page; prices in worked examples are invented, so replace them with your own.
+
+## Three kinds of cache
+
+| | What it reuses | Saves | Main risk |
+|---|---|---|---|
+| **Exact-match** | The stored reply to an identical request (same prompt, same settings) | The whole model call | Almost none, but few hits on free-text input |
+| **Semantic** | The stored reply to a *similar* earlier question | The whole model call | A wrong hit: a near-duplicate question that needs a different answer |
+| **Provider prompt cache** | The processed form of a repeated prompt *prefix* | Part of the input cost and latency; the model still runs | Low: output is still generated fresh. See [the context window and prompt caching](../../llm/context-window-and-caching/) |
+
+The first two skip the model, so they save the most and are the only ones that can return a stale or wrong answer. The third is a pricing feature: you still get a fresh answer. AWS's caching guide draws the same line, recommending prompt caching for long repeated prefixes and request-response caching for identical requests that should give identical responses.
+
+## How a semantic cache works
+
+1. Turn the incoming question into an embedding ([tokens and embeddings](../../foundations/tokens-and-embeddings/)).
+2. Find the nearest stored question by cosine similarity.
+3. If the similarity reaches a **threshold**, return that question's stored answer. Otherwise call the model and store the new question with its answer.
+
+Everything depends on step 3. The demo below runs 40 invented support questions from two shops through a cache. Its similarity is a stand-in (counts of three-letter chunks), so its scale will not match a real embedding model, but the behaviour is the real one. Start at 0.85, then try 0.80 and 0.95, and switch to a separate cache per shop.
+
+<SemanticCacheSim client:visible />
+
+What to notice, using the demo's own numbers:
+
+- **No threshold separates a paraphrase from a near-duplicate.** "I forgot my password, how do I reset it?" scores 0.81 against "How do I reset my password?", a correct match. "What time do you open on Monday?" scores 0.88 against the Sunday question, a wrong one. A threshold that admits the first admits the second. A real embedding model behaves differently, but the problem is the same: similar wording is not the same meaning.
+- **Raising the threshold removes wrong hits and also right ones.** Only near-identical text survives at 0.95.
+- **A threshold cannot fix a scope error.** "What is your return policy" from the other shop scores 1.00, and the answer is wrong because the two shops have different policies. Only the cache key can fix that: partition by tenant, and by anything else that changes the answer (user permissions, language, model and prompt version).
+- **Wrong answers can cancel the saving.** At a low threshold the demo's hit rate looks excellent while the net saving goes negative once the assumed cost of a wrong answer is counted.
+
+Do the arithmetic for your own traffic before building. Example numbers: 100,000 questions a day, $0.01 per model call, $0.0001 per lookup, 30 per cent of questions answered from the cache.
+
+| Wrong share of hits | Wrong answers a day | Saved on calls (after lookups) | Cost of wrong answers at $0.05 each | Net saving a day |
+|---|---|---|---|---|
+| 0% | 0 | $290 | $0 | $290 |
+| 3% | 900 | $290 | $45 | $245 |
+| 10% | 3,000 | $290 | $150 | $140 |
+
+The saving disappears when the wrong share reaches about 19 per cent at these numbers (290 / (30,000 x 0.05)), and the $0.05 is a guess you must replace: a wrong refund policy costs far more than a wrong shop-hours answer.
+
+<Deep title="What the research and the vendors say">
+
+The vCache paper (Schroeder et al., 2025) observes that existing systems use one static similarity threshold for every request, and that static thresholds give no formal correctness guarantee, unexpected error rates and suboptimal hit rates. It proposes learning a threshold per cached prompt to meet a user-set error rate, and reports up to 12.5 times higher hit rates and 26 times lower error rates than static-threshold baselines on its own benchmarks. Treat that as a research result, not a product guarantee.
+
+On the clouds, as of 1 November 2026: AWS's guide describes persistent semantic caches built on vector search in Amazon MemoryDB and notes caches should be segregated by context, as similar queries can need different answers; it also offers one heuristic, that if caching cannot apply to at least 60 per cent of calls the benefit may not justify the complexity. Azure API Management has an `llm-semantic-cache-lookup` policy with a `score-threshold` (lower values require higher similarity; the docs suggest starting around 0.05 and warn that above 0.2 may cause mismatches) and a `vary-by` expression to partition the cache. Apigee on Google Cloud has a `SemanticCacheLookup` policy that uses Vertex AI embeddings and a Vector Search index with a configurable threshold. [GPTCache](https://github.com/zilliztech/GPTCache) is an open-source option. Thresholds are not portable between embedding models: calibrate on your own labelled pairs.
+
+</Deep>
+
+## When a semantic cache earns its place
+
+It fits narrow, repetitive, low-stakes traffic: FAQ-style support, public documentation questions, and classification of near-identical inputs. It fits badly where answers depend on who is asking or on the time, on live data or tool results, or on small differences in wording that matter (dates, amounts, names, negations). Safe habits:
+
+- **Scope the key** to everything that changes the answer, and put a version in it, so changing a prompt or a policy invalidates old entries.
+- **Expire entries** by time, and by content change for facts that can change.
+- **Measure on real traffic.** Sample hits, label them right or wrong, and track the wrong share. Keep a shadow mode where the cache proposes an answer but the model still answers, so you can compare.
+- **Keep personal data out.** A cache stores user text and answers. AWS's guide advises checking that neither cached queries nor responses contain personal data.
+- **Pair it with exact match first.** The cheapest hit is the one that needs no embedding.
+
+## Batch APIs: trade time for price
+
+A batch API takes a file of requests, runs them asynchronously and returns the results later at a discount. Use it for work nobody is waiting on: evaluation runs, backfills, tagging or summarising an archive, nightly enrichment, bulk embeddings. It does not suit chat or anything interactive.
+
+As of 1 November 2026, each vendor's own pages say:
+
+| Provider | Discount | Turnaround | Notes from the docs |
+|---|---|---|---|
+| **Anthropic** (Message Batches) | 50% of standard prices on input and output | Most batches finish within 1 hour; batches expire after 24 hours | Up to 100,000 requests or 256 MB per batch; results kept 29 days; expired requests are not billed; cache discounts stack, with hits on a best-effort basis |
+| **OpenAI** (Batch API) | 50% lower cost | 24-hour completion window | A separate, higher rate-limit pool; up to 50,000 requests and 200 MB per batch |
+| **Google, Gemini API** | 50% of the standard price | 24-hour target | Priced at half the interactive rate for the equivalent model |
+| **Google Cloud, Gemini on Vertex AI** | 50% discount | 24-hour turnaround | For Gemini 3 and later the cache and batch discounts stack (95% off cached input tokens in total); for Gemini 2.5 models the 90% cache discount takes precedence |
+| **AWS, Amazon Bedrock** | 50% lower than on-demand for select models, per the pricing page | Not stated on the pages I read | Not available for provisioned models; the pricing page lists the models |
+| **Microsoft, Azure OpenAI Global Batch** | 50% less than global standard | 24-hour target; jobs are not expired if they run longer | Separate quota; cancelled jobs still bill completed work |
+
+The headline is the same everywhere (about half price, up to a day), but the details that bite are not: size limits per batch, whether jobs expire, how cache discounts combine, and which models are eligible. Read the page for the model you use. Plan for partial failure too: each request in a batch succeeds, errors or expires on its own, so keep an ID per request and re-submit the rest.
+
+Example saving: a nightly job of 100,000 requests, each with 2,000 input and 300 output tokens, at example prices of $3 per million input and $15 per million output tokens costs 200 million input tokens x $3 = $600 plus 30 million output tokens x $15 = $450, which is $1,050 at standard prices and $525 as a batch. If 80 per cent of the input is a shared prefix read from a cache at one tenth of the input price, and the vendor lets the discounts stack, the input cost falls from $600 to $168 and the job to $309. Check whether your vendor allows stacking: Anthropic and Gemini 3 and later say yes, Gemini 2.5 on Vertex says no.
+
+## Rate limits and queueing
+
+Limits decide how fast you can go even when money is no object. When you exceed one, the API returns HTTP 429 (RFC 6585), and the response may carry a `Retry-After` header saying how long to wait (RFC 9110): wait that long. Anthropic documents a token bucket, where capacity is replenished continuously up to a maximum rather than reset at fixed intervals. OpenAI says to follow `Retry-After` when present, reduce your request rate and increase it gradually.
+
+Practical rules:
+
+- **Retry with exponential backoff and jitter**, a cap on attempts, and no retries for errors that will not change.
+- **Queue by priority.** Interactive requests go first; bulk work yields to them, or goes to the batch pool, which for OpenAI is a separate limit that does not consume your standard per-model limits.
+- **Know what counts.** For most Claude models, Anthropic says only uncached input tokens count towards input-token limits, so a high cache hit rate raises effective throughput (its example: a 2 million per minute limit with an 80 per cent hit rate handles about 10 million input tokens a minute).
+- **Smooth bursts.** Both vendors mention sudden jumps in traffic triggering limits; ramp up.
+
+<Callout kind="cost" title="Order of attack">
+Exact-match cache, then provider prompt caching, then batch for everything non-urgent. Add a semantic cache last, only for traffic you have measured to be repetitive and low-risk, with scoped keys and a tracked wrong-answer rate.
+</Callout>
+
+## What to remember
+
+- An exact or semantic cache skips the model; a provider prompt cache only discounts the input. Only the first two can serve a stale or wrong answer.
+- A semantic cache depends on a threshold, and similar wording is not the same meaning. No threshold separates every paraphrase from every near-duplicate, and none fixes a scope error: key by tenant, permissions, language and version.
+- Count the cost of wrong answers: a high hit rate with a few per cent wrong can cost more than it saves.
+- Batch APIs from all six providers above advertise about half price for results within a day, but size limits, expiry, eligible models and cache stacking differ: read the current page.
+- On a 429, honour `Retry-After`, back off with jitter, and keep interactive and bulk traffic in separate queues.
+
+Next: [Cost levers, ranked](../cost-levers/) puts both in the full list and the order to try them.

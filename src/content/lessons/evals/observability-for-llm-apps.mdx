@@ -1,0 +1,139 @@
+---
+title: "Observability for LLM apps: traces, spans and what to log"
+track: evals
+level: intermediate
+order: 4.2
+summary: How to record an LLM request or agent run as a trace of spans, what to log and what to leave out, how sampling decides which runs you can still debug, and how traces feed feedback and evals.
+updated: 2026-11-01
+sources:
+  - label: "OpenTelemetry GenAI semantic conventions: overview and status (GitHub, read 1 November 2026)"
+    url: https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/README.md
+  - label: "Semantic conventions for generative client AI spans, including content capture (OpenTelemetry)"
+    url: https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/gen-ai-spans.md
+  - label: "GenAI client inference spans and metrics (OpenTelemetry)"
+    url: https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/client-inference.md
+  - label: "GenAI agent spans (OpenTelemetry)"
+    url: https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/gen-ai-agent-spans.md
+  - label: "Sampling (OpenTelemetry documentation)"
+    url: https://opentelemetry.io/docs/concepts/sampling/
+  - label: "Monitoring Distributed Systems: the four golden signals (Google SRE Book)"
+    url: https://sre.google/sre-book/monitoring-distributed-systems/
+  - label: "Generative AI observability (Amazon CloudWatch User Guide)"
+    url: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/GenAI-observability.html
+  - label: "Monitor model invocation using CloudWatch Logs and Amazon S3 (Amazon Bedrock)"
+    url: https://docs.aws.amazon.com/bedrock/latest/userguide/model-invocation-logging.html
+  - label: "Observability in generative AI (Microsoft Foundry, Microsoft Learn)"
+    url: https://learn.microsoft.com/en-us/azure/foundry/concepts/observability
+  - label: "Scale your agents: set up tracing, logging and monitoring (Google Cloud, Gemini Enterprise Agent Platform)"
+    url: https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/manage/tracing
+  - label: "Instrument ADK applications with OpenTelemetry (Google Cloud Observability)"
+    url: https://cloud.google.com/stackdriver/docs/instrumentation/ai-agent-adk
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import TraceViewer from '../../../components/viz/TraceViewer.tsx';
+
+A user says "the assistant was slow and then gave a wrong answer". With a log file you have a few lines per request and no idea which of nine steps was slow. With a trace you can open that one run and see every model call, retrieval and tool call, in order, with its time, tokens and errors. This lesson is about recording LLM apps that way, and doing it without storing more than you should. It extends [LLMOps in production](../llmops-in-production/), which covers what to monitor; this covers how to see inside one request.
+
+## Traces and spans
+
+A **trace** is the record of one request or run. It is a tree of **spans**. A span is one timed step with a name, a start, a duration, a status and some attributes. For an agent the tree looks like this: one span for the whole run, and under it a span for each model call, retrieval, tool call and check.
+
+Two habits matter. Every span carries the same **trace ID**, so you can find all the steps of one run. And a parent span's duration includes its children, so to find a slow step you look at **own time** (duration minus the children), not at the parent.
+
+## The OpenTelemetry GenAI conventions
+
+OpenTelemetry (OTel) is the vendor-neutral standard for traces, metrics and logs. It has a set of **GenAI semantic conventions**: agreed names for spans and attributes, so a trace from one library reads the same in many backends.
+
+**Status, as of 1 November 2026.** The conventions are marked **Development**, not Stable, and the GenAI-specific attributes in the span definitions carry the same Development status (a few shared ones, such as `error.type`, are Stable). They now live in their own repository (`open-telemetry/semantic-conventions-genai`); the page that used to hold them on opentelemetry.io says it has moved. In practice: use them, but pin the version your instrumentation follows, expect names to change, and keep your dashboards tolerant of that.
+
+What they define, from the current text:
+
+| Span | Name pattern | Notes |
+|---|---|---|
+| Model call | `chat {model}` (operation name plus model) | Records provider, requested model, finish reasons, input and output token counts, including tokens served from a provider cache |
+| Agent run | `invoke_agent {agent name}` | Agent name, version, conversation ID |
+| Tool call | `execute_tool {tool name}` | Tool name and call ID; `error.type` on failure |
+| Retrieval | `retrieval {data source}` | Data source ID and `top_k`; the retrieved document IDs and scores are opt-in |
+
+There are matching metrics, such as the duration of an inference call and, for streaming, the time to the first chunk. Prompt template name and version (`gen_ai.prompt.name`, `gen_ai.prompt.version`) have attributes too, which is where the release manifest from the LLMOps lesson plugs in. Application-specific steps, such as your own output check, are ordinary custom spans.
+
+## What to log
+
+| Always (cheap, low risk) | Be careful (can hold personal data) | Avoid |
+|---|---|---|
+| Trace and conversation ID, release or prompt version, model and parameters | Prompt and completion text | API keys, tokens and secrets |
+| Input, output and cached token counts, and the cost you compute from them | System prompt and tool definitions (fine to store, but they may be proprietary) | Personal data the debugging does not need |
+| Time per span, time to first token, finish reason | Tool arguments and results | Raw documents copied in full |
+| Tool name, status, error type, retry count | Retrieved text (store IDs and scores instead) | |
+| Guardrail decisions and the layer that made them | | |
+
+The OTel conventions take the same view. They say instructions, inputs and outputs are considered sensitive and often large, and that instrumentation should not capture them by default. They describe three patterns: record nothing (the default), record content on the spans (suited to pre-production or where privacy rules allow it), or store content externally and keep only a reference on the span, which allows separate access controls. The content setting is named `OTEL_INSTRUMENTATION_GENAI_CAPTURE_CONTENT` in the text, with `NO_CONTENT` as the default.
+
+Traces are a data store with retention duties. Set a retention period, restrict who can open content, and redact before logging where you can. [LLM application security](../llm-security/) and [Privacy engineering for AI](../../responsible/privacy-engineering-for-ai/) cover why.
+
+## Read a run
+
+Below is an invented support-agent run. Answer the four questions by clicking spans. Then switch the content setting and see what each choice would store, and use the sampling panel to see which runs survive.
+
+<TraceViewer client:visible />
+
+The run shows three things logs hide. The slow step was a tool that timed out and was retried, not a model call. The costly step was the last model call, whose input grew to 6,800 tokens because the whole tool result was passed back: about 60% of the run's token cost, at example prices. And a retrieval span reported success while returning no documents, so a status field alone would never have flagged it. For that one, record an outcome attribute such as the number of documents returned, and alert on it.
+
+## Sampling: you cannot keep everything
+
+A busy app produces more traces than you want to store. **Head sampling** decides at the start of a trace, usually from the trace ID, for example "keep 10%". OpenTelemetry's documentation notes its upsides (easy, efficient) and its main downside: it cannot know the run will fail, so you cannot guarantee that traces with errors are kept. **Tail sampling** decides after the trace is complete, so you can always keep errors and slow runs and sample the rest. The same page lists the cost: it is harder to implement and operate, because the sampler must hold whole traces in memory until they finish, and the best options may be vendor-specific.
+
+In the panel above, with 1,000 invented runs of which 21 fail, head sampling at 1% kept none of the failed runs, and at 10% kept 2. Tail sampling kept all 21 at either rate and stored about 6 to 15% of the runs. Those counts come from the invented data, not from any real system, but the shape is general: head sampling throws away the traces you most want.
+
+A practical rule: keep all traces with errors, with a guardrail block, with negative user feedback, or above a latency threshold; sample the rest. Metrics (counts, token totals, latency histograms) should be computed on all traffic before sampling, so dashboards stay accurate.
+
+## Link feedback and evals to traces
+
+- **User feedback.** Attach the thumbs, edit or retry to the **trace ID**. A thumbs-down with no trace is a complaint you cannot investigate; with one, it is a test case.
+- **Online scores.** Run a judge on a sample of production traces and store the score as an attribute or event on the trace, and see [LLM-as-judge pitfalls](../llm-as-judge-pitfalls/) for calibrating it.
+- **Eval cases.** Promote failing traces into the eval set, with consent and redaction, as in [Building an eval dataset](../building-an-eval-dataset/). Anthropic's agent-evals guidance uses the word "transcript" for the full record of a trial, and a trace is that record in production (see [Evaluating agents](../evaluating-agents/)).
+- **Releases.** Tag every trace with the release or prompt version so you can compare versions, as in [LLMOps in production](../llmops-in-production/).
+
+## Dashboards worth having
+
+Google's SRE book names four golden signals for any user-facing service: latency, traffic, errors and saturation. For an LLM app, an extra set is worth building, each split by release version:
+
+- Latency at the 50th and 95th percentile, for the whole request and per step, plus time to first token.
+- Tokens in and out, cached share, and **cost per completed task**, not per call.
+- Error rate by type, including provider throttling, timeouts and tool failures per tool.
+- Finish reasons: a rising share of "length" means answers are being cut off.
+- Empty retrievals, retries per run, and agent steps per run.
+- Guardrail block rate per category, and feedback rate.
+
+Alert on a few symptoms people feel (error rate, tail latency, cost per task), and use the rest to find causes. The SRE book's warning applies: alerts with a lot of noise get ignored.
+
+## Managed options on the three clouds
+
+As of 1 November 2026, from each vendor's documentation. You can also send OTel data to open-source or third-party backends.
+
+| | AWS | Azure | Google Cloud |
+|---|---|---|---|
+| What the docs call it | Amazon CloudWatch generative AI observability; Amazon Bedrock model invocation logging | Observability in Microsoft Foundry: evaluation, monitoring and tracing | Cloud Trace, Cloud Logging and Cloud Monitoring for agents on Gemini Enterprise Agent Platform; Google Cloud Observability |
+| Traces | End-to-end prompt tracing; third-party model traces sent with the ADOT SDK | Distributed tracing built on OpenTelemetry, integrated with Azure Monitor Application Insights | Cloud Trace for agents; ADK agents have built-in OpenTelemetry instrumentation |
+| Logging prompts and outputs | Model invocation logging is **disabled by default**; when on, it can write full request and response data to CloudWatch Logs or Amazon S3 | The overview page does not state a default for prompt content; check the tracing guide before enabling it | ADK instrumentation can send prompts and responses to your Google Cloud project, so review it before enabling |
+
+The default matters. On AWS, invocation logging is off until you enable it and then stores the full input and output in your account. Decide first who can read that bucket or log group.
+
+<Deep title="What the trace cannot tell you">
+
+A trace records what happened, not whether it was good. A fast, cheap, error-free run can still contain a wrong answer. Pair traces with a quality signal: user feedback, a sampled judge, or a check of the outcome in the system of record, as in [Evaluating agents](../evaluating-agents/). Also remember that sampling and redaction both remove evidence; write down what you do not keep, so nobody trusts a gap in the data.
+
+</Deep>
+
+## What to remember
+
+- A trace is a tree of spans for one run. Find slow steps by own time, not by parent duration.
+- The OTel GenAI conventions give shared names (`chat`, `invoke_agent`, `execute_tool`, `retrieval`). They are in Development status as of 1 November 2026: pin the version.
+- Log timings, tokens, versions, tool outcomes and decisions always. Treat prompt, completion and tool content as sensitive and off by default, with a retention period.
+- Head sampling can lose every failed run. Keep errors, slow runs and bad feedback; sample the rest; compute metrics before sampling.
+- Tag traces with release and trace IDs so feedback, judge scores and eval cases connect to the run that caused them.
+- A green span is not a good result. Record outcomes such as documents returned.
+
+Next: [LLMOps in production](../llmops-in-production/) puts traces to work in releases, canaries and incident response.

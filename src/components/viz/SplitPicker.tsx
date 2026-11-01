@@ -59,8 +59,9 @@ export default function SplitPicker() {
   const MR = 8;
   const MT = 8;
   const MB = 26;
-  const sx = (v: number) => ML + (v / 10) * (W - ML - MR);
-  const sy = (v: number) => H - MB - (v / 10) * (H - MT - MB);
+  const r2 = (v: number) => Math.round(v * 100) / 100; // fixed precision so server and browser draw identical coordinates
+  const sx = (v: number) => r2(ML + (v / 10) * (W - ML - MR));
+  const sy = (v: number) => r2(H - MB - (v / 10) * (H - MT - MB));
 
   const [view, setView] = useState<View>('split');
   const [seedIx, setSeedIx] = useState(0);

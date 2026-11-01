@@ -1,0 +1,145 @@
+---
+title: "Your toolkit: notebooks, Colab, the terminal and git"
+track: skills
+level: basic
+order: 4
+summary: "The tools every AI project uses: notebooks (and why run order matters), Colab or your own computer, the command line in five commands, and git as a save-point system. Practise in pretend versions that run in your browser."
+updated: 2026-11-01
+sources:
+  - label: "Project Jupyter documentation: what is a notebook?"
+    url: https://docs.jupyter.org/en/latest/
+  - label: "Project Jupyter documentation: What is Jupyter? (kernels)"
+    url: https://docs.jupyter.org/en/latest/what_is_jupyter.html
+  - label: "Google Colab FAQ (read on 1 November 2026)"
+    url: https://research.google.com/colaboratory/faq.html
+  - label: "Kaggle Notebooks documentation"
+    url: https://www.kaggle.com/docs/notebooks
+  - label: "Python Tutorial: Virtual Environments and Packages"
+    url: https://docs.python.org/3/tutorial/venv.html
+  - label: "Pro Git (free book): Recording Changes to the Repository"
+    url: https://git-scm.com/book/en/v2/Git-Basics-Recording-Changes-to-the-Repository
+  - label: "Pro Git: Basic Branching and Merging"
+    url: https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging
+  - label: "Git documentation: gitignore"
+    url: https://git-scm.com/docs/gitignore
+  - label: "The Missing Semester of Your CS Education (MIT): Course overview and the shell"
+    url: https://missing.csail.mit.edu/2020/course-shell/
+  - label: "GitHub Docs: Removing sensitive data from a repository"
+    url: https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository
+---
+
+import NotebookOrder from '../../../components/viz/NotebookOrder.tsx';
+import TerminalLab from '../../../components/viz/TerminalLab.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+Three tools turn up in nearly every AI project: a notebook, a terminal and git. You meet each one here, then practise in pretend versions that run in this page.
+
+## A notebook is a page that runs
+
+A **notebook** is a page made of boxes called cells. Some cells hold text. Some hold code. When you run a code cell, the answer appears underneath.
+
+Behind the page sits a helper called the **kernel**. It remembers every variable you have made. It remembers them in the order you ran the cells, not the order they sit on the page.
+
+That causes the most common notebook bug. Run all three cells below. Change cell 1. Then run only cell 1 and cell 3.
+
+<NotebookOrder client:visible />
+
+The page now shows an answer that does not match its own code. The fix is **Restart and run all**. It wipes the kernel's memory and runs every cell from the top.
+
+## Where does a notebook run?
+
+On your own computer, or on someone else's. Google Colab is a notebook website. Its FAQ says your code runs on a virtual machine that is deleted when idle (read 1 November 2026). Kaggle also offers free notebooks.
+
+So anything you install in Colab can vanish. Put your install lines in the first cell. Sharing a Colab notebook shares the code and output, but not the machine or its files.
+
+You need to install nothing for this site. A box below shows how to set up Python on your own computer.
+
+## When something breaks
+
+Errors are normal. Read the last line first, then the line number. When you ask for help, say what you tried, what you expected, and paste the full error message. Add the smallest code that still shows the problem.
+
+## The terminal in five commands
+
+The terminal lets you control a computer by typing. Five commands get you a long way. `pwd` says where you are. `ls` lists what is here. `cd` moves into a folder. `cat` prints a file. `mkdir` makes a folder.
+
+Tap a command to fill the box, then press Run.
+
+<TerminalLab client:visible mode="shell" />
+
+## Git: save points for your project
+
+**Git** is a save-point system, like the ones in a video game. Each save point is called a **commit**. You can go back to any of them, and see what changed between two.
+
+Saving takes two steps. First you choose changes with `git add`. They wait in the staging area. Then you save them with `git commit`. `git status` shows what is going on.
+
+A **branch** is a separate line of save points. Try a risky idea on a branch. If it works, merge it back. If not, your main line is untouched.
+
+Work through the tasks below. The boxes under the terminal show what each command changes.
+
+<TerminalLab client:visible mode="git" />
+
+## Habits that save you
+
+- **Never paste secrets.** A password or API key does not belong in a notebook, a chat or a commit. Keep it in a `.env` file listed in `.gitignore`, as in the last task.
+- **If a key leaks, revoke it first.** GitHub says to revoke or rotate the secret before anything else.
+- **Pin your versions.** Save the exact package versions you used, so the project works next month.
+- **Restart and run all** before you share a notebook.
+- **Commit small and often**, with a clear message.
+
+<Deep title="A real error, read line by line (an example of the shape)">
+
+This is typical Python output when a package is missing. It is an example written for this lesson, not the output of the pretend terminal.
+
+```
+Traceback (most recent call last):
+  File "/home/you/project/load.py", line 1, in <module>
+    import pandas as pd
+ModuleNotFoundError: No module named 'pandas'
+```
+
+The last line names the kind of error and the cause: Python cannot find a package called pandas. The line above it shows the code that failed, and the line above that shows the file and line number. Read from the bottom up. The usual fix is to install the package into the same Python that runs your code. In a Colab cell that is `!pip install pandas`. In a terminal it is `python -m pip install pandas`.
+
+</Deep>
+
+<Deep title="Python on your own computer: a virtual environment and a requirements file">
+
+A virtual environment is a self-contained folder with its own copy of Python and its own packages, so projects do not disturb each other. The official Python tutorial shows these steps (the folder name is your choice; `.venv` is a common one):
+
+```
+python -m venv .venv
+source .venv/bin/activate        # on Windows: .venv\Scripts\activate
+python -m pip install numpy
+python -m pip freeze > requirements.txt
+python -m pip install -r requirements.txt   # later, on another machine
+```
+
+`pip freeze` lists the exact versions installed. Keeping that list in `requirements.txt` and committing it to git means anyone, including you in six months, can rebuild the same setup. Python can be downloaded from python.org. Commands and names change between versions and operating systems, so check the [Python tutorial](https://docs.python.org/3/tutorial/venv.html) for your setup.
+
+</Deep>
+
+<Deep title="Git in more detail">
+
+Git stages a file exactly as it was when you ran `git add`. If you edit it again before committing, the new edit is not in the commit until you add again. The Pro Git book shows this with a file that is both staged and modified; try it in the simulator by adding a file, changing it, then running `git status`.
+
+A commit stores a snapshot of the staged files, a message and a link to its parent. The short codes are fingerprints of that content. The ones in the simulator are made up. When two branches change the same lines, git cannot merge them by itself. It stops and marks the clashing lines in the file for you to fix by hand. The simulator stops without changing anything instead.
+
+Sharing work through a website such as GitHub uses `git push` and `git pull`. This lesson skips them. The [Pro Git book](https://git-scm.com/book/en/v2) is free and covers them well. If a secret is already committed and pushed, GitHub's own guidance is to revoke or rotate it first, because rewriting history is difficult and has side effects.
+
+</Deep>
+
+## Where to learn more
+
+- [The Missing Semester](https://missing.csail.mit.edu/2020/course-shell/) from MIT teaches the shell and git, free.
+- [Pro Git](https://git-scm.com/book/en/v2) is the free book behind the git ideas here.
+- The [Jupyter documentation](https://docs.jupyter.org/en/latest/) and the [Colab FAQ](https://research.google.com/colaboratory/faq.html) answer most notebook questions.
+
+## What to remember
+
+- A notebook's kernel remembers the order you ran things in. Restart and run all tells the truth.
+- A notebook in Colab runs on someone else's computer that gets deleted, so install in the first cell.
+- Five commands (`pwd`, `ls`, `cd`, `cat`, `mkdir`) get you around a terminal.
+- Git saves points of your project: add chooses, commit saves, branches let you experiment.
+- Keep secrets out of notebooks and commits. Revoke a leaked key first.
+
+Next: [Getting data ready](../../ml/getting-data-ready/), where you clean the messy data that real projects start with.

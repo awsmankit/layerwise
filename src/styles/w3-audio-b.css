@@ -1,0 +1,619 @@
+/* Styles for the interactive components in the wave 3 "audio-b" lesson batch. Keep every class under this batch's own prefix. */
+
+/* ---------- shared bits ---------- */
+
+.aub-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.8rem;
+}
+.aub-chip-label {
+  font-size: 0.88rem;
+  color: var(--ink-3);
+  margin-right: 0.2rem;
+}
+.viz .aub-chip {
+  min-height: 44px;
+  padding: 0.35rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font: 600 0.9rem var(--font-display);
+  line-height: 1.2;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.aub-chip:hover {
+  border-color: var(--signal);
+}
+.viz .aub-chip[aria-pressed='true'] {
+  background: var(--signal);
+  border-color: var(--signal);
+  color: var(--on-signal);
+}
+.viz .aub-chip.aub-quiet {
+  border-style: dashed;
+}
+.aub-chip:focus-visible,
+.aub .btn:focus-visible,
+.aub input[type='range']:focus-visible,
+.aub textarea:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.aub-hint {
+  margin-top: 0.7rem;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+.aub-key {
+  margin-top: 0.5rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--ink-3);
+}
+.aub-look {
+  margin-top: 0.9rem;
+  padding: 0.7rem 0.9rem;
+  border-left: 2px solid var(--signal);
+  background: var(--signal-wash);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+.aub-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+.aub-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+}
+.aub .aub-buttons .btn {
+  min-height: 44px;
+}
+.aub-status {
+  font-size: 0.88rem;
+  color: var(--ink-3);
+}
+
+/* ---------- WER calculator ---------- */
+
+.aub-fields {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.8rem;
+  margin-top: 0.9rem;
+}
+@media (min-width: 720px) {
+  .aub-fields {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.aub-field {
+  display: block;
+}
+.aub-field > span {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--ink-2);
+  margin-bottom: 0.25rem;
+}
+.aub textarea {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 4.2rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--surface);
+  color: var(--ink);
+  font: 400 1rem/1.45 var(--font-display);
+  resize: vertical;
+}
+@media (pointer: coarse) {
+  .aub textarea {
+    font-size: 16px;
+  }
+}
+.aub-result {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1.4rem;
+  margin-top: 1.1rem;
+}
+.aub-big {
+  display: flex;
+  flex-direction: column;
+  min-width: 7rem;
+}
+.aub-big-n {
+  font: 700 2.4rem/1 var(--font-display);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.aub-big-l {
+  font-size: 0.85rem;
+  color: var(--ink-3);
+}
+.aub-sum {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+.aub-formula {
+  font: 500 0.95rem/1.4 var(--font-mono);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.aub-meta {
+  margin-top: 0.3rem;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--ink-3);
+}
+.aub-align {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.aub-col {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 3.2rem;
+  max-width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--surface);
+  text-align: center;
+  overflow: hidden;
+}
+.aub-col + .aub-col {
+  margin-top: 0;
+}
+.aub-w {
+  padding: 0.3rem 0.5rem;
+  font: 500 1rem/1.3 var(--font-display);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.aub-w + .aub-w {
+  border-top: 1px dashed var(--line);
+}
+.aub-tag {
+  padding: 0.1rem 0.3rem;
+  border-top: 1px solid var(--line);
+  font: 700 0.75rem/1.4 var(--font-display);
+  letter-spacing: 0.04em;
+  color: var(--ink);
+}
+.aub-ok .aub-tag {
+  color: var(--ink-3);
+  font-weight: 600;
+}
+.aub-sub {
+  background: var(--tint-sun);
+}
+.aub-del {
+  background: var(--tint-pink);
+}
+.aub-ins {
+  background: var(--tint-sky);
+}
+.aub-sub,
+.aub-del,
+.aub-ins {
+  border-color: var(--ink-3);
+}
+
+/* ---------- MOS simulator ---------- */
+
+.aub-sliders {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.2rem 1.6rem;
+}
+@media (min-width: 640px) {
+  .aub-sliders {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.aub .field > span {
+  flex-wrap: wrap;
+  gap: 0.1rem 1rem;
+}
+.aub-svg {
+  display: block;
+  width: 100%;
+  max-width: 560px;
+  height: auto;
+  margin-top: 1rem;
+  overflow: visible;
+}
+.aub-svg text {
+  font-family: var(--font-display);
+  fill: var(--ink-2);
+}
+.aub-svg-h {
+  font-size: 14px;
+  font-weight: 650;
+  fill: var(--ink);
+}
+.aub-tick {
+  font-size: 13px;
+  fill: var(--ink-3);
+}
+.aub-row {
+  font-size: 14px;
+  font-weight: 650;
+  fill: var(--ink);
+}
+.aub-row-s {
+  font-size: 13px;
+  font-weight: 500;
+}
+.aub-grid {
+  stroke: var(--line);
+  stroke-width: 1;
+  opacity: 0.5;
+}
+.aub-zero {
+  stroke: var(--ink-2);
+  stroke-width: 1.4;
+}
+.aub-bar {
+  stroke-width: 2.4;
+  stroke-linecap: round;
+}
+.aub-bar-A {
+  stroke: var(--signal);
+}
+.aub-bar-B {
+  stroke: var(--cost);
+}
+.aub-bar-ok {
+  stroke: var(--ok);
+}
+.aub-bar-none {
+  stroke: var(--ink-3);
+}
+.aub-bar-dash {
+  stroke: var(--ink-3);
+  stroke-width: 1.6;
+  stroke-dasharray: 4 3;
+}
+.aub-dot-A {
+  fill: var(--signal);
+}
+.aub-dot-B {
+  fill: var(--cost);
+}
+.aub-dot-ok {
+  fill: var(--ok);
+}
+.aub-dot-none {
+  fill: var(--ink-3);
+}
+.aub-true {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.4;
+}
+.aub-say {
+  margin-top: 0.9rem;
+  font-size: 0.98rem;
+  line-height: 1.55;
+  color: var(--ink-2);
+  min-height: 3em;
+}
+.aub-label {
+  margin-top: 1.3rem;
+  font-weight: 650;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+.aub-rates {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0.7rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.aub-rates li {
+  display: grid;
+  grid-template-columns: 6.2rem 1fr 3rem;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.1rem 0.3rem;
+  font-size: 0.9rem;
+  border-left: 3px solid transparent;
+}
+.aub-rates li + li {
+  margin-top: 0;
+}
+.aub-rates li.aub-now {
+  border-left-color: var(--signal);
+  background: var(--signal-wash);
+  font-weight: 650;
+}
+.aub-rn {
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.aub-track {
+  display: block;
+  height: 10px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--surface);
+  overflow: hidden;
+}
+.aub-fill {
+  display: block;
+  height: 100%;
+  background: var(--ok);
+}
+.aub-rv {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+/* ---------- toy TTS pipeline and codec budget ---------- */
+
+.aub-input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--surface);
+  color: var(--ink);
+  font: 400 1rem/1.4 var(--font-display);
+}
+.aub-input:focus-visible,
+.aub-tab:focus-visible,
+.aub-scroll:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+@media (pointer: coarse) {
+  .aub-input {
+    font-size: 16px;
+  }
+}
+.aub-tts .aub-field > span {
+  margin-bottom: 0.3rem;
+}
+.aub-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 1.1rem;
+}
+.viz .aub-tab {
+  min-height: 44px;
+  padding: 0.3rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--surface);
+  color: var(--ink);
+  font: 600 0.9rem var(--font-display);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.aub-tab:hover {
+  border-color: var(--signal);
+}
+.viz .aub-tab[aria-selected='true'] {
+  background: var(--signal);
+  border-color: var(--signal);
+  color: var(--on-signal);
+}
+.aub-tab-n {
+  display: inline-block;
+  min-width: 1.2em;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.8;
+}
+.aub-panel {
+  margin-top: 0.9rem;
+  padding: 0.9rem 0 0.2rem;
+  border-top: 1px solid var(--line);
+}
+.aub-explain {
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+.aub-words,
+.aub-g2p {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.8rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.aub-words li + li,
+.aub-g2p li + li {
+  margin-top: 0;
+}
+.aub-word,
+.aub-mark {
+  padding: 0.25rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  font: 500 1rem var(--font-display);
+}
+.aub-mark {
+  background: var(--tint-sun);
+  min-width: 1.6rem;
+  text-align: center;
+}
+.aub-g2p {
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.aub-g2p li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 0.7rem;
+}
+.aub-g2p-word {
+  min-width: 4.5rem;
+  font: 650 1rem var(--font-display);
+}
+.aub-g2p-ph {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+.aub-ph {
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--tint-lilac);
+  font: 600 0.95rem var(--font-mono);
+  color: var(--ink);
+}
+.aub-src {
+  font-size: 0.82rem;
+  color: var(--ink-3);
+}
+.aub-scroll {
+  margin-top: 0.8rem;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--surface);
+}
+.aub-plan {
+  display: block;
+  max-width: none;
+}
+.aub-plan text,
+.aub-tts .aub-svg text {
+  font-family: var(--font-display);
+  fill: var(--ink-2);
+}
+.aub-bar-s {
+  stroke: var(--ink-3);
+  stroke-width: 0.6;
+}
+.aub-k-voiced {
+  fill: var(--signal);
+  opacity: 0.85;
+}
+.aub-k-noise {
+  fill: var(--cost);
+  opacity: 0.9;
+}
+.aub-k-pause {
+  fill: var(--line);
+  opacity: 0.6;
+}
+.aub-pitch {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.4;
+}
+.aub-dot-st {
+  fill: var(--ink);
+}
+.aub-dot-pl {
+  fill: var(--ink-3);
+}
+.aub-spec {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.8rem;
+}
+.aub-spec-axis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--ink-3);
+  min-width: 2.6rem;
+  text-align: right;
+}
+.aub-canvas {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  height: 170px;
+  image-rendering: pixelated;
+  border: 1px solid var(--line);
+  background: #000004;
+}
+.aub-wave {
+  display: block;
+  width: 100%;
+  height: 110px;
+  margin-top: 0.8rem;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+.aub-wave-l {
+  stroke: var(--signal);
+  stroke-width: 1;
+}
+.aub-vol {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--ink-2);
+}
+.aub-vol input {
+  width: 7rem;
+}
+
+.aub-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: 0.7rem 1rem;
+  margin: 1rem 0 0;
+}
+.aub-stats > div {
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--surface);
+}
+.aub-stats dt {
+  font-size: 0.82rem;
+  color: var(--ink-3);
+}
+.aub-stats dd {
+  margin: 0;
+  font: 700 1.35rem/1.2 var(--font-display);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.aub-stats dd.aub-note {
+  font: 400 0.8rem/1.35 var(--font-display);
+  color: var(--ink-3);
+}

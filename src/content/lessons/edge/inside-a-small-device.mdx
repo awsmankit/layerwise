@@ -1,0 +1,120 @@
+---
+title: "Inside a small device: microcontrollers, NPUs and where the memory goes"
+track: edge
+level: intermediate
+order: 1.5
+summary: The hardware ladder from a data-centre GPU down to a microcontroller, why flash holds the weights while SRAM holds the activations, and how to read a datasheet to see whether your model will fit and how long it will run.
+updated: 2026-11-01
+sources:
+  - label: "Efficient Processing of Deep Neural Networks: A Tutorial and Survey (Sze et al., 2017)"
+    url: https://arxiv.org/abs/1703.09039
+  - label: "Hello Edge: Keyword Spotting on Microcontrollers (Zhang et al., 2017)"
+    url: https://arxiv.org/abs/1711.07128
+  - label: "MobileNets: Efficient Convolutional Neural Networks for Mobile Vision Applications (Howard et al., 2017)"
+    url: https://arxiv.org/abs/1704.04861
+  - label: "MLPerf Tiny Benchmark (Banbury et al., 2021)"
+    url: https://arxiv.org/abs/2106.07597
+  - label: "LiteRT for Microcontrollers (Google AI Edge)"
+    url: https://www.tensorflow.org/lite/microcontrollers
+  - label: "Get started with microcontrollers: allocating the tensor arena (LiteRT for Microcontrollers)"
+    url: https://www.tensorflow.org/lite/microcontrollers/get_started_low_level
+  - label: "CMSIS-NN: efficient neural network kernels for Arm Cortex-M (Arm, GitHub)"
+    url: https://github.com/ARM-software/CMSIS-NN
+  - label: "CMSIS-6 SIMD intrinsics, including __SMLAD (Arm)"
+    url: https://arm-software.github.io/CMSIS_6/latest/Core/group__intrinsic__SIMD__gr.html
+  - label: "Arm Ethos-U55 NPU (Arm)"
+    url: https://www.arm.com/products/silicon-ip-cpu/ethos/ethos-u55
+  - label: "ExecuTorch Arm Ethos-U backend (PyTorch documentation)"
+    url: https://docs.pytorch.org/executorch/stable/backends/arm-ethos-u/arm-ethos-u-overview.html
+  - label: "Core ML Tools: specifying compute units (Apple)"
+    url: https://apple.github.io/coremltools/docs-guides/source/model-prediction.html
+  - label: "LiteRT NPU acceleration and supported vendors (Google AI Edge)"
+    url: https://ai.google.dev/edge/litert/next/npu
+  - label: "RP2040 datasheet (Raspberry Pi Ltd)"
+    url: https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf
+  - label: "Apollo4 Plus (Ambiq)"
+    url: https://ambiq.com/apollo4-plus/
+  - label: "Ensemble E3 series (Alif Semiconductor)"
+    url: https://alifsemi.com/ensemble-e3-series/
+  - label: "Jetson Orin Nano Super developer kit, performance boost (NVIDIA developer blog)"
+    url: https://developer.nvidia.com/blog/nvidia-jetson-orin-nano-developer-kit-gets-a-super-boost/
+  - label: "NVIDIA H100 Tensor Core GPU (NVIDIA)"
+    url: https://www.nvidia.com/en-us/data-center/h100/
+---
+
+import DeviceBudget from '../../../components/viz/DeviceBudget.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+[Edge or cloud inference](../edge-vs-cloud-inference/) said that memory and power become requirements on a small device. This lesson shows what the hardware is, so that you can read a datasheet and predict whether a model will fit and how fast it will run before you buy a board. Device figures below come from vendor documents and are dated 1 November 2026; they change with each product generation.
+
+## The ladder
+
+Edge hardware is a ladder. Each rung down trades compute and memory for power and cost.
+
+| Rung | Example from vendor documents | Compute | Memory | Power |
+|---|---|---|---|---|
+| Server GPU | NVIDIA H100 SXM | 3,958 INT8 TOPS "with sparsity" | 80 GB, 3.35 TB/s | up to 700 W |
+| Embedded board with GPU | NVIDIA Jetson Orin Nano Super | 67 sparse and 33 dense INT8 TOPS | 8 GB, 102 GB/s | 7 to 25 W |
+| Phone chip | Apple, Google Tensor, Qualcomm, MediaTek, Samsung | CPU, GPU and an NPU on one chip (check the precision and sparsity behind any TOPS figure) | Gigabytes of main memory, varies by phone | Battery powered, no single figure |
+| Microcontroller with NPU | Alif Ensemble E3 (Cortex-M55 + Ethos-U55) | NPU of 256 MAC per cycle, up to 204 GOPS | up to 5.5 MB MRAM, 13.5 MB SRAM | milliwatts |
+| Microcontroller | Ambiq Apollo4 Plus (Cortex-M4F, 192 MHz); Raspberry Pi RP2040 (2 x Cortex-M0+, 133 MHz) | about half to two MACs per cycle (this lesson's estimate) | 2 MB MRAM and 2.75 MB RAM; 264 kB SRAM with external flash | microwatts to milliwatts |
+
+Three things to notice. Memory spans about five orders of magnitude, from 264 kB to 80 GB. Peak compute spans about seven, from tens of millions of MACs per second to nearly a quadrillion. And a phone has the same kinds of units as a microcontroller with an NPU, only larger: a CPU, a GPU and an accelerator. The Core ML Tools documentation names the three compute units a model can use as the CPU, the GPU and the Neural Engine, and the LiteRT documentation lists NPU support from Google Tensor, Qualcomm, MediaTek, Intel and Samsung.
+
+Many products sit on two rungs at once. A small always-on core, often a Cortex-M core or a DSP, listens or watches continuously on a few milliwatts, and wakes a larger processor only when something interesting happens. Alif describes its E3 in exactly these terms: a low-power core and NPU that wake the system, and a high-performance core for when it is needed. This is the cascade idea from the edge-or-cloud lesson, drawn in silicon.
+
+## Flash holds the weights, SRAM holds the activations
+
+On a microcontroller the weights are constants. They sit in non-volatile memory (flash, or MRAM on some chips) and are read in place. The numbers that change while the model runs, the **activations**, need fast writable memory, which is SRAM. LiteRT for Microcontrollers makes this explicit: you hand it one fixed block of memory, the **tensor arena**, for the input, output and intermediate arrays, and its documentation says the size depends on the model and may need to be found by experimentation.
+
+So two separate budgets decide whether a model fits: weight bytes against flash, and the arena against SRAM. A model with few weights can still fail on SRAM, and the reverse.
+
+A worked example you can check against a paper. The "small" keyword-spotting network from Hello Edge (Zhang et al., 2017) is a convolution followed by four depthwise-separable blocks on 49 frames of 10 MFCC features. Counting its layers gives 22,604 weights and biases. Each layer reads one tensor and writes another, and the biggest pair is 8,000 + 8,000 = 16,000 values. In 8-bit that is 22,604 + 16,000 = 38,604 bytes. The paper reports 38.6 KB for this network, which is the same sum: weights plus the larger of two consecutive activation tensors. Its count of about 5.4 million operations matches 2.66 million multiply-accumulates at two operations each (this lesson's arithmetic gives 5.3 million; the paper does not print the layer-by-layer count).
+
+A bigger network moves the pressure. MobileNetV1 at full width on a 224 x 224 image has about 4.2 million weights, as its paper says, and about 569 million multiply-accumulates. Its activation peak is not in the deep, weight-heavy layers but in the first pointwise layer, where a 112 x 112 x 32 tensor goes in and a 112 x 112 x 64 tensor comes out: 1,204,224 values, about 1.15 MB in int8. Early layers have large images and few weights; late layers have small images and many weights. That is why shrinking the input resolution, not only the weights, is a standard way to fit a model.
+
+<DeviceBudget client:visible />
+
+Try the photo classifier on the Apollo4 Plus: the weights alone are too big for its MRAM, and on the RP2040 neither budget works. Switch to float32 and the keyword spotter's weights grow fourfold. Move to the Ensemble E3 and the photo classifier fits, though its 4 MB of weights take most of the 5.5 MB of MRAM (the widget keeps 25 per cent back for other firmware, which you can change).
+
+## Why integer maths, and why data movement wins
+
+Energy, not arithmetic, is usually the bottleneck. In the Sze et al. survey (their Fig. 22, for one accelerator design), fetching an operand from a small register file costs about as much energy as the multiply-accumulate itself. From a 100 to 500 kB on-chip buffer it costs about 6 times as much, and from off-chip DRAM about 200 times as much. The survey adds that, in the worst case, AlexNet's 724 million MACs would need nearly 3,000 million DRAM accesses. Ratios will differ between chips, but the shape holds: keep data close to the multipliers.
+
+That is the hardware reason for 8-bit integers. An int8 value is a quarter of the size of a float32 value, so a quarter of the bytes cross every memory boundary, and integer arithmetic units are typically smaller and cheaper than floating-point ones. It is also a software reason. On Cortex-M, CMSIS-NN picks kernels by the processor: plain C for Cortex-M0 or M3, SIMD instructions where the DSP extension exists (Cortex-M4, or a Cortex-M33 with it), and Arm Helium vector instructions on cores that have them. One SIMD instruction, `__SMLAD`, performs two 16-bit multiplications and adds both to a 32-bit accumulator, which is why the Apollo4 entry above is rated at two MACs per cycle and the M0+-based RP2040 at about half a MAC per cycle (both are this lesson's estimates, not vendor figures). Many NPUs go further and run only quantised models: the ExecuTorch backend for Arm's Ethos-U targets "quantized models" on the Ethos-U55, U65 and U85. The previous lesson in this track covers how to get a model to int8; this one explains why you must.
+
+<Deep title="What an NPU actually does">
+
+An NPU is a grid of multiply-accumulate units with local memory, built for a fixed list of operations, mainly convolutions and matrix multiplies in low precision. A compiler turns your model into a command stream for it ahead of time. For the Ethos-U, the ExecuTorch documentation describes using the Vela graph compiler to produce that command stream, and the same documentation says the parts of a model the backend does not support run on the CPU instead. That fallback is where many projects lose their speed-up, and the next lesson covers it. Chip makers sell NPUs in sizes: Alif's E3 pairs one Ethos-U55 of 256 MAC per cycle with one of 128.
+
+</Deep>
+
+## Energy and the always-on budget
+
+Energy per inference is power times time. The MLPerf Tiny paper makes the stakes plain: a constant 100 mA drain would flatten a typical phone battery in a day, and a keyword detector has to run continuously. Duty cycling helps, because the chip computes for a short burst and sleeps.
+
+An example, using this lesson's own assumptions. Put the keyword spotter on the Apollo4 Plus. Ambiq's headline is 4 microamps per MHz, so at 192 MHz the core draws about 0.77 mA; at an assumed 1.8 V that is about 1.4 mW. If the software reaches 25 per cent of the two-MACs-per-cycle ceiling, one inference takes about 27.7 ms and costs about 38 microjoules. Run ten a second and the chip is busy 28 per cent of the time, averaging about 0.38 mW for the model alone. A 200 mAh battery at 3 V holds 0.6 Wh, so inference alone would last about 1,570 hours, roughly 65 days. Real life is worse: microphones, the radio and sleep current all add to it, and the 25 per cent is a guess. The point is the method, and that you can run it on a datasheet before building anything.
+
+## Reading an edge datasheet
+
+- **Memory.** Look for "up to": it may be a total shared by several cores, and not all of it is equally fast. Note which part holds code and which can hold activations.
+- **Compute.** Convert to MACs per second. One MAC is two operations, so GOPS divided by two is G MAC/s. For a CPU, multiply MACs per cycle by the clock.
+- **Sparse or dense.** NVIDIA's headline figures are sparse (67 for the Jetson, 3,958 for the H100). The Jetson blog also gives the dense figure, 33, which is half. For the H100 this lesson halves the number by the same convention. A dense model does not get the sparse figure.
+- **Which mode.** Peak speed is quoted at one power mode and clock. Lower power modes give less.
+- **Peak is a ceiling.** A small model cannot fill a big chip, and memory traffic often sets the real speed. Treat the datasheet as an upper bound and measure the rest.
+- **Power.** Per-MHz core figures exclude sensors, radio and NPU. Check what is included.
+
+<Callout kind="edge" title="Memory first">
+Before asking how fast, ask whether it fits. Compute weights in bytes, find the largest pair of consecutive tensors for the arena, and compare each with the right memory. This takes minutes and rules out most boards.
+</Callout>
+
+## What to remember
+
+- The hardware ladder spans five orders of magnitude of memory and seven of compute; the same ideas apply on every rung.
+- Weights go in flash or MRAM, activations in SRAM: two budgets, and the activation peak often sits in an early, high-resolution layer.
+- Moving data costs far more energy than computing on it, which is why small integer types and local memory matter.
+- NPUs run a fixed set of operations, often quantised only; anything else falls back to the CPU.
+- Convert every datasheet figure to MACs per second, check sparse versus dense, and treat peak as a ceiling.
+
+Next: [fitting a model onto a small device](../quantization-for-edge/).

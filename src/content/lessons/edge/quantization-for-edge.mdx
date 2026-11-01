@@ -12,6 +12,12 @@ sources:
     url: https://arxiv.org/abs/1503.02531
   - label: "Learning both Weights and Connections for Efficient Neural Networks (Han et al., 2015)"
     url: https://arxiv.org/abs/1506.02626
+  - label: "Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference (Jacob et al., 2017)"
+    url: https://arxiv.org/abs/1712.05877
+  - label: "Quantizing deep convolutional networks for efficient inference: A whitepaper (Krishnamoorthi, 2018)"
+    url: https://arxiv.org/abs/1806.08342
+  - label: "LiteRT 8-bit quantization specification (Google AI Edge)"
+    url: https://developers.google.com/edge/litert/conversion/tensorflow/quantization/quantization_spec
 ---
 
 import Callout from '../../../components/ui/Callout.astro';
@@ -69,3 +75,30 @@ A latency number from a development board on a bench says little about the produ
 ## Data and evaluation
 
 The bigger risk on devices is usually the data, not the arithmetic. Build the evaluation set from the situations the device meets in daily use, including the awkward ones, and keep a way to learn from the field, with user consent and privacy protections, so that the next model improves on what the current one gets wrong.
+
+## Post-training or quantization-aware, and what the chip computes
+
+There are two ways to get to 8 bits. **Post-training quantization** (PTQ) takes a trained float model and converts it, using a small **calibration set** of real inputs to measure the range each activation takes. **Quantization-aware training** (QAT) puts the rounding inside training: the forward pass quantizes and de-quantizes values ("fake quantization"), while the weights stay in float and the backward pass passes gradients straight through the rounding. The model learns to tolerate the error.
+
+PTQ is the first thing to try, and often enough. Krishnamoorthi's whitepaper reports that quantizing weights per channel and activations per tensor to 8 bits, after training, kept accuracy within 2% of float across a range of image CNNs, and that QAT narrowed the gap to about 1%. It also reports that at 4-bit weights QAT was needed, with losses of 2% to 10% (all on image classification, so check your own task). The MLPerf Tiny closed division uses 8-bit PTQ with supplied calibration data. Jacob et al. found that simple PTQ lost significant accuracy on small, efficient networks, and named two causes: weight ranges that differ by more than 100 times between output channels, which a single scale handles badly, and outlier weights that stretch the range. Small models and depthwise convolutions are exactly what edge devices run, so reach for per-channel scales first, then QAT if the gap remains.
+
+On the chip nothing is floating point. Following the LiteRT 8-bit specification, a real value is `(q - zero_point) x scale`. Weights are int8 with zero point 0, one scale per output channel. Activations are int8 with a zero point, one scale per tensor. The bias is int32 with scale `S_w x S_x`. A layer accumulates int32 products, then rescales to the output's scale with `M = S_w x S_x / S_y`, which is below 1 and is stored as an int32 fraction and a bit shift. CMSIS-NN follows the same specification. A worked example, one output neuron, computed by `src/lib/int-quant.ts` and unit-tested:
+
+| Step | Value |
+|---|---|
+| Weights (float) | 0.42, -0.77, 0.15, 0.91, so `S_w` = 0.91 / 127 = 0.007165 |
+| Weights (int8) | 59, -107, 21, 127 |
+| Inputs (float) | 0.3, 1.2, -0.4, 0.9, range -0.5 to 2.0, so `S_x` = 2.5 / 255 = 0.009804, zero point -77 |
+| Inputs (int8) | -46, 45, -118, 15 |
+| Bias 0.1 as int32 | 1,424 |
+| int32 accumulator | bias plus the sum of (input minus zero point) times weight: 1,424 + 1,829 - 13,054 - 861 + 11,684 = 1,022 |
+| Rescale | `M` = 0.005971 = 0.7643 x 2^-7, held as the int32 1,641,331,334 and a shift of 7 |
+| Output (int8) | -37, which is 0.0706 for an output range of -1 to 2 (scale 3 / 255 = 0.011765, zero point -43) |
+| Float answer | 0.0610 |
+
+The integer result is within one output step (0.0118) of the float answer. Choose the calibration set from real, hard inputs, noise and rare conditions included: ranges measured on easy data clip the values that matter most.
+
+## Go deeper
+
+- [From PyTorch to the chip](../from-pytorch-to-the-chip/): converters, runtimes and compilers.
+- [Real-time on a budget](../real-time-on-a-budget/): blocks, deadlines and honest benchmarks.

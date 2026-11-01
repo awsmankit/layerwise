@@ -1,0 +1,118 @@
+---
+title: "Reinforcement learning from scratch: rewards, Q-tables and the road to RLHF"
+track: deep-learning
+level: intermediate
+order: 8.5
+summary: "The reinforcement learning loop in a few lines of maths, Q-learning on a grid world you can train in the page, exploration against exploitation, how a badly written reward gets exploited, why deep RL is unstable, and how all of it maps onto training a language model."
+updated: 2026-11-01
+sources:
+  - label: "Reinforcement Learning: An Introduction, 2nd edition (Sutton and Barto, free book)"
+    url: http://incompleteideas.net/book/the-book-2nd.html
+  - label: "Spinning Up in Deep RL: Part 1, Key Concepts in RL (OpenAI)"
+    url: https://spinningup.openai.com/en/latest/spinningup/rl_intro.html
+  - label: "Spinning Up in Deep RL: Part 2, Kinds of RL Algorithms (OpenAI)"
+    url: https://spinningup.openai.com/en/latest/spinningup/rl_intro2.html
+  - label: "Hugging Face Deep RL course: Introduction to Q-learning"
+    url: https://huggingface.co/learn/deep-rl-course/unit2/q-learning
+  - label: "Human-level control through deep reinforcement learning (Mnih et al., Nature, 2015)"
+    url: https://www.nature.com/articles/nature14236
+  - label: "Deep Reinforcement Learning that Matters (Henderson et al., 2017)"
+    url: https://arxiv.org/abs/1709.06560
+  - label: "Proximal Policy Optimization Algorithms (Schulman et al., 2017)"
+    url: https://arxiv.org/abs/1707.06347
+  - label: "Specification gaming: the flip side of AI ingenuity (Krakovna et al., DeepMind, 2020)"
+    url: https://deepmind.google/blog/specification-gaming-the-flip-side-of-ai-ingenuity/
+  - label: "Training language models to follow instructions with human feedback (Ouyang et al., 2022)"
+    url: https://arxiv.org/abs/2203.02155
+---
+
+import QGridLab from '../../../components/viz/QGridLab.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+Supervised learning is handed the right answers. Reinforcement learning (RL) is handed only a score, after the fact, for what it did. [Three ways a machine can learn](../../start/three-ways-machines-learn/) showed a robot finding a star on a grid. This lesson writes down what that robot does, runs it on a grid you can train in the page, explains why the same idea becomes fragile with neural networks, and maps it onto [RL for language models](../rl-post-training/).
+
+## The loop
+
+An **agent** sits in a **state**, picks an **action**, and the **environment** answers with a new state and a **reward**, a single number. This repeats until an **episode** ends, such as reaching the goal. The agent's aim is the **return**: the sum of rewards from now on, with later ones counted for less.
+
+```text
+return = r₁ + γ·r₂ + γ²·r₃ + …          0 ≤ γ ≤ 1   (the discount)
+```
+
+With γ = 0.9, a reward of 10 that arrives on the tenth step is worth 10 × 0.9⁹ = 3.9 now. Spinning Up gives two reasons for discounting: it is intuitive, because a reward now beats a reward later, and it is convenient, because an infinite sum of rewards may not converge but a discounted one usually does.
+
+Three more terms. A **policy** is the rule that picks an action in each state. The **value** of a state is the return you expect from it if you follow the policy. The **Q-value** Q(s, a) is the expected return from taking action a in state s and then following the policy. If you know the best Q-values, the best policy is to take the action with the highest one.
+
+## Q-learning
+
+Q-learning keeps a table of Q-values, one per state and action, starting at zero. After each move it nudges one entry toward what that move just showed (Sutton and Barto, equation 6.8):
+
+```text
+Q(s,a) ← Q(s,a) + α · [ r + γ · max Q(s′,a′) − Q(s,a) ]
+```
+
+Here α is the learning rate. The bracket is the gap between the old estimate and a better one: the reward just received plus the discounted value of the best move from the next state s′. A worked case: Q(s, right) is 0, the move earned r = −1, and the best value in s′ is 2. With α = 0.5 and γ = 0.9 the target is −1 + 0.9 × 2 = 0.8, so the entry becomes 0 + 0.5 × 0.8 = 0.4.
+
+Notice what the target is built from: the agent's own current estimate of the next state. That is **bootstrapping**. Real rewards enter only at the goal and at costly moves, so early on, the value of the cell next to the goal becomes right first, then its neighbour, and so on backwards, one step per visit. Q-learning is also **off-policy**: its table estimates the best possible behaviour, whatever the agent did to collect the experience. Sutton and Barto note that for convergence all that is required is that every state and action keeps being updated, which brings us to exploration.
+
+## Explore or exploit
+
+An agent that always takes its best-looking move never finds out whether another move is better. The simplest cure is **epsilon-greedy**: with probability ε take a random move, otherwise the best one. Too little exploration can strand the agent on a poor habit; too much wastes effort and, as the book's cliff-walking example shows, has a price while learning. In that example (reproduced below on a smaller grid) Q-learning learns the shortest route along the cliff edge, but with ε-greedy choices it "occasionally falls off the cliff"; Sarsa, a close relative that learns the value of the behaviour it actually follows, takes the longer, safer route. If ε were gradually reduced, both would converge to the optimal policy.
+
+<QGridLab client:visible />
+
+Things to try, with what the fixed-seed toy does at the time of writing:
+
+1. **Cliff, default settings (α 0.5, γ 0.9, ε 0.1), train 100 twice.** After 200 episodes the arrows run along the cliff edge: 9 moves, return −9. Yet over the last 50 episodes the agent averaged −33 and fell 11 times, because exploring next to a cliff is expensive. The safe route along the top would cost 13 moves.
+2. **Reset, set ε to 0, train 200.** Average −9, no falls. This works here only because untried actions start at 0, which looks better than any tried one when every real reward is negative; it is not a general recipe (see the detail below). Started from scratch with ε at 0.5, the average is around −270 per episode.
+3. **Learning rate and discount.** With α = 0.1 the same route takes noticeably more episodes to appear. With γ = 0 the agent values only the next reward, never learns that the goal matters, and its greedy route loops.
+4. **Coin room, coin pays 3, defaults, train 200.** Return per episode climbs to about +39, but the goal is reached in only 1 of the last 50 episodes and the greedy route loops on the coin. Nothing is broken: that is the best behaviour for the reward as written, which the unit tests confirm with exact values. Switch to "coin pays 0.4" and the agent reaches the goal every time through the coin in 7 moves.
+
+<Deep title="Why ε = 0 worked on the cliff, and what else helps">
+
+All values start at 0 and every real reward on the cliff map is negative, so an untried action always looks better than a tried one. The agent is pushed to try everything without any randomness. Sutton and Barto call this idea optimistic initial values; it stops working when rewards can be positive, as in the coin room. Other options are to reduce ε over time, to prefer actions tried less often, or to sample actions in proportion to their value. The lab below uses plain ε-greedy so the update is the only moving part.
+
+</Deep>
+
+## A reward is a specification
+
+The coin room is invented, but the problem is not. DeepMind's specification-gaming post defines it as behaviour that satisfies the literal specification of an objective without achieving the intended outcome, and gives a robotic stacking task as an example: the agent was rewarded for the height of the bottom face of a red block and learned to flip the block over instead of stacking it. The post's point is that these behaviours come from misspecified tasks, not from a flaw in the algorithm, and that a better learner finds the loophole faster. Changing the coin's value in the toy fixed the behaviour; changing α or ε would not have. The same failure appears in language-model training as reward hacking, covered in [the RL post-training lesson](../rl-post-training/).
+
+## Why deep RL is unstable
+
+A table works while states are few. For images or text, the table becomes a neural network that estimates Q-values or the policy, and trouble starts. Sutton and Barto name three ingredients that are dangerous together, the **deadly triad**: function approximation (such as a network), bootstrapping (targets that contain the agent's own estimates), and off-policy training. Instability and divergence arise whenever all three are combined; with only two, it can be avoided.
+
+The DQN paper (Mnih et al., 2015), which learned Atari games from pixels, says RL is "known to be unstable or even to diverge" with a nonlinear approximator, and lists causes: consecutive observations are correlated, small updates to Q can change the policy and so the data, and Q is chased by targets that depend on Q itself. Its two fixes were **experience replay**, which samples stored past moves at random to break correlations, and a target network updated only periodically so the target holds still. Separately, Henderson et al. showed that non-determinism in benchmark environments together with the methods' own variance makes reported deep RL results hard to interpret, and recommended more rigorous reporting. Practical rule: run several seeds and report the spread, not one lucky run.
+
+A second family sidesteps the table. **Policy-gradient** methods represent the policy directly and nudge the probability of each action up in proportion to the return that followed it. Spinning Up notes that this family is almost always on-policy, which removes one leg of the triad. **PPO** (Schulman et al., 2017) adds a clip so that one batch of experience cannot move the policy too far.
+
+## From a grid to a language model
+
+The vocabulary carries over almost word for word.
+
+| Idea | Grid world | Language model |
+|---|---|---|
+| State | The agent's cell | The prompt and the tokens written so far |
+| Action | One of 4 moves | The next token, or, when only finished answers are scored, the whole answer |
+| Reward | −1 per move, sometimes a prize at the goal | One score after the answer, from a reward model or a checker |
+| Policy | The table's best arrow, plus ε random moves | The model's probabilities over next tokens |
+| Episode | Start to goal | Prompt to end of answer |
+| Exploration | Random moves | Sampling several different answers |
+
+The differences matter more than the similarities. The action space is the vocabulary, over 128,000 tokens for Llama 3, instead of four moves. The reward arrives once, at the end, so deciding which of hundreds of tokens deserve credit is the hard part: the sparse goal of the grid, stretched out. The starting policy is a pretrained model that already writes sensible text, so exploration means sampling varied answers, not random tokens. And instead of a table there is a network with billions of weights, which is why these methods use PPO-style clipping and a KL penalty that keeps the new policy near the old one: the same stability worries as above. InstructGPT (Ouyang et al., 2022) is the standard example of the full pipeline. [The next lesson](../rl-post-training/) shows how GRPO then drops the value network by using the average of a group of answers as the baseline.
+
+## Try the lab
+
+[Q-learning on a small grid world](../../../practice/q-learning-gridworld/) asks you to write the epsilon-greedy choice, the update, the training loop and the greedy route in pure Python, and checks each against hand-computed values, including the 0.4 from the worked example above.
+
+## What to remember
+
+- RL learns from a score, not from answers. The return is the discounted sum of future rewards; a policy picks actions; Q(s, a) is the expected return of an action.
+- Q-learning moves each table entry a fraction α toward reward plus γ times the best next value. It bootstraps and it is off-policy.
+- Exploration is not optional: values only improve for what the agent tries. Exploring has a cost while learning, as the cliff shows.
+- The agent maximises the reward you wrote, not the one you meant. Fix a loophole in the specification, not in the algorithm.
+- Function approximation, bootstrapping and off-policy training together can diverge; DQN's replay and target network, PPO's clipping and multi-seed reporting are the standard defences.
+- For language models the state is the text so far, the action a token or an answer, and the reward usually comes once at the end.
+
+Next: [RL post-training: RLHF, verifiable rewards and GRPO](../rl-post-training/) shows how these ideas are used to turn a pretrained model into an assistant or a reasoner.

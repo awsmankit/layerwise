@@ -57,6 +57,20 @@ Five games live in `src/games/` as pure TypeScript engines with tests (`blueprin
 
 Data used in visualisations is labelled in its caption as illustrative or example. Keep it that way: replace example prices and speeds with sourced numbers before presenting them as fact.
 
+## Versions and releases
+
+Every version is listed in [CHANGELOG.md](CHANGELOG.md), on the site at `/changelog/`, and as a tagged [GitHub release](https://github.com/awsmankit/layerwise/releases). The history is data in `src/data/releases.ts`; the page, the changelog and the release notes are all made from it, and a test fails if they drift apart.
+
+Versions follow [semantic versioning](https://semver.org/), read for a learning site: **major** when the curriculum or the way learners move through it changes shape (new topics, rebuilt learning paths), **minor** for new lessons, labs, tools or features, **patch** for fixes (wording, links, layout, accessibility).
+
+To make a release:
+
+1. Add the new entry at the top of `src/data/releases.ts` (version, date, title, summary, highlights, and the counts at that point; the tests check the counts against the repository).
+2. Set the same `version` in `package.json`.
+3. Run `npm run changelog` to rewrite `CHANGELOG.md`, then `npm test`.
+4. Commit and push to `main` (this deploys the site).
+5. Tag it: `git tag -a v2.3.0 -m "v2.3.0" && git push origin v2.3.0`. The `Publish a GitHub release` workflow then creates the GitHub release from the same data.
+
 ## Deploy to GitHub Pages
 
 The workflow in `.github/workflows/deploy.yml` builds and publishes on every push to `main`.

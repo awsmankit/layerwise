@@ -1,0 +1,146 @@
+---
+title: "Clustering and dimensionality reduction: finding structure without labels"
+track: ml
+level: intermediate
+order: 5.5
+summary: k-means by hand and why it fails on moons and rings, DBSCAN for odd shapes, hierarchical clustering, why silhouette and the elbow can mislead, PCA as the best flat view of the data, and what t-SNE and UMAP pictures can and cannot tell you.
+updated: 2026-11-01
+sources:
+  - label: "scikit-learn user guide: Clustering (k-means, DBSCAN, hierarchical, evaluation)"
+    url: https://scikit-learn.org/stable/modules/clustering.html
+  - label: "scikit-learn: silhouette_score"
+    url: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.silhouette_score.html
+  - label: "scikit-learn example: a comparison of clustering algorithms on toy datasets"
+    url: https://scikit-learn.org/stable/auto_examples/cluster/plot_cluster_comparison.html
+  - label: "Google for Developers: What is clustering?"
+    url: https://developers.google.com/machine-learning/clustering/overview
+  - label: "A density-based algorithm for discovering clusters (Ester, Kriegel, Sander and Xu, KDD 1996: DBSCAN)"
+    url: https://www.aaai.org/Papers/KDD/1996/KDD96-037.pdf
+  - label: "Silhouettes: a graphical aid to the interpretation and validation of cluster analysis (Rousseeuw, 1987)"
+    url: https://doi.org/10.1016/0377-0427(87)90125-7
+  - label: "scikit-learn user guide: Decomposing signals in components (PCA)"
+    url: https://scikit-learn.org/stable/modules/decomposition.html
+  - label: "How to Use t-SNE Effectively (Wattenberg, Viegas and Johnson, Distill, 2016)"
+    url: https://distill.pub/2016/misread-tsne/
+  - label: "Visualizing Data using t-SNE (van der Maaten and Hinton, JMLR, 2008)"
+    url: https://jmlr.org/papers/v9/vandermaaten08a.html
+  - label: "UMAP: Uniform Manifold Approximation and Projection for Dimension Reduction (McInnes, Healy and Melville, 2018)"
+    url: https://arxiv.org/abs/1802.03426
+  - label: "UMAP documentation: basic parameters"
+    url: https://umap-learn.readthedocs.io/en/latest/parameters.html
+  - label: "Initialization is critical for preserving global data structure in both t-SNE and UMAP (Kobak and Linderman, Nature Biotechnology, 2021)"
+    url: https://www.nature.com/articles/s41587-020-00809-z
+  - label: "The specious art of single-cell genomics (Chari and Pachter, PLOS Computational Biology, 2023)"
+    url: https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1011288
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import ClusteringLab from '../../../components/viz/ClusteringLab.tsx';
+import PcaRotator from '../../../components/viz/PcaRotator.tsx';
+import EmbeddingGallery from '../../../components/viz/EmbeddingGallery.tsx';
+
+A lot of data has no labels: customers with no segment, support tickets with no topic, sensor readings with no diagnosis. **Unsupervised learning** looks for structure in such data anyway. Its two workhorses are **clustering**, which puts similar points in the same group, and **dimensionality reduction**, which squeezes many measurements into a few so that a person can look at them. Both are easy to run and easy to over-read, so this lesson spends as much time on what they cannot show as on how they work. It builds on [Linear and logistic regression](../linear-and-logistic-regression/) for the idea of fitting to data.
+
+## What clustering is for
+
+Google's clustering course describes clustering as grouping unlabelled examples by how similar they are. Typical jobs are segmenting customers, finding topics by clustering the [embeddings](../../foundations/tokens-and-embeddings/) of documents, and spotting near-duplicates. The inverted-file (IVF) indexes in [vector search](../../rag-agents/vector-search-and-retrieval-metrics/) use k-means to split a collection into cells so that a query searches only a few. There is no answer sheet, so "is this clustering good?" is a hard question.
+
+## k-means: assign, move, repeat
+
+**k-means** needs you to say how many groups, k, you want. It then repeats two steps:
+
+1. **Assign** every point to its nearest centre.
+2. **Move** every centre to the average of the points assigned to it.
+
+It stops when no point changes group. Take six numbers, 1, 2, 3, 10, 11 and 12, with k = 2 and starting centres 1 and 2:
+
+| Round | Assign | Move the centres to |
+|---|---|---|
+| 1 | 1 goes to the first centre; 2, 3, 10, 11 and 12 go to the second | 1 and (2+3+10+11+12)/5 = 7.6 |
+| 2 | 1, 2 and 3 go to the first centre; 10, 11 and 12 to the second | 2 and 11 |
+| 3 | nothing changes | stop |
+
+The final **inertia**, the sum of squared distances from each point to its centre, is (1+0+1) + (1+0+1) = 4. Lower inertia means tighter groups, but it always falls as k grows, so it cannot pick k by itself.
+
+Try it below. Choose "Three blobs", use the step button to watch assign and move alternate, then press "New starting centres" a few times with random starts.
+
+<ClusteringLab client:visible />
+
+Three things go wrong with k-means, and the lab shows each.
+
+**The start matters.** k-means finds a local best, not the global best. On 36 made-up points in three blobs, a start with one centre in each blob finished at inertia 34.3, while a start with two centres in one blob stayed stuck at 186.0 (scikit-learn gives the same answers from the same starts). The defences are **k-means++**, which picks spread-out starting centres, and running several starts and keeping the lowest inertia.
+
+**Distance depends on units.** Two customers aged 25 and 55 with incomes of 50,000 and 51,000 are 30 years and 1,000 apart. The distance is the square root of 30 squared plus 1,000 squared, about 1000.45, so age is almost invisible. Put every column on a similar scale first, as in [Getting data ready](../getting-data-ready/).
+
+**Shapes must be round.** The scikit-learn guide says inertia assumes convex, isotropic clusters and responds poorly to elongated or irregular ones. Switch the lab to "Two moons", "Two rings" or "Two stripes": k-means cuts straight across all three, and on the rings it agrees with the real groups no better than a random split.
+
+## Choosing k, and what silhouette cannot tell you
+
+Two common aids:
+
+- **The elbow.** Plot inertia against k and look for the bend after which extra clusters buy little. On the three blobs, inertia drops from 1,111 at k = 2 to 260 at k = 3, then only to 204 at k = 4. These are example data and the bend is clear; real data often has no clear bend.
+- **The silhouette score.** For each point, a is its average distance to the others in its own cluster and b is its average distance to the nearest other cluster. The point's silhouette is (b - a) / max(a, b), between -1 and 1, and the score is the average. For the six numbers above, the point 2 has a = 1 and b = 9, so its silhouette is 8/9, and the average over all six is 0.85. Rousseeuw proposed it in 1987; scikit-learn describes 1 as best, -1 as worst and values near 0 as overlapping clusters.
+
+Both reward compact, well-separated blobs, so they can prefer the wrong answer. On the lab's moons, k-means scores a silhouette of 0.48 and the correct grouping found by DBSCAN scores 0.32; on the stripes it is 0.45 against 0.38. The score answers a different question: how compact are these groups?
+
+<Callout title="Ask what the clusters are for">
+If the clusters feed a decision, judge them by that decision: do the customer segments respond differently to an offer, do the topic groups read as coherent when a person looks at ten examples from each? Internal scores such as silhouette are a sanity check, not a verdict. The "match with real groups" figure in the lab exists only because the data are invented; with real data you do not have it.
+</Callout>
+
+## DBSCAN: clusters as crowded regions
+
+**DBSCAN** (Ester and colleagues, 1996) defines a cluster as a crowded region. It has two settings. **eps** is a radius. **min points** is how many points must be inside that radius, counting the point itself, for a point to be a **core** point. Clusters grow outwards from core points, a point that is within eps of a core point but is not core itself joins as a **border** point, and everything else is **noise**.
+
+That gives what k-means lacks: no need to choose k, clusters of any shape, and a "none of these" label for noise. In the lab, DBSCAN on the moons with eps near 0.75 separates them exactly; at 0.4 they shatter into many small clusters, and past about 1 they merge into one.
+
+The price is that eps is one global radius, and a good value depends on how dense the groups are. On the lab's three blobs, eps 0.4 splits the loosest blob into several small clusters and calls 52 of the 200 points noise, while eps 1.0 finds the three groups with 2 points left as noise. Where densities differ a lot, no single eps suits every group. A common aid is the **k-distance plot**: sort every point's distance to its k-th nearest neighbour and look for a sharp bend. DBSCAN also leans on distance, so the scaling warning applies.
+
+## Hierarchical clustering: the whole family tree
+
+**Agglomerative** clustering starts with every point alone and repeatedly merges the two closest clusters until one remains. The record of merges is a tree, a **dendrogram**. You choose k afterwards by cutting the tree, and the lab's bar chart shows the distances at which the last merges happened: a tall bar after short ones means two well-separated groups were forced together, which suggests where to cut.
+
+The **linkage** decides what "closest clusters" means. Single linkage uses the closest pair of points, so it follows chains and handles moons and rings (the lab shows this), but a few stray points can bridge two groups. Complete linkage uses the farthest pair, average linkage the mean over pairs, and Ward linkage tends to give round groups like k-means. The method needs all pairwise distances, so it suits thousands of points, not millions.
+
+## PCA: the best flat view
+
+Now the other half. Data with many columns cannot be drawn. **Principal component analysis** (PCA) finds new axes: the first points in the direction of most spread, the second in the direction of most spread at right angles to the first, and so on. Each axis is a **principal component**, and the share of the total variance along each is its **explained variance**. Keeping the first two gives the flat view that keeps the most spread, which is the sense in which it is best. scikit-learn describes PCA as decomposing data into successive orthogonal components that explain a maximum amount of variance, and notes that it centres the data but does not scale it, so scale first if the units differ.
+
+In the rotator, turn a made-up 3D cloud and watch how much of its spread each view keeps. On the "Flat pancake" the first two components hold 81% and 17.6% of the spread, so the best view keeps about 98.6%, and a badly chosen view keeps far less. On the "Round ball" there is no good view: the shares are 43.6%, 31% and 25.4%, and even the best flat picture keeps 74.6%.
+
+<PcaRotator client:visible />
+
+PCA is linear, deterministic and fast: a good first look, a way to compress many correlated columns (keep enough components to explain, say, 95% of the variance), and sometimes a clean-up step before k-means, which the scikit-learn guide notes can help in very high dimensions. It cannot unroll a curved shape.
+
+<Deep title="How PCA is computed">
+Centre each column, form the covariance matrix C (variances on the diagonal, covariances elsewhere, dividing by n - 1), and find its eigenvectors. The eigenvector with the largest eigenvalue is the first component and the eigenvalue is the variance along it. The share of variance for component i is its eigenvalue divided by the sum of all the eigenvalues. For a view that flattens onto two orthonormal directions u and v, the kept share is (u'Cu + v'Cv) divided by the trace of C, and the best u and v are the first two eigenvectors. The lesson's code checks variances, ratios and directions against scikit-learn on a fixed 40-point example. In practice libraries use the singular value decomposition of the centred data, which gives the same answer more stably.
+</Deep>
+
+## t-SNE and UMAP: neighbourhood maps, not scale drawings
+
+Embedding pictures in blog posts are usually PCA, **t-SNE** or **UMAP**. t-SNE (van der Maaten and Hinton, 2008) and UMAP (McInnes and colleagues, 2018) are non-linear: they try to place points that were neighbours in the original space close together in 2D. The UMAP paper describes it as competitive with t-SNE for visualisation quality and arguably preserving more of the global structure. They are for looking, not measuring.
+
+Distill's "How to Use t-SNE Effectively" lists the traps, and the gallery below lets you see three of them on 180 example points in 10 dimensions. In the "Three groups" data, group B is spread about 3.7 times as wide as group A, and group C is about 5 times further from A than B is. The layouts were computed offline with scikit-learn 1.9.1 and umap-learn 0.5.12 on 1 November 2026.
+
+<EmbeddingGallery client:visible />
+
+- **Settings change the picture.** Compare perplexity 2, 5, 30 and 100. At 2, groups A, B and C look nearly the same distance apart (C only 1.1 times as far from A as B is). At 30 the ratio recovers to 3.2, and UMAP's neighbour count moves it between 1.8 and 4.6. Distill's advice is to look at several settings, not one.
+- **Sizes mean nothing.** Distill notes that t-SNE adapts to local density, so clusters of very different spread look about the same size. Here B is 3.7 times wider than A, yet at perplexity 30 it looks only 1.3 times wider.
+- **Gaps are unreliable.** Distill: distances between well-separated clusters may mean nothing. Cluster in the original space and then colour the picture, rather than clustering what you see in it.
+- **Noise can look like structure.** Switch to "One random blob". There are no groups in this data, yet the low-perplexity pictures show clumps and gaps.
+
+How faithful is a layout? The gallery reports the share of each point's 10 nearest neighbours that are still its 10 nearest neighbours in 2D. For the three-group data that is 30% for PCA and 52% at t-SNE perplexity 30, falling to 33% at perplexity 100. Even the best picture loses about half the neighbourhoods.
+
+Two further cautions. Kobak and Linderman (2021) argued that UMAP's apparent edge in preserving global structure came from its default initialisation: with random starts both methods preserve it poorly, and with informative starts both do about equally well. Chari and Pachter (2023) argue, for single-cell biology, that squeezing thousands of dimensions into two inevitably distorts the data. These are published arguments in a specialist field, not settled fact, but they agree with the general advice.
+
+## What to remember
+
+- Clustering finds groups without labels, so quality is hard to define. Judge clusters by the decision they feed.
+- k-means alternates assign and move. It needs k, depends on its start (use k-means++ and several starts), depends on scaling, and assumes round clusters.
+- Inertia always falls as k grows. The elbow and the silhouette are aids that favour compact blobs and can prefer a wrong answer on moons, rings and stripes.
+- DBSCAN finds crowded regions of any shape and labels noise, but eps is one global radius and is hard to set when densities differ.
+- Hierarchical clustering gives a tree you cut afterwards; linkage choice changes the answer.
+- PCA is the linear flat view that keeps the most spread. Scale first, and read its explained-variance shares.
+- t-SNE and UMAP pictures show neighbourhoods, not sizes or gaps, and change with settings and seeds. Plot with several settings and never measure from one.
+
+Next: [Is the difference real?](../is-the-difference-real/)

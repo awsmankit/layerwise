@@ -1,0 +1,136 @@
+---
+title: "Autoencoders, VAEs and GANs: generating by compressing and by competing"
+track: deep-learning
+level: intermediate
+order: 4.8
+summary: Squeeze data into a small code and rebuild it (autoencoder), tidy that code so you can sample from it (VAE), or train a forger against a detective (GAN). Two tiny models you train in the browser, why GANs are hard to train, and why diffusion and autoregressive models became the usual starting point.
+updated: 2026-11-01
+sources:
+  - label: "Auto-Encoding Variational Bayes, the VAE paper (Kingma and Welling, 2013)"
+    url: https://arxiv.org/abs/1312.6114
+  - label: "An Introduction to Variational Autoencoders (Kingma and Welling, 2019)"
+    url: https://arxiv.org/abs/1906.02691
+  - label: "Generative Adversarial Nets (Goodfellow et al., 2014)"
+    url: https://arxiv.org/abs/1406.2661
+  - label: "Unrolled Generative Adversarial Networks (Metz et al., 2016)"
+    url: https://arxiv.org/abs/1611.02163
+  - label: "Unsupervised Representation Learning with Deep Convolutional GANs, DCGAN (Radford et al., 2015)"
+    url: https://arxiv.org/abs/1511.06434
+  - label: "Wasserstein GAN (Arjovsky, Chintala and Bottou, 2017)"
+    url: https://arxiv.org/abs/1701.07875
+  - label: "Diffusion Models Beat GANs on Image Synthesis (Dhariwal and Nichol, 2021)"
+    url: https://arxiv.org/abs/2105.05233
+  - label: "High-Resolution Image Synthesis with Latent Diffusion Models (Rombach et al., 2021)"
+    url: https://arxiv.org/abs/2112.10752
+  - label: "Adversarial Diffusion Distillation (Sauer et al., 2023)"
+    url: https://arxiv.org/abs/2311.17042
+  - label: "Dive into Deep Learning: Generative Adversarial Networks"
+    url: https://d2l.ai/chapter_generative-adversarial-networks/gan.html
+  - label: "GAN Lab: play with a GAN in your browser (Polo Club)"
+    url: https://poloclub.github.io/ganlab/
+---
+
+import Deep from '../../../components/ui/Deep.astro';
+import LatentLab from '../../../components/viz/LatentLab.tsx';
+import GanToy from '../../../components/viz/GanToy.tsx';
+
+A generative model learns what the data looks like well enough to make new examples. There are a handful of ways to do it. Language models predict the next token, one after another ([modern LLM architecture](../modern-llm-architecture/)). Diffusion models clean up noise ([diffusion models](../diffusion-models/)). This lesson covers the other three names you will keep meeting: **autoencoders**, **variational autoencoders (VAEs)** and **generative adversarial networks (GANs)**. Each answers the same question, "how do I draw a new sample?", in a different way, and each fails in a way that explains why the others exist.
+
+You need only the basics from [inside a neural network](../inside-a-neural-network/).
+
+## Autoencoder: squeeze, then rebuild
+
+An autoencoder has two halves. The **encoder** turns an input into a short list of numbers called the **code** (or latent). The **decoder** turns the code back into something the same size as the input. Training asks one thing: make the output match the input, usually by minimising the squared difference. No labels are needed, because the input is its own answer, which is why this counts as self-supervised learning ([self-supervised and transfer learning](../self-supervised-and-transfer-learning/)).
+
+The trick is the **bottleneck**. If the code were as big as the input, the network could copy it across and learn nothing. A small code forces it to keep what matters and drop the rest. The latent diffusion autoencoder in [diffusion models](../diffusion-models/) turns a picture of 786,432 numbers into 16,384.
+
+What are autoencoders good for? Compression and denoising, features for other tasks, and spotting oddities: an autoencoder trained on normal data rebuilds normal inputs well and strange ones badly, so the rebuild error is an anomaly score ([anomaly detection](../../ml/anomaly-detection/)).
+
+What they are not good for is making new things. Pick a random code and decode it, and you often get rubbish. Training only ever visited the codes of real examples, and nothing says that the space between them, or beyond them, means anything.
+
+## VAE: tidy the code so sampling works
+
+A **variational autoencoder** fixes that by changing two things.
+
+First, the encoder does not output one code. It outputs a mean and a spread, which describe a small cloud of codes, and one code is drawn from that cloud. Writing the draw as `code = mean + spread × noise` (the **reparameterisation trick**) keeps it differentiable, so ordinary backpropagation still works.
+
+Second, the loss gets an extra term. The total is the rebuild error plus a weight times the **KL term**, which measures how far each cloud is from a standard bell curve centred on zero. In plain words, it charges the encoder for putting codes far from zero or for making clouds very narrow. Pay too little and the codes scatter wherever they like. Pay enough and every input's cloud lands in the same shared region, with the clouds overlapping.
+
+A worked example, with the one-number formula `KL = ½ × (mean² + spread² − 1 − ln spread²)`. A cloud with mean 1 and spread 0.5 costs ½ × (1 + 0.25 − 1 − ln 0.25) = ½ × (0.25 + 1.386) = about 0.82. A cloud that is already the standard bell curve (mean 0, spread 1) costs 0.
+
+The payoff is that you can now generate: draw a code from the standard bell curve and decode it. Because training pulled every code towards that region, the decoder has seen something there. The price is that you now trade two goals against each other. A heavier KL weight gives a tidier code and a blurrier rebuild. Latent diffusion uses exactly this idea: one of the two regularisers its autoencoder was tried with is "a slight KL-penalty towards a standard normal", as in a VAE, and the same paper notes that pixel-space losses like L1 and L2 alone cause blurriness.
+
+Try it. Both models below are real networks (a one-number code, eight hidden units either side) trained in your browser.
+
+<LatentLab client:visible />
+
+Things to try, in this order:
+
+- **Autoencoder on Two clumps.** The ticks on the code line form two separate groups, with a gap and no reason to sit near the hill. Move the **Code** slider across the gap: the decoded ring slides between the clumps through empty space. Press **Draw 120 random codes** and notice how many diamonds land where there is no data.
+- **Press New run a few times.** The share of random codes landing near real data changes from run to run, because nothing ties a plain autoencoder's code scale to the bell curve.
+- **Switch to VAE with weight 0.05.** The ticks pile into the hill, most diamonds land on a clump, and the rebuild error rises a little.
+- **Arc, VAE, weight 1.** The line blurs: the error goes from about 0.01 at weight 0.05 to about 0.2 at weight 1 on seeds 1 to 3. That is the trade-off in one slider.
+- **Arc, plain autoencoder.** Nothing goes wrong, because the data has no gaps. The trouble with sampling from an autoencoder appears when the data is lumpy.
+
+<Deep title="The VAE objective, a little more exactly">
+Kingma and Welling train the encoder and decoder together by maximising a lower bound on the log-likelihood of the data. The bound splits into an expected reconstruction term and the KL divergence from the encoder's cloud to the prior, which they note can be computed and differentiated without sampling when both are Gaussian. If the decoder is assumed to add Gaussian noise of a fixed size, the reconstruction term is a squared error divided by that noise variance, so the KL weight in the toy is the same thing as a choice of how noisy the pixels are assumed to be. Pushing the weight up too far lets the decoder ignore the code altogether, a failure often called posterior collapse. Kingma and Welling's later introduction is the readable full treatment.
+</Deep>
+
+## GAN: a forger against a detective
+
+A **generative adversarial network** drops reconstruction altogether. It has two networks. The **generator** (the forger) turns random noise into a fake sample. The **discriminator** (the detective) looks at a sample and says how likely it is to be real. They train in turns: the detective gets better at spotting fakes, and the forger adjusts to fool the current detective. Goodfellow and colleagues call this a two-player minimax game. In the ideal end state the forger's samples match the data and the detective can only guess, giving every sample a score of one half.
+
+Two things make this different. The forger never sees a real example: its only teacher is the detective's verdict, passed back through the detective's weights. And a trained GAN makes a sample in one forward pass, with no iteration, which is why GANs are fast at sampling.
+
+The toy below puts a GAN on one number. The real data has two humps, near -2 and 2. The forger is a tiny network that turns a random number into a sample. Press **Train** and watch the fakes (bars) try to cover the real data (dashed line) while the detective's score (orange line) moves.
+
+<GanToy client:visible />
+
+Things to try:
+
+- **Even match.** Train it. Both humps fill in, and the detective's score hovers near the middle where real and fake overlap.
+- **Forger too fast, then Run these settings on 8 seeds.** The forger learns much faster than the detective. In this toy, with these settings, some seeds settle on both humps and others collapse onto one. Look at the distance strip: it hops about instead of falling smoothly.
+- **Detective too strong.** The detective runs ahead, so the forger gets little useful feedback and improves slowly: more fakes sit between the humps.
+- **Move one slider** and rerun the eight seeds. Small changes shift the mix of outcomes, which is why GAN results are hard to reproduce.
+
+What you saw has names. **Mode collapse** is when the generator covers only some of the modes (humps) of the data, here one hump out of two. The mechanism is simple: the forger finds the output the current detective rates highest and piles all its samples there. The detective learns to reject that spot, and the forger hops to the next one without ever spreading out. Goodfellow's paper already warned about collapsing "too many values of z to the same value of x" and advised not training the generator too far without updating the detective.
+
+**Instability** is the wider problem. There are two moving targets and no single loss that steadily falls, so a loss curve does not tell you how good the samples are. Dhariwal and Nichol note that GANs are often difficult to train, "collapsing without carefully selected hyperparameters and regularizers". Fixes exist. The Wasserstein GAN paper changes the distance being optimised and reports better stability and no mode collapse in its own experiments. The unrolled GAN paper lets the generator look ahead at the detective's next moves. Both are improvements claimed by their authors on their own tests, and they did not make GANs effortless.
+
+<Deep title="Why this is not ordinary optimisation">
+A normal network has one loss, and gradient descent walks downhill. A GAN has two losses that pull against each other: the detective minimises its classification error, the forger minimises the detective's success. For a fixed forger, the best detective scores a sample at p_data / (p_data + p_forger), as the original paper shows, so the detective's job gets harder exactly as the forger improves. Taking gradient steps on both at once can circle round the balance point rather than settle on it, and the toy above uses Adam with the first-moment decay lowered to 0.5, as the DCGAN authors did after finding that the usual 0.9 "resulted in training oscillation and instability". The forger's loss here is the "non-saturating" form from the paper: rather than minimise the detective's chance of being right, it maximises the log of the detective's score for fakes, which gives stronger gradients early on.
+</Deep>
+
+## Why diffusion and autoregressive models took over
+
+By 2021 GANs held the best scores on many image benchmarks, but they were costly to scale and, as Dhariwal and Nichol put it, captured less diversity than likelihood-based models. Their paper then reported a diffusion model (with a classifier guiding it) that beat BigGAN-deep, a leading GAN, on ImageNet at 128, 256 and 512 pixels. The scores are FID, a measure of how close generated images are to real ones in a feature space, where lower is better: 2.97, 4.59 and 7.72 against 6.02, 6.95 and 8.43. They also report better coverage of the data, a stationary training objective and easy scaling. The cost they named is slower sampling than a GAN, because diffusion needs many steps.
+
+That is the shape of the answer: GANs gave sharp pictures in one pass but were fragile to train and prone to dropping modes; diffusion trades speed for steadiness and variety, and next-token models scale on text and are also used on image and audio tokens. As of 1 November 2026, the image generators discussed in [diffusion models](../diffusion-models/) are diffusion and flow models. I have not surveyed every system, so read "usual starting point", not "only choice".
+
+GAN ideas did not disappear. They moved inside other systems:
+
+- The latent diffusion autoencoder was trained with a perceptual loss and a patch-based adversarial objective, to keep reconstructions sharp.
+- Adversarial diffusion distillation adds an adversarial loss to a diffusion model so it can sample in one to four steps, combining diffusion quality with GAN speed.
+- GAN-trained vocoders turn spectrograms into audio fast ([text to speech and voice cloning](../../audio/text-to-speech-and-voice-cloning/)).
+
+| Family | What training does | How it samples | Strength | Main weak spot |
+|---|---|---|---|---|
+| Autoencoder | Rebuild the input through a small code | Not a generator | Compression, features, anomaly scores | Random codes decode to rubbish |
+| VAE | Rebuild plus a KL pull towards a bell curve | Draw a code, decode once | Stable training, smooth code | Blurry with simple pixel losses |
+| GAN | Forger against detective | One pass | Sharp, fast sampling | Unstable, drops modes, no likelihood |
+| Autoregressive | Predict the next token | One token at a time | Exact likelihood, scales well | Sampling is sequential |
+| Diffusion and flow | Predict the noise (or a direction) | Many cleaning steps | Quality and variety, stable training | Many steps per sample |
+
+A last practical note. GANs and diffusion are both used for synthetic faces and voices, so the fake-spotting advice in [real or fake](../../responsible/real-or-fake/) applies whichever family made the sample.
+
+## What to remember
+
+- An autoencoder squeezes through a bottleneck and rebuilds. It is useful for compression, features and anomaly scores, but it is not a reliable generator.
+- A VAE makes the code a small cloud and adds a KL term that pulls all codes towards one bell curve. That makes sampling work, at the price of blurrier rebuilds when the weight is high.
+- A GAN trains a forger against a detective. It samples in one pass, but training is a two-player game: it can be unstable and can drop modes, and one loss curve does not show sample quality.
+- On image benchmarks diffusion models overtook GANs on both sample quality and coverage, with slower sampling as the cost. GAN and VAE pieces live on inside bigger systems.
+- Whatever the family, ask how it was evaluated, and whether the metric sees diversity as well as sharpness.
+
+For more play, try [GAN Lab](https://poloclub.github.io/ganlab/) and the GAN chapter of [Dive into Deep Learning](https://d2l.ai/chapter_generative-adversarial-networks/gan.html).
+
+Next: [diffusion models](../diffusion-models/), the family that replaced GANs as the usual image generator.

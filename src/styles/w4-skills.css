@@ -1,0 +1,153 @@
+/* Styles for the interactive components in the wave 4 "skills" lesson batch. Keep every class under this batch's own prefix. */
+
+/* ---------- shared bits: chips, sliders, panels ---------- */
+.ws-top { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem 1rem; flex-wrap: wrap; }
+.ws-top .viz-title { margin-bottom: 0; }
+.ws-tabs, .ws-btns { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.ws-lab { font-size: 0.9rem; color: var(--ink-2); }
+.ws-chip { min-height: 44px; padding: 0.35rem 0.9rem; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink); font: 600 0.92rem var(--font-display); cursor: pointer; }
+.ws-chip[aria-pressed='true'] { background: var(--signal-wash); border-color: var(--signal); color: var(--signal-ink); }
+.ws-chip:focus-visible,
+.ws-panel .btn:focus-visible,
+.ws-term .btn:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+.ws-panel { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.8rem; margin-top: 0.8rem; }
+.ws-panel .btn,
+.ws-term .btn { min-height: 44px; }
+.ws-sliders { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 0.4rem 1.5rem; }
+.ws-slide { display: grid; gap: 0.2rem; font-size: 0.9rem; color: var(--ink-2); }
+.ws-slide input[type='range'] { touch-action: pan-y; margin: 0.6rem 0; }
+.ws-slide b { font-family: var(--font-mono); color: var(--ink); }
+.ws-say { margin: 0; padding: 0.7rem 0.9rem; border-left: 3px solid var(--signal); background: var(--signal-wash); font-size: 0.95rem; line-height: 1.5; overflow-wrap: anywhere; }
+.ws-note { margin: 0; font-size: 0.88rem; color: var(--ink-3); line-height: 1.45; }
+
+/* ---------- MathPlayground and SlopeFollower ---------- */
+.ws-svg { display: block; width: 100%; max-width: 26rem; height: auto; margin: 0.8rem auto 0; user-select: none; -webkit-user-select: none; }
+.ws-svg.ws-wide { max-width: 100%; }
+.ws-svg text { font-family: var(--font-display); font-weight: 700; font-size: 15px; fill: var(--ink); paint-order: stroke; stroke: var(--surface); stroke-width: 3px; }
+.ws-faint line { stroke: var(--line-soft); stroke-width: 1; }
+.ws-faint.is-axis line { stroke: var(--ink-3); stroke-width: 1.4; }
+.ws-warp { stroke: var(--signal); stroke-opacity: 0.4; stroke-width: 1; }
+.ws-warp.is-axis { stroke-opacity: 0.9; stroke-width: 1.6; }
+.ws-square { fill: var(--signal-wash); stroke: var(--signal); stroke-width: 1.5; }
+.ws-arrow line { stroke-width: 3; stroke-linecap: round; }
+.ws-arrow polygon { stroke: none; }
+.ws-arrow.ws-a line { stroke: var(--signal); }
+.ws-arrow.ws-a polygon { fill: var(--signal); }
+.ws-arrow.ws-a text { fill: var(--signal-ink); }
+.ws-arrow.ws-b line { stroke: var(--ok); }
+.ws-arrow.ws-b polygon { fill: var(--ok); }
+.ws-arrow.ws-b text { fill: var(--ok); }
+.ws-arrow.ws-i line, .ws-arrow.ws-j line { stroke: var(--ink-2); stroke-width: 2; }
+.ws-arrow.ws-i polygon, .ws-arrow.ws-j polygon { fill: var(--ink-2); }
+.ws-arrow.ws-ghost line { stroke: var(--ok); stroke-dasharray: 4 4; }
+.ws-arrow.ws-ghost polygon { fill: var(--ok); }
+.ws-arrow.ws-ghost text { fill: var(--ok); }
+.ws-handle { fill: transparent; stroke: var(--ink); stroke-width: 1.5; stroke-dasharray: 3 3; cursor: grab; touch-action: none; }
+.ws-handle:active { cursor: grabbing; }
+.ws-matrix { display: flex; align-items: center; gap: 0.7rem; }
+.ws-brace { font: 700 1.1rem var(--font-mono); }
+.ws-cells { display: grid; grid-template-columns: repeat(2, 5rem); gap: 0.4rem; padding: 0.3rem 0.5rem; border-left: 2px solid var(--ink); border-right: 2px solid var(--ink); border-radius: 6px; }
+.ws-cells input { width: 100%; min-height: 44px; font: 600 16px var(--font-mono); text-align: center; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface); color: var(--ink); }
+.ws-cells input:focus-visible { outline: 2px solid var(--signal); outline-offset: 1px; }
+.ws-curve { fill: none; stroke: var(--ink); stroke-width: 2.5; stroke-linejoin: round; }
+.ws-tangent { stroke: var(--warn); stroke-width: 2.5; stroke-linecap: round; }
+.ws-ball { fill: var(--signal); stroke: var(--surface); stroke-width: 2; }
+.ws-trail { fill: var(--signal-wash); stroke: var(--signal); stroke-width: 1.5; }
+
+/* ---------- FrequencyGrid ---------- */
+.ws-freq { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.7rem; }
+.ws-freq .viz-title { margin-bottom: 0; }
+.ws-dot { fill: var(--line-soft); }
+.ws-dot.is-caught { fill: var(--signal); }
+.ws-dot.is-missed { fill: var(--surface); stroke: var(--signal); stroke-width: 1.2; }
+.ws-dot.is-false { fill: var(--warn); }
+.ws-dot.is-clear { fill: var(--line-soft); }
+.ws-key { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 0.3rem 1rem; font-size: 0.92rem; }
+.ws-key li { display: flex; align-items: center; gap: 0.5rem; }
+.ws-sw { flex: none; width: 14px; height: 14px; border-radius: 3px; border: 1.5px solid transparent; }
+.ws-sw.is-caught { background: var(--signal); }
+.ws-sw.is-missed { background: var(--surface); border-color: var(--signal); }
+.ws-sw.is-false { background: var(--warn); }
+.ws-sw.is-clear { background: var(--line-soft); border-color: var(--line); }
+
+@media (max-width: 560px) {
+  .ws-svg text { font-size: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ws-chip { transition: none; }
+}
+
+/* ---------- TerminalLab ---------- */
+.ws-term, .ws-nb { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.75rem; }
+.ws-count { margin: 0; font-size: 0.9rem; color: var(--ink-2); font-weight: 600; }
+.ws-tasks { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.3rem; }
+.ws-tasks li { display: flex; align-items: flex-start; gap: 0.6rem; font-size: 0.95rem; line-height: 1.4; }
+.ws-tick { flex: none; width: 1.3rem; height: 1.3rem; margin-top: 0.1rem; border: 1.5px solid var(--line); border-radius: 50%; display: grid; place-items: center; font-size: 0.8rem; line-height: 1; color: var(--paper); }
+.ws-tasks li.is-done .ws-tick { background: var(--ok); border-color: var(--ok); }
+.ws-tasks li.is-done { color: var(--ink-3); }
+.ws-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.ws-yes { color: var(--ok); }
+.ws-note code, .ws-say code, .ws-tasks code { font-family: var(--font-mono); font-size: 0.88em; overflow-wrap: anywhere; }
+.ws-screen { padding: 0.8rem 0.9rem; min-height: 9rem; max-height: 20rem; overflow-y: auto; background: var(--night); color: #f6f3ff; border-radius: var(--r-sm); font-family: var(--font-mono); font-size: 0.85rem; line-height: 1.5; tab-size: 4; }
+.ws-screen:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+.ws-line { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.ws-line.is-in { color: #bff0df; }
+.ws-line.is-out { color: #f6f3ff; }
+.ws-line.is-err { color: #ffb4a3; }
+.ws-line.is-note { color: #b9dcff; font-style: italic; margin-bottom: 0.4rem; }
+.ws-form { display: flex; align-items: center; gap: 0.5rem; font-family: var(--font-mono); }
+.ws-prompt { flex: none; font-size: 0.85rem; color: var(--ink-2); max-width: 9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ws-form input { flex: 1; min-width: 0; min-height: 44px; font: 16px var(--font-mono); padding: 0.4rem 0.6rem; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface); color: var(--ink); }
+.ws-form input:focus-visible { outline: 2px solid var(--signal); outline-offset: 1px; }
+.ws-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
+.ws-chip.ws-code { font: 500 0.82rem var(--font-mono); text-align: left; overflow-wrap: anywhere; }
+.ws-places { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; }
+.ws-places section { border: 1px solid var(--line-soft); border-radius: var(--r-sm); padding: 0.6rem 0.8rem; background: var(--surface); min-width: 0; }
+.ws-places .ws-places-wide { grid-column: 1 / -1; }
+.ws-places h4 { margin: 0; font: 700 0.95rem var(--font-display); }
+.ws-places ul { list-style: none; margin: 0.4rem 0 0; padding: 0; display: grid; gap: 0.3rem; font-size: 0.9rem; }
+.ws-places li code { font-family: var(--font-mono); font-size: 0.88em; overflow-wrap: anywhere; }
+.ws-tag { display: inline-block; font-size: 0.78rem; padding: 0.05rem 0.5rem; border: 1px solid var(--line); border-radius: 999px; color: var(--ink-2); white-space: nowrap; }
+.ws-tag.is-untracked, .ws-tag.is-deleted { border-color: var(--warn); color: var(--warn); }
+.ws-tag.is-modified, .ws-tag.is-staged-modified, .ws-tag.is-staged-new, .ws-tag.is-staged-deleted { border-color: var(--signal); color: var(--signal-ink); }
+.ws-tag.is-clean { border-color: var(--ok); color: var(--ok); }
+.ws-graph { display: flex; gap: 0.4rem; margin-top: 0.4rem; align-items: flex-start; }
+.ws-graph-svg { flex: none; display: block; }
+.ws-graph-svg path { fill: none; stroke-width: 2.5; }
+.ws-graph-rows { list-style: none; margin: 0; padding: 0; min-width: 0; flex: 1; }
+.ws-graph-rows li { height: 44px; display: flex; flex-wrap: wrap; align-content: center; align-items: center; gap: 0 0.4rem; overflow: hidden; line-height: 1.25; }
+.ws-sha { font: 600 0.85rem var(--font-mono); }
+.ws-ref { font: 600 0.75rem var(--font-display); padding: 0 0.4rem; border: 1px solid var(--signal); border-radius: 4px; color: var(--signal-ink); background: var(--signal-wash); }
+.ws-msg { flex-basis: 100%; font-size: 0.85rem; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---------- NotebookOrder ---------- */
+.ws-cells-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
+.ws-cell { border: 1px solid var(--line); border-radius: var(--r-sm); padding: 0.6rem 0.8rem; display: grid; gap: 0.5rem; background: var(--surface); }
+.ws-cell.is-stale { border-color: var(--warn); }
+.ws-cell-head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.8rem; }
+.ws-in { font: 600 0.82rem var(--font-mono); color: var(--ink-3); }
+.ws-src { flex: 1 1 8rem; font: 600 0.95rem var(--font-mono); overflow-wrap: anywhere; }
+.ws-cell .btn { min-height: 44px; }
+.ws-cell .ws-chip { justify-self: start; text-align: left; }
+.ws-chip code { font-family: var(--font-mono); font-size: 0.9em; }
+.ws-out { font: 0.95rem var(--font-mono); padding: 0.4rem 0.6rem; border-left: 3px solid var(--ink-3); background: var(--tint-lilac); overflow-wrap: anywhere; }
+.ws-out.is-err { border-left-color: var(--warn); background: var(--tint-pink); }
+.ws-bad { color: var(--warn); }
+.ws-kernel { margin: 0; font: 0.88rem var(--font-mono); color: var(--ink-2); overflow-wrap: anywhere; }
+
+@media (max-width: 560px) {
+  .ws-places { grid-template-columns: minmax(0, 1fr); }
+  .ws-prompt { max-width: 6rem; }
+}
+
+/* the lesson's own list spacing would otherwise indent these figure lists */
+.viz .ws-tasks, .viz .ws-cells-list, .viz .ws-key, .viz .ws-places ul, .viz .ws-graph-rows { padding-left: 0; margin-top: 0; margin-bottom: 0; }
+.viz .ws-places ul { margin-top: 0.4rem; }
+.viz .ws-tasks li, .viz .ws-cells-list > li, .viz .ws-key li, .viz .ws-places li, .viz .ws-graph-rows li { margin: 0; padding-left: 0; }
+.viz .ws-cells-list > li { padding: 0.6rem 0.8rem; }
+.viz .ws-graph-rows li { padding: 0; }
+.viz .ws-tasks li::marker, .viz .ws-cells-list > li::marker { content: none; }
+@media (max-width: 560px) {
+  .ws-form { flex-wrap: wrap; }
+  .ws-form .ws-prompt { flex-basis: 100%; max-width: none; }
+}

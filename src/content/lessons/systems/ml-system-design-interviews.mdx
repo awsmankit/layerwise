@@ -1,0 +1,167 @@
+---
+title: "ML system design: a framework for interviews and design reviews"
+track: systems
+level: advanced
+order: 9
+summary: A repeatable seven-stage framework for designing an ML system, worked through a feed-ranking system, a fraud detector and a search-relevance system with example numbers, plus the mistakes that sink most answers. Includes a scorecard walkthrough.
+updated: 2026-11-01
+sources:
+  - label: "Designing Machine Learning Systems (Chip Huyen, book repository)"
+    url: https://github.com/chiphuyen/dmls-book
+  - label: "Data Distribution Shifts and Monitoring (Chip Huyen, CS 329S notes, 2022)"
+    url: https://huyenchip.com/2022/02/07/data-distribution-shifts-and-monitoring.html
+  - label: "Rules of Machine Learning (Google)"
+    url: https://developers.google.com/machine-learning/guides/rules-of-ml
+  - label: "Production ML systems (Google Machine Learning Crash Course)"
+    url: https://developers.google.com/machine-learning/crash-course/production-ml-systems
+  - label: "System Design for Recommendations and Search (Eugene Yan)"
+    url: https://eugeneyan.com/writing/system-design-for-discovery/
+  - label: "Recommendation systems overview (Google for Developers)"
+    url: https://developers.google.com/machine-learning/recommendation/overview/types
+  - label: "Deep Neural Networks for YouTube Recommendations (Covington, Adams, Sargin)"
+    url: https://research.google/pubs/deep-neural-networks-for-youtube-recommendations/
+  - label: "Embedding-based Retrieval in Facebook Search (Huang et al.)"
+    url: https://arxiv.org/abs/2006.11632
+  - label: "Embedding-Based Retrieval for Airbnb Search (Airbnb Engineering)"
+    url: https://airbnb.tech/ai-ml/embedding-based-retrieval-for-airbnb-search/
+  - label: "Reproducible Machine Learning for Credit Card Fraud detection: Practical handbook, fraud detection system (ULB Machine Learning Group)"
+    url: https://fraud-detection-handbook.github.io/fraud-detection-handbook/Chapter_2_Background/FDS.html
+  - label: "Credit card fraud handbook: validation strategies"
+    url: https://fraud-detection-handbook.github.io/fraud-detection-handbook/Chapter_5_ModelValidationAndSelection/ValidationStrategies.html
+  - label: "Credit card fraud handbook: precision top-k metrics"
+    url: https://fraud-detection-handbook.github.io/fraud-detection-handbook/Chapter_4_PerformanceMetrics/TopKBased.html
+---
+
+import DesignChecklist from '../../../components/viz/DesignChecklist.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+An ML system design question ("design a fraud detector", "design the home feed") and a real design review test the same thing. Can you turn a vague goal into a system that works, and say where it will break? Interviewers rarely want the fanciest model. They want you to ask the right questions in a sensible order, make trade-offs explicit, put numbers on them, and remember that the model is one box in a larger system.
+
+This lesson gives a framework, shows it on three classic problems, and lists the mistakes that sink answers. Every number below is an **example with stated assumptions**, not a measurement, and the arithmetic is unit-tested.
+
+## The framework
+
+Work through the same seven stages every time. The order matters, because each stage constrains the next.
+
+| Stage | The questions to ask | The trap to avoid |
+|---|---|---|
+| 1. Goal and metric | What is the product trying to do? What does a wrong answer cost? Which online metric stands for success, which offline metric predicts it, and which guardrails must not move? | Optimising what is easy to measure, or accuracy on a rare event |
+| 2. Data and labels | Where do examples come from? How are labels made, how late do they arrive and how are they biased by what the system already did? | Treating "no click" or "no dispute yet" as a true negative |
+| 3. Baseline and model | What is the simplest thing that could work? Which model family fits the data, latency and team? | Starting with the deepest model |
+| 4. Offline evaluation | How do you split (by time), which metrics, which slices, what is the baseline score? | Random splits that leak the future |
+| 5. Serving | Batch, online or streaming? What is the latency budget per stage, what is precomputed, what is the fallback? | No fallback, or two versions of a feature |
+| 6. Launch | Shadow, canary, A/B? What are the guardrails and the rollback criteria? | Shipping because offline numbers rose |
+| 7. Monitoring and feedback | What drifts, what is the label delay, how do you retrain, what loops does the system create? | Watching only uptime |
+
+Google's *Rules of Machine Learning* backs the spirit of this order: design and implement metrics first (rule 2), keep the first model simple and get the infrastructure right (rule 4), and do not be afraid to launch a product without machine learning (rule 1). In a 45-minute interview a rough split might be: five minutes on stages 1 and 2 together, ten each on data, model and serving, and the rest on evaluation, launch and monitoring. That split is a suggestion, not a standard.
+
+<Callout kind="note" title="Say your assumptions out loud">
+Estimates are only useful if the inputs are visible. "Assume 10 million daily users who load the feed five times a day, and a peak three times the average" lets an interviewer correct one number and watch you recompute. Never present an assumed figure as a fact.
+</Callout>
+
+## Three useful estimates
+
+Most design numbers come from a few formulas.
+
+- **Requests per second**: daily requests divided by 86,400, then multiplied by an assumed peak-to-average ratio.
+- **Memory for embeddings**: items times dimensions times bytes per number (4 for float32, 1 for int8).
+- **Cost of a decision threshold**: missed cases times the cost of a miss, plus false alarms times the cost of a false alarm. The best threshold minimises total cost, not the miss count.
+
+## Case 1: ranking a feed
+
+*A short-video app ranks the home feed. About 100 million videos, 10 million daily users who load the feed five times a day.*
+
+**Goal and metric.** The business wants people to come back and to be satisfied. Clicks alone reward attention-grabbing items, so choose a primary online metric such as retention or satisfied watch time, with guardrails for diversity, creator exposure and harmful content. Offline, use recall at k for retrieval and NDCG or AUC for ranking, and say how they should relate to the online metric.
+
+**Scale (example).** 50 million feed loads a day is about 579 requests per second on average, and about 1,736 at a peak three times the average. Embeddings for 100 million videos at 64 dimensions need 25.6 GB as float32, or 6.4 GB as int8.
+
+**Data and labels.** Log every impression with the features used at serving time, the position and the outcome. Position matters: items shown first get more clicks whatever their quality, so the training data needs a position feature, and the system needs some exploration traffic. Huyen describes the degenerate feedback loop: what the model shows gets clicked, so the model shows more of it.
+
+**Model.** Start with a heuristic such as recently popular items. Then use the standard stages described in Google's recommendation course and in Eugene Yan's write-up: candidate generation narrows the catalogue to hundreds (keeping 500 of 100 million is a 99.9995 percent cut), a richer ranker scores those candidates with user, item and context features, and a re-ranking step applies diversity, freshness and rules. A two-tower model for retrieval lets item embeddings be computed ahead of time.
+
+**Serving (example budget for 200 ms at the 99th percentile).** Retrieval 30 ms, feature fetch 30 ms, ranking 60 ms, re-ranking 20 ms: 140 ms, leaving 60 ms for network, slack and a fallback. If ranking times out, return a popular or last-good list, not an error.
+
+**Evaluation, launch, monitoring.** Split by time. Evaluate retrieval and ranking separately and by slice (new and returning users, regions, creator size). Launch with shadow traffic, then an A/B test with guardrails, a pre-set duration and a holdout. Monitor input and score drift, engagement and the diversity of what is shown. Huyen suggests measuring popularity diversity to detect a degenerate loop, and keeping some randomisation.
+
+## Case 2: a fraud detector
+
+*A payments company must decide, while the customer waits, whether a card payment is fraudulent. A small team of investigators reviews the most suspicious cases.*
+
+The fraud-detection handbook from the Université Libre de Bruxelles describes the usual layers: fast checks and blocking rules before authorisation, then scoring rules and a data-driven model, then human investigators who call cardholders and return labelled feedback. It adds that investigators can check only a few alerts a day, so precision matters more than a high raw alert count.
+
+**Goal and metric.** A miss loses money. A false decline loses a sale and trust. Define the target from those costs and report precision and recall at the chosen operating point, with precision among the top k alerts investigators can review. Never accuracy.
+
+**The base-rate trap (example).** Take 20 million payments a day with 0.1 percent fraud, so 20,000 fraudulent payments. A detector that catches 80 percent of fraud while wrongly flagging 0.5 percent of genuine payments finds 16,000 frauds and raises 99,900 false alarms. It flags 115,900 payments in all, and only about **13.8 percent** of flags are fraud. Approving everything would be 99.9 percent accurate and catch nothing.
+
+**Choosing the threshold (example costs).** Say a missed fraud costs 80 dollars and a false alarm costs 2 dollars.
+
+| Operating point | Recall | False-positive rate | Missed fraud per day | False alarms per day | Daily cost |
+|---|---|---|---|---|---|
+| Strict | 60% | 0.1% | 8,000 | 19,980 | 679,960 dollars |
+| Middle | 80% | 0.5% | 4,000 | 99,900 | 519,800 dollars |
+| Loose | 90% | 2% | 2,000 | 399,600 | 959,200 dollars |
+
+The middle point is cheapest, even though the loose one catches the most fraud. Review capacity then shapes the design further: approve low scores, send a middle band to step-up verification, and send only the top slice to people.
+
+**Labels and splits.** Labels are late. Huyen notes that dispute windows can run from a month to three months, so recent transactions look cleaner than they are. The handbook's validation scheme removes a **delay period** between the training data and the test period for this reason, and discards old data because of concept drift. Labels are also biased: investigators mostly label what the system already flagged, so consider a small controlled exploration.
+
+**Model and serving.** Start with rules plus logistic regression or gradient-boosted trees on tabular features, with per-card, per-device and per-merchant aggregates over the last minute, hour and day. Velocity features need streaming computation. Decide the fallback: if the feature store is slow, use rules and a safe default, not a failed payment.
+
+**Launch and monitoring.** Run in shadow mode, then use champion-challenger with a holdout. Watch score drift, the mix of approve, review and decline, queue size and alert precision daily, and recall and precision on mature labels as disputes arrive. Attackers adapt once blocked, so expect concept drift and keep a fast path for new rules.
+
+## Case 3: search relevance
+
+*An online shop with 10 million items wants better results. Queries run from exact product codes to "gift for a runner".*
+
+**Goal and metric.** Clicks mix relevance with position and appeal, so build a human-judged evaluation set with graded labels (for example 0 to 3 per query and item) and use NDCG at 10 or mean reciprocal rank. Confirm with online metrics such as conversion, reformulation and zero-result rate. See [vector search and retrieval metrics](../../rag-agents/vector-search-and-retrieval-metrics/) for how NDCG works.
+
+**Scale (example).** 20 million queries a day is about 231 per second on average and 694 at a peak three times the average. Embeddings for 10 million items at 128 dimensions take 5.12 GB as float32.
+
+**Model.** Start with a tuned keyword baseline. Then use hybrid retrieval, because keywords handle exact codes while embeddings handle meaning, and a learned ranker over text match, popularity, price and stock. Facebook's paper describes embedding retrieval added to an inverted-index search system. Airbnb's engineers report that random negatives made their retrieval task too easy and that negatives should be results users saw but did not book.
+
+**Serving (example budget for 300 ms at the 99th percentile).** Query understanding 20 ms, retrieval 50 ms, feature fetch 40 ms and ranking 80 ms leaves 110 ms of slack. Precompute item embeddings and the index offline and refresh them as the catalogue changes, but keep price and stock filters fresh at query time. Airbnb reported that frequent price and availability updates led them to choose an index type that used less memory under heavy updates.
+
+**Evaluation and monitoring.** Stratify evaluation queries into frequent, mid-frequency and rare, check zero-result queries, and watch the query mix and index freshness. Sample poor queries for human judgment so failures become new labels.
+
+<Deep title="Where these cases connect to other lessons">
+
+- Recommender and ranking models, cold start and feedback loops: [Recommenders and ranking](../../ml/recommenders-and-ranking/).
+- Features, training-serving skew and point-in-time correctness: [Batch vs online inference and feature stores](../batch-vs-online-inference-and-feature-stores/).
+- Validation of inputs and labels: [Data pipelines and data quality](../data-pipelines-and-data-quality/).
+- Safe rollout and statistics of a test: [Testing and deploying ML models](../testing-and-deploying-ml-models/) and [Is the difference real?](../../ml/is-the-difference-real/).
+- Fairness in what gets shown or declined: [Fairness for builders](../../responsible/fairness-for-builders/).
+- Rare-event scoring more generally: [Anomaly detection](../../ml/anomaly-detection/).
+
+</Deep>
+
+## Common mistakes
+
+- **Starting with the model.** The first minutes should be questions and a metric.
+- **A random split.** For anything that unfolds in time (feeds, fraud, search), train on earlier data and test on later data.
+- **Accuracy on a rare class.** Use precision, recall, cost and top-k metrics.
+- **No baseline.** Without one you cannot show a gain.
+- **Ignoring label delay and label bias.** Ask how and when each label arrives, and who chose which cases get labelled.
+- **Offline-online mismatch.** Offline numbers are proxies built from the old system's logs. Check them in an experiment.
+- **No fallback.** Every dependency can be slow or down.
+- **Two implementations of a feature.** Reuse code between training and serving, and log serving-time features (Rules of ML, rules 29 and 32).
+- **Forgetting the loop.** A system that changes what users see changes its own future data.
+- **Unlabelled numbers.** State the assumptions and re-derive when they change.
+
+## Try it: a design walkthrough
+
+Choose a scenario and tick what a strong answer would include at each stage. The scorecard explains each gap.
+
+<DesignChecklist client:visible />
+
+## What to remember
+
+- Use the same seven stages each time: goal and metric, data and labels, baseline and model, offline evaluation, serving, launch, monitoring.
+- Define the metric from the cost of being wrong, and report precision, recall and cost, not accuracy, on rare events.
+- Ask how labels are made, how late they arrive and what they are biased by.
+- Split by time, evaluate by slice, and build a baseline first.
+- Give each serving stage a latency budget, precompute what you can, and design the fallback.
+- Roll out in steps with guardrails and a rollback plan, then monitor inputs, predictions and outcomes.
+- State every assumed number as an assumption and keep the arithmetic visible.
+
+Next: [System design for LLM apps](../llm-app-system-design/) applies the same thinking to systems built around language models, where the "model" is a hosted service and the parts around it matter even more.

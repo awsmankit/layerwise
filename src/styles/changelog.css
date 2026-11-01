@@ -1,0 +1,127 @@
+/* The /changelog/ page: a timeline of releases, newest first. */
+.cl-policy {
+  max-width: var(--measure);
+  margin: 1.4rem 0 0;
+  padding: 1rem 1.2rem;
+  border: 1.5px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  font-family: var(--font-display);
+}
+.cl-policy h2 {
+  margin: 0 0 0.4rem;
+  font-size: 1.05rem;
+}
+.cl-policy ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+.cl-policy li + li {
+  margin-top: 0.25rem;
+}
+.cl-jump {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.7rem;
+  margin: 1.6rem 0 0.4rem;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+}
+.cl-jump a {
+  display: inline-block;
+  padding: 0.35rem 0.1rem;
+}
+.cl-list {
+  display: grid;
+  gap: 1.4rem;
+  margin: 1.4rem 0 3rem;
+  padding: 0;
+  list-style: none;
+}
+.cl-rel {
+  max-width: var(--measure);
+  padding: 1.1rem 1.3rem 1.2rem;
+  border: 2px solid var(--ink);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  scroll-margin-top: 5rem;
+}
+.cl-rel.is-latest {
+  background: var(--tint-sun);
+}
+.cl-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem 0.8rem;
+  margin: 0;
+  font-family: var(--font-display);
+}
+.cl-ver {
+  font-size: 1.5rem;
+  font-weight: 780;
+}
+.cl-ver a {
+  color: inherit;
+  text-decoration: none;
+}
+.cl-ver a:hover {
+  text-decoration: underline;
+}
+.cl-date {
+  font-size: 0.9rem;
+  color: var(--ink-2);
+}
+.cl-new {
+  padding: 0.05rem 0.6rem;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.cl-title {
+  margin: 0.2rem 0 0.3rem;
+  font-family: var(--font-display);
+  font-size: 1.12rem;
+  font-weight: 700;
+}
+.cl-summary {
+  margin: 0 0 0.6rem;
+  color: var(--ink-2);
+}
+.cl-hl {
+  margin: 0 0 0.8rem;
+  padding-left: 1.2rem;
+}
+.cl-hl li + li {
+  margin-top: 0.4rem;
+}
+.cl-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.5rem;
+  margin: 0 0 0.6rem;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+}
+.cl-stats li {
+  padding: 0.12rem 0.65rem;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+}
+.cl-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 1.2rem;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+}
+.cl-links a {
+  display: inline-block;
+  padding: 0.3rem 0;
+}

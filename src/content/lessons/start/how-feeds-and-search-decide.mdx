@@ -1,0 +1,93 @@
+---
+title: How feeds and search decide what you see
+track: start
+level: basic
+order: 3.5
+summary: Find out how a search engine or a video feed picks what to show you, why it keeps showing more of the same, and how to take some control back. Build a feed yourself.
+updated: 2026-11-01
+sources:
+  - label: "How Google Search ranks results (Google Search, checked 1 November 2026)"
+    url: https://www.google.com/search/howsearchworks/how-search-works/ranking-results/
+  - label: "Recommendations (How YouTube Works, checked 1 November 2026)"
+    url: https://www.youtube.com/howyoutubeworks/product-features/recommendations/
+  - label: "Manage your recommendations and search results (YouTube Help, checked 1 November 2026)"
+    url: https://support.google.com/youtube/answer/6342839
+  - label: "Our approach to explaining ranking (Meta Transparency Center, checked 1 November 2026)"
+    url: https://transparency.meta.com/features/explaining-ranking/
+  - label: "Recommendation systems (Google Machine Learning course)"
+    url: https://developers.google.com/machine-learning/recommendation
+  - label: "Filter bubble (Wikipedia)"
+    url: https://en.wikipedia.org/wiki/Filter_bubble
+  - label: "How do social media feed algorithms affect attitudes and behavior in an election campaign? (Guess and others, Science, 2023)"
+    url: https://andyguess.com/publication/doi-10-1126-science-abp-9364/
+---
+
+import FeedBuilder from '../../../components/viz/FeedBuilder.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+Open a video app and the first thing you see was chosen for you. Out of millions of posts, a computer picked a few and put them in an order. This lesson shows how that works, and how to take some control back.
+
+## Search: match, then rank
+
+When you search, the computer does two jobs. First it **matches**: it finds pages that fit your words and what you probably mean. Then it **ranks**: it puts the most useful pages first.
+
+Google says its ranking looks at the words you typed, how relevant and useful a page is, how much the source can be trusted, and things like your location and settings. For news, newer pages count for more.
+
+Location matters. Google's own example is "football". In Chicago you will probably see American football. In London you will probably see soccer.
+
+## A feed is a sorted list
+
+A feed is different, because you did not ask for anything. So the app has to guess. It gives every post a score that means "will this person enjoy it?". Then it sorts the posts, highest score first.
+
+Because each person gets different scores, each person gets a different feed. That is called **personalising**.
+
+## What goes into the score
+
+Each clue the computer can measure is a **signal**. Apps watch what you like, what you watch for a long time, what you skip and who you follow. They also watch what other people do.
+
+YouTube says it looks at viewing behaviour, likes, dislikes, subscriptions and feedback, including surveys that ask whether you enjoyed a video. Meta says it looks at how other people have reacted to a post, and how you reacted to similar posts.
+
+Companies do not share their exact recipes. The feed below is a simple, made-up one.
+
+## Try it: build a feed
+
+Switch on "What you liked before". Then like another football post and watch what happens at the top. Finally, press "Mix it up".
+
+<FeedBuilder client:visible />
+
+## Why you see more of the same
+
+Here is the loop. You watch football. The app learns that you like football, so it shows more. You watch more, and it learns even more.
+
+Nobody has to plan this. The score guesses, and you keep confirming the guess. When your feed gets narrow like this, it is called a **filter bubble**: you mostly see things like what you already liked.
+
+Google says its Search does not put people in filter bubbles. Researchers also disagree about how strong the effect is on social apps. What is clear is that a narrow feed is easy to end up with, and a varied one takes some effort.
+
+## Ads
+
+An ad is a post that a company paid to show. Look for a label such as "Ad" or "Sponsored". Google says paying for ads does not change where websites appear in its normal search results.
+
+In the lab, the ad always sits in third place, with a label. The feed did not choose it because you liked it.
+
+## Taking back control
+
+<Callout title="Five things you can do">
+
+1. **Tell the app.** YouTube has "Not interested" and "Don't recommend channel" buttons.
+2. **Clear your history.** On YouTube you can pause, edit or delete your watch and search history.
+3. **Ask why.** Google Search has an "About this result" panel that shows whether your past searches were a factor.
+4. **Search on purpose.** Type what you want, and follow people and sources you picked yourself.
+5. **Look outside the app.** Try a library, a teacher or a grown-up. Take breaks too.
+
+</Callout>
+
+<Deep title="For grown-ups: how feeds are built, and what researchers found">
+
+Large systems usually work in two stages: a fast step picks a short list of candidates, then a slower model scores and orders them. The [Recommenders and ranking](../../ml/recommenders-and-ranking/) lesson goes through this properly. Platforms say they use more than clicks. YouTube, for example, mentions satisfaction surveys, and Meta says its models predict what a person is likely to value. Those pages change often, and they describe the systems only in general terms.
+
+One study took consenting Facebook and Instagram users in the 2020 US election and gave some of them a newest-first feed instead of the usual ranked one. They spent less time on the apps. They saw more political and untrustworthy content. Over three months their political attitudes did not change significantly. It covers two apps, one election and three months, so it does not settle the filter bubble question. TikTok and Snapchat also publish pages about their recommendations, but we could not read TikTok's from our tools, so it is not cited here.
+
+</Deep>
+
+Next: [How a chatbot decides what to say](../how-a-chatbot-answers/), where you see how a computer picks the next word instead of the next post.

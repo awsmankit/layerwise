@@ -1,0 +1,139 @@
+---
+title: "A TinyML wake-word detector, end to end"
+track: edge
+level: intermediate
+order: 3.5
+summary: A keyword-spotting pipeline from microphone frames to a decision. Log-mel features, a tiny network, smoothing and thresholds, the false-accept and false-reject trade-off, why always-on detectors are built as cascades, and how the same recipe applies to motion and vibration sensors.
+updated: 2026-11-01
+sources:
+  - label: "Hello Edge: Keyword Spotting on Microcontrollers (Zhang et al., 2017)"
+    url: https://arxiv.org/abs/1711.07128
+  - label: "Speech Commands: A Dataset for Limited-Vocabulary Speech Recognition (Warden, 2018)"
+    url: https://arxiv.org/abs/1804.03209
+  - label: "MLPerf Tiny Benchmark (Banbury et al., 2021)"
+    url: https://arxiv.org/abs/2106.07597
+  - label: "Hey Siri: An On-device DNN-powered Voice Trigger for Apple's Personal Assistant (Apple Machine Learning Research, 1 October 2017)"
+    url: https://machinelearning.apple.com/research/hey-siri
+  - label: "A Cascade Architecture for Keyword Spotting on Mobile Devices (Gruenstein et al., 2017)"
+    url: https://arxiv.org/abs/1712.03603
+  - label: "LiteRT for Microcontrollers overview (Google AI Edge)"
+    url: https://developers.google.com/edge/litert/microcontrollers/overview
+  - label: "CMSIS-NN: neural network kernels for Arm Cortex-M (Arm)"
+    url: https://github.com/ARM-software/CMSIS-NN
+  - label: "Edge Impulse: An MLOps Platform for Tiny Machine Learning (Hymel et al., 2023)"
+    url: https://arxiv.org/abs/2212.03332
+  - label: "MLPerf Tiny repository: streaming wake-word benchmark (work in progress)"
+    url: https://github.com/mlcommons/tiny/tree/master/benchmark/training/streaming_wakeword
+---
+
+import PipelineFlow from '../../../components/viz/PipelineFlow.tsx';
+import KwsPipeline from '../../../components/viz/KwsPipeline.tsx';
+import KwsThreshold from '../../../components/viz/KwsThreshold.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+"Hey Siri", "Ok Google" and "Alexa" are the best-known uses of **keyword spotting**: a small model that listens all the time for one phrase, and wakes a bigger system when it hears it. It is the standard example of on-device AI. The Hello Edge paper puts the needs in one breath: real-time response, high accuracy, and, because it is always on, a very tight power budget. This lesson builds the pipeline end to end, using the front end from the [spectrogram lesson](../../audio/spectrograms-and-the-mel-scale/) and the deadlines from [real-time on a budget](../real-time-on-a-budget/). Product details are as of 1 November 2026, from the sources listed.
+
+## The pipeline
+
+<PipelineFlow
+  client:visible
+  title="A keyword-spotting pipeline"
+  stages={[
+    { title: 'Microphone', detail: 'A stream of samples, commonly 16,000 a second. Apple describes 16 kHz for its voice trigger.' },
+    { title: 'Frames', detail: 'The stream is cut into short overlapping frames. Hello Edge uses 40 ms frames every 20 ms; Apple describes frames of about 10 ms. The toy below uses 32 ms every 20 ms.' },
+    { title: 'Features', detail: 'Each frame becomes a few dozen numbers: log-mel energies or MFCCs. This throws away detail the task does not need.' },
+    { title: 'Tiny network', detail: 'A model reads a second or less of recent frames and outputs, for each class, how likely it is. Classes include the keywords, silence and "unknown".' },
+    { title: 'Smoothing', detail: 'Hello Edge calls it posterior handling: average the outputs over a short time so a single odd frame cannot trigger.' },
+    { title: 'Decision', detail: 'A threshold, plus a rule that stops repeat firing. Then the bigger system wakes.' },
+  ]}
+  caption="Features and smoothing are ordinary signal processing. The learned part is the middle."
+/>
+
+The demo below runs the first three steps and a stand-in for the fourth on a short clip. Pick a sound and watch the log-mel picture the model sees. The front end is the same code as in the audio lessons. The microphone button is off until you tap it, and the audio stays in the page.
+
+<KwsPipeline client:visible />
+
+**The model here is a stand-in, not a trained network.** It is a matched filter: a fixed pattern taken from one clean example of the keyword (a synthesised "ah" gliding to "ee"), compared with each recent stretch of audio. It works on these clean synthetic sounds and will not work on real speakers. If you record your voice, do not expect it to recognise anything. It only makes the shape of the pipeline concrete.
+
+## What a real tiny network is
+
+The usual choice for small devices is a **depthwise-separable CNN** (DS-CNN), which splits each convolution into a cheap per-channel filter and a 1x1 mix, so it needs far fewer weights and operations than a plain CNN. The Hello Edge paper compared DNN, CNN, recurrent and DS-CNN designs under microcontroller memory and compute limits on the Speech Commands dataset. Its small ("S") DS-CNN has 38.6 KB of weights and activations at 8 bits and about 5.4 million operations per inference, and reaches 94.4% accuracy on its 12-class test. (The [small-device lesson](../inside-a-small-device/) works through that memory sum.) The MLPerf Tiny keyword-spotting benchmark uses a DS-CNN too: input 49 frames by 10 features, 38.6 thousand parameters, a 52.5 KB file, and a closed-division accuracy target of 90%.
+
+**How one is made.** A real model is trained, quantised and deployed in four steps:
+
+1. **Train on labelled one-second clips.** Speech Commands (Warden, 2018) has 105,829 utterances of 35 words from many speakers, and both Hello Edge and MLPerf Tiny use ten command words plus "silence" and "unknown" classes. Hello Edge augments the training data with background noise and random time shifts of up to 100 ms. For a product wake word, the negatives matter most: the Speech Commands paper stresses that most of a device's input is silence or background noise and most speech is unrelated, so false positives there must be minimised.
+2. **Quantise to 8 bits** with a calibration set, or train with quantisation in the loop. See [fitting a model onto a small device](../quantization-for-edge/).
+3. **Convert** to a format a microcontroller runtime reads. For LiteRT for Microcontrollers the documented steps are to train a model with supported operations, convert it, turn it into a C byte array that sits in program memory, and run it with the C++ library.
+4. **Run with optimised kernels.** CMSIS-NN supplies neural-network kernels for Arm Cortex-M processors and, per its README, follows the same 8-bit specification as TensorFlow Lite so that it is bit-exact with TensorFlow Lite's reference kernels (the README lists some exceptions).
+
+The features are the memory bargain. One second of 16-bit audio at 16 kHz is 32,000 bytes. A window of 49 frames by 10 coefficients in 8 bits is 490 bytes. A detector keeps a rolling window of features, not of audio, unless a later stage needs the audio.
+
+## False accepts and false rejects
+
+A detector makes two kinds of mistake. Apple's description is the clearest: the **false-accept rate** (FAR) is false activations per hour, and the **false-reject rate** (FRR) is the share of real attempts that fail. They have different units, so Apple notes there is no "equal error rate" to quote. Changing the threshold moves you along a curve: raise it and false accepts fall while missed keywords rise.
+
+The Speech Commands paper adds the way streaming detectors are scored in practice: a detection counts if it falls within a time tolerance of the true word (750 ms by default there), and a crude rule suppresses repeated detections of the same word. The demo below applies those ideas to two minutes of invented audio with 12 keywords hidden among 22 other sounds, including near-misses like the keyword backwards.
+
+<KwsThreshold client:visible />
+
+Things to try, with the numbers this stream gives (all from the toy, in a quiet room, smoothing 100 ms):
+
+- At threshold 0.50 it hears all 12 keywords and fires 4 times when it should not: 120 an hour if the whole day were like this two minutes. At 0.70 it fires falsely 0 times and misses 3 of 12.
+- Look at which sounds cause the false accepts. They are near-misses, such as "ah-oo" and "oo-ee", and random vowel babble, not plain noise. The same is true of real detectors: the hard negatives are similar-sounding speech.
+- Switch to the noisy room. The whole trade-off curve moves the wrong way: at 0.50 it hears 9 and fires falsely 3 times, and no threshold is clean. Noise is why training data includes background sound.
+- Raise the smoothing. False accepts fall because a brief resemblance cannot hold the average up, but keywords start to be missed and every decision comes later. Smoothing buys steadiness with delay, which is the [previous lesson's](../real-time-on-a-budget/) trade-off again.
+
+**Two minutes is not enough.** One false accept in two minutes is 30 an hour. Apple says it needs thousands of hours of negative recordings, because it is trying to estimate false-alarm rates as low as one per week. At that rate you would expect one false accept in 168 hours, so you would need about 1,680 hours of audio just to expect ten. A small test set shows ranking, not the rate a user will meet.
+
+<Callout kind="edge" title="Two thresholds">
+Apple's detector uses a normal threshold and a lower one. If the score lands between them, the system becomes more sensitive for a few seconds, so that a repeated phrase is accepted. It improves usability without raising the false-alarm rate much, because the extra sensitivity is short.
+</Callout>
+
+## Always on: the cascade
+
+A detector that never sleeps has a power budget measured in fractions of a milliamp. Gruenstein et al. (Google, 2017) put it plainly: with phone batteries of 1,000 to 2,400 mAh, the whole system should draw under 1 mA to use under 1% of the battery per day. (Check: 1 mA for 24 hours is 24 mAh, which is 1% of 2,400 mAh.)
+
+The answer, in both Google's and Apple's published designs, is a **cascade**. A very small first-stage detector runs continuously on a low-power processor. When it fires, a larger second stage on the main processor makes the final decision.
+
+- Google's paper runs the first stage on a DSP, buffers about two seconds of audio, and hands that buffer to a larger, more accurate detector on the application processor, which can also verify the speaker.
+- Apple's article describes an always-on coprocessor running a network of 5 layers of 32 units, which wakes the main processor to run one of 5 layers of 192 units (in the first versions with this feature). Apple Watch uses a single-pass detector, run only after a wrist-raise gesture. The audio then also goes to a server, which can cancel a false wake. These details are from a 2017 article and may have changed.
+
+The first stage is tuned to rarely miss, since the second stage can clean up its false accepts. An example calculation, with made-up numbers: the first stage draws 1 mW and the second 300 mW and runs for 0.3 s each time it is woken, 6 times an hour. The average is 1 + 300 x (6 x 0.3 / 3,600) = 1.15 mW, against 300 mW if the big stage ran all the time. A first stage with a poor false-accept rate wakes the expensive stage often, so the false-accept rate is also a power figure.
+
+## Sensors and time series: the same recipe
+
+Most TinyML products listen to something other than speech: a motion sensor for activity recognition, a vibration sensor on a machine, heart rate. The structure is the same: **window** the stream, make **features** or let a network learn them, run a small model, **smooth** and decide.
+
+| In audio | In a motion or vibration sensor |
+|---|---|
+| Frame of 25 to 40 ms, hop 10 to 20 ms | Window of a fraction of a second to several seconds, overlapping |
+| Log-mel energies or MFCCs | Statistics (mean, spread, peaks), or spectral bands from an FFT |
+| Tiny CNN | Small 1-D CNN, or a classical model on the features |
+| Smoothing and threshold | Smoothing, plus a rule for how long a state must persist |
+
+Edge Impulse, a TinyML development platform, describes this stage as DSP, with frame length, stride and window size as the settings to tune. Its paper notes an FFT is an O(n log n) way to get frequency information, where learning it with 1-D convolutions would take O(n^2), which is a reason to do some of the work in ordinary signal processing.
+
+Four things differ from speech:
+
+- **Sampling and aliasing.** Sample fast enough for the motion you care about, and filter before sampling. See [how a computer hears](../../audio/how-a-computer-hears/).
+- **Units differ.** Sensor placement, orientation and calibration vary between devices and people, so a model tuned on one unit can fail on another. Test across units.
+- **Labelled data is scarce.** Edge Impulse's paper lists data collection and labelling as a main obstacle, which is why platforms build field data-collection tools.
+- **Often only normal data exists.** MLPerf Tiny's anomaly-detection task trains an autoencoder on normal machine sound only. It scores each audio window by how badly the autoencoder reconstructs it, and judges the score with AUC, since a threshold has to be chosen separately. That makes the false-accept and false-reject trade-off above a choice you make later, with cost in mind.
+
+<Deep title="How the toy scores a frame">
+
+For each frame the toy has 40 log-mel values in decibels. Take the latest 43 frames (about 0.86 s), subtract each band's average over those frames so a steady hum cancels, flatten to one vector, and compute its cosine similarity with the keyword template built the same way. Negative values become 0. The smoothed score is the average of the last few such scores, the detector fires when it rises through the threshold after being below it, and a 1-second refractory period blocks repeats. The signals are synthesised from vowel-like harmonics shaped by three resonances. The code is in `src/lib/kws.ts` with tests, and the numbers quoted above are checked by those tests.
+
+</Deep>
+
+## What to remember
+
+- A wake-word detector is a pipeline: frames, log-mel features, a small network, smoothing, a threshold. Only the network is learned.
+- Real tiny networks are DS-CNNs or small recurrent models of tens of kilobytes, trained on thousands of recordings with noise, then quantised to 8 bits.
+- The threshold trades false accepts (per hour) against false rejects (share missed). The hard negatives are similar-sounding speech, and noise moves the whole curve.
+- Rare false accepts need thousands of hours to measure. Two minutes ranks settings; it does not predict a product's rate.
+- Always-on detectors are cascades: a tiny first stage runs continuously, and a larger stage verifies. Its false-accept rate sets the power bill.
+- Motion and vibration sensors follow the same recipe with windows and different features.
+
+Next: [small language models on device](../small-language-models-on-device/).

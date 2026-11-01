@@ -1,0 +1,497 @@
+/* Styles for the interactive components in the wave 4 "dl-b" lesson batch. Keep every class under this batch's own prefix (wb-). */
+
+/* ---------- shared bits ---------- */
+
+.viz.wb {
+  --wb-cell: 24px;
+}
+.wb-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+.wb-label {
+  min-width: 4.4rem;
+  font-size: 0.85rem;
+  font-weight: 650;
+  color: var(--ink-3);
+}
+.viz .wb-chip {
+  min-height: 40px;
+  padding: 0.3rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font: 600 0.9rem var(--font-display);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.wb-chip:hover {
+  border-color: var(--signal);
+}
+.viz .wb-chip[aria-pressed='true'] {
+  background: var(--signal);
+  border-color: var(--signal);
+  color: var(--on-signal);
+}
+.viz .wb-chip-quiet {
+  border-style: dashed;
+}
+.wb-chip:focus-visible,
+.wb-word:focus-visible,
+.wb-rowhead:focus-visible,
+.wb.viz input[type='range']:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.wb-note {
+  margin: 0.2rem 0 0.9rem;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+.wb-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.9rem 0;
+}
+.viz.wb .btn {
+  min-height: 44px;
+}
+.wb-slide {
+  margin: 0.6rem 0;
+}
+.wb-slide input,
+.wb-sliders input,
+.wb-prow input {
+  width: 100%;
+}
+.wb-read {
+  margin: 0.5rem 0 0;
+  font-size: 0.95rem;
+  color: var(--ink-2);
+}
+.wb-read b {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.wb-hint {
+  margin: 0.5rem 0;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid var(--signal);
+  background: var(--signal-wash);
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+.wb-calc {
+  margin: 0.8rem 0;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.wb-calc p {
+  margin: 0.15rem 0;
+}
+.wb-calc b {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.wb-key {
+  margin: 0.3rem 0 0;
+  font-size: 0.8rem;
+  color: var(--ink-3);
+  text-align: center;
+}
+.wb-k {
+  display: inline-block;
+  width: 0.9em;
+  height: 0.7em;
+  margin-right: 0.25em;
+  vertical-align: -0.05em;
+}
+.wb-k-fake {
+  background: var(--signal);
+  opacity: 0.55;
+}
+.wb-k-real {
+  border-top: 2px dashed var(--ink);
+  height: 0;
+  vertical-align: 0.2em;
+}
+.wb-k-d {
+  border-top: 2px solid var(--cost);
+  height: 0;
+  vertical-align: 0.2em;
+}
+
+/* ---------- svg plots ---------- */
+
+.wb-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 420px;
+  margin-inline: auto;
+  touch-action: manipulation;
+}
+.wb-frame {
+  fill: var(--surface);
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.wb-axis {
+  stroke: var(--ink-3);
+  stroke-opacity: 0.45;
+  stroke-width: 1;
+}
+.wb-tl {
+  fill: var(--ink-3);
+  font: 500 12px var(--font-display);
+}
+.wb-fig {
+  margin: 0;
+  min-width: 0;
+}
+.wb-fig figcaption {
+  margin-top: 0.3rem;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: var(--ink-3);
+}
+.wb-plots {
+  display: grid;
+  gap: 1rem 1.6rem;
+  margin-top: 0.4rem;
+}
+.wb-g0 {
+  fill: var(--signal);
+  stroke: var(--signal);
+}
+.wb-g1 {
+  fill: var(--cost);
+  stroke: var(--cost);
+}
+.wb-pt {
+  fill-opacity: 0.55;
+  stroke: none;
+}
+.wb-curve {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.6;
+  stroke-opacity: 0.75;
+}
+.wb-sample {
+  fill: var(--warn);
+  fill-opacity: 0.85;
+  stroke: none;
+}
+.wb-here {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2.5;
+}
+.wb-bell {
+  fill: var(--signal-wash);
+  stroke: var(--signal);
+  stroke-width: 1;
+}
+.wb-tick {
+  stroke-width: 2;
+  stroke-opacity: 0.6;
+  fill: none;
+}
+.wb-zline {
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+.wb-hbar {
+  fill: var(--signal);
+  fill-opacity: 0.55;
+}
+.wb-real {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+}
+.wb-dcurve {
+  fill: none;
+  stroke: var(--cost);
+  stroke-width: 2;
+}
+.wb-hist {
+  fill: none;
+  stroke: var(--signal);
+  stroke-width: 1.8;
+}
+.wb-sliders {
+  display: grid;
+  gap: 0.3rem 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+.wb-tally-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.wb-out {
+  padding: 0.25rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 0.85rem;
+  background: var(--surface);
+}
+.wb-out-both {
+  border-color: var(--ok);
+}
+.wb-out-one-hump {
+  border-color: var(--warn);
+  border-style: dashed;
+}
+.wb-out-between {
+  border-color: var(--cost);
+  border-style: dotted;
+}
+
+/* ---------- mask lab ---------- */
+
+.wb-block {
+  margin: 0.9rem 0;
+}
+.wb-cap {
+  margin: 0.4rem 0 0.3rem;
+  font-size: 0.85rem;
+  font-weight: 650;
+  color: var(--ink-3);
+}
+.wb-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.viz .wb-word {
+  min-height: 40px;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--ink);
+  font: 600 0.95rem var(--font-mono);
+  cursor: pointer;
+}
+.viz .wb-word.wb-word-static {
+  display: inline-flex;
+  align-items: center;
+  cursor: default;
+}
+.viz .wb-word.is-hidden {
+  background: var(--tint-sun);
+  border-style: dashed;
+  color: var(--ink-3);
+  text-decoration: line-through;
+}
+.viz .wb-word.is-prefix {
+  background: var(--tint-sky);
+}
+.wb-seq {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin: 0 0 0.5rem;
+  min-height: 2rem;
+}
+.wb-tok {
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font: 500 0.9rem var(--font-mono);
+  background: var(--surface);
+}
+.wb-tok-mark {
+  background: var(--tint-sun);
+  border-style: dashed;
+}
+.wb-tok-goal {
+  background: var(--tint-mint);
+}
+.wb-empty {
+  font-size: 0.9rem;
+  color: var(--ink-3);
+}
+.wb-signal {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--ink-2);
+}
+.wb-signal b {
+  color: var(--ink);
+}
+.wb-grid-wrap {
+  overflow-x: auto;
+  padding-bottom: 0.2rem;
+}
+.wb-grid {
+  display: grid;
+  gap: 0 2px;
+  width: max-content;
+  align-items: center;
+}
+.wb-colhead {
+  text-align: center;
+  font: 500 0.75rem var(--font-display);
+  color: var(--ink-3);
+}
+.viz .wb-rowhead {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 40px;
+  padding: 0 0.3rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ink);
+  font: 500 0.8rem var(--font-mono);
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.viz .wb-rowhead.wb-rowhead-static {
+  cursor: default;
+}
+.viz .wb-rowhead.is-on {
+  border-color: var(--signal);
+  background: var(--signal-wash);
+}
+.wb-rn {
+  color: var(--ink-3);
+  font-size: 0.72rem;
+}
+.wb-cell {
+  display: block;
+  align-self: center;
+  height: var(--wb-cell);
+  border: 1px solid var(--line-soft);
+  border-radius: 3px;
+  background: transparent;
+}
+.wb-cell.is-open {
+  background: var(--signal);
+  border-color: var(--signal);
+  opacity: 0.5;
+}
+.wb-cell.is-row {
+  border-color: var(--ink);
+}
+.wb-cell.is-open.is-row {
+  opacity: 1;
+}
+
+/* ---------- loss labs ---------- */
+
+.wb-ptable {
+  margin: 0.4rem 0;
+  padding: 0;
+  list-style: none;
+}
+.wb-prow {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr);
+  gap: 0.1rem 0.6rem;
+  align-items: center;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+.wb-ptok {
+  font: 600 0.95rem var(--font-mono);
+}
+.wb-pval {
+  grid-column: 2;
+  font-size: 0.85rem;
+  color: var(--ink-3);
+}
+.wb-pval b {
+  color: var(--ink);
+}
+.wb-bars {
+  margin: 0.4rem 0;
+  padding: 0;
+  list-style: none;
+}
+.wb-bar-row {
+  display: grid;
+  grid-template-columns: 3.4rem minmax(0, 1fr);
+  gap: 0.1rem 0.6rem;
+  align-items: center;
+  padding: 0.3rem 0;
+}
+.wb-bar-name {
+  font: 600 0.92rem var(--font-mono);
+}
+.wb-bar-pair {
+  display: grid;
+  gap: 3px;
+}
+.wb-bar-track {
+  display: block;
+  height: 9px;
+  border-radius: 5px;
+  background: var(--line-soft);
+  overflow: hidden;
+}
+.wb-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 5px;
+  transition: width 0.3s var(--ease);
+}
+.wb-bar-truth {
+  background: var(--ink);
+  opacity: 0.75;
+}
+.wb-bar-model {
+  background: var(--signal);
+}
+.wb-bar-num {
+  grid-column: 2;
+  font-size: 0.8rem;
+  color: var(--ink-3);
+}
+
+@media (min-width: 700px) {
+  .wb-plots {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+  .wb-prow {
+    grid-template-columns: 3rem minmax(0, 1fr) 11rem;
+  }
+  .wb-pval {
+    grid-column: auto;
+  }
+  .wb-bar-row {
+    grid-template-columns: 3.4rem minmax(0, 1fr) 9rem;
+  }
+  .wb-bar-num {
+    grid-column: auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wb-bar-fill {
+    transition: none;
+  }
+}

@@ -1,0 +1,136 @@
+---
+title: "AI rules around the world: a dated map"
+track: responsible
+level: intermediate
+order: 15
+summary: How the EU, the US (federal, Colorado, California, Texas), the UK, India, China, South Korea, Japan and the OECD handle AI, compared by who must do what, with a primary source and a date for every entry. As of 1 November 2026. Not legal advice.
+updated: 2026-11-01
+sources:
+  - label: "AI Act Service Desk: timeline for the implementation of the EU AI Act"
+    url: https://ai-act-service-desk.ec.europa.eu/en/ai-act/timeline/timeline-implementation-eu-ai-act
+  - label: "European Commission: AI Act, regulatory framework (application timeline and AI Omnibus)"
+    url: https://digital-strategy.ec.europa.eu/en/policies/regulatory-framework-ai
+  - label: "AI Act Article 16: obligations of providers of high-risk AI systems"
+    url: https://ai-act-service-desk.ec.europa.eu/en/ai-act/article-16
+  - label: "AI Act Article 26: obligations of deployers of high-risk AI systems"
+    url: https://ai-act-service-desk.ec.europa.eu/en/ai-act/article-26
+  - label: "AI Act Article 50: transparency obligations for providers and deployers of certain AI systems"
+    url: https://ai-act-service-desk.ec.europa.eu/en/ai-act/article-50
+  - label: "AI Act Article 99: penalties"
+    url: https://ai-act-service-desk.ec.europa.eu/en/ai-act/article-99
+  - label: "White House: Executive Order 14365, Ensuring a National Policy Framework for Artificial Intelligence (11 December 2025)"
+    url: https://www.whitehouse.gov/presidential-actions/2025/12/eliminating-state-law-obstruction-of-national-artificial-intelligence-policy/
+  - label: "NIST: AI Risk Management Framework"
+    url: https://www.nist.gov/itl/ai-risk-management-framework
+  - label: "Public Law 119-12, TAKE IT DOWN Act (19 May 2025), text on govinfo.gov"
+    url: https://www.govinfo.gov/content/pkg/PLAW-119publ12/html/PLAW-119publ12.htm
+  - label: "Colorado Senate Bill 26-189, signed act (PDF on the Colorado General Assembly site)"
+    url: https://leg.colorado.gov/bill_files/116489/download
+  - label: "Colorado General Assembly: SB26-189 Automated Decision-Making Technology (bill page)"
+    url: https://leg.colorado.gov/bills/sb26-189
+  - label: "Governor of California: press release on signing SB 53 (29 September 2025)"
+    url: https://www.gov.ca.gov/2025/09/29/governor-newsom-signs-sb-53-advancing-californias-world-leading-artificial-intelligence-industry/
+  - label: "Texas HB 149 (89th Legislature), enrolled text"
+    url: https://capitol.texas.gov/tlodocs/89R/billtext/html/HB00149F.htm
+  - label: "Texas Legislature Online: HB 149 bill history"
+    url: https://capitol.texas.gov/BillLookup/History.aspx?LegSess=89R&Bill=HB149
+  - label: "GOV.UK: A pro-innovation approach to AI regulation (white paper, updated 3 August 2023)"
+    url: https://www.gov.uk/government/publications/ai-regulation-a-pro-innovation-approach/white-paper
+  - label: "GOV.UK: Britain steps up national defences against growing AI risks (12 October 2026)"
+    url: https://www.gov.uk/government/news/britain-steps-up-national-defences-against-growing-ai-risks
+  - label: "MeitY: India AI Governance Guidelines (PDF hosted by the Press Information Bureau, released 5 November 2025)"
+    url: https://static.pib.gov.in/WriteReadData/specificdocs/documents/2025/nov/doc2025115685601.pdf
+  - label: "Press Information Bureau: MeitY unveils India AI Governance Guidelines (5 November 2025)"
+    url: https://www.pib.gov.in/PressReleasePage.aspx?PRID=2186639
+  - label: "MeitY: IT (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021, consolidated as updated on 10 February 2026"
+    url: https://www.meity.gov.in/static/uploads/2026/03/0b576f2071694b52e4cd6bb1b6dfab1e.pdf
+  - label: "Cyberspace Administration of China: Interim Measures for the Management of Generative AI Services (in Chinese)"
+    url: https://www.cac.gov.cn/2023-07/13/c_1690898327029107.htm
+  - label: "Cyberspace Administration of China: Measures for Labeling AI-Generated Synthetic Content, notice 国信办通字〔2025〕2号 (in Chinese)"
+    url: https://www.cac.gov.cn/2025-03/14/c_1743654684782215.htm
+  - label: "Ministry of Science and ICT (Korea): Basic Act on AI passed at the National Assembly plenary session (press release, December 2024)"
+    url: https://www.msit.go.kr/eng/bbs/view.do?sCode=eng&mId=4&mPid=2&pageIndex=&bbsSeqNo=42&nttSeqNo=1071&searchOpt=ALL&searchTxt=
+  - label: "Korean Law Information Center: AI Framework Act, Article 31 (in Korean)"
+    url: https://law.go.kr/LSW/lsLinkCommonInfo.do?lsJoLnkSeq=1031810723
+  - label: "Korean Law Information Center: AI Framework Act, Article 43 (in Korean)"
+    url: https://www.law.go.kr/lsLinkCommonInfo.do?lsJoLnkSeq=1031810927
+  - label: "Japanese Law Translation: Act on Promotion of Research and Development, and Utilization of AI-related Technology (Act No. 53 of 2025)"
+    url: https://www.japaneselawtranslation.go.jp/en/laws/view/5066/en
+  - label: "Cabinet Office (Japan): outline of the AI Act"
+    url: https://www8.cao.go.jp/cstp/ai/ai_hou_gaiyou_en.pdf
+  - label: "OECD.AI: OECD AI Principles overview"
+    url: https://oecd.ai/en/ai-principles
+---
+
+import AiRulesTable from '../../../components/viz/AiRulesTable.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+<Callout title="Not legal advice, and a snapshot" kind="note">
+This lesson describes what primary sources say, as I read them on 1 November 2026. It does not tell you what your product must do; for that, ask a lawyer in the places you operate. Several of the rules below changed in the past year and some will change again. Every entry in the table carries the date it was read and a link, so you can check it yourself. Where I could not read a primary source, the entry is left blank.
+</Callout>
+
+The [EU AI Act lesson](../../evals/eu-ai-act-for-engineers/) covers one law in detail. Other places have chosen differently, and a team that sells to several of them needs a way to compare. This lesson gives a method and a map. Both will date quickly, so the method is the part to keep.
+
+## Five questions for any AI rule
+
+1. **Who is covered?** Developers (providers), people who use a system in their work (deployers), platforms that carry content, or all of them. Terms differ: Korea's Act speaks of "AI business operators", Japan's of "utilization business operators".
+2. **What is banned or restricted?** A named use or intent, a type of decision, a type of content, or a class of system.
+3. **What must be disclosed?** To users, to deployers, to a regulator, or to the public.
+4. **Who enforces it, and how?** A regulator, an attorney general, courts. With fines, orders to stop, or loss of a legal protection.
+5. **When does it apply?** Many laws start in stages, or are delayed, or are amended before they start.
+
+## Five ways of regulating
+
+Real laws mix these, so the tags in the table are my own simplification.
+
+- **Risk-based.** Duties grow with the risk. The EU AI Act is the clearest case, with banned practices, high-risk systems, transparency duties and general-purpose models. South Korea's Act also names "high-impact" AI.
+- **Use-specific.** Rules aimed at a named harm or decision. Texas bans developing or deploying AI with certain intents. Colorado's law covers automated decisions in areas such as employment, housing, lending and insurance. The US TAKE IT DOWN Act targets non-consensual intimate images, including AI-made ones.
+- **Developer transparency.** California's SB 53, as the Governor's office describes it, asks large frontier developers to publish a safety framework and sets up incident reporting.
+- **Content labelling.** The EU (Article 50), India (the 2026 IT Rules amendment), China (the 2025 labelling measures) and South Korea (Article 31) all require AI-generated content to be marked or disclosed, in different ways.
+- **Principles and promotion.** The UK's 2023 white paper chose non-statutory principles applied by existing regulators. India's guidelines and the OECD's principles are guidance. Japan's 2025 Act mostly sets plans and institutions.
+
+## The map
+
+Pick approaches to narrow the list, then choose what to compare. The last block works the EU fine arithmetic with an example turnover you can change.
+
+<AiRulesTable client:visible />
+
+## What stands out
+
+These points come from the entries above. Check each against its source.
+
+- **Penalties are built differently.** The EU sets ceilings as a fixed sum or a share of turnover, whichever is higher. For a company with EUR 1 billion turnover, 3% is EUR 30 million, above the EUR 15 million fixed sum; for an SME the lower figure applies. Texas sets dollar ranges per violation and per day. South Korea's fine is up to KRW 30 million for the listed breaches. Colorado's act sets no amount of its own. I found no penalty clause in the official English translation of Japan's Act.
+- **Two US states give a cure period.** Colorado's act and Texas's act both give 60 days to cure before the Attorney General acts. In Colorado that applies where the Attorney General deems a cure possible.
+- **Labelling is spreading, with different targets.** India's rule covers intermediaries and realistic audio and visual content, and excludes routine editing such as noise reduction and transcription. China's measures describe explicit and implicit labels, the latter in file metadata. The EU puts a duty on providers to mark outputs and on deployers to disclose deepfakes.
+- **Federal and state layers collide in the US.** Executive Order 14365 says that until a national standard exists, the administration will act against "onerous" state laws. Colorado, which the order names, has since replaced its 2024 act.
+- **Some rules are not binding.** The UK white paper put principles on a non-statutory footing; India's guidelines are guidance; the OECD's are principles. The UK said on 12 October 2026 that it would "legislate wherever necessary".
+
+<Deep title="What changed recently, as examples of staleness">
+
+- The EU delayed its high-risk rules to 2 December 2027 and 2 August 2028 through the AI Omnibus, in force 27 July 2026, and added bans from 2 December 2026.
+- Colorado signed SB 26-189 on 14 May 2026, repealing and reenacting its 2024 law with a 1 January 2027 start.
+- South Korea's national law database lists a version of its Act in force from 21 July 2026, after its January 2026 start.
+- Labelling duties arrived within about a year of each other: China's measures took effect on 1 September 2025, Korea's Act in January 2026, the EU's Article 50 on 2 August 2026, and India's amendment was notified on 10 February 2026.
+
+</Deep>
+
+## What I could not read
+
+The brief for this lesson was primary sources only. Where an official site refused automated access, I say what I did instead.
+
+- **California.** The legislature's site refused access, so SB 53 is described only from the Governor's press release. I give no effective date or penalty amount. California's chatbot law, SB 243, is left out for the same reason.
+- **Colorado.** I read the signed act as a PDF. The bill page was read through a fetch tool.
+- **UK.** I could not read Parliament's own debate pages, so the UK entry rests on the 2023 white paper and a 12 October 2026 government press release. Blank cells are not a claim that nothing exists.
+- **Not covered at all.** The Council of Europe's Framework Convention on AI (its site refused access), Brazil, Canada, Australia, Singapore, Switzerland and others. A map with more places is not better if its entries are unchecked.
+- **Language.** I read the Chinese and Korean sources in the original. The Japanese Act I read in the government's own English translation. Translations are aids, and the original language text governs.
+
+## What to remember
+
+- Ask five questions of any rule: who is covered, what is restricted, what is disclosed, who enforces, and from when.
+- Approaches differ: risk-based, use-specific, developer transparency, labelling, and principles or promotion. Most laws mix them.
+- Dates and amendments matter as much as text. Note when you read a rule, and read it again before relying on it.
+- Primary sources over summaries. If you cannot read the instrument, do not repeat the claim.
+- This is a map, not advice. Have a lawyer check the places you operate in.
+
+Next: [The EU AI Act for engineers](../../evals/eu-ai-act-for-engineers/) goes deep on the one law whose rules most products meet first.

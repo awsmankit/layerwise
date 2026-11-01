@@ -1,0 +1,495 @@
+/* Styles for the interactive components in the wave 4 "dl-a" lesson batch. Keep every class under this batch's own prefix. */
+
+/* All classes start with wa-. Two hand colours that stay apart for most kinds of colour blindness,
+   plus a third (teal) for the third hidden class. */
+.wa-lab,
+.wa-ssl,
+.wa-xfer {
+  --wa-a: #2563eb;
+  --wa-b: #d96400;
+  --wa-c: #0b7a6b;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .wa-lab,
+  :root:not([data-theme='light']) .wa-ssl,
+  :root:not([data-theme='light']) .wa-xfer {
+    --wa-a: #6ea8ff;
+    --wa-b: #ffa24d;
+    --wa-c: #4fd8ac;
+  }
+}
+:root[data-theme='dark'] .wa-lab,
+:root[data-theme='dark'] .wa-ssl,
+:root[data-theme='dark'] .wa-xfer {
+  --wa-a: #6ea8ff;
+  --wa-b: #ffa24d;
+  --wa-c: #4fd8ac;
+}
+
+/* ---------- controls ---------- */
+
+.wa-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.6rem;
+  margin-block: 0.4rem;
+}
+.wa-lab-t {
+  font-size: 0.9rem;
+  color: var(--ink-2);
+}
+.viz .wa-chip {
+  min-height: 44px;
+  padding: 0.35rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font: 600 0.9rem var(--font-display);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.viz .wa-chip:hover:not(:disabled) {
+  border-color: var(--signal);
+}
+.viz .wa-chip[aria-pressed='true'] {
+  background: var(--signal);
+  border-color: var(--signal);
+  color: var(--on-signal);
+}
+.viz .wa-chip:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.wa-chip:focus-visible,
+.wa-slide input:focus-visible,
+.wa-check input:focus-visible,
+.wa-details summary:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.wa-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 44px;
+  font-size: 0.92rem;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.wa-check input {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  accent-color: var(--signal);
+}
+.wa-sliders {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 0.2rem 1.6rem;
+  margin-block: 0.4rem 0.2rem;
+}
+.wa-slide {
+  display: block;
+  margin-top: 0.7rem;
+}
+.wa-slide > span {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.2rem 1rem;
+  font-size: 0.92rem;
+  color: var(--ink-2);
+}
+.wa-slide > span b {
+  color: var(--ink);
+}
+.wa-slide input[type='range'] {
+  display: block;
+  width: 100%;
+  min-height: 32px;
+  touch-action: pan-y;
+}
+.wa-step {
+  margin-top: 1rem;
+}
+
+/* ---------- sentence ---------- */
+
+.wa-sentence {
+  margin: 0.6rem 0 0.2rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font: 400 1rem/1.7 var(--font-mono);
+  overflow-wrap: anywhere;
+}
+.wa-w {
+  padding: 0.1rem 0.2rem;
+  border-radius: 4px;
+  color: var(--ink-2);
+}
+.wa-subj {
+  color: var(--ink);
+  font-weight: 700;
+  border-bottom: 2px solid var(--signal);
+}
+.wa-odd {
+  color: var(--ink);
+  border-bottom: 2px dashed var(--warn);
+}
+.wa-cur {
+  background: var(--signal);
+  color: var(--on-signal);
+}
+
+/* ---------- charts ---------- */
+
+.wa-svg {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  height: auto;
+  margin: 0.4rem 0 0;
+}
+.wa-ring {
+  margin-inline: auto;
+}
+.wa-axis,
+.wa-grid,
+.wa-guide {
+  stroke: var(--line);
+  stroke-width: 1;
+  fill: none;
+}
+.wa-grid {
+  stroke: var(--line-soft);
+}
+.wa-chance {
+  stroke: var(--ink-3);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+  fill: none;
+}
+.wa-cursor {
+  stroke: var(--ink-3);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+.wa-t {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  fill: var(--ink-3);
+}
+.wa-t-mid {
+  fill: var(--ink-3);
+}
+.wa-line {
+  fill: none;
+  stroke-width: 2.2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.wa-line-rnn,
+.wa-dot-rnn {
+  stroke: var(--wa-b);
+}
+.wa-line-lstm,
+.wa-dot-lstm {
+  stroke: var(--wa-a);
+}
+.wa-dot {
+  stroke-width: 2;
+  fill: var(--surface);
+}
+.wa-sw {
+  display: inline-block;
+  width: 22px;
+  height: 0;
+  margin-right: 0.35rem;
+  border-top: 3px solid;
+  vertical-align: middle;
+}
+.wa-sw-rnn {
+  border-color: var(--wa-b);
+}
+.wa-sw-lstm {
+  border-color: var(--wa-a);
+}
+.wa-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 1.2rem;
+  margin: 0.8rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.88rem;
+  color: var(--ink-2);
+}
+.wa-keys {
+  justify-content: center;
+  margin-top: 0.2rem;
+}
+.wa-dim {
+  color: var(--ink-3);
+}
+.wa-cell-rnn {
+  fill: var(--wa-b);
+}
+.wa-cell-lstm {
+  fill: var(--wa-a);
+}
+.wa-mark {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+.wa-scale {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.4rem;
+  max-width: 420px;
+  margin: 0.2rem 0 0;
+  font-size: 0.8rem;
+  color: var(--ink-3);
+}
+
+/* contrastive points: shape and colour both say which class */
+.wa-pt {
+  stroke: var(--surface);
+  stroke-width: 1;
+}
+.wa-pt-hollow {
+  fill: var(--surface) !important;
+  stroke-width: 2;
+}
+.wa-c0.wa-pt {
+  fill: var(--wa-a);
+}
+.wa-c1.wa-pt {
+  fill: var(--wa-b);
+}
+.wa-c2.wa-pt {
+  fill: var(--wa-c);
+}
+.wa-c0.wa-pt-hollow {
+  stroke: var(--wa-a);
+}
+.wa-c1.wa-pt-hollow {
+  stroke: var(--wa-b);
+}
+.wa-c2.wa-pt-hollow {
+  stroke: var(--wa-c);
+}
+.wa-pair {
+  stroke: var(--ink-3);
+  stroke-width: 1;
+  opacity: 0.5;
+}
+
+/* ---------- readouts ---------- */
+
+.wa-out {
+  margin: 0.5rem 0 0;
+  font-size: 0.95rem;
+  color: var(--ink-2);
+}
+.wa-out b {
+  color: var(--ink);
+}
+.wa-right {
+  border-left: 3px solid var(--ok);
+  padding-left: 0.6rem;
+}
+.wa-wrong {
+  border-left: 3px solid var(--warn);
+  padding-left: 0.6rem;
+}
+.wa-unsure {
+  border-left: 3px solid var(--ink-3);
+  padding-left: 0.6rem;
+}
+.wa-panels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 0.4rem 2rem;
+  margin-top: 0.6rem;
+}
+.wa-panel {
+  min-width: 0;
+}
+.wa-h {
+  margin: 0.6rem 0 0.3rem;
+  font: 650 0.98rem var(--font-display);
+  color: var(--ink);
+}
+.wa-h2 {
+  margin-top: 1.2rem;
+}
+.wa-sub {
+  margin-top: 1.6rem;
+  margin-bottom: 0.2rem;
+}
+.wa-nums {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.15rem 1rem;
+  margin: 0.4rem 0;
+  font-size: 0.9rem;
+}
+.wa-nums dt {
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+.wa-nums dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  text-align: right;
+}
+.wa-gate {
+  display: grid;
+  grid-template-columns: 7.5rem 1fr 3rem;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0.25rem 0;
+  font-size: 0.9rem;
+  color: var(--ink-2);
+}
+.wa-gate b {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  text-align: right;
+  color: var(--ink);
+}
+.wa-bar {
+  display: block;
+  height: 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.wa-bar i {
+  display: block;
+  height: 100%;
+  background: var(--wa-a);
+  transition: width 0.25s;
+}
+.wa-bar i.wa-bar-bg {
+  background: var(--wa-b);
+}
+.wa-note,
+.wa-status {
+  margin: 0.5rem 0 0;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+.wa-status b {
+  color: var(--ink);
+}
+.wa-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  gap: 0.4rem 1rem;
+  margin: 0.8rem 0 0;
+}
+.wa-stats dt {
+  font-size: 0.8rem;
+  color: var(--ink-3);
+}
+.wa-stats dd {
+  margin: 0;
+  font-weight: 650;
+}
+.wa-details {
+  margin-top: 0.6rem;
+  font-size: 0.92rem;
+}
+.wa-details summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  color: var(--ink-2);
+}
+.wa-table {
+  width: 100%;
+  max-width: 28rem;
+  border-collapse: collapse;
+}
+.wa-table th,
+.wa-table td {
+  padding: 0.3rem 0.4rem;
+  border-bottom: 1px solid var(--line-soft);
+  text-align: left;
+  font-weight: 400;
+}
+.wa-table thead th {
+  font-size: 0.8rem;
+  color: var(--ink-3);
+}
+
+@media (max-width: 420px) {
+  .wa-gate {
+    grid-template-columns: 6rem 1fr 2.6rem;
+    gap: 0.4rem;
+  }
+}
+
+/* ---------- LSTM diagram ---------- */
+
+.wa-lstm {
+  --wa-a: #2563eb;
+  --wa-b: #d96400;
+}
+:root[data-theme='dark'] .wa-lstm {
+  --wa-a: #6ea8ff;
+  --wa-b: #ffa24d;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .wa-lstm {
+    --wa-a: #6ea8ff;
+    --wa-b: #ffa24d;
+  }
+}
+.wa-lstm {
+  margin-inline: 0;
+}
+.wa-fig {
+  margin-inline: auto;
+}
+.wa-fig .wa-t {
+  font-size: 13px;
+}
+.wa-t-strong {
+  fill: var(--ink);
+  font-weight: 600;
+}
+.wa-belt {
+  stroke: var(--wa-a);
+  stroke-width: 3;
+  fill: none;
+}
+.wa-flow {
+  stroke: var(--ink-3);
+  stroke-width: 1.6;
+  fill: none;
+}
+.wa-dash {
+  stroke-dasharray: 4 3;
+}
+.wa-arrowhead {
+  fill: var(--ink-3);
+}
+.wa-op {
+  fill: var(--surface);
+  stroke: var(--wa-a);
+  stroke-width: 2;
+}
+.wa-box {
+  fill: var(--surface);
+  stroke: var(--line);
+  stroke-width: 1.5;
+}

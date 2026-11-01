@@ -1,0 +1,144 @@
+---
+title: "Structured output in depth: schemas, constrained decoding and their limits"
+track: llm
+level: intermediate
+order: 1.5
+summary: How a grammar mask forces valid JSON at the token level, what that guarantees and what it does not, how the three big providers differ today, and how to design schemas, validators and failure paths that hold up.
+updated: 2026-11-01
+sources:
+  - label: "Structured outputs (Claude Platform docs), read 1 November 2026"
+    url: https://platform.claude.com/docs/en/build-with-claude/structured-outputs
+  - label: "Structured model outputs (OpenAI API docs), read 1 November 2026"
+    url: https://developers.openai.com/api/docs/guides/structured-outputs
+  - label: "Structured outputs (Gemini API docs, page last updated 2026-10-21)"
+    url: https://ai.google.dev/gemini-api/docs/structured-output
+  - label: "Efficient Guided Generation for Large Language Models (Willard and Louf, 2023)"
+    url: https://arxiv.org/abs/2307.09702
+  - label: "XGrammar: Flexible and Efficient Structured Generation Engine for Large Language Models (Dong et al., 2024)"
+    url: https://arxiv.org/abs/2411.15100
+  - label: "Let Me Speak Freely? A Study on the Impact of Format Restrictions on Performance of Large Language Models (Tam et al., 2024)"
+    url: https://arxiv.org/abs/2408.02442
+  - label: "Say What You Mean: A Response to 'Let Me Speak Freely' (Will Kurt, .txt)"
+    url: https://blog.dottxt.ai/say-what-you-mean.html
+  - label: "JSONSchemaBench: A Rigorous Benchmark of Structured Outputs for Language Models (Geng et al., 2025)"
+    url: https://arxiv.org/abs/2501.10868
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import ConstrainedDecoder from '../../../components/viz/ConstrainedDecoder.tsx';
+
+[Prompting and structured output](../prompting-and-structured-output/) introduced the idea: ask for JSON, parse it, retry on failure, and prefer the platform's structured output feature when there is one. This lesson opens that feature. You will see how a schema becomes a mask on the model's next-token choices, what the mask can and cannot promise, how Anthropic, OpenAI and Google differ in what they accept, and how to design around the gaps. Product details are as of 1 November 2026 and change often, so each is tied to the vendor's page.
+
+## Valid is not correct
+
+A schema guarantees **shape**: the right keys, the right types, a value from your list. It cannot guarantee **truth**. A ticket classifier can return `{"category": "billing", "urgency": 5}` for a message about a broken button, and that output is perfectly valid. Keep two separate questions in your head for the rest of the lesson: does it parse and fit the schema, and is it right?
+
+## Three mechanisms
+
+| Mechanism | What it guarantees | Where it fails |
+|---|---|---|
+| **Prompt and parse**: ask for JSON in the prompt, then parse | Nothing | Chatty preambles, code fences, trailing commas, missing keys |
+| **JSON mode**: the API ensures the output is syntactically valid JSON | It parses | Any keys and values: wrong names, wrong types, invented fields. OpenAI's docs also say you must tell the model to produce JSON, or it may emit whitespace until the token limit |
+| **Schema-constrained decoding**: you supply a JSON Schema and decoding is restricted to outputs that match it | It parses and fits the schema (within the supported subset) | Truncation, refusals, wrong content, and anything the schema subset cannot express |
+
+## How the mask works
+
+A language model produces a score for every token in its vocabulary at each step, then turns the scores into probabilities and one token is chosen. **Constrained decoding** inserts a step in between. A grammar derived from the schema says which tokens can still lead to a valid output. Every other token has its score set to minus infinity, so its probability becomes zero, and the remaining probabilities are rescaled to add up to one. The model then chooses as usual.
+
+Try it. The "model" below is a table of invented probabilities for a tiny schema (a category and an urgency from 1 to 5). Start with no constraint and choose tokens yourself, then switch to JSON mode, then to the schema mask. Set `max_tokens` to 6 at the end.
+
+<ConstrainedDecoder client:visible />
+
+Things to notice, using the numbers in the demo:
+
+- **The mask removes mass and rescales.** After `{"category": "` the model puts 30, 20 and 14 per cent on `bill`, `bug` and `question`, and 36 per cent on `Bill`, `Bug` and `refund`. Under the schema mask the three allowed tokens become 30/64 = 46.9, 20/64 = 31.3 and 14/64 = 21.9 per cent. The odds between allowed tokens do not change.
+- **Tokens are not words.** `billing` is two tokens, `bill` then `ing`. The grammar works on characters, so `bill` is allowed because it can still become `billing`, and `ing` is the only continuation left. In the same way, `":` is allowed after `"urgency` because a space can still follow. The mask asks "can this still become valid?", not "is this valid yet?".
+- **JSON mode is a weaker mask.** `6`, `10`, `type` and `Billing` all pass, because they are valid JSON. Only the schema mask rejects them.
+- **A mask cannot fix a budget.** With `max_tokens` too small the output is cut off and no longer parses, whichever mode you chose.
+
+<Deep title="How engines make this fast">
+
+A vocabulary has around 100,000 tokens, so checking each against a grammar at every step would be slow. Outlines (Willard and Louf, 2023) turns the schema into a finite-state machine and precomputes, for each state, which tokens are allowed, so each step is a lookup. XGrammar (Dong et al., 2024) handles context-free grammars, which can nest, by precomputing the tokens whose validity does not depend on the stack and checking only the rest at run time. Provider APIs hide the engine, but their docs describe the cost you can see: Anthropic says the first request with a new schema is slower while the grammar compiles, and caches compiled grammars for 24 hours since last use.
+
+</Deep>
+
+## What the providers accept, as of 1 November 2026
+
+All three offer schema-constrained output for the final reply, and all three keep a separate feature for tool calls. The details differ in ways that bite when you move a schema between them.
+
+| | Anthropic | OpenAI | Google (Gemini API) |
+|---|---|---|---|
+| Where | `output_config.format` with a JSON schema; `strict: true` on tools | `text.format` (Responses API) or `response_format` (Chat Completions) with `strict: true`; function calling for tools | `response_format` with `mime_type` of `application/json` and a schema |
+| Optional fields | Allowed; required properties are output first, then optional ones | All fields must be required; emulate optional with a null type | Supports `required`; null by adding `"null"` to the type |
+| Numeric bounds | Not supported; SDK helpers move them into the description and validate afterwards | Supported (`minimum`, `maximum`, `multipleOf`) | `minimum` and `maximum` supported, but listed among causes of too-complex schemas |
+| String length | Not supported | Not in the supported list (`pattern` and `format` are) | `minLength` and `maxLength` stripped and not enforced |
+| Array size | `minItems` of 0 or 1 only | `minItems` and `maxItems` | `minItems` and `maxItems` enforced |
+| Recursion | Not supported | Supported | A recursive example is documented |
+| Output key order | Schema order, but required keys first | Schema order | Not stated on the page |
+| Notable limits | 24 optional parameters and 16 union-type parameters across strict schemas; enum casing may differ; incompatible with citations and prefilling | Root must be an object (no top-level `anyOf`); up to 5,000 properties and 10 levels of nesting | Large or deeply nested schemas can be rejected with `400 INVALID_ARGUMENT` |
+
+JSONSchemaBench (Geng et al., 2025) ran six constrained-decoding frameworks, including OpenAI's and Gemini's, over 10,000 real-world schemas and found that they differ in how many schemas they handle and how reliably, which is one more reason to test your schema rather than assume. Read the table as a map of what to test, not a ranking. The pages change, and a schema that one provider accepts may be rejected or silently loosened by another. The safe habit is the one all three recommend in different words: **validate in your own code against your own schema**, with the same Pydantic or Zod type you generated the schema from.
+
+<Callout kind="cost" title="Structured output is not free">
+Anthropic notes that the API adds a system prompt describing the format, so input tokens rise slightly, and that changing the format parameter invalidates the prompt cache for that conversation. See [the context window and prompt caching](../context-window-and-caching/).
+</Callout>
+
+## Does forcing a format hurt quality?
+
+The evidence is contested, so hold it loosely. Tam et al. (2024) reported a significant decline in reasoning performance under format restrictions, worse for stricter formats. The team behind Outlines replied that the paper's prompts differed between the constrained and free-text conditions, that its own re-runs showed no decline, and that the paper itself found constrained generation better on classification tasks. Both are published; neither settles your case.
+
+Two mechanisms are worth knowing regardless:
+
+- **Squeezed reasoning.** If the schema leaves no room to think, the model must commit to the answer in its first tokens. Put a short `reasoning` or `explanation` string **before** the answer field. On Anthropic, required keys come first in the output, so make that field required. Anthropic also warns that a field asking for the model's step-by-step thinking can trigger a refusal and suggests asking for a short explanation.
+- **Fighting the model.** If most of the probability sits on tokens the mask blocks, the model is being steered towards text it finds unlikely. A schema whose enum values are unnatural (`CAT_07`) is harder to fill than one with plain words.
+
+The practical answer is an eval, not an argument: run the same 50 labelled inputs with and without the schema and compare accuracy. [Building an eval dataset](../../evals/building-an-eval-dataset/) shows how.
+
+## Designing a schema a model can fill
+
+1. **Prefer enums to free strings** for anything you will branch on, and keep the values plain words.
+2. **Write descriptions as prompts.** A field description is the cheapest place to say what counts.
+3. **Give the model a way out.** Add `"unknown"` or `"other"`, or make a field nullable. OpenAI's docs warn that if the input has nothing to do with the schema, the model still tries to fit it and can invent values.
+4. **Do not rely on bounds being enforced.** For urgency 1 to 5 use an enum of five values, or validate afterwards. The demo does the former.
+5. **Keep it shallow.** Nested objects with many optional fields grow the compiled grammar quickly; Anthropic's docs say each optional parameter roughly doubles part of the grammar's state space.
+6. **Name and order fields deliberately.** Reasoning before verdict; identifiers before details.
+
+## Structured output versus tool calling
+
+Use **structured output** when the schema describes the reply you will show or store. Use **tool calling** when the model must ask your code to do something before it can answer. All three vendors draw the line in the same place. On Anthropic you can combine them: JSON outputs shape what Claude says, and strict tool use guarantees the arguments of a call. A schema on a tool is covered in [designing tools for agents](../../rag-agents/designing-tools-for-agents/).
+
+## Failure handling
+
+| What happens | Why | What to do |
+|---|---|---|
+| Output cut off, will not parse | Hit the token limit (`max_tokens` on Anthropic; an incomplete response on OpenAI) | Check the stop reason first; raise the limit or shorten the schema; never parse a truncated reply |
+| Reply does not fit the schema | A refusal (`stop_reason: "refusal"` on Anthropic; a `refusal` field on OpenAI) takes precedence over the schema | Detect it before parsing and show a clear message |
+| 400 error on the request | Schema outside the supported subset or too complex | Simplify; test schemas in CI, not on first use in production |
+| Enum value with different capitalisation | Anthropic documents this can happen | Compare case-insensitively; avoid values that differ only in case |
+| Valid but wrong | Shape is guaranteed, content is not | Semantic checks, evals, and human review for risky fields |
+
+For the last row, write validators your schema cannot express: cross-field rules (a refund amount must not exceed the order total), lookups (the customer ID exists), and plausibility ranges. Then wrap the call in a **bounded repair loop**: on failure, send the validation error back once or twice, then fall back to a safe default or a human queue. Do not loop without a cap. When you stream, partial JSON is not valid until it closes, so parse only completed fields or use a tolerant parser.
+
+```python
+from pydantic import BaseModel, Field, ValidationError
+
+class Ticket(BaseModel):
+    reasoning: str = Field(description="One or two sentences on why.")
+    category: str  # enum in the schema: billing, bug, question, unknown
+    urgency: int   # enum in the schema: 1 to 5
+
+def check(t: Ticket, order_total: float, refund: float):
+    if t.category == "billing" and refund > order_total:
+        raise ValueError("refund exceeds the order total")  # a rule the schema cannot state
+```
+
+## What to remember
+
+- A schema guarantees shape, never truth. Validate against your own schema and add semantic checks.
+- Constrained decoding sets the probability of every token that cannot lead to a valid output to zero and rescales the rest. It works on characters through tokens.
+- Providers accept different subsets of JSON Schema. Test the exact schema on the exact provider; do not trust bounds, lengths or optional fields to behave the same everywhere.
+- Truncation and refusals are separate failure paths. Check the stop reason before parsing.
+- Put reasoning before the answer, give the model an "unknown" option, and measure quality with and without the schema.
+
+Next: [the context window and prompt caching](../context-window-and-caching/).

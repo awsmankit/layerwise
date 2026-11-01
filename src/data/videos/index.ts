@@ -17,6 +17,32 @@ import { videosW2Docs } from './w2-docs';
 import { videosW2DlA } from './w2-dl-a';
 import { videosW2DlB } from './w2-dl-b';
 import { videosW2Resp } from './w2-resp';
+import { videosW3EdgeA } from './w3-edge-a';
+import { videosW3EdgeB } from './w3-edge-b';
+import { videosW3EdgeC } from './w3-edge-c';
+import { videosW3AudioA } from './w3-audio-a';
+import { videosW3AudioB } from './w3-audio-b';
+import { videosW3MlopsA } from './w3-mlops-a';
+import { videosW3MlopsB } from './w3-mlops-b';
+import { videosW3MlopsC } from './w3-mlops-c';
+import { videosW3AppliedA } from './w3-applied-a';
+import { videosW3AppliedB } from './w3-applied-b';
+import { videosW4DlA } from './w4-dl-a';
+import { videosW4DlB } from './w4-dl-b';
+import { videosW4DlC } from './w4-dl-c';
+import { videosW4Skills } from './w4-skills';
+import { videosW4StartA } from './w4-start-a';
+import { videosW4StartB } from './w4-start-b';
+import { videosW4RespA } from './w4-resp-a';
+import { videosW4RespB } from './w4-resp-b';
+import { videosW4RespC } from './w4-resp-c';
+import { videosW4RespD } from './w4-resp-d';
+import { videosW4BuildA } from './w4-build-a';
+import { videosW4BuildB } from './w4-build-b';
+import { videosW4BuildC } from './w4-build-c';
+import { videosW4BuildD } from './w4-build-d';
+import { videosW4BuildE } from './w4-build-e';
+import { videosW4Misc } from './w4-misc';
 import type { LessonVideo, LessonVideos } from './types';
 
 export type { LessonVideo } from './types';
@@ -44,6 +70,32 @@ export const videoFiles: Record<string, LessonVideos> = {
   'w2-dl-a': videosW2DlA,
   'w2-dl-b': videosW2DlB,
   'w2-resp': videosW2Resp,
+  'w3-edge-a': videosW3EdgeA,
+  'w3-edge-b': videosW3EdgeB,
+  'w3-edge-c': videosW3EdgeC,
+  'w3-audio-a': videosW3AudioA,
+  'w3-audio-b': videosW3AudioB,
+  'w3-mlops-a': videosW3MlopsA,
+  'w3-mlops-b': videosW3MlopsB,
+  'w3-mlops-c': videosW3MlopsC,
+  'w3-applied-a': videosW3AppliedA,
+  'w3-applied-b': videosW3AppliedB,
+  'w4-dl-a': videosW4DlA,
+  'w4-dl-b': videosW4DlB,
+  'w4-dl-c': videosW4DlC,
+  'w4-skills': videosW4Skills,
+  'w4-start-a': videosW4StartA,
+  'w4-start-b': videosW4StartB,
+  'w4-resp-a': videosW4RespA,
+  'w4-resp-b': videosW4RespB,
+  'w4-resp-c': videosW4RespC,
+  'w4-resp-d': videosW4RespD,
+  'w4-build-a': videosW4BuildA,
+  'w4-build-b': videosW4BuildB,
+  'w4-build-c': videosW4BuildC,
+  'w4-build-d': videosW4BuildD,
+  'w4-build-e': videosW4BuildE,
+  'w4-misc': videosW4Misc,
 };
 
 const all: LessonVideos = Object.assign({}, ...Object.values(videoFiles));

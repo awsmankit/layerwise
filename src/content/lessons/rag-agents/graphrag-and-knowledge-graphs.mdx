@@ -1,0 +1,132 @@
+---
+title: GraphRAG and knowledge graphs
+track: rag-agents
+level: advanced
+order: 3.5
+summary: What a knowledge graph adds to vector search (multi-hop and whole-collection questions), how Microsoft's GraphRAG builds and queries one, what it costs, and the simpler options to try first.
+updated: 2026-11-01
+sources:
+  - label: "From Local to Global: A Graph RAG Approach to Query-Focused Summarization (Edge et al., Microsoft, 2024)"
+    url: https://arxiv.org/abs/2404.16130
+  - label: "GraphRAG documentation: indexing methods (read 1 November 2026)"
+    url: https://microsoft.github.io/graphrag/index/methods/
+  - label: "GraphRAG documentation: global search (read 1 November 2026)"
+    url: https://microsoft.github.io/graphrag/query/global_search/
+  - label: "GraphRAG documentation: local search (read 1 November 2026)"
+    url: https://microsoft.github.io/graphrag/query/local_search/
+  - label: "microsoft/graphrag README (read 1 November 2026)"
+    url: https://github.com/microsoft/graphrag
+  - label: "LazyGraphRAG: Setting a new standard for quality and cost (Microsoft Research, 25 November 2024)"
+    url: https://www.microsoft.com/en-us/research/blog/lazygraphrag-setting-a-new-standard-for-quality-and-cost/
+  - label: "RAG vs. GraphRAG: A Systematic Evaluation and Key Insights (Han et al., 2025)"
+    url: https://arxiv.org/abs/2502.11371
+  - label: "HippoRAG: Neurobiologically Inspired Long-Term Memory for Large Language Models (Gutierrez et al., 2024)"
+    url: https://arxiv.org/abs/2405.14831
+  - label: "LightRAG: Simple and Fast Retrieval-Augmented Generation (Guo et al., 2024)"
+    url: https://arxiv.org/abs/2410.05779
+  - label: "HotpotQA: A Dataset for Diverse, Explainable Multi-hop Question Answering (Yang et al., 2018)"
+    url: https://arxiv.org/abs/1809.09600
+  - label: "GraphRAG field guide: RAG patterns (Neo4j, September 2024)"
+    url: https://neo4j.com/blog/developer/graphrag-field-guide-rag-patterns/
+  - label: "Amazon Bedrock: build a knowledge base with Neptune Analytics graphs (read 1 November 2026)"
+    url: https://docs.aws.amazon.com/bedrock/latest/userguide/knowledge-base-build-graphs.html
+  - label: "Amazon Bedrock: how content chunking works (hierarchical chunking)"
+    url: https://docs.aws.amazon.com/bedrock/latest/userguide/kb-chunking.html
+  - label: "Google Cloud: GraphRAG infrastructure using Spanner Graph (read 1 November 2026)"
+    url: https://docs.cloud.google.com/architecture/gen-ai-graphrag-spanner
+  - label: "Microsoft Learn: AI knowledge graphs with Azure Cosmos DB (CosmosAIGraph)"
+    url: https://learn.microsoft.com/en-us/azure/cosmos-db/gen-ai/cosmos-ai-graph
+  - label: "Stop Saying RAG Is Dead (Hamel Husain and Ben Clavie, July 2025)"
+    url: https://hamel.dev/notes/llm/rag/not_dead.html
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import GraphRagLab from '../../../components/viz/GraphRagLab.tsx';
+
+[Vector search](../vector-search-and-retrieval-metrics/) answers the question "which passages resemble this question?". Two kinds of question are not about resemblance, and a plain top-k retriever handles them badly.
+
+- **Multi-hop questions** need facts from several passages, linked through an entity. "Which supplier makes the sensor used by the project Priya leads?" needs a passage about Priya's project, one about its sensor and one about the sensor's maker. The datasets built to test this, such as HotpotQA, define multi-hop as needing several supporting documents. The last passage in the chain often resembles the question; the first does not.
+- **Whole-collection questions** ("what are the main themes?") have no answering passage at all. Microsoft's GraphRAG paper calls these query-focused summarisation, not retrieval, and notes that ordinary RAG fails on them.
+
+A **knowledge graph** stores the missing structure: entities (people, projects, parts), the relations between them, and a pointer from every relation back to the passage that states it. Retrieval can then walk links instead of only comparing resemblance.
+
+## See the two failures
+
+An invented company, 13 passages, and a toy retriever. Step through each question and move both sliders.
+
+<GraphRagLab client:visible />
+
+What to notice: the multi-hop question needs three hops from Priya to the supplier, and the vector top-k only completes the chain at k = 5, by which point it has also sent passages about batteries and policy. The single-fact question shows the cost side: the graph also finds the answer but drags in neighbours. The whole-collection question shows why graph systems build **community reports**: the passages that resemble its words cover two of five themes, while the reports cover all five.
+
+## How Microsoft's GraphRAG works
+
+Microsoft's open-source project is the reference design most people mean by the name. As of 1 November 2026 its documentation describes two stages.
+
+**Indexing (offline).** A language model reads every text chunk and extracts entities, relationships and optionally claims. Community detection, using the Leiden algorithm in the paper, partitions the graph into groups of closely related entities, at several levels of detail. The model then writes a summary report for each community. Outputs are stored as tables, with embeddings in a vector store.
+
+**Querying.** The documentation lists four modes:
+
+- **Local search** embeds the question, matches entities, then gathers their neighbours, linked text passages and community reports, trimmed to fit one context window. This is the multi-hop and entity-centred mode.
+- **Global search** works over community reports in a map-reduce pattern: each batch of reports produces partial answers with importance scores, and the most important points are combined into the final answer. Lower community levels give more thorough answers but cost more time and model calls.
+- **DRIFT** is local search that also uses community information.
+- **Basic** is ordinary top-k vector search, for questions that plain RAG already answers well.
+
+<Deep title="The numbers in the original paper">
+
+Edge et al. tested two corpora of about one million tokens each (podcast transcripts and news articles), cut into 600-token chunks with 100-token overlap. Indexing the podcast set took 281 minutes with gpt-4-turbo on their setup. Answers to global questions were compared by a language-model judge on comprehensiveness, diversity, empowerment and directness, over 125 questions per comparison. Graph-based global answers beat plain vector RAG in comprehensiveness 72 to 83 per cent of the time on the podcasts and 72 to 80 per cent on the news set, and in diversity 75 to 82 and 62 to 71 per cent. Vector RAG gave the most direct answers. Summaries at the root community level needed over 97 per cent fewer context tokens than summarising the source text, for a modest drop in quality against other global methods. The authors say their evaluation covered global sensemaking questions on these two corpora and that more work is needed on other domains. Their own baseline test also found a small 8,000-token context window beat larger ones for comprehensiveness.
+
+</Deep>
+
+## What independent evidence says
+
+Han et al. (2025) compared plain RAG with several graph methods on common benchmarks under one protocol. Their summary is that the two show **complementary strengths, not clear dominance**. Plain RAG did well on single-hop, detail-oriented questions (on Natural Questions, F1 64.78 for plain RAG against 63.01 for local community GraphRAG). Graph methods did better on multi-hop and comparison questions: on the temporal questions in MultiHop-RAG, plain RAG scored 30.7 and local community GraphRAG 50.6 (accuracy, per cent). Global search often struggled on ordinary question answering, because summaries lose the fine detail such questions need. Graph quality also matters: in one analysis only about 65 per cent of answer entities appeared in the extracted graph, so a missing entity is a missing answer.
+
+Other methods use the same ingredients differently. HippoRAG combines an extracted graph with a graph-ranking algorithm (personalised PageRank) for multi-hop questions, and its authors report single-step retrieval comparable to or better than iterative retrieval while 10 to 30 times cheaper. LightRAG adds a dual-level retrieval scheme and an incremental update algorithm, aimed at updating the index without a rebuild. Those are the authors' claims on their benchmarks.
+
+## What it costs
+
+- **Indexing.** Microsoft's docs say its standard method uses a model for all reasoning, and that graph extraction is roughly 75 per cent of indexing cost. The README warns that indexing can be an expensive operation and to start small. A cheaper "Fast" method swaps model calls for traditional language processing; the docs describe its graph as noisier and its default extraction as suited mainly to English.
+- **LazyGraphRAG.** A November 2024 Microsoft Research post describes a variant that defers model use to query time, and claims indexing costs identical to vector RAG and 0.1 per cent of full GraphRAG. That is the vendor's claim, from its own tests.
+- **Maintenance.** Entities must be resolved (is "Priya" the same as "P. Nair"?), new documents must be merged in, and prompts must be tuned to your domain. The README strongly recommends tuning the prompts to your own data.
+- **Project status.** As of 1 November 2026 the repository's README says the project is largely in maintenance mode, will not accept new features, and is a demonstration, not an officially supported Microsoft offering. Treat it as a reference design to learn from and check what you are adopting.
+
+## Try the simpler things first
+
+Most of what teams want from a graph can be had more cheaply. Neo4j's field guide sorts graph patterns from basic ones (a plain retriever, or parent-child chunks) up to graph-enhanced vector search and community-summary retrievers, which is a useful ladder to climb one rung at a time.
+
+| Problem | Simpler first move |
+|---|---|
+| Right document, wrong or too-small passage | **Parent-child chunks:** search small child chunks, return their larger parent. Bedrock's hierarchical chunking works this way, replacing child with parent at retrieval. |
+| Questions mention versions, dates, teams | **Metadata filters** before ranking |
+| Misses exact names and codes | **Hybrid search** and a reranker ([retrieval lesson](../vector-search-and-retrieval-metrics/)) |
+| Question is really several questions | **Decomposition** and rewriting ([query understanding](../query-understanding-for-rag/)) |
+| Hop count is unpredictable | **Agentic retrieval:** search, read, search again ([agents](../agents-and-tool-use/)) |
+| The data is already a graph or tables | Query it directly, with a graph query or SQL |
+| Whole-collection summaries over a collection that fits the window | Long context ([long context or RAG](../../llm/long-context-or-rag/)) |
+
+Husain and Clavie's July 2025 notes quote a practitioner who argues a graph database is usually unnecessary: a table of edges can do the job, so keep infrastructure simple until you need more. That is an opinion, but it matches the table above.
+
+## Managed options, as of 1 November 2026
+
+- **AWS.** Amazon Bedrock Knowledge Bases offers GraphRAG backed by Neptune Analytics. The docs list limits: no customising the graph build, Amazon S3 as the only data source, a file cap per data source, and the Neptune graph is not deleted when you delete the knowledge base, so charges can continue.
+- **Google Cloud.** A reference architecture builds GraphRAG on Spanner Graph, with Cloud Storage, Cloud Run, Gemini for extraction and summaries, and an embeddings service. It is an architecture to assemble, not a single switch.
+- **Azure.** Microsoft's GraphRAG is open source and runs against Azure storage and search back ends. Microsoft Learn also documents CosmosAIGraph on Azure Cosmos DB, whose "OmniRAG" approach chooses between database queries, vector matching and graph traversal per question. I found no single Azure service documented as a one-click equivalent of Bedrock's.
+
+## Evaluate it like any retrieval change
+
+1. Write 30 or more **multi-hop** questions and label every passage the answer needs. Report evidence recall, not only answer quality.
+2. Add **single-hop** questions, since a graph should not make those worse.
+3. For whole-collection questions, write a rubric of the themes a good answer must mention and score coverage. Using a model as judge is common but biased, so calibrate it ([judge pitfalls](../../evals/llm-as-judge-pitfalls/)).
+4. Record **index build cost, time and re-index cost** next to quality.
+
+## When it is not worth it
+
+- Questions are mostly single-fact lookups.
+- The corpus is small enough to fit the window and be cached.
+- Documents change hourly and you cannot afford constant re-extraction.
+- You have no multi-hop or whole-collection failures in your logs yet. Let measured failures justify the build.
+
+<Callout title="What to remember">
+A knowledge graph adds links and community summaries to retrieval. It helps with multi-hop and whole-collection questions and costs extraction, resolution and upkeep. Independent comparisons find complementary strengths, not a winner. Try parent-child chunks, metadata filters, hybrid search, decomposition and agentic retrieval first, and measure on your own questions.
+</Callout>

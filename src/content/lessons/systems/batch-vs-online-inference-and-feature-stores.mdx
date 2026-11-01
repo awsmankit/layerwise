@@ -1,0 +1,155 @@
+---
+title: "Batch or online? Serving modes and feature stores"
+track: systems
+level: intermediate
+order: 6
+summary: When to score ahead of time and when to score on request, what each costs, and how feature stores keep the numbers a model saw in training the same as the numbers it sees live.
+updated: 2026-11-01
+sources:
+  - label: "Rules of Machine Learning: Best Practices for ML Engineering (Martin Zinkevich, Google)"
+    url: https://developers.google.com/machine-learning/guides/rules-of-ml
+  - label: "MLOps: Continuous delivery and automation pipelines in machine learning (Google Cloud Architecture Center)"
+    url: https://cloud.google.com/architecture/mlops-continuous-delivery-and-automation-pipelines-in-machine-learning
+  - label: "The ML Test Score: A Rubric for ML Production Readiness and Technical Debt Reduction (Breck et al., 2017)"
+    url: https://research.google/pubs/the-ml-test-score-a-rubric-for-ml-production-readiness-and-technical-debt-reduction/
+  - label: "Real-time machine learning: challenges and solutions (Chip Huyen, 2022)"
+    url: https://huyenchip.com/2022/01/02/real-time-machine-learning-challenges-and-solutions.html
+  - label: "Point-in-time joins (Feast documentation)"
+    url: https://docs.feast.dev/getting-started/concepts/point-in-time-joins
+  - label: "Online store (Feast documentation)"
+    url: https://docs.feast.dev/getting-started/components/online-store
+  - label: "Offline store (Feast documentation)"
+    url: https://docs.feast.dev/getting-started/components/offline-store
+  - label: "Create, store, and share features with Feature Store (Amazon SageMaker AI documentation)"
+    url: https://docs.aws.amazon.com/sagemaker/latest/dg/feature-store.html
+  - label: "What is managed feature store? (Azure Machine Learning, Microsoft Learn)"
+    url: https://learn.microsoft.com/en-us/azure/machine-learning/concept-what-is-managed-feature-store
+  - label: "About Feature Store (Google Cloud, Gemini Enterprise Agent Platform)"
+    url: https://docs.cloud.google.com/vertex-ai/docs/featurestore/latest/overview
+  - label: "Batch transform for inference (Amazon SageMaker AI documentation)"
+    url: https://docs.aws.amazon.com/sagemaker/latest/dg/batch-transform.html
+  - label: "What are batch endpoints? (Azure Machine Learning, Microsoft Learn)"
+    url: https://learn.microsoft.com/en-us/azure/machine-learning/concept-endpoints-batch
+  - label: "Get batch inferences from a custom trained model (Google Cloud, Gemini Enterprise Agent Platform)"
+    url: https://docs.cloud.google.com/vertex-ai/docs/predictions/get-batch-predictions
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import SkewDemo from '../../../components/viz/SkewDemo.tsx';
+import PointInTimeJoin from '../../../components/viz/PointInTimeJoin.tsx';
+
+A trained model is a function. The first design question for any service built on it is when to call that function. You can call it overnight for everyone, call it when a user asks, or call it as events stream past. The second question is where its inputs come from, and it causes more production incidents than the first. This lesson covers both, with numbers you can recompute and two demos of the ways features go wrong.
+
+## Three ways to get a prediction
+
+| Mode | When the model runs | Typical use | What you store |
+|---|---|---|---|
+| **Batch** | On a schedule, for every entity you care about | Nightly "recommended for you", weekly churn lists, demand forecasts | A table of predictions, read by key |
+| **Online** | When a request arrives | Fraud check at payment, search ranking, anything that depends on what the user just did | Nothing, or a cache; the model sits behind an endpoint |
+| **Streaming** | Continuously, as events arrive, often with features computed over a sliding window | Live delivery-time estimates, abuse detection, sensor alarms | A running state per entity |
+
+Chip Huyen's write-up of real-time ML describes the usual progression. Teams start with batch prediction, move to online prediction using features computed in batch, and later add streaming features. Her example is a shop where many visitors are new or logged out: there is no precomputed recommendation for them, so a batch system serves them nothing relevant before they leave. Batch and online are not rival camps. Many systems precompute for the many and compute on request for the rest.
+
+## Four questions that choose the mode
+
+1. **How fresh must the answer be?** If yesterday's answer is fine, batch is enough. If the answer depends on something the user did a minute ago, you need online prediction, and probably some streaming features.
+2. **Who asks, and how many of them?** Batch cost grows with the number of entities you could score. Online cost grows with the number who actually ask, plus headroom for the busiest moment.
+3. **How fast must it be?** A batch lookup is a key-value read. Online prediction needs a latency budget covering the network, feature lookups, the model and logging.
+4. **What happens when it fails?** A failed batch job leaves yesterday's predictions in place, which is usually acceptable. A failed online service fails requests unless you design a fallback.
+
+## A worked cost comparison
+
+Here is a deliberately simple model, using **example numbers**, not prices from any provider. A shop has 50 million customers. A prediction takes 20 ms of one CPU core. An example core costs $0.04 an hour. Each customer who opens the app does so 3 times a day. Online servers are sized for a peak 5 times the daily average and run at no more than 50% of capacity at that peak, with a floor of 2 cores.
+
+- **Batch** scores all 50 million once a day: 50,000,000 x 0.02 s = 1,000,000 core-seconds, or 277.8 core-hours, which is **$11.11** a day.
+- **Online** scores only the customers who show up. What matters is the share who do.
+
+| Customers active each day | Requests a day | Peak requests a second | Cores | Online cost a day | Batch cost a day |
+|---|---|---|---|---|---|
+| 1% | 1.5 million | 86.8 | 4 | $3.84 | $11.11 |
+| 3% | 4.5 million | 260.4 | 11 | $10.56 | $11.11 |
+| 10% | 15 million | 868 | 35 | $33.60 | $11.11 |
+| 50% | 75 million | 4,340 | 174 | $167.04 | $11.11 |
+
+Computed by `compare()` in this site's tested code; compute only, with no storage, network or feature-store cost. The break-even comes straight from the formula: online beats batch when active share is below target utilisation / (requests per active customer x peak factor) = 0.5 / (3 x 5), about 3.3%. Three lessons follow. Batch wastes work on people who never show up (99% of its predictions at a 1% active share), but its cost is predictable and flat. Online pays for the busiest moment, so spiky traffic costs more than the average suggests. And freshness is not in this table at all: batch answers can be up to a day old, online answers reflect the last few seconds.
+
+Latency is the other half. An example online budget of 100 ms at the 99th percentile might be 15 ms for the network and gateway, 25 ms for feature lookups (done in parallel), 20 ms for the model, 10 ms for post-processing and logging, and 30 ms of headroom. If the feature lookups take 80 ms, the design is wrong, whatever the model does.
+
+<Deep title="Managed batch inference on each cloud (as of 1 November 2026)">
+
+All three clouds run batch scoring as a job over stored data, with no endpoint kept warm.
+
+| Cloud | Service | What its documentation says |
+|---|---|---|
+| AWS | Amazon SageMaker AI batch transform | Use it to get inferences from large datasets and when you do not need a persistent endpoint. |
+| Azure | Azure Machine Learning batch endpoints | Receive pointers to data and run jobs asynchronously, in parallel on compute clusters, for long-running inference without low-latency requirements. |
+| Google Cloud | Batch inference in the Gemini Enterprise Agent Platform (the successor to Vertex AI) | You give an input source and an output location in Cloud Storage or BigQuery. Unlike online inference, batch jobs do not autoscale. |
+
+Names and limits change, so read the current page before designing around one.
+
+</Deep>
+
+## Features are where the trouble starts
+
+A model never sees raw data, it sees **features**: numbers computed from raw data, such as "orders in the last 7 days". The training set is built by a batch job, often SQL, run after the fact over history. The serving path is code that runs while a request waits. These are two implementations of one idea, and when they differ the model is fed numbers it was never trained on. This is **training-serving skew**.
+
+Google's Rules of ML names the usual cures. Rule 29: save the features used at serving time and log them, then train on that log. Rule 32: reuse code between training and serving where you can. Rule 31 warns that if you join against a table that keeps changing, the value at serving time may differ from the one at training time. Rule 37 asks you to measure skew: the model's score on an example in the training data and the same example at serving should be identical, so a gap probably means an engineering error. The ML Test Score paper turns this into a monitoring test (Monitor 3): log a sample of live traffic with an identifier and compare feature values example by example, tracking how many features show skew and how many examples are affected for each. The same paper calls it "perhaps the most important and least implemented test" among the teams it surveyed.
+
+Try it. The demo runs one made-up feature pipeline two ways and feeds both to a fixed model. Pick how the two paths differ.
+
+<SkewDemo client:visible />
+
+Notice three things. The differences are small in each row and large in total: a daily table that stops at midnight against a live counter that includes today moves the scores of a third of customers and flips some decisions. A blank-handling difference changes scores without flipping any decision, which is the kind that never shows up as a visible error and quietly spoils calibration. And the fix in the first option is not cleverness, it is having one definition.
+
+## Offline store, online store, and time
+
+A **feature store** is a service that gives training and serving one source of feature definitions and values. Google's MLOps guide says it should offer both high-throughput batch access for training and low-latency real-time access for serving, from the same definitions. Most feature stores, Feast being the open-source example, are built from two stores.
+
+- The **offline store** holds the full history of every feature as time-stamped records. It is used to build training sets and to feed batch scoring.
+- The **online store** holds only the latest value per entity, for low-latency lookups at request time. A **materialisation** job copies fresh values from offline to online. In Feast's words, "only the latest feature values are stored. No historical values are stored."
+
+The offline store has a second job that matters as much: the **point-in-time join**. Every training example is a row such as "customer 7, event at 14:02, did they default". The feature value attached must be the one known at 14:02, not today's. Feast's documentation describes scanning backward in time from each row's timestamp, up to a time-to-live (TTL) limit measured from that row, not from now. A value that was backfilled or corrected after the event can still leak, which Feast handles with an option to filter by created timestamp.
+
+Try both joins. The data is invented: card utilisation for a loan-default model, updated monthly, with labelled loan events in between.
+
+<PointInTimeJoin client:visible />
+
+With the latest-value join, a trivial rule looks perfect, because utilisation shot up after the customers defaulted and the join gave that future value to the past. With the as-of join, the rule misses two defaults. That drop is the truth. A model trained on the leaky table would do well offline and fail live, the same trap the [data pipelines lesson](../data-pipelines-and-data-quality/) describes for leakage in time. In the as-of join, move the TTL slider down: old values become "no value", and your model must have a policy for blanks (see the skew option above).
+
+## Do you need one?
+
+Not at first. If one team has one model, batch scoring and a tested shared function that builds features can be enough, and Rule 4 of the Rules of ML says to keep the first model simple and get the infrastructure right. A feature store starts to pay when several models share features, when online serving needs low-latency lookups of values computed in batch, or when skew has already bitten you. Huyen adds a limit worth knowing: current feature stores often manage materialised streaming features, but not the feature computation or its source code. A store does not remove the need to write the feature once.
+
+<Deep title="Managed feature stores on each cloud (as of 1 November 2026)">
+
+| Cloud | Service | Offline and online sides, from its documentation |
+|---|---|---|
+| AWS | Amazon SageMaker AI Feature Store | Feature groups can have an online store, an offline store or both. The online store keeps only the latest records for low-latency reads; the offline store keeps all records. |
+| Azure | Azure Machine Learning managed feature store | Feature set specifications; materialisation to an offline store (Azure Data Lake Storage Gen2) and an online store (Redis) is supported. |
+| Google Cloud | Feature Store in the Gemini Enterprise Agent Platform | BigQuery tables or views form the offline store. Its "optimized online serving" is deprecated, with the documentation giving a full sunset date of 17 February 2027 and pointing to Bigtable online serving. |
+
+The Google entry shows why to read the current page before committing: product names and capabilities move.
+
+</Deep>
+
+## Caching
+
+Between the two modes sits the cache. A prediction cache returns a stored answer for a repeated input, which is only correct if the answer does not change with time. Key it by the input and by the model version, and give it a lifetime that matches how fast the answer goes stale. A feature cache keeps hot feature values close to the service. Both add a freshness trade-off, so state the allowed staleness the same way you would for a batch table. A common hybrid is to precompute scores for customers active in the last 30 days and fall back to online scoring for everyone else.
+
+<Callout title="Models on devices">
+
+When the model runs on the user's device, "online" is in the app and the features come from local sensors, so skew shows up as differences between the training-time preprocessing and the on-device code. Google's MLOps guide lists an embedded model on an edge or mobile device as one deployment target. See [Edge or cloud](../../edge/edge-vs-cloud-inference/) for the trade-offs.
+
+</Callout>
+
+## What to remember
+
+- Choose the mode by freshness, how many entities ask, the latency budget and what failure costs. Batch cost follows entities scored; online cost follows peak demand.
+- Training-serving skew is two implementations of one feature. Measure it by comparing logged serving features with the training values, example by example.
+- One definition, shared code, or train on logged serving features: all three remove the skew at the source.
+- Build training sets with point-in-time joins: each row gets the value known at its own time, within a TTL.
+- A feature store gives you an offline store (history), an online store (latest values), materialisation and point-in-time joins. Adopt one when the pain is real.
+- Every cost number here is an example. Recompute with your own traffic.
+
+Next: [Testing and deploying ML models](../testing-and-deploying-ml-models/) covers how to get a new model into this system without breaking it. Later, [Monitoring and drift](../monitoring-and-drift/) shows how to notice when it quietly gets worse.

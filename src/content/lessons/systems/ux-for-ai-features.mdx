@@ -1,0 +1,166 @@
+---
+title: "UX for AI features: streaming, citations, uncertainty and feedback"
+track: systems
+level: intermediate
+order: 3.5
+summary: How to design the interface around output that is slow, probabilistic and sometimes wrong. Streaming and perceived delay, citations that actually verify, honest uncertainty cues, cheap correction, feedback you can use, accessible live text, and the product metrics that tell you whether it works.
+updated: 2026-11-01
+sources:
+  - label: "People + AI Guidebook: Explainability + Trust (Google PAIR, read 1 November 2026)"
+    url: https://pair.withgoogle.com/chapter/explainability-trust/
+  - label: "People + AI Guidebook: Feedback + Control (Google PAIR, read 1 November 2026)"
+    url: https://pair.withgoogle.com/chapter/feedback-controls/
+  - label: "People + AI Guidebook: Errors + Graceful Failure (Google PAIR, read 1 November 2026)"
+    url: https://pair.withgoogle.com/chapter/errors-failing/
+  - label: "Guidelines for Human-AI Interaction: the 18 guidelines (Microsoft HAX Toolkit; the page loads only with a browser user agent)"
+    url: https://www.microsoft.com/en-us/haxtoolkit/ai-guidelines/
+  - label: "Generative AI (Apple Human Interface Guidelines, read 1 November 2026)"
+    url: https://developer.apple.com/design/human-interface-guidelines/generative-ai
+  - label: "Response Times: The 3 Important Limits (Jakob Nielsen, Nielsen Norman Group)"
+    url: https://www.nngroup.com/articles/response-times-3-important-limits/
+  - label: "Evaluating Verifiability in Generative Search Engines (Liu, Zhang and Liang, 2023)"
+    url: https://arxiv.org/abs/2304.09848
+  - label: "\"I'm Not Sure, But...\": Examining the Impact of Large Language Models' Uncertainty Expression on User Reliance and Trust (Kim and others, FAccT 2024)"
+    url: https://arxiv.org/abs/2405.00623
+  - label: "What large language models know and what people think they know (Steyvers and others, Nature Machine Intelligence, 2025)"
+    url: https://www.nature.com/articles/s42256-024-00976-7
+  - label: "Does the Whole Exceed its Parts? The Effect of AI Explanations on Complementary Team Performance (Bansal and others, 2020)"
+    url: https://arxiv.org/abs/2006.14779
+  - label: "To Trust or to Think: Cognitive Forcing Functions Can Reduce Overreliance on AI (Buçinca, Malaya and Gajos, 2021)"
+    url: https://arxiv.org/abs/2102.09692
+  - label: "Productivity Assessment of Neural Code Completion (Ziegler and others, 2022)"
+    url: https://arxiv.org/abs/2205.06537
+  - label: "ARIA: aria-live attribute (MDN)"
+    url: https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-live
+  - label: "Understanding Success Criterion 4.1.3: Status Messages (W3C, WCAG 2.2)"
+    url: https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html
+  - label: "Server-sent events (MDN)"
+    url: https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events
+  - label: "Citations (Anthropic documentation, read 1 November 2026)"
+    url: https://platform.claude.com/docs/en/build-with-claude/citations
+  - label: "Grounding with Google Search (Gemini API documentation, read 1 November 2026)"
+    url: https://ai.google.dev/gemini-api/docs/google-search
+  - label: "Test your knowledge base with queries and responses: RetrieveAndGenerate (Amazon Bedrock documentation, read 1 November 2026)"
+    url: https://docs.aws.amazon.com/bedrock/latest/userguide/kb-test-retrieve-generate.html
+  - label: "File search tool for agents (Microsoft Foundry documentation, read 1 November 2026)"
+    url: https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/file-search
+---
+
+import UxExplorer from '../../../components/viz/UxExplorer.tsx';
+import Deep from '../../../components/ui/Deep.astro';
+
+A normal interface shows what a program computed. An AI feature shows what a model guessed: it takes seconds, differs between runs, and is sometimes wrong in a fluent, confident voice. The interface has four jobs that ordinary software barely has: make the wait bearable, make mistakes findable, make correction cheap, and learn from how people react.
+
+The explorer runs one feature through those jobs. Change the design and watch a scripted user's time and outcome.
+
+<UxExplorer client:visible />
+
+Try this order. Stream the text and watch the perceived wait fall. Add citations: checking gets cheaper, but nothing says where to look. Pick the calibrated flags and the wrong claim is caught. Then pick the badly calibrated flags: the user checks what they are shown, feels safe, and the error still ships. Last, add editing to cut the cost of the fix.
+
+## Waiting: streaming and perceived delay
+
+Nielsen's rule of thumb, still hosted by the Nielsen Norman Group, gives three limits: about 0.1 seconds feels instant, about 1 second keeps a person's flow of thought unbroken, and about 10 seconds is the limit for holding their attention, after which they need feedback on when the work will finish. A model call is rarely under 1 second, so the question is what the user sees during the gap.
+
+**Streaming** shows tokens as they are generated. It does not make the model faster; it moves the first useful thing on screen from "all the text exists" to "the first words exist". In the explorer's example a 160-token summary at 40 tokens a second takes 4.0 s to write, after 1.8 s to the first token, so without streaming the user watches a spinner for 5.8 s. With streaming they start reading at 1.8 s. Reading 120 words at 240 words a minute takes 30 s, slower than the model writes, so they also finish 4.0 s sooner. With short outputs and fast readers the saving shrinks.
+
+Streaming has costs:
+
+- **Partial text can be wrong or retracted.** A moderation or citation check that needs the whole answer cannot run first. The [system design lesson](../llm-app-system-design/) covers the options.
+- **Structured output cannot render until it is valid.** Stream prose; for data, fill a skeleton as fields complete or wait for the whole object.
+- **The transport must survive proxies.** Server-sent events, a one-way text stream over HTTP, are the common choice; MDN documents the browser side.
+
+For tasks over about 10 seconds, such as an agent running tools, stream *progress*: the current step, a stop button, and what is already done.
+
+## Sources the user can verify
+
+A citation promises that a sentence can be checked, and a broken promise is worse than none. Liu, Zhang and Liang audited four generative search products in 2023 and found that on average 51.5% of sentences were fully supported by their citations and 74.5% of citations supported the sentence they were attached to. Those products have changed, so read this as a failure mode, not a current score.
+
+Designs that keep citations honest:
+
+- **Build them from retrieved passages.** Give each passage an ID, have the model return IDs, and render links from your own index. A URL the model typed can be invented.
+- **Check the quote.** If the model returns a quoted span, confirm in code that it occurs in the source. Drop the citation, or flag the sentence, if not.
+- **Land the user on the passage.** A link to a 40-page PDF is not a source; the same link highlighted at the supporting sentence is.
+- **Have a "no source" state** instead of answering from general knowledge in the same confident voice.
+
+As of 1 November 2026, each cloud returns citation data you can build on, in different shapes: Anthropic's Citations feature returns the exact supporting passages; Gemini's Grounding with Google Search returns inline citation annotations; Amazon Bedrock Knowledge Bases' RetrieveAndGenerate returns citations to source data; Microsoft Foundry's file search tool returns file-citation annotations. Check fields and stability for your model and region.
+
+## Saying how sure you are
+
+PAIR's guidance is that people should neither trust a probabilistic system completely nor distrust it: the interface should help them calibrate. The evidence on how is mixed, so test before you ship.
+
+- Kim and colleagues ran a pre-registered experiment (404 people, medical questions, a fictional LLM search engine). First-person hedges such as "I'm not sure, but..." lowered confidence and agreement and raised accuracy; an exploratory analysis put this down to reduced, not eliminated, overreliance on wrong answers. Impersonal hedges had weaker effects that were not statistically significant: the exact words mattered.
+- Steyvers and colleagues found people overestimated an LLM's accuracy when it gave default explanations, and longer explanations raised confidence without raising accuracy. Matching the explanation to the model's internal confidence narrowed the gap.
+- Bansal and colleagues found explanations made people more likely to accept the AI's recommendation whether or not it was right. Buçinca and colleagues found "cognitive forcing" designs reduced overreliance, but people rated them lowest.
+
+So: a **footer disclaimer** that is identical on every answer tells the user nothing about where to look (in the explorer it changes no behaviour, which is a scripted assumption). A **per-claim cue** is only as good as its calibration; a "check this" that misses the wrong claim is worse than none. And cues work best when they point at an action ("compare with the ticket") rather than a feeling ("low confidence"). Building a calibrated score is covered in the [human-in-the-loop lesson](../human-in-the-loop-design/).
+
+## Correction should be cheap
+
+Apple's guidance says to let people dismiss unwanted content, revert or retry changes, and ask permission before irreversible tasks. Microsoft's guidelines list efficient dismissal, efficient correction, and conveying the consequences of user actions as separate rules.
+
+- **Edit in place.** If one sentence in six is wrong, the fix should cost seconds. In the explorer an edit costs 10 s; regenerating and re-reading costs 35.8 s.
+- **Undo for anything applied**: writing into a ticket field, sending a reply, changing a setting.
+- **Regenerate with a reason.** "Shorter" and "use the second source" beat a bare retry, and they are feedback.
+- **Show what will change before it changes**, for anything with side effects: the approval pattern in the [human-in-the-loop lesson](../human-in-the-loop-design/).
+
+## Feedback you can use
+
+PAIR separates explicit feedback (thumbs, ratings, text) from implicit feedback (what people do), and asks that people know what is collected and can opt out. A thumbs-down is unambiguous but rarely says why, and only some users click, so they are not a sample of everyone. Implicit signals are plentiful but ambiguous: interacting with something does not mean the user wants more of it.
+
+| Signal | What it can mean | The trap |
+|---|---|---|
+| Accepted, copied or inserted | The output was good enough to use | They may have accepted without checking |
+| Edited before use | Close but not right | A large edit may mean a poor draft or a picky user; look at what was changed |
+| Regenerated or rephrased | The first answer missed | Some people regenerate out of curiosity |
+| Citation opened | Interest, or distrust | A high click rate is not good or bad on its own |
+
+Attach every signal to the trace of the request (prompt version, retrieved passages, model, latency; see [LLMOps in production](../../evals/llmops-in-production/)) so a bad rating leads to a cause, and feed failures into your eval set ([building an eval dataset](../../evals/building-an-eval-dataset/)).
+
+## Expectations, empty states and errors
+
+PAIR and Microsoft ask that users learn early what the system can do and how well (HAX guidelines 1 and 2); Apple suggests curated starter prompts for open-ended inputs. An empty prompt box is the hardest state to use, so show two or three real examples. Then plan the unhappy states before the happy path:
+
+- **Refusal or "I could not find that".** Say why, then offer a way forward: rephrase, search, contact a person.
+- **Timeout or provider error.** Keep what the user typed, offer retry, and where practical fall back to the non-AI route, as Apple's guidance suggests.
+- **Wrong anyway.** PAIR advises defining what users would call an error, since it depends on their expectations, and giving them a path forward.
+
+<Deep title="Accessibility of streaming text">
+
+A screen reader reads one part of the page at a time. MDN describes a live region as an element with `aria-live` that you update with a brief announcement, and notes `aria-busy` for suppressing announcements while updates are in progress. WCAG 4.1.3 asks that status messages, such as progress and results, can be announced without taking focus.
+
+The common mistake is putting `aria-live="polite"` on the container that receives streamed tokens, so fragments are announced as they arrive. A safer pattern, which you should test with screen readers and people who use them:
+
+- Keep the answer container out of the live region and mark it `aria-busy="true"` while streaming.
+- Use a small separate status element: "Generating", then "Summary ready, six points".
+- Leave the finished text reachable by ordinary reading and heading navigation.
+- Do not move focus when text arrives, or auto-scroll if the user has scrolled up.
+- Make stop a real, focusable button, and do not use colour alone for flags and failed citations.
+
+The explorer follows this: the preview is not a live region, and only the result sentence is.
+
+</Deep>
+
+## Measuring whether it works
+
+Pick metrics that mean something about the user's job, and read them together.
+
+- **Acceptance rate**: the share of shown suggestions people take. In a GitHub Copilot case study, Ziegler and colleagues found it predicted developers' perceived productivity better than how long accepted code survived. That is one product and one task, and a high rate can also reflect users who do not check.
+- **Edit distance**: how much accepted text was changed, which separates "used as written" from "used as a starting point".
+- **Time to complete the task**, not time to first token. In the explorer, the design that ships an error fastest is not the best.
+- **Error escapes**: sampled audits of accepted outputs, the number acceptance rate hides.
+- **Retries, abandonment and handoffs**, as trends by segment.
+
+Compare designs with a controlled test ([LLMOps lesson](../../evals/llmops-in-production/)) and pair every satisfaction metric with a cost and an error metric.
+
+## What to remember
+
+- Streaming shortens the perceived wait and, when reading is slower than generation, the whole task. It complicates checks, structured output and accessibility.
+- A citation is a claim that can be checked. Build it from your own retrieved passages, verify quotes in code, and land the user on the passage.
+- Uncertainty cues work only when they are calibrated and attached to something the user can do. A generic disclaimer changes little, and a badly calibrated flag gives false comfort.
+- Make correction cheaper than regeneration: edit in place, undo, and ask before irreversible actions.
+- Collect feedback that you can trace to a request and feed into evals, and measure task completion and error escapes, not only acceptance.
+- Every number in the explorer is an example. The shape of the trade-offs is what carries over.
+
+## Next
+
+[Human-in-the-loop design](../human-in-the-loop-design/) covers when a person should check, approve or take over, and how to size and run the review queue.

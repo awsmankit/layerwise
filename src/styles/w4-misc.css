@@ -1,0 +1,429 @@
+/* Styles for the interactive components in the wave 4 "misc" lesson batch. Keep every class under this batch's own prefix (wm-). */
+
+/* ---------- shared ---------- */
+
+.wm-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+.viz .wm-chip {
+  min-height: 40px;
+  padding: 0.3rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font: 600 0.9rem var(--font-display);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.2s, background 0.2s;
+}
+.wm-chip:hover {
+  border-color: var(--signal);
+}
+.viz .wm-chip[aria-pressed='true'] {
+  background: var(--signal);
+  border-color: var(--signal);
+  color: var(--on-signal);
+}
+.wm-chip:focus-visible,
+.wm.viz input:focus-visible,
+.wm-log:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.wm-note {
+  margin: 0.2rem 0 0.8rem;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+.wm-cap {
+  margin: 1rem 0 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 650;
+  line-height: 1.35;
+  color: var(--ink-3);
+}
+.wm-status {
+  margin-top: 0.8rem;
+  padding: 0.55rem 0.8rem;
+  border-left: 3px solid var(--signal);
+  background: var(--signal-wash);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.wm-status.is-warn {
+  border-left-color: var(--warn);
+  background: var(--tint-pink);
+  color: var(--ink);
+}
+.wm-status b {
+  color: var(--ink);
+}
+
+/* ---------- latency waterfall ---------- */
+
+.wm-wf {
+  margin-top: 0.4rem;
+}
+.wm-wf-row,
+.wm-axis {
+  display: grid;
+  grid-template-columns: 11.5rem 1fr 4.6rem;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.3rem;
+}
+.wm-wf-label {
+  font-size: 0.85rem;
+  line-height: 1.25;
+  color: var(--ink-2);
+}
+.wm-wf-ms {
+  font-size: 0.85rem;
+  text-align: right;
+  color: var(--ink);
+}
+.wm-wf-track {
+  position: relative;
+  height: 24px;
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+  background: var(--surface);
+  overflow: hidden;
+}
+.wm-bar {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  border-radius: 4px;
+}
+.wm-bar-work {
+  background: var(--signal);
+}
+.wm-bar-wait {
+  background: repeating-linear-gradient(45deg, var(--line-soft) 0 5px, transparent 5px 10px);
+  border: 1px solid var(--line);
+}
+.wm-bar-net {
+  background: var(--cost);
+}
+.wm-tick {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-left: 2px dashed var(--ink-3);
+  opacity: 0.7;
+}
+.wm-tick-slow {
+  border-left-color: var(--cost);
+}
+.wm-tick-heard {
+  border-left: 2px solid var(--warn);
+  opacity: 1;
+}
+.wm-axis-track {
+  position: relative;
+  height: 1.3rem;
+}
+.wm-axis-tag {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 0.78rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
+}
+.wm-axis-mean {
+  transform: translateX(-100%);
+  padding-right: 4px;
+}
+.wm-axis-slow {
+  transform: none;
+  padding-left: 4px;
+  color: var(--cost);
+}
+.wm-axis-heard {
+  color: var(--warn);
+  top: 0.9rem;
+}
+.wm-axis-track {
+  height: 2.2rem;
+}
+.wm-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1rem;
+  margin: 0.3rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.82rem;
+  color: var(--ink-3);
+}
+.wm-key li {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.wm-swatch {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+}
+.wm-tick-inline {
+  display: inline-block;
+  width: 0;
+  height: 14px;
+  border-left: 2px dashed var(--ink-3);
+}
+.wm-tick-inline.wm-tick-slow {
+  border-left-color: var(--cost);
+}
+.wm-tick-inline.wm-tick-heard {
+  border-left: 2px solid var(--warn);
+}
+
+@media (max-width: 560px) {
+  .wm-wf-row,
+  .wm-axis {
+    grid-template-columns: 1fr auto;
+    gap: 0.1rem 0.5rem;
+  }
+  .wm-wf-label {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .wm-wf-ms {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .wm-wf-track,
+  .wm-axis-track {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  .wm-wf-row {
+    margin-bottom: 0.55rem;
+  }
+  .wm-axis > span:first-child,
+  .wm-axis > span:last-child {
+    display: none;
+  }
+}
+
+/* ---------- endpointing ---------- */
+
+.wm-utts {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.wm-utt {
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+}
+.wm-utt.is-cut {
+  border-color: var(--warn);
+}
+.wm-utt-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.2rem 1rem;
+  margin: 0 0 0.35rem;
+  font-size: 0.88rem;
+}
+.wm-utt-label {
+  font-weight: 650;
+  color: var(--ink);
+}
+.wm-utt-state {
+  color: var(--ink-2);
+}
+.wm-utt.is-cut .wm-utt-state {
+  color: var(--warn);
+  font-weight: 650;
+}
+.wm-strip {
+  position: relative;
+  display: flex;
+  height: 20px;
+  border-radius: 5px;
+  background: var(--paper-2);
+  overflow: hidden;
+}
+.wm-seg {
+  display: flex;
+  height: 100%;
+}
+.wm-speech {
+  height: 100%;
+  background: var(--signal);
+  border-radius: 3px;
+}
+.wm-reply {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-left: 3px solid var(--ok);
+}
+.wm-reply.is-cut {
+  border-left-color: var(--warn);
+}
+.wm-utt-text {
+  margin: 0.4rem 0 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--ink-3);
+}
+
+/* ---------- semantic cache ---------- */
+
+.wm-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+  gap: 0.5rem;
+  margin: 0.6rem 0 0;
+}
+.wm-stats > div {
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+}
+.wm-stats > div.is-bad {
+  border-color: var(--warn);
+  background: var(--tint-pink);
+}
+.wm-stats > div.is-good {
+  border-color: var(--ok);
+  background: var(--tint-mint);
+}
+.wm-stats dt {
+  font-size: 0.78rem;
+  font-weight: 650;
+  color: var(--ink-3);
+}
+.wm-stats dd {
+  margin: 0.1rem 0 0;
+  font: 650 1.25rem var(--font-display);
+  color: var(--ink);
+}
+.wm-stats dd small {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--ink-3);
+}
+.wm-sweep {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.wm-sweep li {
+  display: grid;
+  grid-template-columns: 2.6rem 1fr 8.5rem;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1px 4px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+}
+.wm-sweep li.is-now {
+  background: var(--signal-wash);
+  outline: 1px solid var(--signal);
+}
+.wm-sweep-bar {
+  display: flex;
+  height: 12px;
+}
+.wm-sweep-right {
+  background: var(--ok);
+}
+.wm-sweep-wrong {
+  background: var(--warn);
+}
+.wm-sweep-n {
+  color: var(--ink-2);
+}
+.wm-log {
+  max-height: 22rem;
+  overflow: auto;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+}
+.wm-log ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: wmq;
+}
+.wm-log li {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.4rem 0.7rem 0.4rem 2.2rem;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 0.88rem;
+  line-height: 1.4;
+  position: relative;
+  counter-increment: wmq;
+}
+.wm-log li::before {
+  content: counter(wmq);
+  position: absolute;
+  left: 0.6rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.wm-log-q {
+  color: var(--ink);
+}
+.wm-tenant {
+  display: inline-block;
+  margin-right: 0.3rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  background: var(--tint-sky);
+  font-size: 0.74rem;
+  font-weight: 650;
+  color: var(--ink);
+}
+.wm-log-o {
+  color: var(--ink-2);
+}
+.wm-log-o small {
+  font-size: 0.8rem;
+  color: var(--ink-3);
+}
+.wm-log-hit-right .wm-log-o {
+  color: var(--ok);
+}
+.wm-log-hit-wrong {
+  background: var(--tint-pink);
+}
+.wm-log-hit-wrong .wm-log-o {
+  color: var(--warn);
+  font-weight: 650;
+}
+@media (max-width: 560px) {
+  .wm-sweep li {
+    grid-template-columns: 2.6rem 1fr;
+  }
+  .wm-sweep-n {
+    grid-column: 2;
+  }
+}

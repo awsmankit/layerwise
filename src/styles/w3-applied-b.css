@@ -1,0 +1,128 @@
+/* Styles for the interactive components in the wave 3 "applied-b" lesson batch. Keep every class under this batch's own prefix (ap2-). */
+
+/* ---------- shared: colours, buttons, readouts ---------- */
+.ap2 {
+  --ap2-c0: #0072b2;
+  --ap2-c1: #d55e00;
+  --ap2-c2: #009e73;
+  --ap2-c3: #cc79a7;
+  --ap2-c4: #b07d00;
+  --ap2-c5: #3d9bd6;
+  --ap2-c6: #7b3294;
+  --ap2-c7: #8a5a2b;
+  --ap2-anom: #d55e00;
+  --ap2-flag: var(--signal);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .ap2 {
+    --ap2-c0: #4aa3df;
+    --ap2-c1: #ff8a4d;
+    --ap2-c2: #3ddbad;
+    --ap2-c3: #f09cc6;
+    --ap2-c4: #ffc04d;
+    --ap2-c5: #8fd3ff;
+    --ap2-c6: #b89cff;
+    --ap2-c7: #d6a85a;
+    --ap2-anom: #ff8a4d;
+  }
+}
+:root[data-theme='dark'] .ap2 {
+  --ap2-c0: #4aa3df;
+  --ap2-c1: #ff8a4d;
+  --ap2-c2: #3ddbad;
+  --ap2-c3: #f09cc6;
+  --ap2-c4: #ffc04d;
+  --ap2-c5: #8fd3ff;
+  --ap2-c6: #b89cff;
+  --ap2-c7: #d6a85a;
+  --ap2-anom: #ff8a4d;
+}
+.ap2 .btn { min-height: 40px; }
+.ap2 .btn[aria-pressed='true'] { background: var(--signal-wash); border-color: var(--signal); color: var(--signal-ink); }
+.ap2 .btn:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+.ap2 .field input[type='range'] { touch-action: pan-y; }
+.ap2-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-top: 0.8rem; }
+.ap2-row.ap2-tight { margin-top: 0.4rem; }
+.ap2-lab { font-size: 0.88rem; color: var(--ink-3); min-width: 3.6rem; }
+.ap2-ctrls { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 0.4rem 2rem; margin-top: 0.9rem; }
+.ap2-split { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 1rem 1.4rem; margin-top: 1rem; align-items: start; }
+@media (max-width: 680px) { .ap2-split { grid-template-columns: minmax(0, 1fr); } }
+.ap2-svg { display: block; width: 100%; height: auto; max-width: 520px; margin: 0 auto; overflow: visible; user-select: none; -webkit-user-select: none; }
+.ap2-frame { fill: var(--surface); stroke: var(--line); stroke-width: 1; }
+.ap2-readout { margin: 1rem 0 0; padding: 0.7rem 0.9rem; border-left: 3px solid var(--signal); background: var(--signal-wash); color: var(--ink); font-size: 0.95rem; line-height: 1.5; }
+.ap2-note { margin: 0.5rem 0 0; font-size: 0.86rem; color: var(--ink-3); line-height: 1.4; }
+.ap2-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.ap2-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.5rem; margin: 0; }
+.ap2-stats > div { border: 1px solid var(--line); border-radius: 8px; padding: 0.5rem 0.65rem; background: var(--surface); }
+.ap2-stats dt { font-size: 0.8rem; color: var(--ink-3); line-height: 1.25; }
+.ap2-stats dd { margin: 0.15rem 0 0; font-size: 1.3rem; font-weight: 650; font-variant-numeric: tabular-nums; }
+.ap2-stats dd small { font-size: 0.78rem; font-weight: 500; color: var(--ink-3); }
+.ap2-fig { margin: 0.9rem 0 0; }
+.ap2-mini-title { margin: 0 0 0.2rem; font-size: 0.86rem; color: var(--ink-2); font-weight: 600; }
+.ap2-mini + .ap2-mini { margin-top: 0.6rem; }
+.ap2-mini-svg { display: block; width: 100%; max-width: 340px; height: auto; overflow: visible; }
+.ap2-t { font-family: var(--font-mono); font-size: 12px; fill: var(--ink-3); }
+.ap2-axis { stroke: var(--line); stroke-width: 1; }
+.ap2-line { fill: none; stroke: var(--ink-3); stroke-width: 1.5; }
+.ap2-pt { fill: var(--surface); stroke: var(--ink-3); stroke-width: 1.5; }
+.ap2-pt-on { fill: var(--signal); stroke: var(--surface); stroke-width: 1.5; }
+.ap2-bar { fill: var(--signal); }
+.ap2-bar.ap2-cut { fill: none; stroke: var(--ink-3); stroke-dasharray: 3 3; stroke-width: 1; }
+
+/* cluster colours */
+.ap2-c0 { fill: var(--ap2-c0); } .ap2-c1 { fill: var(--ap2-c1); } .ap2-c2 { fill: var(--ap2-c2); } .ap2-c3 { fill: var(--ap2-c3); }
+.ap2-c4 { fill: var(--ap2-c4); } .ap2-c5 { fill: var(--ap2-c5); } .ap2-c6 { fill: var(--ap2-c6); } .ap2-c7 { fill: var(--ap2-c7); }
+.ap2-f0 { fill: var(--ap2-c0); } .ap2-f1 { fill: var(--ap2-c1); } .ap2-f2 { fill: var(--ap2-c2); } .ap2-f3 { fill: var(--ap2-c3); }
+.ap2-f4 { fill: var(--ap2-c4); } .ap2-f5 { fill: var(--ap2-c5); } .ap2-f6 { fill: var(--ap2-c6); } .ap2-f7 { fill: var(--ap2-c7); }
+.ap2-dot { stroke: var(--surface); stroke-width: 1; fill-opacity: 0.9; }
+.ap2-dot.ap2-plain { fill: var(--ink-3); }
+.ap2-x { fill: none; stroke: var(--ink-3); stroke-width: 1.6; stroke-linecap: round; }
+.ap2-centre { stroke: var(--ink); stroke-width: 1.8; }
+.ap2-eps { fill: var(--signal-wash); stroke: var(--signal); stroke-width: 1.5; stroke-dasharray: 4 3; }
+.ap2-eps-dot { fill: var(--signal); }
+
+/* ---------- PcaRotator ---------- */
+.ap2-pca-svg { cursor: grab; touch-action: pan-y; max-width: 440px; }
+.ap2-pca-svg:active { cursor: grabbing; }
+.ap2-axis3 { stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 3 3; }
+.ap2-bars { padding: 0.2rem 0; }
+.ap2-barrow { display: grid; grid-template-columns: 2.6rem minmax(0, 1fr) 3rem; align-items: center; gap: 0.5rem; font-size: 0.9rem; margin-top: 0.35rem; }
+.ap2-barrow b { text-align: right; font-variant-numeric: tabular-nums; }
+.ap2-track { position: relative; height: 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); overflow: visible; }
+.ap2-track i { position: absolute; inset: 0 auto 0 0; background: var(--ap2-c0); border-radius: 5px; transition: width 0.25s ease; }
+.ap2-track i.ap2-you { background: var(--ap2-c1); }
+.ap2-track i.ap2-full { background: var(--ap2-c2); }
+.ap2-track em { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--ink); }
+.ap2-gap { margin-top: 1.1rem; }
+@media (prefers-reduced-motion: reduce) { .ap2-track i { transition: none; } }
+
+/* ---------- EmbeddingGallery ---------- */
+.ap2-lab-wide { min-width: 9.5rem; }
+.ap2 .btn.ap2-sq { min-width: 44px; padding-inline: 0.7rem; font-variant-numeric: tabular-nums; }
+.ap2-legend { display: flex; flex-direction: column; gap: 0.3rem; margin: 0.9rem 0 0; font-size: 0.88rem; color: var(--ink-2); }
+.ap2-legend span { display: inline-flex; align-items: center; gap: 0.5rem; }
+.ap2-sw { display: inline-block; width: 12px; height: 12px; border-radius: 50%; flex: none; }
+@media (max-width: 480px) { .ap2-lab-wide { min-width: 0; flex-basis: 100%; } }
+.ap2-sw.ap2-f0 { background: var(--ap2-c0); }
+.ap2-sw.ap2-f1 { background: var(--ap2-c1); }
+.ap2-sw.ap2-f2 { background: var(--ap2-c2); }
+
+/* ---------- AnomalyLab ---------- */
+.ap2-anom-svg { cursor: crosshair; touch-action: pan-y; }
+.ap2-norm-pt { fill: var(--ink-3); fill-opacity: 0.75; }
+.ap2-anom-pt { fill: var(--ap2-anom); stroke: var(--surface); stroke-width: 1; }
+.ap2-ring { fill: none; stroke: var(--signal); stroke-width: 1.8; }
+.ap2-sel { fill: none; stroke: var(--ink); stroke-width: 2; stroke-dasharray: 3 3; }
+.ap2-cutline { stroke: var(--signal); stroke-width: 1.3; stroke-opacity: 0.75; }
+.ap2-good { border-color: var(--ok) !important; }
+.ap2-legend-row { flex-direction: row; flex-wrap: wrap; gap: 0.4rem 1.1rem; }
+.ap2-key-d { display: inline-block; width: 10px; height: 10px; background: var(--ap2-anom); transform: rotate(45deg); }
+.ap2-key-c { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--ink-3); }
+.ap2-key-r { display: inline-block; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--signal); }
+
+/* ---------- SeasonalAnomaly ---------- */
+.ap2-seas-field { margin-top: 0.8rem; max-width: 420px; }
+.ap2-seas-svg { max-width: 620px; }
+.ap2-gridline { stroke: var(--line-soft); stroke-width: 1; }
+.ap2-series { fill: none; stroke: var(--ink-2); stroke-width: 1.5; stroke-linejoin: round; }
+.ap2-pattern { fill: none; stroke: var(--signal); stroke-width: 1.5; stroke-dasharray: 4 3; }

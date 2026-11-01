@@ -1,0 +1,134 @@
+---
+title: "Running AI governance: frameworks, model cards and incidents"
+track: responsible
+level: intermediate
+order: 9
+summary: What a company needs to run AI responsibly week after week (inventory, risk tiers, review gates, monitoring, roles, incident handling), how the NIST AI Risk Management Framework and its generative-AI profile organise that work, what a good model card contains and how to read one, and how this connects to the EU AI Act. Includes a model-card builder and an incident-triage exercise.
+updated: 2026-11-01
+sources:
+  - label: "NIST AI Risk Management Framework: overview page (read 1 November 2026)"
+    url: https://www.nist.gov/itl/ai-risk-management-framework
+  - label: "NIST AI 100-1, Artificial Intelligence Risk Management Framework 1.0 (January 2023), section 5 and Tables 1 to 4"
+    url: https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf
+  - label: "NIST AI 600-1, Generative AI Profile (26 July 2024): the 12 risks and suggested actions GV-4.3-002 and MG-3.1-005"
+    url: https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf
+  - label: "NIST AI RMF Playbook (AI Resource Center, read 1 November 2026)"
+    url: https://airc.nist.gov/airmf-resources/playbook/
+  - label: "ISO/IEC 42001:2023 - AI management systems (ISO page: blocked scripted access on 1 November 2026, so not read)"
+    url: https://www.iso.org/standard/42001
+  - label: "Model Cards for Model Reporting (Mitchell and others, 2018)"
+    url: https://arxiv.org/abs/1810.03993
+  - label: "Datasheets for Datasets (Gebru and others, 2018, version 8 of December 2021)"
+    url: https://arxiv.org/abs/1803.09010
+  - label: "Hugging Face Hub documentation: Model Cards (read 1 November 2026)"
+    url: https://huggingface.co/docs/hub/model-cards
+  - label: "EU AI Act, Article 3: definitions, including serious incident (AI Act Service Desk, read 1 November 2026)"
+    url: https://ai-act-service-desk.ec.europa.eu/en/ai-act/article-3
+  - label: "EU AI Act, Article 17: quality management system"
+    url: https://ai-act-service-desk.ec.europa.eu/en/ai-act/article-17
+  - label: "EU AI Act, Article 26: obligations of deployers of high-risk AI systems"
+    url: https://ai-act-service-desk.ec.europa.eu/en/ai-act/article-26
+  - label: "EU AI Act, Article 55: obligations of providers of general-purpose AI models with systemic risk"
+    url: https://ai-act-service-desk.ec.europa.eu/en/ai-act/article-55
+  - label: "EU AI Act, Article 72: post-market monitoring"
+    url: https://ai-act-service-desk.ec.europa.eu/en/ai-act/article-72
+  - label: "EU AI Act, Article 73: reporting of serious incidents"
+    url: https://ai-act-service-desk.ec.europa.eu/en/ai-act/article-73
+  - label: "AI Incident Database"
+    url: https://incidentdatabase.ai/
+  - label: "OECD AI Incidents and Hazards Monitor"
+    url: https://oecd.ai/en/incidents
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import ModelCardBuilder from '../../../components/viz/ModelCardBuilder.tsx';
+import IncidentTriage from '../../../components/viz/IncidentTriage.tsx';
+
+A team ships a summariser. A year later the company has forty AI features, built by different teams on three vendors' models. Someone asks which of them touch personal data, who approved them, and what happens if one goes wrong. If the answer is "we would have to check", the company has AI but no AI governance.
+
+**Governance** is the routine that answers those questions in advance: who decides, on what evidence, and what happens when something fails. This lesson covers the minimum parts, the frameworks that organise them, the documents they rely on, and how incidents are handled. Earlier lessons covered the tests ([fairness](../fairness-for-builders/), [privacy](../privacy-engineering-for-ai/)); this one is about the system around them.
+
+<Callout title="Not legal or compliance advice" kind="note">
+Laws, standards and frameworks are described as their publishers' own pages showed them on 1 November 2026. Where a page could not be read, the lesson says so. Which rules apply to your organisation is a question for your lawyers and your regulators.
+</Callout>
+
+## The minimum a company needs
+
+Seven practices come up in almost every serious approach. Each row also names the NIST AI RMF subcategory that asks for it, so you can see where the framework says the same thing.
+
+| Practice | What it means in a company | NIST AI RMF subcategory |
+|---|---|---|
+| Inventory | A list of every AI system, including bought ones, with an owner | GOVERN 1.6: mechanisms to inventory AI systems |
+| Risk tiers | A rule that sets how much review a system gets, from its use | GOVERN 1.3: level of risk management based on risk tolerance |
+| Clear roles | A named owner per system and an executive who answers for AI risk | GOVERN 2.1 and 2.3: documented roles; leadership takes responsibility |
+| Review gates | A go or no-go decision with evidence, before launch and after big changes | MANAGE 1.1: whether the system meets its purpose and should proceed |
+| Monitoring | Plans to watch the system after launch, with ways to appeal and override | MANAGE 4.1: post-deployment monitoring plans |
+| Incident handling | A way to report, respond, tell people and learn | GOVERN 4.3 and MANAGE 4.3: incidents tracked and communicated |
+| Supplier checks | Rules for third-party models and data, and a plan for their failures | GOVERN 6.1 and 6.2: third-party risks; contingency processes |
+
+An example of risk tiers (invented for this lesson; yours should come from your own risk tolerance and the law that applies to you):
+
+| Tier | Example use | Minimum before launch |
+|---|---|---|
+| 1 | Internal summariser, no personal data | Owner sign-off, entry in the inventory |
+| 2 | Customer-facing chatbot | Evaluation report, security review, monitoring plan |
+| 3 | Decisions about people: hiring, credit, health | Impact assessment, independent review, designed human oversight, incident drill |
+
+The tiers should echo the law's own: [the EU AI Act lesson](../../evals/eu-ai-act-for-engineers/) explains why use, not technology, decides the tier.
+
+## The NIST AI Risk Management Framework
+
+NIST released AI RMF 1.0 on 26 January 2023 as a voluntary framework. Its Core has four functions: **Govern** (culture, policies, roles, which run through everything), **Map** (understand the context and intended purpose of a system), **Measure** (test and track the risks with suitable metrics) and **Manage** (prioritise, respond, monitor, recover). NIST stresses that the actions "do not constitute a checklist, nor are they necessarily an ordered set of steps", and that after governance is in place most users would start with Map and move on to Measure or Manage, iterating.
+
+As NIST's overview page read on 1 November 2026: "The AI RMF 1.0 is being revised as part of the White House AI Action Plan", and the Playbook page says it "will be updated after the AI RMF is revised". On 7 April 2026 NIST also released a concept note for a profile on trustworthy AI in critical infrastructure. Check the page before you build a programme on version 1.0's exact wording.
+
+The **Generative AI Profile**, NIST AI 600-1 (26 July 2024), adds a list of twelve risks that are new or made worse by generative AI. As a checklist for a review gate they are: CBRN information or capabilities; confabulation; dangerous, violent or hateful content; data privacy; environmental impacts; harmful bias and homogenisation; human-AI configuration (over-reliance, automation bias); information integrity; information security; intellectual property; obscene, degrading or abusive content; and value chain and component integration. For each, the profile gives suggested actions tagged to the four functions.
+
+## ISO/IEC 42001
+
+ISO/IEC 42001:2023 is an ISO standard; a search listing for ISO's page titles it "AI management systems". On 1 November 2026 ISO's page itself refused scripted requests (a 403 error), and the standard's text is sold, not free. So this lesson does not describe its requirements. If a customer or auditor asks whether you meet it, read the standard, or ask an accredited auditor, rather than relying on summaries.
+
+## Model cards and system cards
+
+A **model card** is the short document that travels with a model and tells a reader what it is for and where it fails. Mitchell and colleagues proposed nine sections: model details; intended use; factors (the groups and conditions that matter); metrics; evaluation data; training data; quantitative analyses, "disaggregated" by those factors; ethical considerations; and caveats and recommendations. Their worked examples show why: a smiling classifier had a far higher false discovery rate for older men than for other groups, a gap one overall accuracy figure would have hidden. Hugging Face's documentation builds on the same paper and adds machine-readable metadata (licence, datasets, languages) so models can be searched.
+
+Gebru and colleagues proposed the matching **datasheet for a dataset**, organised around its life: motivation, composition, collection process, preprocessing and labelling, uses, distribution and maintenance. Frontier model developers publish longer "system cards" with a release. The content varies by company, so read each one on its own terms. NIST's generative-AI profile suggests teams "review various transparency artifacts (e.g., system cards and model cards) for third-party models" (MG-3.1-005).
+
+**Reading a card, quickly.** Look for the red flags in the builder below: claims with no number ("state of the art", "diverse users"), a single accuracy figure with no definition, no out-of-scope use, no results by group, an evaluation set that may overlap training data, and "no known limitations".
+
+<ModelCardBuilder client:visible />
+
+The builder also shows what writing one involves. The hard part is not formatting; it is finding out what you know, such as how the children's figure came from only 300 clips, and being willing to publish it.
+
+## Incidents: report, respond, learn
+
+In this lesson an **AI incident** is something that goes wrong with an AI system and affects people, money, safety or trust. Most are small. Governance means they are noticed, sorted and fixed, and the serious ones reach someone with authority.
+
+NIST's profile suggests deciding the minimum information for an incident report: system ID, title, reporter, source, date reported, date of the incident, description, impacts and stakeholders affected (GV-4.3-002). That is a good template for an internal form.
+
+The law sets its own thresholds. In the EU AI Act, a **serious incident** is an incident or malfunction that leads, directly or indirectly, to the death of a person or serious harm to health; a serious and irreversible disruption of critical infrastructure; the infringement of obligations under EU law protecting fundamental rights; or serious harm to property or the environment (Article 3). For high-risk systems, Article 73, as the Service Desk showed it on 1 November 2026, requires the provider to report to the market surveillance authority immediately after establishing a causal link, and in any event within 15 days of becoming aware, with shorter limits of two days for a widespread infringement or a critical-infrastructure disruption and ten days after a death. Deployers who identify a serious incident must inform the provider first, and then the importer or distributor and the authorities (Article 26). Providers of general-purpose models with systemic risk must report serious incidents to the AI Office (Article 55). Whether any of that applies to you depends on your role and on the application dates in [the EU AI Act lesson](../../evals/eu-ai-act-for-engineers/).
+
+Two public collections help you see what incidents look like in practice: the AI Incident Database and the OECD's AI Incidents and Hazards Monitor, both of which NIST's profile points to.
+
+Now try triage. The scoring rubric is an example written for this lesson; it is not a standard.
+
+<IncidentTriage client:visible />
+
+<Deep title="What makes the middle cases hard">
+The two reports that score 4 and 5 sit next to the cut-offs, and real teams argue about those. A rubric helps with consistency and speed, but it cannot know context: a "minor" harm to a vulnerable person, or a small leak of very sensitive data. Good practice is a rubric plus a rule that anyone can escalate, with no penalty for doing so.
+</Deep>
+
+## How this connects to the EU AI Act lesson
+
+[That lesson's Monday list](../../evals/eu-ai-act-for-engineers/) says to list your AI systems, work out their tiers, keep logs, design for human oversight and keep evaluation records. Governance is how a company does those things repeatedly instead of once. The Act itself points the same way for providers of high-risk systems: Article 17, as read on 1 November 2026, lists what their quality management system must include, among them a compliance strategy, risk management, post-market monitoring, procedures for reporting serious incidents and "an accountability framework", and Article 72 requires a documented post-market monitoring plan. A governance programme is also how you get these artefacts, but having one is not the same as complying with the law.
+
+## What to remember
+
+- Governance is inventory, tiers, roles, gates, monitoring, incident handling and supplier checks, kept running.
+- NIST's four functions are Govern, Map, Measure and Manage. The framework is voluntary, is not a checklist and, as of 1 November 2026, is being revised.
+- A model card tells a reader what the model is for, what it was tested on, how it does by group and what is untested. Vague claims are red flags.
+- An incident form needs a few fixed fields, and a rule for who decides when it is serious.
+- A tier, a rubric and a template are tools for judgement, not substitutes for it.
+
+Next: [the EU AI Act for engineers](../../evals/eu-ai-act-for-engineers/), which shows the law these routines serve.

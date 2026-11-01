@@ -567,3 +567,14 @@
     font-size: 1.08rem;
   }
 }
+
+/* the current version, under the hero buttons */
+.lp-version {
+  flex-basis: 100%;
+  padding-block: 0.25rem;
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  color: var(--ink-2);
+  text-decoration-color: var(--line);
+  text-underline-offset: 4px;
+}

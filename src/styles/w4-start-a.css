@@ -1,0 +1,257 @@
+/* Styles for the interactive components in the wave 4 "start-a" lesson batch. Keep every class under this batch's own prefix. */
+
+/* ---------- ShortHistory: a tap-to-open timeline ---------- */
+
+.wsa-tl {
+  --wsa-rules: var(--signal);
+  --wsa-winter: var(--cost);
+  --wsa-learning: var(--ok);
+  --wsa-chat: var(--ink);
+}
+.wsa-era-rules {
+  --wsa-c: var(--wsa-rules);
+}
+.wsa-era-winter {
+  --wsa-c: var(--wsa-winter);
+}
+.wsa-era-learning {
+  --wsa-c: var(--wsa-learning);
+}
+.wsa-era-chat {
+  --wsa-c: var(--wsa-chat);
+}
+.viz .wsa-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  margin: 0 0 0.8rem;
+  padding: 0;
+  list-style: none;
+  font-size: 0.88rem;
+  color: var(--ink-2);
+}
+.wsa-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.wsa-swatch {
+  flex: none;
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 50%;
+  background: var(--wsa-c);
+}
+.wsa-all {
+  min-height: 44px;
+  padding: 0.4rem 0.9rem;
+  margin-bottom: 0.6rem;
+  font: inherit;
+  font-size: 0.92rem;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.viz .wsa-rail {
+  position: relative;
+  margin: 0;
+  padding: 0 0 0 1.5rem;
+  list-style: none;
+}
+.wsa-rail::before {
+  content: '';
+  position: absolute;
+  left: 0.42rem;
+  top: 0.9rem;
+  bottom: 0.9rem;
+  width: 2px;
+  background: var(--line);
+}
+.wsa-ev {
+  position: relative;
+  margin: 0 0 0.35rem;
+}
+.wsa-dot {
+  position: absolute;
+  left: -1.5rem;
+  top: 1rem;
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 3px solid var(--wsa-c);
+  transition: background 0.2s;
+}
+.wsa-ev.is-open .wsa-dot {
+  background: var(--wsa-c);
+}
+.wsa-head {
+  display: grid;
+  gap: 0.1rem;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.55rem 0.8rem;
+  text-align: left;
+  font: inherit;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--wsa-c);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+.wsa-ev.is-open .wsa-head {
+  border-color: var(--wsa-c);
+}
+.wsa-when {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--ink-2);
+}
+.wsa-title {
+  font-weight: 600;
+  font-size: 1.02rem;
+  line-height: 1.3;
+}
+.wsa-tag {
+  font-size: 0.8rem;
+  color: var(--ink-3);
+}
+.wsa-panel {
+  overflow: hidden;
+}
+.wsa-card,
+.wsa-changed {
+  margin: 0;
+  padding: 0.6rem 0.2rem 0 0.8rem;
+  max-width: 62ch;
+  line-height: 1.5;
+}
+.wsa-changed {
+  padding-bottom: 0.5rem;
+  color: var(--ink-2);
+}
+.wsa-changed b {
+  color: var(--ink);
+}
+.wsa-head:focus-visible,
+.wsa-all:focus-visible,
+.wsa-choice:focus-visible,
+.wsa-reset:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+
+/* ---------- AiOrNot: twelve everyday things to sort ---------- */
+
+.viz .wsa-things {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.9rem;
+}
+.wsa-thing {
+  padding: 0.7rem 0.8rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+}
+.wsa-name {
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+  margin: 0 0 0.6rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.wsa-n {
+  flex: none;
+  min-width: 1.5rem;
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--ink-2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.05rem 0.4rem;
+}
+.wsa-choices {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.wsa-choice {
+  flex: 1 1 8rem;
+  min-height: 44px;
+  padding: 0.45rem 0.7rem;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.94rem;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+.wsa-choice.is-picked {
+  background: var(--signal-wash);
+  border-color: var(--signal);
+  color: var(--signal-ink);
+}
+.wsa-feedback {
+  min-height: 0;
+}
+.wsa-feedback > div {
+  margin-top: 0.6rem;
+  padding: 0.55rem 0.7rem;
+  border-left: 4px solid var(--line);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  background: var(--paper);
+}
+.wsa-feedback .is-right {
+  border-left-color: var(--ok);
+}
+.wsa-feedback .is-miss {
+  border-left-color: var(--cost);
+}
+.wsa-feedback p {
+  margin: 0;
+  line-height: 1.5;
+}
+.wsa-feedback .wsa-data {
+  margin-top: 0.35rem;
+  color: var(--ink-2);
+}
+.wsa-bottom {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1rem;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1rem;
+}
+.wsa-total {
+  margin: 0;
+}
+.wsa-reset {
+  min-height: 44px;
+  padding: 0.4rem 1rem;
+  font: inherit;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.wsa-reset:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+@media (max-width: 420px) {
+  .wsa-choice {
+    flex-basis: 100%;
+  }
+}

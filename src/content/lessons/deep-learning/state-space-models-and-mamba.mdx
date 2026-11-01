@@ -1,0 +1,150 @@
+---
+title: "State-space models and Mamba: a fixed-size state instead of a cache"
+track: deep-learning
+level: advanced
+order: 7.5
+summary: "Why attention costs grow with context, what a recurrent state offers instead, how Mamba's selective gate decides what to keep, what the state costs in memory, and what the evidence says about pure and hybrid designs. Includes a gate toy and a cost counter built on the Jamba configuration."
+updated: 2026-11-01
+sources:
+  - label: "Mamba: Linear-Time Sequence Modeling with Selective State Spaces (Gu and Dao, 2023)"
+    url: https://arxiv.org/abs/2312.00752
+  - label: "Efficiently Modeling Long Sequences with Structured State Spaces, S4 (Gu, Goel and Ré, 2021)"
+    url: https://arxiv.org/abs/2111.00396
+  - label: "HiPPO: Recurrent Memory with Optimal Polynomial Projections (Gu et al., 2020)"
+    url: https://arxiv.org/abs/2008.07669
+  - label: "Transformers are SSMs: Generalized Models and Efficient Algorithms Through Structured State Space Duality, Mamba-2 (Dao and Gu, 2024)"
+    url: https://arxiv.org/abs/2405.21060
+  - label: "Mamba-3: Improved Sequence Modeling using State Space Principles (Lahoti et al., 2026)"
+    url: https://arxiv.org/abs/2603.15569
+  - label: "Jamba: A Hybrid Transformer-Mamba Language Model (Lieber et al., 2024)"
+    url: https://arxiv.org/abs/2403.19887
+  - label: "Jamba v0.1 config.json (Hugging Face), the shape used in the counters"
+    url: https://huggingface.co/ai21labs/Jamba-v0.1/blob/main/config.json
+  - label: "An Empirical Study of Mamba-based Language Models (Waleffe et al., NVIDIA, 2024)"
+    url: https://arxiv.org/abs/2406.07887
+  - label: "Repeat After Me: Transformers are Better than State Space Models at Copying (Jelassi et al., 2024)"
+    url: https://arxiv.org/abs/2402.01032
+  - label: "Zoology: Measuring and Improving Recall in Efficient Language Models (Arora et al., 2023)"
+    url: https://arxiv.org/abs/2312.04927
+  - label: "Nemotron-H: A Family of Accurate and Efficient Hybrid Mamba-Transformer Models (NVIDIA, 2025)"
+    url: https://arxiv.org/abs/2504.03624
+  - label: "Kimi Linear: An Expressive, Efficient Attention Architecture (2025)"
+    url: https://arxiv.org/abs/2510.26692
+  - label: "IBM Granite 4.0: hyper-efficient, high performance hybrid models (IBM, 2 October 2025)"
+    url: https://www.ibm.com/new/announcements/ibm-granite-4-0-hyper-efficient-high-performance-hybrid-models
+  - label: "Why Did M2 End Up as a Full Attention Model? (MiniMax, 29 October 2025)"
+    url: https://www.minimax.io/news/why-did-m2-end-up-as-a-full-attention-model
+  - label: "Transformers are RNNs: Fast Autoregressive Transformers with Linear Attention (Katharopoulos et al., 2020)"
+    url: https://arxiv.org/abs/2006.16236
+  - label: "A Visual Guide to Mamba and State Space Models (Maarten Grootendorst)"
+    url: https://newsletter.maartengrootendorst.com/p/a-visual-guide-to-mamba-and-state
+---
+
+import SelectiveGate from '../../../components/viz/SelectiveGate.tsx';
+import ScanVisualiser from '../../../components/viz/ScanVisualiser.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+The [architecture tour](../modern-llm-architecture/) ended with a short note on state-space models. This lesson opens it up. The question is simple: attention keeps every earlier token around, and that gets expensive. Could a model carry a fixed-size summary instead, and what would it lose?
+
+Facts about named models were read on 1 November 2026 from the papers and pages cited. The evidence is mixed and comes mostly from the authors of each design, so this lesson reports what was measured and does not rank models.
+
+## Two costs of attention
+
+[Attention](../../foundations/attention-intuition/) compares each token with every earlier token. That has two consequences.
+
+**Compute grows with the square of the length.** Reading a prompt of n tokens scores n(n+1)/2 pairs per head per layer, so doubling the prompt roughly quadruples that work. **Memory grows with the length.** To generate, the model keeps every earlier token's keys and values, the [KV cache](../../serving/kv-cache-and-memory/).
+
+For a 32-layer model with 8 key-value heads of size 128 and 2-byte numbers (the shape of Mistral 7B and of Jamba, used throughout this lesson), the cache is 131,072 bytes per token. At 128,000 tokens that is 16 GiB for one sequence, and 32 GiB at 256,000. Attention is expensive because it never compresses: in Gu and Dao's words it is "both effective and inefficient because it explicitly does not compress context at all".
+
+## A state instead of a cache
+
+The alternative is a **recurrence**. The model keeps a state h of fixed size and updates it once per token:
+
+```text
+h_t = a · h_(t-1) + b · x_t        (forget a little, write the new input)
+y_t = c · h_t                      (read the state out)
+```
+
+Each token costs the same, and the state is the same size at token 10 or token 1,000,000. This is the shape of an RNN, and [recurrent networks](../rnns-and-lstms/) were the standard before attention. Two things distinguish a state-space layer.
+
+First, the update is linear in h, with no squashing function between steps. A step h → a·h + b is an affine map, and composing two such maps gives another of the same form: first (a₁, b₁), then (a₂, b₂), is (a₂a₁, a₂b₁ + b₂). Because that composition is associative, the steps can be regrouped like a tournament bracket. A **parallel scan** finishes n steps in about log₂ n rounds instead of n, so training can run along the sequence in parallel, which an LSTM cannot. The unit tests for this lesson check that the scan and the loop give the same states.
+
+Second, the lineage. S4 (Gu, Goel and Ré, 2021) fixed a, b and c for all tokens and a carefully chosen matrix A derived from the HiPPO theory of remembering history. Fixed coefficients also let the whole layer be computed as one long convolution. S4 solved the Path-X task of length 16,000 that all earlier models failed, according to its abstract. The catch is the word *fixed*: every token's influence fades by the same factor whatever it says.
+
+## Selection: the Mamba idea
+
+Language needs the opposite. "The password is tulip" should be kept and "um" should not. Mamba makes the coefficients **functions of the current token**: small linear layers compute the step size Δ, and the write and read vectors B and C, from the input. Δ acts as a dial. A large Δ resets the state and focuses on the current input; a small Δ keeps the state and ignores the input.
+
+The paper gives the simplest case. With a one-number state, A = −1, B = 1 and a softplus on Δ, the layer reduces to the classic gated recurrence:
+
+```text
+g_t = σ(Linear(x_t))
+h_t = (1 − g_t) · h_(t-1) + g_t · x_t
+```
+
+The price of letting coefficients vary is the convolution shortcut, so Mamba computes the layer as a scan with a hardware-aware kernel that keeps the large expanded state in fast on-chip memory instead of writing it out. In the paper's setup each of the channels holds N = 16 state numbers.
+
+A worked example. The input is x = [4, 0, 0, 0, 0]: one fact, then four tokens of filler. A fixed gate of 0.3 gives h = 1.2, 0.84, 0.588, 0.412, 0.288. A selective gate that opens for the fact and nearly closes for filler, g = [0.9, 0.05, 0.05, 0.05, 0.05], gives h = 3.6, 3.42, 3.249, 3.087, 2.932. After the filler the fixed state holds 7% of the fact and the selective state 73%.
+
+<SelectiveGate client:visible />
+
+Three things to try. Drag "Tokens read so far" and watch the fixed gate forget by the same factor at every step. Mark "password" as well as "tulip": the earlier of the two is pushed out, because the shares always add up to at most 100%. The state is a budget. A real Mamba layer has many channels, each with its own state and gate, so it can hold far more than this toy, but the total is still fixed.
+
+## What the state costs
+
+Fixed does not mean small. For the Jamba shape, one layer's state is 2 × 4,096 channels × 16 = 131,072 numbers, which is 256 KiB. Jamba has 28 such layers and 4 attention layers, so its state is 7 MiB at 1,000 tokens and at 1,000,000. The 4 attention layers cache 16,384 bytes per token, 4 GiB at 256K tokens, the figure in the Jamba paper's table against 32 GiB for a Mixtral-shaped model.
+
+Compute works the same way. Per new token and per layer, attention does about 2 · n · 32 · 128 length-dependent multiply-adds, about 1.07 × 10⁹ at 128K tokens. A state update is about 3 × 131,072 = 393,216, whatever n is. But a layer of this width also spends on the order of 10⁸ multiply-adds per token on its dense projections, so the length-dependent term only dominates once the context reaches tens of thousands of tokens. Short prompts see little difference.
+
+<ScanVisualiser client:visible />
+
+The counter shows an honest detail: below 64 tokens the state is larger than the cache it replaces. The saving is about long contexts and many simultaneous sequences, which is where serving memory runs out. These are counts, not measurements; real speed depends on kernels and memory bandwidth.
+
+## Where pure state-space models fall short
+
+A fixed state must compress, and compression loses detail. The measured pattern is consistent across several groups, though the models and sizes differ.
+
+- **Copying and recall.** Jelassi et al. prove that a two-layer Transformer can copy strings of exponential length while models with a fixed-size state are limited by it, and find Transformers far ahead on copying and retrieval in pretrained models. Arora et al. found that 82% of the perplexity gap between attention and gated-convolution models (predecessors of Mamba) came from recalling something said earlier in the context.
+- **At 8 billion parameters.** In NVIDIA's controlled comparison on up to 3.5 trillion tokens, pure Mamba and Mamba-2 matched or beat a Transformer on many tasks but lagged on tasks needing strong copying or in-context learning, such as 5-shot MMLU and a phone-book lookup, and on long-context reasoning. Asked for a phone number, the SSMs tended to produce a number sharing several digits with the right one: a fuzzy memory.
+- **Few-shot format.** In Jamba's ablations at 1.3 billion parameters, pure Mamba scored 48.8 on the IMDB classification task against 84.1 for attention, often answering with words outside the allowed labels such as "Very Good".
+
+The Mamba paper itself reports results at up to about 3 billion parameters, says larger sizes were untested, and notes that selection can hurt on continuous signals such as audio where fixed-coefficient models do well.
+
+## Hybrids and what the evidence says
+
+The common response is to keep a few attention layers for exact lookup and use state-space layers for the rest.
+
+| Design | Mix | What its authors report |
+|---|---|---|
+| Jamba (AI21, 2024) | 1 attention layer in 8, plus mixture of experts | 52B total, 12B active; 256K context; 1:3 and 1:7 ratios performed about the same at 1.3B; hybrids beat both pure designs in their ablations |
+| Mamba-2-Hybrid (NVIDIA, 2024) | 24 Mamba-2, 4 attention, 28 MLP layers at 8B | Above the Transformer on all 12 standard tasks (+2.65 points on average); predicted up to 8× faster generation; matched or beat it on average on 23 long-context tasks but struggled on three multi-document question tasks |
+| Nemotron-H (NVIDIA, 2025) | Mostly Mamba-2 layers, a few attention | On-par or better accuracy than similar-size open Transformers; up to 3× faster inference |
+| Granite 4.0 (IBM, 2 October 2025) | 9 Mamba-2 blocks to 1 transformer block | IBM reports over 70% less RAM for long inputs and many sessions |
+| Kimi Linear (2025) | Linear attention layers with latent attention layers; 48B total, 3B active | Reports beating full attention under fair comparisons; up to 75% less KV cache; up to 6× decoding throughput at 1M tokens |
+
+Related work explains why these mixes make sense. Mamba-2 shows that SSMs and variants of attention are close relatives through structured matrices, and its core layer is 2 to 8 times faster than Mamba's. Mamba-3 (March 2026) reports, at 1.5B parameters, 0.6 points better average accuracy than the next best linear model, Gated DeltaNet, and comparable perplexity to Mamba-2 with half the state size. Linear attention is itself a recurrence, as the 2020 paper "Transformers are RNNs" showed.
+
+The counter-evidence deserves equal weight. MiniMax-M1 used a hybrid with a linear-attention variant; its successor M2 went back to full attention. The M2 pretraining lead wrote on 29 October 2025 that the hybrid looked as good as full attention on the benchmarks of a year earlier, but showed clear deficits on complex multi-hop reasoning at larger scale, and that the real bottleneck was evaluation and immature infrastructure. That is one lab's account of one decision, not a general verdict.
+
+How to read this: every row is its authors' own design, tested on different data, sizes and tasks. The consistent findings are narrow. Pure fixed-state models lose on exact recall. A little attention restores it. Memory savings follow the share of layers that cache. Whether a given hybrid is better for your workload is a measurement to make with your own [evals](../../evals/evals-101/), and serving support matters: IBM notes that most serving infrastructure was built for transformer-only models, which is why it worked with vLLM, llama.cpp and others before release.
+
+<Deep title="Where the gate comes from: discretisation">
+
+The state-space layer starts as a continuous system, h′(t) = A·h(t) + B·x(t), and is turned into steps of size Δ. With the zero-order-hold rule the paper uses, Ā = exp(ΔA) and B̄ = (ΔA)⁻¹(exp(ΔA) − I)·ΔB. In the one-number case with A = −1 and B = 1 this gives Ā = e^(−Δ) and B̄ = 1 − e^(−Δ), so the gate is g = 1 − e^(−Δ) and 1 − g = e^(−Δ) is the decay. Setting Δ = softplus(z) gives g = 1 − 1/(1 + eᶻ) = σ(z), which is Theorem 1. In the toy, g = 0.9 corresponds to Δ ≈ 2.30 and g = 0.03 to Δ ≈ 0.030. Larger Δ means a longer effective step: the state forgets its past and takes in the present. The same discretisation is why SSMs have a natural reading for continuous signals such as audio.
+
+</Deep>
+
+<Callout title="Streaming is the natural home">
+A fixed state also suits streaming input: a model can carry its state from one chunk of audio to the next without a growing cache. Small recurrent networks already do this in hearing devices, as [noise suppression](../../audio/noise-suppression-and-hearing-devices/) shows with RNNoise.
+</Callout>
+
+## What to remember
+
+- Attention compute grows with the square of the length and its cache with the length. A state-space layer does constant work per token and keeps a fixed-size state.
+- The linear recurrence can be scanned in parallel, so training does not have to be sequential.
+- Mamba's selection makes the gate depend on the token, which lets the state keep a fact and skip filler. The state is still a fixed budget.
+- A fixed state is not small: the saving appears at long contexts and many concurrent sequences.
+- Pure state-space models are weaker at exact copying and in-context learning in several studies; a few attention layers repair most of that. Evidence for hybrids is promising and mostly from their authors, and at least one lab reverted to full attention.
+
+Next: [Scaling laws](../scaling-laws/) asks how model quality grows with parameters, data and compute, which is the lens for judging any of these designs.

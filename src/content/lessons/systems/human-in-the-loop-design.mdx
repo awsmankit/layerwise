@@ -1,0 +1,174 @@
+---
+title: "Human-in-the-loop design: approvals, escalation and review queues"
+track: systems
+level: intermediate
+order: 3.6
+summary: The builder's view of putting people into an AI system. Gates, undo windows, audits and handoffs; tiering actions by risk; approval screens and approvals that cannot be replayed; building a confidence score you can route on; and sizing a review queue, with a simulator for load, backlog and the errors that still get through.
+updated: 2026-11-01
+sources:
+  - label: "A practical guide to building agents (OpenAI; sections on tool safeguards and human intervention, read from the PDF on 1 November 2026)"
+    url: https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf
+  - label: "Model Context Protocol specification, server tools (version 2026-07-28, read 1 November 2026)"
+    url: https://modelcontextprotocol.io/specification/2026-07-28/server/tools
+  - label: "Interrupts (LangGraph documentation, read 1 November 2026)"
+    url: https://docs.langchain.com/oss/python/langgraph/interrupts
+  - label: "Get user confirmation before invoking action group function (Amazon Bedrock documentation, read 1 November 2026)"
+    url: https://docs.aws.amazon.com/bedrock/latest/userguide/agents-userconfirmation.html
+  - label: "Connect agents to MCP servers: review and approve tool calls (Microsoft Foundry documentation, read 1 November 2026)"
+    url: https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/model-context-protocol
+  - label: "Action confirmations (Agent Development Kit documentation, Google; marked experimental when read on 1 November 2026)"
+    url: https://google.github.io/adk-docs/tools-custom/confirmation/
+  - label: "How we built Claude Code auto mode (Anthropic engineering, 25 March 2026)"
+    url: https://www.anthropic.com/engineering/claude-code-auto-mode
+  - label: "Language Models (Mostly) Know What They Know (Kadavath and others, 2022)"
+    url: https://arxiv.org/abs/2207.05221
+  - label: "Just Ask for Calibration: Strategies for Eliciting Calibrated Confidence Scores from Language Models Fine-Tuned with Human Feedback (Tian and others, 2023)"
+    url: https://arxiv.org/abs/2305.14975
+  - label: "Can LLMs Express Their Uncertainty? An Empirical Evaluation of Confidence Elicitation in LLMs (Xiong and others, ICLR 2024)"
+    url: https://arxiv.org/abs/2306.13063
+  - label: "On Calibration of Modern Neural Networks (Guo and others, 2017)"
+    url: https://arxiv.org/abs/1706.04599
+---
+
+import ReviewQueueSim from '../../../components/viz/ReviewQueueSim.tsx';
+import Deep from '../../../components/ui/Deep.astro';
+
+Putting a person "in the loop" is a design decision with a budget. Every item sent to a human costs minutes, adds delay, and teaches them to click faster. This lesson is the builder's view: where the person goes, what they see, how many you need, and what flows back into your evals. The psychology (automation bias, alert fatigue) and the legal view are in [human oversight, and when AI should not decide](../../responsible/human-oversight-and-when-ai-should-not-decide/). Read that for why a rubber stamp fails; read this for how to build the alternative.
+
+## Four places for a person
+
+| Pattern | The person acts | Good when | The cost |
+|---|---|---|---|
+| **Gate** | Before the action, who approves, edits or rejects | The action is hard to undo | Delay on every gated item |
+| **Undo window** | After the action, within a set time | The action is reversible and mistakes are cheap to reverse | The effect is briefly live |
+| **Audit** | Later, on a random sample | Volume is high and each error is small | Errors are found after the fact |
+| **Handoff** | Instead of the system, when it stops | The system cannot or should not continue | The person starts cold unless you pass context |
+
+Most real systems mix all four. Which goes where is decided by the action, not by the model.
+
+## Tier the actions, not the model
+
+OpenAI's practical guide to agents suggests rating each tool low, medium or high from read-only against write access, reversibility, the account permissions it needs, and financial impact, and using the rating to trigger a guardrail check or escalation. It names two triggers for human intervention: the agent exceeding a failure limit, and high-risk actions such as cancelling orders, authorising large refunds or making payments. The MCP specification says there SHOULD always be a human in the loop able to deny tool invocations, with confirmation prompts, but leaves the interaction design to the implementer.
+
+A worked tiering for a support agent. The limits are examples to argue about, not recommendations.
+
+| Action | Undoable? | Tier | Control |
+|---|---|---|---|
+| Look up an order | Read only | 0 | Automatic, logged |
+| Send a reply from an approved template | No, but low harm | 1 | Automatic, 5% random audit |
+| Send a free-text reply | No | 2 | Route by risk score: high-risk drafts wait for a person |
+| Refund up to 20 dollars | Mostly | 2 | Automatic, daily cap per customer, audit |
+| Refund over 20 dollars | Hard | 3 | Gate, bound to the exact amount |
+| Close an account, delete data | No | 4 | Gate with an authorised approver, delayed execution with an undo window |
+
+Write this table before you write the agent. Notice that tier 2 and tier 3 differ by a number your code enforces, not by anything the model says.
+
+## A gate that cannot be bypassed
+
+**The pause lives in code, not in the prompt.** A model told to "ask before refunding" can be talked out of it by a malicious ticket. Build the pause as a graph or workflow step that the model cannot skip. LangGraph's `interrupt()` is one mechanism: it saves the run's state and waits until resumed, and it needs a checkpointer and a thread ID. Its documentation also warns that side effects before an interrupt must be idempotent, because the node reruns from the top on resume.
+
+**The approval binds to the exact action.** If a person approves "refund order 48213", the agent must not be able to change the amount afterwards. Approve a specific call: tool, arguments and a hash of both. Execute only that call, once, with an idempotency key, and let approvals expire.
+
+**The screen shows the effect and the evidence, not "Are you sure?"** A good approval screen:
+
+```text
+Refund 84.00 dollars to the card ending 4417 (order 48213)
+Why: customer reports a cracked base; photo attached; within 30-day window
+Check: amount matches order total; no previous refund on this order
+Changes if approved: order marked refunded, email sent to customer
+[Approve]  [Edit amount]  [Reject with reason]
+```
+
+Untrusted content, such as the customer's own message, goes in a quoted box and the review tool has no powers of its own. Text a reviewer reads can contain instructions aimed at them, or at an assistant that summarises for them.
+
+**Failure defaults to safe.** If nobody responds in time, the item is held or declined, never approved. Log who approved, what they saw, and when.
+
+As of 1 November 2026 the main agent platforms have a confirmation primitive, and the names differ. In Amazon Bedrock Agents you enable user confirmation per action in an action group, and the agent returns a confirmation question to your application, which AWS describes as a safeguard against prompt injection. In Microsoft Foundry, an MCP tool can be set to `require_approval="always"`, and the sample has you review the requested server, tool and arguments before approving. In Google's Agent Development Kit, tool confirmation lets a tool pause for a yes or no, or for structured input; the page marked it experimental when read. Treat these as building blocks, and check that approval is bound to the arguments you were shown.
+
+Gate sparingly. Anthropic reported in March 2026 that users of Claude Code accepted 93% of its permission prompts, and described the resulting approval fatigue as a reason to build sandboxing and classifier-based approval. A gate that is nearly always approved protects little.
+
+## Handoffs: pass the case, not a transcript
+
+When the agent stops, a person takes over. Give them a **handoff packet**: what the user asked in one line, what the agent did and found (with links to traces and sources), what it was unsure about, the action it would have taken, and why it stopped. If the user has to repeat themselves, the handoff failed.
+
+## A score you can route on
+
+Routing by confidence only works if errors really cluster at low confidence. Check it on labelled data, in bands. The numbers below are an **example** table, from 1,000 reviewed drafts:
+
+| Score band (stated risk) | Items | Wrong | Observed error rate | Average stated risk |
+|---|---|---|---|---|
+| 0 to 0.05 | 520 | 21 | 4.0% | 2.5% |
+| 0.05 to 0.15 | 270 | 38 | 14.1% | 10% |
+| 0.15 to 0.35 | 150 | 54 | 36.0% | 25% |
+| 0.35 and above | 60 | 37 | 61.7% | 55% |
+
+The ranking is useful: error rates rise with the band. The stated numbers are too low: they add up to 110.5 expected errors, and there were 150. So you can route on the ranking, but you cannot trust the dashboard's predicted error rate, and a threshold written as "auto-approve anything under 10% risk" means something different from what it says.
+
+Now compare two routing rules, assuming reviewers catch 90% of wrong drafts (an example):
+
+- Review the top two bands: 210 items (21%) hold 91 of the 150 errors (60.7%). Auto-approved errors are 21 + 38 = 59, plus 9.1 missed in review, so 68.1 of 1,000 reach customers (6.8%, against 15% with no review).
+- Review the top three: 480 items (48%) hold 129 errors (86%). 21 + 12.9 = 33.9 reach customers (3.4%).
+
+Doubling the workload buys a halving of escapes. Which side of that trade is right depends on what an error costs.
+
+Where does the score come from? A trained classifier's probabilities can be recalibrated: Guo and colleagues found modern neural networks often poorly calibrated and simple temperature scaling often effective. For language models, asking for the model's own confidence gives mixed evidence. Kadavath and colleagues found larger models well calibrated on multiple-choice and true/false questions in the right format. Tian and colleagues found verbalised confidences from RLHF-tuned models better calibrated than their token probabilities on the tasks they tried. Xiong and colleagues found verbalised confidence tends to be overconfident, with no method consistently best. So build the score from signals you can test (agreement across samples, a retrieval-support check, a judge grade, rules like "amount over the cap"), measure the table above on your own data, and redo it when the model, prompt or traffic changes.
+
+## Queues: size the desk
+
+A review queue is a capacity problem. The load on your reviewers is
+
+`load = items sent per shift × minutes per review ÷ (reviewers × minutes on shift)`
+
+Above 100% the backlog grows for as long as the overload lasts. The simulator runs one 8-hour shift of 480 refund drafts with a risk score on each. Move the threshold, change the number of reviewers, and flip the score to overconfident.
+
+<ReviewQueueSim client:visible />
+
+With the default settings (2 reviewers, 3 minutes per review, 90% catch rate; all illustrative), the simulator gives:
+
+| Threshold | Sent to a person | Reviewer load | Left waiting at shift end | Wrong drafts reaching customers |
+|---|---|---|---|---|
+| 0 (review everything) | 480 (100%) | 150% | 160 | 5.7 |
+| 0.1 | 173 (36%) | 54% | 1 | 11.3 |
+| 0.2 | 115 (24%) | 36% | 0 | 18.9 |
+| none | 0 | 0% | 0 | 57.6 |
+
+Three things to take from it. Reviewing everything is not the safest setting, because two reviewers can do only two thirds of the work and 160 customers wait hours. A 36% review rate removes about 80% of the wrong drafts, at 54% load instead of 150%. And ordering matters only when overloaded: risk-first and oldest-first give the same result at 54% load, and very different waits at 150%. Sort by risk and age so nothing waits forever, and alert on queue age, not only length.
+
+**Audit the part you do not review.** If you only ever look at flagged items, you cannot know how many errors are in the auto-approved pile. Send a random slice of it to the queue. To estimate a 2% error rate to within one percentage point at 95% confidence takes about 753 items (the normal approximation, 1.96² × 0.02 × 0.98 ÷ 0.01²), so the audit budget is part of the design.
+
+## Measure the loop
+
+- **Automation rate and escaped-error rate**, always as a pair. Raising one alone is a trade, not a win.
+- **Override rate and time per item.** A reject rate near zero deserves a look, as does time per item falling to seconds.
+- **Reviewer agreement.** Have two people label a sample and compute kappa ([building an eval dataset](../../evals/building-an-eval-dataset/)). Treat disagreement as a rubric bug before a reviewer bug.
+- **Wait and backlog** against your service levels.
+
+## Feed review back into your evals
+
+Every override is a labelled case. Store the reviewer's decision with a reason code and the trace of the request, then promote disagreements into the [eval set](../../evals/building-an-eval-dataset/). One caution: reviewed items are not a random sample, because you chose them by risk. Use the random audit slice for any estimate of overall error, and the flagged items for finding failure modes. Recompute the score table monthly, and after any model or prompt change ([LLMOps in production](../../evals/llmops-in-production/)).
+
+## When it goes wrong
+
+<Deep title="Abuse and failure modes of review systems">
+
+- **Injection aimed at reviewers.** Content the agent processed can address the person reading it. Render it as quoted data, and give the review tool no ability to act on what it shows ([LLM application security](../../evals/llm-security/)).
+- **Approval flooding.** An attacker, or a bug, creates hundreds of approval requests to wear reviewers down. Rate-limit requests per source and group them by cause.
+- **Duplicate execution.** A reviewer double-clicks, a retry fires, a resume reruns the node. Idempotency keys on the action, not the click.
+- **Stale approvals.** The facts changed between approval and execution. Expire approvals and re-check preconditions at execution.
+- **Nobody home.** Reviewers are off shift. Hold and escalate, and say so to the user.
+- **Too much data.** Show reviewers only what they need to decide. A review tool is a new place for personal data to leak ([privacy engineering](../../responsible/privacy-engineering-for-ai/)).
+
+</Deep>
+
+## What to remember
+
+- Choose the pattern (gate, undo window, audit, handoff) for each action by its reversibility and harm. Enforce the tiers in code.
+- Bind each approval to the exact action, make it expire, default to safe, and show the effect and the evidence.
+- A confidence score is useful for ranking before it is trustworthy as a number. Measure bands on labelled data and re-measure.
+- Size the queue by load. Above 100% it never clears. Order by risk and age, and audit a random slice of what you do not review.
+- Treat every override as a labelled case for your evals, and measure automation rate and escaped errors together.
+- The simulator's numbers are illustrative. Your error rates, review times and reviewers are the ones that count.
+
+## Next
+
+[System design for LLM apps](../llm-app-system-design/) puts these parts, with streaming, caching and guardrails, into one reference architecture.

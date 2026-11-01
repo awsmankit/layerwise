@@ -1,0 +1,67 @@
+/* Styles for the interactive components in the wave 3 "mlops-b" lesson batch. Keep every class under this batch's own prefix. */
+
+/* ---------- shared bits (prefix mo2-) ---------- */
+.mo2-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.8rem 0; }
+.viz .mo2-chips .btn { min-height: 44px; }
+.viz .mo2-chips .btn[aria-pressed='true'],
+.viz .mo2-actions .btn[aria-pressed='true'] { background: var(--signal-wash); border-color: var(--signal); color: var(--signal-ink); font-weight: 650; }
+.viz .mo2-chips .btn:focus-visible,
+.viz .mo2-actions .btn:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+.mo2-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.8rem 0; }
+.viz .mo2-actions .btn { min-height: 44px; }
+.mo2-two { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.6rem; margin: 0.8rem 0; }
+.mo2-card { padding: 0.6rem 0.8rem; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); font-size: 0.92rem; }
+.mo2-card p { margin: 0; }
+.mo2-card-h { font-weight: 650; font-size: 0.8rem !important; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 0.2rem !important; }
+.mo2-result { margin-top: 1rem; padding: 0.8rem 1rem; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.mo2-big { display: flex; justify-content: space-between; align-items: baseline; gap: 0.3rem 1rem; flex-wrap: wrap; margin: 0; color: var(--ink-2); font-size: 0.95rem; }
+.mo2-big b { font-size: 1.15rem; font-variant-numeric: tabular-nums; color: var(--ink); }
+.mo2-big b.mo2-bad { color: var(--warn); }
+.mo2-big b.mo2-good { color: var(--ok); }
+.mo2-small { margin: 0.4rem 0 0; font-size: 0.88rem; color: var(--ink-2); line-height: 1.4; }
+.mo2-note { color: var(--ink); font-weight: 600; }
+.mo2-wrap { margin-top: 1rem; overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+.mo2-wrap:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+.mo2-table { border-collapse: collapse; width: 100%; font-size: 0.86rem; font-variant-numeric: tabular-nums; }
+.mo2-table th, .mo2-table td { padding: 0.35rem 0.6rem; border-bottom: 1px solid var(--line-soft); text-align: left; white-space: nowrap; vertical-align: top; }
+.mo2-table thead th { background: var(--surface); font-weight: 650; }
+.mo2-table tbody th { font-weight: 600; }
+.mo2-table .mo2-diff { background: color-mix(in srgb, var(--warn) 14%, transparent); font-weight: 650; }
+.mo2-table tr.mo2-flip td:last-child { color: var(--warn); }
+.mo2-tag { font-size: 0.78rem; color: var(--warn); font-weight: 650; }
+.mo2-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.mo2-set { border: 0; padding: 0; margin: 0.8rem 0; min-width: 0; display: grid; gap: 0.4rem; }
+.mo2-set legend { padding: 0; margin-bottom: 0.35rem; font-weight: 650; font-size: 0.95rem; }
+.mo2-opt { display: flex; align-items: flex-start; gap: 0.55rem; min-height: 44px; padding: 0.4rem 0.6rem; border: 1px solid var(--line-soft); border-radius: 8px; font-size: 0.92rem; line-height: 1.3; cursor: pointer; }
+.mo2-opt input { width: 20px; height: 20px; margin: 0.1rem 0 0; flex: none; accent-color: var(--signal); }
+.mo2-opt small { display: block; color: var(--ink-3); font-size: 0.8rem; margin-top: 0.15rem; }
+.mo2-opt:has(input:checked) { border-color: var(--signal); background: var(--signal-wash); }
+.mo2-opt:has(input:focus-visible) { outline: 2px solid var(--signal); outline-offset: 2px; }
+
+/* ---------- svg charts ---------- */
+.mo2-svg { display: block; width: 100%; height: auto; max-width: 560px; margin: 0.9rem auto 0; overflow: visible; }
+.mo2-grid { stroke: var(--line-soft); stroke-width: 1; }
+.mo2-thr { stroke: var(--warn); stroke-width: 1.2; stroke-dasharray: 4 3; }
+.mo2-tick { font-family: var(--font-mono); font-size: 13px; fill: var(--ink-3); }
+.mo2-line { fill: none; stroke: var(--ink-2); stroke-width: 1.8; stroke-linejoin: round; }
+.mo2-dot { fill: var(--surface); stroke: var(--ink); stroke-width: 1.5; }
+.mo2-ev-bad { stroke: var(--warn); fill: var(--warn); stroke-width: 1.5; }
+.mo2-ev-ok { stroke: var(--ok); fill: var(--ok); stroke-width: 1.5; }
+.mo2-ev-box { stroke: none; }
+.mo2-pick { stroke: var(--signal); stroke-width: 1.5; stroke-dasharray: 3 3; fill: none; }
+.mo2-ring { fill: none; stroke: var(--signal); stroke-width: 2; }
+.mo2-pick.mo2-future, .mo2-ring.mo2-future { stroke: var(--warn); }
+.mo2-zline { fill: none; stroke: var(--signal); stroke-width: 2; stroke-linejoin: round; }
+.mo2-zline.mo2-faint { opacity: 0.45; stroke-dasharray: 2 2; }
+.mo2-halt { fill: none; stroke: var(--warn); stroke-width: 2.5; }
+.mo2-chartnote { text-align: center; }
+.mo2-legend { display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; justify-content: center; margin: 0.6rem 0 0; font-size: 0.85rem; color: var(--ink-2); }
+.mo2-legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+.mo2-sw { display: inline-block; width: 12px; height: 12px; border: 1.5px solid var(--ink); border-radius: 50%; background: var(--surface); }
+.mo2-sw-bad { border-color: var(--warn); background: var(--warn); border-radius: 2px; }
+.mo2-sw-ok { border-color: var(--ok); background: var(--ok); border-radius: 2px; }
+.mo2-sw-ring { border-color: var(--signal); border-width: 2px; }
+.mo2-sw-future { border-color: var(--warn); border-width: 2px; }
+@media (max-width: 420px) {
+  .mo2-big b { font-size: 1.05rem; }
+}

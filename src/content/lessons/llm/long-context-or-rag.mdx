@@ -1,0 +1,144 @@
+---
+title: Long context or RAG?
+track: llm
+level: intermediate
+order: 3.5
+summary: When the whole collection fits in the window, should you still retrieve? What long inputs really deliver, the cost arithmetic with and without caching, and a calculator for your own numbers.
+updated: 2026-11-01
+sources:
+  - label: "Lost in the Middle: How Language Models Use Long Contexts (Liu et al., 2023)"
+    url: https://arxiv.org/abs/2307.03172
+  - label: "RULER: What's the Real Context Size of Your Long-Context Language Models? (Hsieh et al., 2024)"
+    url: https://arxiv.org/abs/2404.06654
+  - label: "NoLiMa: Long-Context Evaluation Beyond Literal Matching (Modarressi et al., 2025)"
+    url: https://arxiv.org/abs/2502.05167
+  - label: "Context Rot: How Increasing Input Tokens Impacts LLM Performance (Hong, Troynikov and Huber, Chroma, July 2025)"
+    url: https://www.trychroma.com/research/context-rot
+  - label: "Retrieval Augmented Generation or Long-Context LLMs? A Comprehensive Study and Hybrid Approach (Li et al., 2024)"
+    url: https://arxiv.org/abs/2407.16833
+  - label: "Long Context vs. RAG for LLMs: An Evaluation and Revisits (Li et al., 2024)"
+    url: https://arxiv.org/abs/2501.01880
+  - label: "In Defense of RAG in the Era of Long-Context Language Models (Yu et al., 2024)"
+    url: https://arxiv.org/abs/2409.01666
+  - label: "Introducing Contextual Retrieval (Anthropic, 19 September 2024)"
+    url: https://www.anthropic.com/news/contextual-retrieval
+  - label: "Anthropic: prompt caching (read 1 November 2026)"
+    url: https://platform.claude.com/docs/en/build-with-claude/prompt-caching
+  - label: "Anthropic: context windows (read 1 November 2026)"
+    url: https://platform.claude.com/docs/en/build-with-claude/context-windows
+  - label: "OpenAI: prompt caching (read 1 November 2026)"
+    url: https://developers.openai.com/api/docs/guides/prompt-caching
+  - label: "Google Gemini API: context caching (read 1 November 2026)"
+    url: https://ai.google.dev/gemini-api/docs/caching
+  - label: "Google Gemini API: pricing (page last updated 30 October 2026)"
+    url: https://ai.google.dev/gemini-api/docs/pricing
+  - label: "Amazon Bedrock: prompt caching (read 1 November 2026)"
+    url: https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-caching.html
+  - label: "Azure OpenAI in Microsoft Foundry: prompt caching (read 1 November 2026)"
+    url: https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/prompt-caching
+  - label: "Stop Saying RAG Is Dead (Hamel Husain and Ben Clavie, July 2025)"
+    url: https://hamel.dev/notes/llm/rag/not_dead.html
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import LongContextCalc from '../../../components/viz/LongContextCalc.tsx';
+
+Windows of hundreds of thousands, even a million, tokens make a tempting shortcut: skip chunking, embedding and search, and paste the whole knowledge base into every prompt. [The context window lesson](../context-window-and-caching/) covered what fills a window and how caching works. This lesson asks the decision question. For a given collection, question rate and kind of question, is stuffing the window, caching it, or retrieving the better design?
+
+The answer depends on three things you can measure: how big the collection is, how often it is queried, and what the questions need. Anthropic's own rule of thumb, in its September 2024 contextual retrieval post, was that a knowledge base under about 200,000 tokens (roughly 500 pages) can simply go in the prompt. That figure is a dated vendor suggestion, not a law, and the arithmetic below shows why it moves.
+
+## What a long window really gives you
+
+A window is a capacity limit. It says how much the model will accept, not how well it uses all of it. Four lines of evidence, each from a specific set of models at a specific time:
+
+- **Position matters.** Liu et al. (2023) found accuracy was often highest when the relevant passage was at the start or end of the input and fell significantly when it was in the middle, even for models built for long inputs.
+- **Easy tests overstate it.** The needle-in-a-haystack test hides one odd sentence in long filler and asks for it. RULER (2024) added harder variants, such as several needles, tracing a chain of facts and aggregating. Models that scored almost perfectly on the plain test dropped sharply as length grew, and only about half of the 17 tested, all claiming 32,000 tokens or more, held up at 32,000.
+- **Literal matches flatter the result.** NoLiMa (2025) rewrote the questions so they share almost no words with the answer sentence. At 32,000 tokens, 11 of 13 models fell below half of their own short-input score; GPT-4o went from 99.3% to 69.7%.
+- **Distractors hurt.** Chroma's July 2025 report tested 18 models and found performance fell as input grew even on deliberately simple tasks, and that a single distractor passage could hurt. The authors note their tasks were synthetic and that real tasks may behave differently.
+
+Newer models may do better than the ones in these papers. The durable lesson is the method: **test at your length, on your questions**, with the answer in the middle and with distractors present.
+
+Several teams have compared the two designs head to head. Li et al. (2024) found that, with enough resources, long context beat RAG on average, but RAG was far cheaper, and proposed routing each query to one or the other (called Self-Route). A second study (Li et al., from a different group) found long context ahead on many question-answering sets, especially Wikipedia-based ones, while RAG did better on dialogue-style and general questions. Yu et al. (2024) reported that with order-preserving retrieval, answer quality first rose and then fell as more chunks were retrieved, so a middling amount of retrieved text could beat the whole document. The honest summary is that there is no universal winner. It depends on the task, the retriever and the model.
+
+## The arithmetic
+
+Per question, input is billed on every token you send. With a collection of `C` tokens, a question of `q` tokens and a retrieved slice of `k` tokens, at input price `p`:
+
+- **Long context:** (C + q) x p
+- **RAG:** (k + q) x p, plus fixed infrastructure (index, embeddings, reranker)
+- **Cached long context:** (C x m + q) x p, where `m` blends cache reads and writes
+
+Output tokens cost the same in all three, so they only add a constant. The multiplier `m` is where caching enters. If a share `h` of questions find the cache warm and pay the read multiplier `r`, and the rest pay the write multiplier `w`, then m = h x r + (1 - h) x w.
+
+<Deep title="When does caching pay?">
+
+Caching beats no caching when m is below 1, that is when h > (w - 1) / (w - r). With the example multipliers used here (read 0.1x, write 1.25x) that is a hit rate above about 22 per cent. Below it you pay the write premium more often than you collect the read discount. A cache also expires: with a 5-minute lifetime that is refreshed on each use, questions must arrive roughly every 5 minutes, about 288 a day spread evenly, to keep it warm without help.
+
+</Deep>
+
+Here are two worked examples. Every number is an **example**, not a quote: $3 per million input tokens, $15 per million output tokens, 200-token questions, 400-token answers, a retrieval slice of 4,000 tokens, $5 a day of retrieval infrastructure, and a 90 per cent cache hit rate. The sums are unit-tested in the site's code.
+
+| Collection and traffic | Long context | Cached long context | RAG |
+|---|---|---|---|
+| 150,000 tokens, 2,000 questions a day | $913.20 a day | $206.70 a day | $42.20 a day |
+| 40,000 tokens, 300 questions a day | $37.98 a day | $9.72 a day | $10.58 a day |
+
+Three things follow. First, caching changes the picture a lot: the 150,000-token collection falls from $913 to $207 a day. Second, retrieval is still about five times cheaper there, because it sends 4,200 tokens per question instead of the 32,250 token-equivalents the cached design pays for. Third, for the small 40,000-token handbook the cached design is within a dollar a day of RAG, and cheaper once RAG's fixed cost is counted. At that size, simplicity may decide it.
+
+## Prices and caching rules, as of 1 November 2026
+
+The multipliers above are examples. These are the terms each vendor's own documentation stated when read on 1 November 2026. They change often, so treat this as a map of what to look up, not a price list.
+
+| Platform | How caching works | Reads | Writes |
+|---|---|---|---|
+| Anthropic API | Marked prefixes, 5-minute lifetime refreshed on each use, 1-hour option | 0.1x the input price on most models; 0.05x or 0.025x on some newer ones | 1.25x (5 minutes) or 2x (1 hour) |
+| OpenAI API | On by default; on GPT-5.6 and later a 30-minute default lifetime or 12 hours | 0.1x on GPT-5.6 and later (0.05x on two models) | 1.25x (30 minutes) or 2.5x (12 hours) on GPT-5.6 and later; no write fee on earlier models |
+| Google Gemini API | Implicit caching on by default for Gemini 2.5 and newer; explicit caches on some models | Pricing page lists cached input at one tenth of the standard rate for the models checked | Explicit caches add an hourly storage charge |
+| Amazon Bedrock | Implicit (best effort) and explicit checkpoints; many models use a 5-minute lifetime | Billed at the model's cache-read rate | Depending on the model, higher than the input rate; not available with batch inference |
+| Azure OpenAI in Foundry | Automatic for supported models; 1,024-token minimum | Discounted on Standard deployments | No extra charge before GPT-5.6; may incur a charge on GPT-5.6 and later |
+
+Two more points from those pages. Some providers charge more for very long prompts: Google's pricing page lists higher rates above 200,000 tokens for its Pro models, and Anthropic's context-window page says long requests are billed at standard pricing except on Claude Haiku 5.5, where prompts over 100,000 tokens cost more. And a cache hit lowers the price of tokens but they still occupy the window.
+
+## Try your own numbers
+
+Pick a collection, set the traffic and the hit rate, and open the assumptions to put in your vendor's real prices. The second panel is deliberately not arithmetic: it lists what cost cannot tell you.
+
+<LongContextCalc client:visible />
+
+## Latency
+
+Cost is not the only meter. Before the first output token appears, the model must process the entire prompt, so a long prompt delays the first token even when cost is acceptable. Caching can shorten that wait, because the cached prefix is not reprocessed. Anthropic's 2024 post claimed more than twice the speed and up to 90% lower cost for cached prompts, a vendor claim that depends on prompt length and hit rate. OpenAI's page adds that a minimum cache lifetime does not guarantee every request reuses stored computation or runs faster. Measure time to first token at your real prompt length rather than trusting a number.
+
+## When each design wins
+
+| Situation | Leans towards |
+|---|---|
+| Small, stable collection, steady traffic, questions mix several documents | Cached long context |
+| Large collection, or one that exceeds the window | RAG |
+| Documents change constantly | RAG (re-index only what changed) |
+| Different users may see different documents | RAG with permission filters |
+| One-off analysis of a single large document | Long context, uncached |
+| Questions about the whole collection ("what are the themes?") | Long context if it fits, otherwise map-reduce summaries or a graph index (see [GraphRAG](../../rag-agents/graphrag-and-knowledge-graphs/)) |
+| Most questions need one fact | RAG |
+
+## Hybrids
+
+The choice is rarely all or nothing.
+
+- **Retrieve, then read long.** Retrieve whole sections or documents instead of tiny chunks, and give the model a generous but bounded window. Keep retrieved passages in their original order, as Yu et al. did.
+- **Cache the stable core, retrieve the long tail.** Put the style guide, glossary and top reference pages in a cached prefix, and retrieve the rest per question.
+- **Route.** Try the cheap path first and escalate when it cannot answer, as Self-Route does by asking the model whether the retrieved passages suffice.
+- **Let an agent search.** Instead of a fixed top-k, give the model search and read tools and let it decide how much to look at. That costs extra calls, and [agents have their own failure modes](../../rag-agents/agents-and-tool-use/).
+
+<Callout title="Whichever you choose, evaluate it">
+Build 30 to 50 real questions with known answers, then run each design on them and compare accuracy, cost per answered question and time to first token. Husain and Clavie make the related point that bigger windows do not change the economics of sending everything with every query. Retrieval quality is still worth improving ([chunking and retrieval quality](../../rag-agents/chunking-and-retrieval-quality/), [retrieval metrics](../../rag-agents/vector-search-and-retrieval-metrics/)).
+</Callout>
+
+## What to remember
+
+- A window is a limit on what you may send, not a promise about what the model will use. Accuracy on long inputs often falls with length, distractors and harder questions, so test at your length.
+- Cost per question is about tokens sent. Retrieval sends thousands; stuffing sends the whole collection, discounted by caching only on the share of questions that find the cache warm.
+- Caching pays only above a hit rate set by the write premium and read discount, and a cache needs steady traffic to stay warm.
+- Prefer long context for small, stable, shared collections and whole-collection questions. Prefer retrieval for large, changing or permissioned ones.
+- Prices and lifetimes change. Check each vendor's page before you decide, and re-check when a model changes.

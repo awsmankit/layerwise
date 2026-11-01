@@ -1,0 +1,467 @@
+/* Styles for the interactive components in the wave 4 "build-c" lesson batch. Keep every class under this batch's own prefix. */
+
+/* ---------- Text-to-SQL workbench (wlc-bench) ---------- */
+
+.wlc-bench .wlc-note {
+  margin: 0 0 0.9rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px dashed var(--line);
+  border-radius: var(--r-sm);
+  font-size: 0.88rem;
+  color: var(--ink-2);
+}
+.wlc-bench .wlc-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 0 0 0.7rem;
+}
+.viz .wlc-btn {
+  min-height: 44px;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  font-size: 0.92rem;
+  text-align: left;
+  cursor: pointer;
+}
+.viz .wlc-btn:hover {
+  border-color: var(--signal);
+}
+.viz .wlc-btn.is-on {
+  border: 2px solid var(--signal);
+  background: var(--signal-wash);
+  font-weight: 650;
+}
+.viz .wlc-btn:focus-visible,
+.viz .wlc-sql:focus-visible,
+.viz .wlc-scroll:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.wlc-bench .wlc-q {
+  margin: 0.2rem 0 0.3rem;
+  font-size: 1.02rem;
+}
+.wlc-bench .wlc-schema {
+  margin: 0 0 0.9rem;
+  font-size: 0.82rem;
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  overflow-wrap: anywhere;
+}
+.wlc-bench .wlc-label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.85rem;
+  color: var(--ink-2);
+}
+.wlc-bench .wlc-sql {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--ink);
+  font: 400 16px/1.45 var(--font-mono);
+  resize: vertical;
+}
+.wlc-bench .wlc-gold {
+  margin: 0.6rem 0 0.9rem;
+  display: grid;
+  gap: 0.2rem;
+}
+.wlc-bench .wlc-gold span {
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.wlc-bench .wlc-gold code {
+  font: 400 0.84rem/1.45 var(--font-mono);
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  background: transparent;
+  padding: 0;
+}
+.wlc-bench .wlc-grids {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.8rem;
+  margin-bottom: 0.9rem;
+}
+.wlc-bench .wlc-grid-title {
+  margin: 0 0 0.3rem;
+  font-weight: 650;
+  font-size: 0.9rem;
+}
+.wlc-bench .wlc-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+}
+.wlc-bench table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  margin: 0;
+}
+.wlc-bench th,
+.wlc-bench td {
+  padding: 0.35rem 0.6rem;
+  text-align: left;
+  border-bottom: 1px solid var(--line-soft);
+  white-space: nowrap;
+}
+.wlc-bench th {
+  font-size: 0.78rem;
+  color: var(--ink-3);
+  font-weight: 650;
+}
+.wlc-bench td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.wlc-bench .wlc-more {
+  margin: 0;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.8rem;
+  color: var(--ink-3);
+}
+.wlc-bench .wlc-err {
+  margin: 0;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--warn);
+  border-radius: var(--r-sm);
+  color: var(--warn);
+  font-size: 0.9rem;
+}
+.wlc-bench .wlc-verdicts,
+.wlc-bench .wlc-board {
+  list-style: none;
+  margin: 0 0 0.7rem;
+  padding: 0;
+  display: grid;
+  gap: 0.3rem;
+}
+.wlc-bench .wlc-verdicts li,
+.wlc-bench .wlc-board li {
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-sm);
+  font-size: 0.92rem;
+}
+.wlc-bench .wlc-mark {
+  flex: none;
+  min-width: 3.4rem;
+  padding: 0.1rem 0.5rem;
+  border: 1.5px solid currentColor;
+  border-radius: 999px;
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+.wlc-bench .wlc-mark.is-yes {
+  color: var(--ok);
+}
+.wlc-bench .wlc-mark.is-no {
+  color: var(--warn);
+}
+.wlc-bench .wlc-say,
+.wlc-bench .wlc-hint {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+}
+.wlc-bench .wlc-h {
+  margin: 1.1rem 0 0.5rem;
+  font-family: var(--font-display);
+  font-size: 0.98rem;
+}
+@media (max-width: 480px) {
+  .wlc-bench .wlc-verdicts li,
+  .wlc-bench .wlc-board li {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+}
+
+/* ---------- Browser agent lab (wlc-agent) ---------- */
+
+.wlc-agent .wlc-note {
+  margin: 0 0 0.9rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px dashed var(--line);
+  border-radius: var(--r-sm);
+  font-size: 0.88rem;
+  color: var(--ink-2);
+}
+.wlc-agent .wlc-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 0 0 0.7rem;
+}
+.wlc-agent .wlc-attack {
+  margin: 0 0 0.8rem;
+  font-size: 0.95rem;
+}
+.viz .wlc-agent .wlc-btn[disabled],
+.viz .wlc-btn[disabled] {
+  opacity: 0.5;
+  cursor: default;
+}
+.wlc-agent .wlc-defs {
+  margin: 0 0 0.9rem;
+  padding: 0;
+  border: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 0.45rem;
+}
+.wlc-agent .wlc-defs legend {
+  padding: 0;
+  margin-bottom: 0.4rem;
+  font-weight: 650;
+  font-size: 0.9rem;
+}
+.wlc-agent .wlc-def {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  min-height: 44px;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  cursor: pointer;
+}
+.wlc-agent .wlc-def.is-on {
+  border: 2px solid var(--signal);
+  padding: calc(0.5rem - 1px) calc(0.7rem - 1px);
+  background: var(--signal-wash);
+}
+.wlc-agent .wlc-def input {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin: 0.1rem 0 0;
+  accent-color: var(--signal);
+}
+.wlc-agent .wlc-def input:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.wlc-agent .wlc-def span {
+  display: grid;
+  gap: 0.1rem;
+}
+.wlc-agent .wlc-def small {
+  font-size: 0.82rem;
+  color: var(--ink-3);
+  line-height: 1.35;
+}
+.wlc-agent .wlc-next {
+  margin: 0 0 0.8rem;
+  font-size: 0.95rem;
+}
+.wlc-agent .wlc-src {
+  display: inline-block;
+  margin-left: 0.3rem;
+  padding: 0 0.5rem;
+  border: 1.5px solid currentColor;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.wlc-agent .wlc-src.is-task {
+  color: var(--ok);
+}
+.wlc-agent .wlc-src.is-injected {
+  color: var(--warn);
+}
+.wlc-agent .wlc-screens {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.9rem;
+  margin-bottom: 0.9rem;
+}
+.wlc-agent .wlc-browser {
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  overflow: hidden;
+  min-height: 190px;
+}
+.wlc-agent .wlc-url {
+  padding: 0.4rem 0.7rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--paper-2);
+  font: 400 0.82rem var(--font-mono);
+  overflow-wrap: anywhere;
+}
+.wlc-agent .wlc-url b {
+  font-weight: 700;
+}
+.wlc-agent .wlc-page {
+  padding: 0.7rem 0.8rem;
+  display: grid;
+  gap: 0.45rem;
+}
+.wlc-agent .wlc-l {
+  margin: 0;
+  font-size: 0.92rem;
+}
+.wlc-agent .wlc-l.is-h {
+  font-weight: 700;
+  font-size: 1.02rem;
+}
+.wlc-agent .wlc-l.is-btn span,
+.wlc-agent .wlc-l.is-field span {
+  display: inline-block;
+  padding: 0.25rem 0.7rem;
+  border: 1.5px solid var(--ink-2);
+  border-radius: 6px;
+  font-size: 0.86rem;
+}
+.wlc-agent .wlc-l.is-field span {
+  min-width: 70%;
+  color: var(--ink-3);
+  border-style: dashed;
+}
+.wlc-agent .wlc-l.is-faint {
+  font-size: 0.74rem;
+  line-height: 1.3;
+  color: var(--ink-3);
+  opacity: 0.6;
+  font-style: italic;
+}
+.wlc-agent .wlc-l.is-secret {
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  background: var(--tint-pink);
+}
+.wlc-agent .wlc-model pre {
+  margin: 0.2rem 0 0.4rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-sm);
+  background: var(--tint-sky);
+  color: var(--ink);
+  font: 400 0.8rem/1.45 var(--font-mono);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.wlc-agent .wlc-small {
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--ink-3);
+}
+.wlc-agent .wlc-grid-title {
+  margin: 0;
+  font-weight: 650;
+  font-size: 0.9rem;
+}
+.wlc-agent .wlc-trace {
+  list-style: none;
+  margin: 0 0 0.9rem;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+.wlc-agent .wlc-t {
+  margin: 0;
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--line-soft);
+  border-left-width: 4px;
+  border-radius: var(--r-sm);
+  font-size: 0.92rem;
+}
+.wlc-agent .wlc-t.is-done,
+.wlc-agent .wlc-t.is-approved {
+  border-left-color: var(--ok);
+}
+.wlc-agent .wlc-t.is-blocked-allowlist,
+.wlc-agent .wlc-t.is-ignored-filter,
+.wlc-agent .wlc-t.is-denied,
+.wlc-agent .wlc-t.is-nothing-to-read,
+.wlc-agent .wlc-t.is-handoff {
+  border-left-color: var(--signal);
+  background: var(--signal-wash);
+}
+.wlc-agent .wlc-t-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.4rem;
+  align-items: center;
+}
+.wlc-agent .wlc-status {
+  margin-left: auto;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.wlc-agent .wlc-t-why {
+  font-size: 0.86rem;
+  color: var(--ink-2);
+}
+.wlc-agent .wlc-outcome {
+  margin: 0 0 0.9rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+}
+.wlc-agent .wlc-outcome p {
+  margin: 0.15rem 0;
+}
+.wlc-agent .wlc-bad {
+  color: var(--warn);
+  font-weight: 700;
+}
+.wlc-agent .wlc-good {
+  color: var(--ok);
+  font-weight: 700;
+}
+.wlc-agent .wlc-h {
+  margin: 1.1rem 0 0.5rem;
+  font-family: var(--font-display);
+  font-size: 0.98rem;
+}
+.wlc-agent .wlc-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+}
+.wlc-agent .wlc-scroll:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.wlc-agent table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  margin: 0;
+}
+.wlc-agent th,
+.wlc-agent td {
+  padding: 0.4rem 0.7rem;
+  text-align: left;
+  border-bottom: 1px solid var(--line-soft);
+}
+.wlc-agent thead th {
+  font-size: 0.8rem;
+  color: var(--ink-3);
+}

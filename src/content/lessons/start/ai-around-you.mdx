@@ -1,0 +1,107 @@
+---
+title: AI around you
+track: start
+level: basic
+order: 1.5
+summary: Spot the AI in a normal day, and tell it apart from plain automation and from robots. Sort twelve everyday things and see what data each one uses.
+updated: 2026-11-01
+sources:
+  - label: "Apple: About Face ID advanced technology"
+    url: https://support.apple.com/en-us/102381
+  - label: "Google DeepMind: Traffic prediction with advanced graph neural networks"
+    url: https://deepmind.google/discover/blog/traffic-prediction-with-advanced-graph-neural-networks/
+  - label: "Google: Ridding Gmail of 100 million more spam messages with TensorFlow"
+    url: https://cloud.google.com/blog/products/g-suite/ridding-gmail-of-100-million-more-spam-messages-with-tensorflow
+  - label: "Apple Machine Learning Research: Hey Siri, an on-device DNN-powered voice trigger"
+    url: https://machinelearning.apple.com/research/hey-siri
+  - label: "YouTube Help: Use automatic captioning"
+    url: https://support.google.com/youtube/answer/6373554
+  - label: "Google Photos Help: Set up and manage your face groups"
+    url: https://support.google.com/photos/answer/6128838
+  - label: "Amazon Science: The history of Amazon's recommendation algorithm"
+    url: https://www.amazon.science/the-history-of-amazons-recommendation-algorithm
+  - label: "Google Nest Help: How Nest thermostats learn"
+    url: https://support.google.com/googlenest/answer/9247510
+  - label: "Wikipedia: Thermostat"
+    url: https://en.wikipedia.org/wiki/Thermostat
+  - label: "Wikipedia: Industrial robot"
+    url: https://en.wikipedia.org/wiki/Industrial_robot
+  - label: "Wikipedia: Automatic door"
+    url: https://en.wikipedia.org/wiki/Automatic_door
+  - label: "Wikipedia: Artificial intelligence in video games"
+    url: https://en.wikipedia.org/wiki/Artificial_intelligence_in_video_games
+  - label: "AI4K12 Big Idea 1: Perception"
+    url: https://ai4k12.org/big-idea-1-overview/
+---
+
+import AiOrNot from '../../../components/viz/AiOrNot.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+Think about a normal day. You wake up, check a phone, travel somewhere, watch something, and maybe chat with a bot. Some of that is AI. Some of it only looks clever.
+
+This lesson helps you tell the difference.
+
+## Three words that get mixed up
+
+- **Automation** means a machine follows fixed steps that a person wrote. A kettle that switches off when the water boils is automation.
+- **AI** means a model that learned from examples. Nobody wrote its rules by hand. Training found them.
+- A **robot** is a machine that moves in the real world.
+
+A robot can follow fixed steps. It can use AI. It can do both. So a robot is a kind of body, and AI is a way of deciding. They are different things.
+
+## Sensing is not thinking
+
+Think of a shop door that opens as you walk up. A **sensor** notices movement and gives the door a signal. The rule is: if something moves, open.
+
+The door has no idea that it is you. It did not learn anything. It is clever to watch, but it is plain automation.
+
+AI often turns up when a sensor's signal needs recognising. Is that a face? What words are in that sound? Researchers call this perception, which means finding meaning in what the sensors pick up.
+
+## Your turn: AI or not?
+
+Here are twelve everyday things. For each one, pick "usually AI" or "usually plain rules". Then read what is going on inside.
+
+<AiOrNot client:visible />
+
+Read the explanation even when you are right. It also tells you what data goes into each thing.
+
+## Where the data comes from
+
+Every AI thing in the list needed examples to learn from. Many of them also use your data when you use them. Face unlock uses a picture of your face. A maps app uses how phones are moving on the roads. Suggestions use what people click.
+
+Some of this stays on your phone, and some goes to computers owned by a company. Settings let you choose some of it. You can find out more in [AI and your private life](../../responsible/ai-and-your-private-life/).
+
+## Why it matters which one it is
+
+Plain rules do the same thing every time, so you can predict them. AI can be wrong in surprising ways. Automatic subtitles can mishear a name, and YouTube itself warns that accents and noise cause mistakes.
+
+So when a mistake would matter, check the result. That means checking a route before a long trip, and reading subtitles for a school project.
+
+## Why "usually"
+
+The same kind of thing can be built in different ways. Some thermostats are one simple rule. Others learn your habits. A washing machine can be a fixed list of steps. Its maker may also add AI to the name.
+
+When you are not sure, ask two questions. What did it learn from? And what data does it use?
+
+<Callout title="Three things to remember">
+
+1. Automation follows rules a person wrote. AI follows rules that training found.
+2. A robot is a body. It may or may not have AI inside.
+3. Sensing is not thinking. A sensor gives numbers, and it takes more to find meaning.
+
+</Callout>
+
+<Deep title="For grown-ups: what is on the phone, and what is in the cloud">
+
+Where the work happens varies. Apple says Face ID matching runs on the device, in the Secure Enclave and its neural engine. Gmail's spam filtering runs on Google's servers. In a February 2019 post, Google said its machine-learning models, together with other protections, block more than 99.9 per cent of spam, phishing and malware.
+
+Recommendation systems have a long history. Amazon's best-known early method, from a 2003 paper, looks at how related products are to each other, instead of matching you to similar customers. Whether a given feed today uses that, or something newer, depends on the company.
+
+Washing machines have used "fuzzy logic" controllers, which are rules with soft edges rather than learning. The word "AI" on a product page is a marketing choice as much as a technical one. Ask what the model is, what it was trained on, and whether it keeps learning from you.
+
+</Deep>
+
+## Next
+
+Next: [How a computer learns from examples](../how-computers-learn/), where you teach a computer to sort fruit by turning a dial.

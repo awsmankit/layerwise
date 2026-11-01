@@ -1,0 +1,454 @@
+/* Styles for the interactive components in the wave 3 "edge-a" lesson batch. Keep every class under this batch's own prefix. */
+
+/* ---------- shared bits ---------- */
+
+.ea-label {
+  margin: 1.1rem 0 0.4rem;
+  font-weight: 650;
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+.ea-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+.ea-chip {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 44px;
+  padding: 0.4rem 0.8rem;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.95rem;
+  line-height: 1.25;
+}
+.ea-chip:hover {
+  border-color: var(--ink);
+}
+.ea-chip[aria-pressed='true'] {
+  background: var(--signal-wash);
+  border-color: var(--signal);
+  box-shadow: inset 0 0 0 1px var(--signal);
+}
+.ea-chip-name {
+  font-weight: 600;
+}
+.ea-chip-sub {
+  font-size: 0.8rem;
+  color: var(--ink-3);
+}
+.ea-sep {
+  width: 1px;
+  background: var(--line-soft);
+  margin: 0 0.2rem;
+}
+.ea-cap {
+  margin-top: 0.6rem;
+  font-size: 0.88rem;
+  color: var(--ink-3);
+  line-height: 1.4;
+}
+.ea-ok {
+  color: var(--ok);
+}
+.ea-bad {
+  color: var(--warn);
+}
+
+/* ---------- DeviceBudget ---------- */
+
+.ea-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin: 1rem 0 1.2rem;
+}
+.ea-stats > div {
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--line-soft);
+  background: var(--paper-2);
+  min-width: 0;
+}
+.ea-stats b {
+  display: block;
+  font-size: 1.15rem;
+  color: var(--ink);
+}
+.ea-stats span {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--ink-3);
+  line-height: 1.3;
+}
+.ea-sliders {
+  margin: 1.1rem 0 1rem;
+}
+.ea-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+.ea-panel {
+  min-width: 0;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+.ea-panel h4 {
+  margin: 0 0 0.6rem;
+  font-size: 0.95rem;
+  font-weight: 650;
+}
+.ea-fit + .ea-fit {
+  margin-top: 0.9rem;
+}
+.ea-fit-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  font-size: 0.9rem;
+}
+.ea-track {
+  height: 12px;
+  margin: 0.3rem 0;
+  background: var(--paper-2);
+  border: 1px solid var(--line-soft);
+}
+.ea-fill {
+  display: block;
+  height: 100%;
+}
+.ea-fill.ok {
+  background: var(--ok);
+}
+.ea-fill.bad {
+  background: var(--warn);
+}
+.ea-fit-num {
+  font-size: 0.88rem;
+  color: var(--ink-2);
+  line-height: 1.4;
+}
+.ea-fit-note {
+  margin-top: 0.25rem;
+  font-size: 0.82rem;
+  color: var(--ink-3);
+  line-height: 1.4;
+}
+.ea-big {
+  font-size: 1.6rem;
+  font-weight: 650;
+  line-height: 1.15;
+}
+.ea-power {
+  display: block;
+  margin-top: 0.7rem;
+  font-size: 0.85rem;
+  color: var(--ink-2);
+}
+.ea-power input {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 0.25rem;
+  padding: 0.4rem 0.6rem;
+  font-size: 16px;
+  font-family: inherit;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+}
+.ea-chart {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 120px;
+  padding: 0 0 0 0;
+  border-bottom: 1px solid var(--ink-3);
+}
+.ea-bar {
+  flex: 1 1 0;
+  min-width: 3px;
+  background: var(--ink-3);
+  opacity: 0.55;
+}
+.ea-bar.peak {
+  background: var(--signal);
+  opacity: 1;
+}
+.ea-bar.over {
+  background: var(--warn);
+  opacity: 1;
+}
+.ea-capline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 2px dashed var(--ink);
+  z-index: 1;
+  pointer-events: none;
+}
+.ea-capline i {
+  position: absolute;
+  right: 0;
+  bottom: 2px;
+  padding: 0 0.3rem;
+  font-style: normal;
+  font-size: 0.8rem;
+  color: var(--ink);
+  background: var(--surface);
+}
+.ea-verdict {
+  margin-top: 1rem;
+  padding: 0.7rem 0.9rem;
+  border-left: 2px solid var(--signal);
+  background: var(--signal-wash);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+.ea-source {
+  margin-top: 0.9rem;
+  font-size: 0.88rem;
+  color: var(--ink-2);
+}
+.ea-source summary {
+  cursor: pointer;
+  min-height: 32px;
+  color: var(--ink);
+}
+.ea-source p {
+  margin-top: 0.4rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 760px) {
+  .ea-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 520px) {
+  .ea-stats {
+    grid-template-columns: 1fr;
+  }
+  .ea-chip {
+    flex: 1 1 calc(50% - 0.25rem);
+    min-width: 0;
+  }
+  .ea-sep {
+    display: none;
+  }
+}
+
+/* ---------- OpPartition ---------- */
+
+.ea-ops {
+  list-style: none;
+  margin: 1rem 0 0.6rem;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 0.5rem;
+  align-items: flex-end;
+}
+.prose .ea-ops {
+  padding-left: 0;
+}
+.ea-ops li {
+  position: relative;
+  margin: 0;
+  padding-top: 1.1rem;
+}
+.prose .ea-ops li + li {
+  margin-top: 0;
+}
+.ea-ops li.ea-cut {
+  margin-left: 0.5rem;
+}
+.ea-hand {
+  position: absolute;
+  top: 0;
+  left: -0.45rem;
+  font-size: 0.75rem;
+  line-height: 1;
+  font-weight: 650;
+  color: var(--warn);
+  white-space: nowrap;
+}
+.ea-op-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+  line-height: 1.2;
+}
+.ea-op-btn.accel {
+  background: var(--tint-mint);
+  border-color: var(--ok);
+}
+.ea-op-btn.cpu {
+  background: var(--tint-sun);
+  border-color: var(--cost);
+}
+.ea-op-btn.is-focus {
+  box-shadow: 0 0 0 2px var(--signal);
+}
+.ea-op-name {
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+.ea-op-where {
+  font-size: 0.78rem;
+  color: var(--ink-2);
+}
+.ea-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+.ea-hint {
+  margin-top: 0.8rem;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.ea-bars {
+  margin-top: 0.6rem;
+}
+.ea-bar-row {
+  display: grid;
+  grid-template-columns: 7.5rem minmax(0, 1fr) 5.5rem;
+  gap: 0.8rem;
+  align-items: center;
+  margin-top: 0.6rem;
+  font-size: 0.92rem;
+}
+.ea-stack {
+  display: flex;
+  height: 22px;
+  background: var(--paper-2);
+  border: 1px solid var(--line-soft);
+}
+.ea-seg {
+  display: block;
+  height: 100%;
+  flex: none;
+}
+.ea-seg.accel,
+.ea-key.accel {
+  background: var(--ok);
+}
+.ea-seg.cpu,
+.ea-key.cpu {
+  background: var(--cost);
+}
+.ea-seg.hand,
+.ea-key.hand {
+  background: var(--warn);
+}
+.ea-bar-val {
+  text-align: right;
+  font-weight: 600;
+}
+.ea-legend {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1.2rem;
+  margin: 0.7rem 0 0;
+  padding: 0;
+  font-size: 0.85rem;
+  color: var(--ink-2);
+}
+.prose .ea-legend {
+  padding-left: 0;
+}
+.ea-legend li {
+  margin: 0;
+}
+.prose .ea-legend li + li {
+  margin-top: 0;
+}
+.ea-key {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 0.3rem;
+  vertical-align: -1px;
+}
+
+/* ---------- RuntimeChooser ---------- */
+
+.ea-rc-head {
+  margin-top: 1.2rem;
+  font-weight: 650;
+}
+.ea-rc-list {
+  list-style: none;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.8rem;
+}
+.prose .ea-rc-list {
+  padding-left: 0;
+}
+.ea-rc-card {
+  margin: 0;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-size: 0.92rem;
+  line-height: 1.5;
+  min-width: 0;
+}
+.prose .ea-rc-list li + li {
+  margin-top: 0;
+}
+.ea-rc-card h4 {
+  margin: 0 0 0.4rem;
+  font-size: 1rem;
+  line-height: 1.3;
+}
+.ea-rc-art {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--ink-3);
+}
+.ea-rc-card p + p {
+  margin-top: 0.4rem;
+}
+
+@media (max-width: 560px) {
+  .ea-bar-row {
+    grid-template-columns: 1fr;
+    gap: 0.2rem;
+  }
+  .ea-bar-val {
+    text-align: left;
+  }
+  .ea-rc-list {
+    grid-template-columns: 1fr;
+  }
+}

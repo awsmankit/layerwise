@@ -1,0 +1,149 @@
+---
+title: Shipping to a fleet of devices
+track: edge
+level: advanced
+order: 4.5
+summary: "How to update a model on thousands or millions of devices safely: signed artefacts, staged rollouts and halt rules, monitoring that avoids collecting raw data, how to tell a model is failing in the field, and what federated learning does and does not protect."
+updated: 2026-11-01
+sources:
+  - label: "The Update Framework (TUF) specification"
+    url: https://theupdateframework.io/specification/latest/
+  - label: "A/B (seamless) system updates (Android Open Source Project)"
+    url: https://source.android.com/docs/core/ota/ab
+  - label: "Release app updates with staged rollouts (Google Play Console Help)"
+    url: https://support.google.com/googleplay/android-developer/answer/6346149
+  - label: "Play for On-device AI, beta (Android Developers)"
+    url: https://developer.android.com/google/play/on-device-ai
+  - label: "How job configurations work: rollout and abort configurations (AWS IoT Core)"
+    url: https://docs.aws.amazon.com/iot/latest/developerguide/jobs-configurations-details.html
+  - label: "What is Device Update for IoT Hub? (Microsoft Learn)"
+    url: https://learn.microsoft.com/en-us/azure/iot-hub-device-update/understand-device-update
+  - label: "Deploy and manage custom models, with the Firebase ML deprecation notice (Firebase)"
+    url: https://firebase.google.com/docs/ml/manage-hosted-models
+  - label: "Apple Intelligence Foundation Language Models: Tech Report 2025 (adapters delivered with Background Assets)"
+    url: https://arxiv.org/abs/2507.13575
+  - label: "Communication-Efficient Learning of Deep Networks from Decentralized Data (McMahan et al., 2017)"
+    url: https://arxiv.org/abs/1602.05629
+  - label: "Federated Learning for Mobile Keyboard Prediction (Hard et al., 2018)"
+    url: https://arxiv.org/abs/1811.03604
+  - label: "Towards Federated Learning at Scale: System Design (Bonawitz et al., 2019)"
+    url: https://arxiv.org/abs/1902.01046
+  - label: "Practical Secure Aggregation for Privacy Preserving Machine Learning (Bonawitz et al., 2017)"
+    url: https://eprint.iacr.org/2017/281
+  - label: "Deep Leakage from Gradients (Zhu et al., 2019)"
+    url: https://arxiv.org/abs/1906.08935
+  - label: "RAPPOR: Randomized Aggregatable Privacy-Preserving Ordinal Response (Erlingsson et al., 2014)"
+    url: https://arxiv.org/abs/1407.6981
+  - label: "Differential Privacy overview (Apple)"
+    url: https://www.apple.com/privacy/docs/Differential_Privacy_Overview.pdf
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import FleetRolloutSim from '../../../components/viz/FleetRolloutSim.tsx';
+
+A model on a server can be changed in a minute and watched all the time. A model on a hundred thousand devices is a hundred thousand copies that update when each device is ready, that you mostly cannot see, and that run on hardware you did not choose. This lesson is about changing those copies safely, learning from them without hoarding data, and noticing when they go wrong. It follows [small language models on device](../small-language-models-on-device/) and assumes the compression and export workflow from [quantization for the edge](../quantization-for-edge/).
+
+## What a fleet changes
+
+- **Several versions are live at once.** Offline devices lag, so old and new run together for weeks.
+- **Failures depend on the device.** A model can be fine on recent chips and run out of memory on older ones, and a fleet-wide average can hide it.
+- **You see little.** Anything you did not build in to report back, you will never know.
+- **Undoing is slower than shipping.** Every device must receive and apply a rollback.
+
+## Ship the model as a signed, versioned artefact
+
+Do not bury the model inside a firmware or app release if you can avoid it, or every model change becomes a full release. Treat it as its own artefact with a manifest. A useful manifest records:
+
+- a version and a content hash of the weights;
+- the minimum runtime and operator set it needs (see [from PyTorch to the chip](../from-pytorch-to-the-chip/));
+- the device classes it is built for, with the memory it needs;
+- the input and output format, thresholds and any post-processing settings that must change with it;
+- the version it replaces and the version to fall back to.
+
+**Signing.** The Update Framework (TUF) is an open specification for secure update systems. It lists the properties an update client should defend: an attacker cannot make a client install software older than what it already knew about (rollback attacks), cannot serve stale metadata without the client noticing (freeze attacks), and cannot compromise clients by stealing a single key, or fewer than a threshold of keys. One consequence is easy to miss. The same anti-rollback rule that stops an attacker also stops you: a client that refuses a lower version will not take your "undo". So a legitimate rollback is published as a new, higher version that points at the old weights.
+
+**Delivery.** A few real routes, as of 1 November 2026:
+
+| Cloud | Route | What the vendor's page says |
+|---|---|---|
+| Google | Play for On-device AI (beta) | Models ship as AI packs in an app bundle, with install-time, fast-follow or on-demand delivery, variants targeted by device model, system properties or RAM, and patching so only differences are downloaded |
+| AWS | AWS IoT Jobs | Jobs have rollout configurations (constant or exponential rate) and abort configurations that cancel a rollout when failures match your criteria |
+| Microsoft | Device Update for IoT Hub | A service for over-the-air updates with device groups and deployments; Microsoft's page also announces a preview of software updates in Azure Device Registry |
+
+Not every route lasts. Firebase's page on hosting custom models says Firebase ML is deprecated and will be shut down on 15 June 2027, and tells developers to migrate to Cloud Storage. Apple's report says adapters for its on-device model are downloaded with the Background Assets framework, one adapter matched to the base-model version.
+
+Delta updates are not automatic savings: Play's patching sends only differences, but a new version that re-trains or re-quantises every weight may change nearly every byte. Measure before you rely on it.
+
+## Roll out in stages
+
+A staged rollout sends the update to a small share first, watches, and widens only if the signals are healthy. Google Play's staged rollouts work this way for apps: you pick a percentage of users, chosen at random, and the percentage does not rise by itself. Halting and resuming affects the same set of users. For system software, Android's A/B updates keep the old system on a second partition, so a device that fails to boot after an update returns to the old one. A model needs its own version of that: keep the previous model on the device until the new one has proved itself, and switch back on failure.
+
+The statistics set how big a stage must be. If a bug harms a share *p* of a device class that is a share *s* of the fleet, then to expect *k* failures you must expose about *k* / (*s* x *p*) devices. With a class of 5% of the fleet failing 2% of the time, that is 10,000 devices for ten failures, and the healthy background of failures also wobbles at random, so ten failures is only just visible. If you see zero failures in *n* devices, you cannot say there is no problem. You can say the failure rate is probably below about 3 / *n*: after 1,000 clean devices, below roughly 0.3% (95% confidence, from solving (1 - p)^n = 0.05). Small canaries rule out only large problems. For the statistics of noise and effect size, see [is the difference real](../../ml/is-the-difference-real/) and [testing and deploying ML models](../../systems/testing-and-deploying-ml-models/).
+
+<FleetRolloutSim client:visible />
+
+Start with the defaults, then change one setting at a time.
+
+## What the simulator shows
+
+These figures come from the simulator's invented fleet (100,000 devices; a canary of 1%, growing times five; halt at a 1.5% failure rate; half of devices reporting before each decision), computed by the tested code behind it.
+
+- **A real regression on older devices** (10% extra failures on 15% of the fleet) is stopped early. Expected devices updated before the halt: about 2,100, of which about 310 are in the affected class.
+- **Fill the canary evenly across classes** and the first stage catches it almost every time, and the expected number updated falls to about 1,000. A canary proportional to the fleet under-samples the rare class that breaks.
+- **A rare bug on recent devices** (1% extra failures on half the fleet) hides in the fleet-wide rate: the chance it reaches everyone is about 85%. Judging each class on its own cuts that to about 10%, but a healthy update is then halted by mistake about 16% of the time, because each class has fewer devices and so a noisier rate.
+- **A tiny canary** (0.1%) with the same rule halts a healthy update about 28% of the time, and waiting for only a fifth of devices to report raises it to about 8%. Rules and stage sizes have to be chosen together.
+
+None of these numbers is a recommendation. They show why a halt rule has three parts: a size, a threshold, and a slice.
+
+<Callout kind="edge" title="A staged rollout is also an experiment">
+You can compare old and new models as an A/B test on a fleet, but the devices that update first may be the ones that are online, charging and on Wi-Fi. Randomise inside a device class, or stratify by it.
+</Callout>
+
+## Monitoring without collecting raw data
+
+Raw audio, photos and text are exactly what on-device inference exists to keep local, so monitoring cannot just upload them. The production federated-learning system described by Bonawitz and colleagues shows the pattern. It logs activity and health parameters, such as the state the device was in when training started, how often and how long it ran, memory used, errors detected, and the phone model, OS and runtime version. The paper says these entries contain no personally identifiable information, and they are aggregated into dashboards and automatic time-series monitors that alert on substantial deviations.
+
+For a model, the same idea gives you:
+
+- **Counters and histograms**, not examples: inferences per day, latency in buckets, memory high-water mark, out-of-memory and thermal-throttle events, fallback-to-cloud rate.
+- **Everything labelled with the model version and device class**, because that is how you find "fails on the older devices".
+- **Output statistics**: a histogram of confidence scores, the share of empty or refused outputs, the length of outputs.
+- **User signals**: how often people undo, edit or retry a result.
+
+With consent and a clear policy, you may want counts of sensitive things. Local differential privacy adds noise on the device before anything is sent, so the server can learn population statistics but not any one person's true value. Apple's overview describes using it this way, opt-in, with device identifiers removed; Google's RAPPOR paper describes the technique. See [privacy engineering for AI](../../responsible/privacy-engineering-for-ai/) for the guarantee and its limits. Set a minimum cohort size before a slice is shown, so a "device class" of three phones identifies no one.
+
+## How you know a model is failing
+
+There are no labels in the field. You have proxies, and each has a blind spot.
+
+| Signal | Catches | Misses |
+|---|---|---|
+| Crash, out-of-memory, timeout and thermal counts | Hard failures, especially on one device class | A model that runs and is wrong |
+| Latency percentiles (p95, p99) | Slow paths from missing accelerator support | Quality |
+| Output histograms and fallback rate | Shifts in behaviour after an update | Which direction is better |
+| Undo, edit and retry rates | Annoying wrong answers | Wrong answers people did not notice |
+| Input statistics, such as levels or lengths | The world changing (drift) | Whether the model coped |
+| Fixed test inputs run on the device at install | A broken model or runtime on that hardware | Anything outside the test set |
+| Running the candidate in shadow, silently, and comparing with the current model | Differences on real inputs | Costs battery and heat |
+
+Alert on movement against the previous version for the same device class, not on absolute thresholds, and expect label delay: for some tasks the ground truth arrives days later or never. See [monitoring and drift](../../systems/monitoring-and-drift/).
+
+## Federated learning and personalisation
+
+Federated learning is a way to learn from the fleet without collecting its data. McMahan and colleagues' FederatedAveraging has each selected device train on its own data for a few steps and send back an update, and the server averages the updates into the next global model. Their paper reports that the approach is robust to unbalanced and non-IID data (each device sees a different slice of the world) and cuts the communication rounds needed by 10 to 100 times compared with synchronised SGD. Hard and colleagues trained a phone keyboard's next-word model this way, and report better prediction recall than server-based training.
+
+Bonawitz and colleagues describe the system side: devices take part only when idle, charging and on an unmetered network, and the server selects a subset of typically a few hundred devices per round. Expect dropouts and uneven participation.
+
+**What it does and does not protect.** Raw data stays on the device. The updates are computed from it, and they can leak: Zhu and colleagues recovered training images and text from shared gradients in their experiments. Secure aggregation (Bonawitz and colleagues, 2017) lets the server see only a sum of many updates, and differential privacy adds noise to the updates; each protects against a different threat and costs accuracy, bandwidth or both. Federated learning is a fit for the data-minimisation principle, not a guarantee. A federated model still needs a held-out test set and a staged rollout.
+
+**Personalisation on the device** adapts a small part of the model, such as a LoRA adapter, to one user and keeps it local. An adapter belongs to one base-model version, so a fleet update needs a plan for the personalised parts too.
+
+## What to remember
+
+- A fleet has many live versions, device-dependent failures, little visibility and slow undo.
+- Ship the model as a separate signed artefact with a manifest. A rollback is a new, higher version, because update clients refuse to go backwards.
+- Stage the rollout. Size the canary from *k* / (*s* x *p*), fill it across device classes, and set a halt rule with a threshold, enough devices reporting back and a per-class slice. Zero failures in *n* devices only bounds the rate near 3 / *n*.
+- Monitor with counters, histograms and version and device-class labels, not raw data. Consider local differential privacy for sensitive counts.
+- Federated learning keeps raw data on the device but does not by itself make updates private.
+- Next: [monitoring and drift](../../systems/monitoring-and-drift/).

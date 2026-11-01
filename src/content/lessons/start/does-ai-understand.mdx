@@ -1,0 +1,102 @@
+---
+title: Does AI really understand?
+track: start
+level: basic
+order: 4.5
+summary: What people mean by "understand" and "intelligent", what the Turing test is, why a chatbot can sound clever without knowing like you do, and how to answer "is it alive?". Includes a myth-or-fact game.
+updated: 2026-11-01
+sources:
+  - label: "The Turing Test (Stanford Encyclopedia of Philosophy)"
+    url: https://plato.stanford.edu/entries/turing-test/
+  - label: "Large Language Models Pass the Turing Test (Jones and Bergen, arXiv, 2025)"
+    url: https://arxiv.org/abs/2503.23674
+  - label: "ELIZA (Wikipedia)"
+    url: https://en.wikipedia.org/wiki/ELIZA
+  - label: "ELIZA: a computer program for the study of natural language communication between man and machine (Weizenbaum, 1966)"
+    url: https://web.stanford.edu/class/cs124/p36-weizenabaum.pdf
+  - label: "Climbing towards NLU: On Meaning, Form, and Understanding in the Age of Data (Bender and Koller, 2020)"
+    url: https://aclanthology.org/2020.acl-main.463/
+  - label: "The Chinese Room Argument (Stanford Encyclopedia of Philosophy)"
+    url: https://plato.stanford.edu/entries/chinese-room/
+  - label: "International AI Safety Report 2026: Executive Summary"
+    url: https://internationalaisafetyreport.org/publication/2026-report-executive-summary
+  - label: "Why Language Models Hallucinate (arXiv, 2025)"
+    url: https://arxiv.org/abs/2509.04664
+  - label: "Is my data used for model training? (Anthropic Privacy Center, March 2026)"
+    url: https://privacy.claude.com/en/articles/10023580-is-my-data-used-for-model-training
+---
+
+import MythFact from '../../../components/viz/MythFact.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+A chatbot explains a joke, writes a poem and answers your homework question. So does it understand? People argue about this, and the honest answer is "it depends what you mean". This lesson helps you think about it clearly.
+
+## What does "understand" mean?
+
+When you understand a joke, you see why it is funny. You can explain it, use the same trick in a new joke, and notice when someone gets it wrong.
+
+People use "understand" and "intelligent" in lots of ways, and experts do not agree on one meaning. So "does AI understand?" has no single answer. A better question is this: what can it do well, and where does it fail?
+
+## The imitation game
+
+In 1950 a scientist called Alan Turing wanted a test for "can a machine think?". He thought that question was too vague. So he swapped it for a game.
+
+In the game, a person chats by text with two players: a human and a machine. They try to guess which is which. This is now called the **Turing test**.
+
+In 2025, researchers ran it. Their chatbot, told to act like a young person, was picked as the human more often than the real human was. That is a big result about sounding human. It does not prove the chatbot understands anything.
+
+## Tricks can fool us
+
+In 1966 a program called ELIZA played a pretend counsellor. It only spotted keywords in what you typed and filled in ready-made replies. Even so, some people felt it understood them. Its maker said it did not.
+
+We are quick to see a mind in anything that talks, just like we talk to pets and toys. Today's chatbots are far more powerful than ELIZA. But the lesson still holds: sounding like it understands is not proof.
+
+## Predicting words, and knowing
+
+A chatbot's job is to guess the next piece of text. To do that well, it picked up a lot from its reading: facts, grammar and patterns of reasoning. That is real, and it is useful.
+
+But it learned mostly from text. It has no body and no school day, and it has never tasted a strawberry. It can also write a wrong answer in a very sure voice.
+
+Experts disagree about how much understanding is inside. Some argue that text alone cannot give real meaning. We do not know the final answer.
+
+## What we can say safely
+
+<Callout title="Four things that are true">
+
+- It is useful. It can explain, summarise, translate and help with code.
+- It can be fooled. It may do something hard, then fail at something that looks easy.
+- It learned from text, not from a life. It has no body and no experiences like yours.
+- Whether it feels anything is something scientists argue about. This lesson does not say yes or no.
+
+</Callout>
+
+## Play: myth or fact?
+
+Tap Myth or Fact on each card. You will see the answer and where it comes from.
+
+<MythFact client:visible />
+
+## Nobody can be sure about the future
+
+You may hear "AI will take over" or "AI will never be a big deal". Be careful with anyone who sounds completely sure. An international report by more than 100 experts says progress could slow down, continue or speed up, and that it is hard to predict.
+
+The same report says some harms already happen today, such as scams and fake content. So the useful habits are the ones in [Using AI without getting burned](../using-ai-without-getting-burned/).
+
+## "Is it alive?"
+
+If a younger cousin asks, you could say this.
+
+"No, it is a computer program. It is not alive like a pet or a plant. It does not eat or grow. It writes words by guessing what comes next. Whether it feels anything inside is something scientists still argue about."
+
+You can still be polite to a chatbot. It is a good habit, and it helps you practise being polite.
+
+<Deep title="For grown-ups: the arguments behind the myths">
+
+In the 2025 study (Jones and Bergen), interrogators had five-minute chats with a human and a system at the same time. With a prompt describing a young, introverted person who knows internet culture and uses slang, GPT-4.5 was judged to be the human 73% of the time. Without that persona prompt, it was picked 36% of the time. ELIZA and GPT-4o without a persona scored 23% and 21%. A test like this measures whether people can tell the difference in a short chat. It does not measure understanding.
+
+Searle's Chinese room asks whether running the right program is enough for understanding. His narrow conclusion is that it is not, and that the Turing test is therefore inadequate; philosophers have argued about it ever since. Bender and Koller make a different argument: that a system trained only on the form of language has no way, in principle, to learn meaning. That is a position paper, and other researchers disagree with it. Nothing on this page settles either debate.
+
+</Deep>
+
+Next: [How computers read words](../how-computers-read-words/), where you find out what the small pieces of text are.

@@ -1,0 +1,120 @@
+---
+title: "Query understanding for RAG: rewriting, HyDE, decomposition and routing"
+track: rag-agents
+level: intermediate
+order: 2.5
+summary: Why people's questions retrieve badly, and when to rewrite, expand, split, imagine an answer (HyDE) or route a query before it reaches the index, with a lab that shows each technique helping, doing nothing, or hurting.
+updated: 2026-11-01
+sources:
+  - label: "Precise Zero-Shot Dense Retrieval without Relevance Labels (HyDE; Gao et al., 2022)"
+    url: https://arxiv.org/abs/2212.10496
+  - label: "Query Rewriting for Retrieval-Augmented Large Language Models (Ma et al., 2023)"
+    url: https://arxiv.org/abs/2305.14283
+  - label: "RAG-Fusion: a New Take on Retrieval-Augmented Generation (Rackauckas, 2024)"
+    url: https://arxiv.org/abs/2402.03367
+  - label: "Reciprocal Rank Fusion outperforms Condorcet and individual rank learning methods (Cormack, Clarke and Buettcher, SIGIR 2009)"
+    url: https://cormack.uwaterloo.ca/cormacksigir09-rrf.pdf
+  - label: "Open-Domain Question Answering Goes Conversational via Question Rewriting (QReCC; Anantha et al., 2021)"
+    url: https://arxiv.org/abs/2010.04898
+  - label: "Measuring and Narrowing the Compositionality Gap in Language Models (Press et al., 2022)"
+    url: https://arxiv.org/abs/2210.03350
+  - label: "Adaptive-RAG: Learning to Adapt Retrieval-Augmented Large Language Models through Question Complexity (Jeong et al., 2024)"
+    url: https://arxiv.org/abs/2403.14403
+  - label: "Configure and customize queries and response generation: query decomposition (Amazon Bedrock User Guide), read 1 November 2026"
+    url: https://docs.aws.amazon.com/bedrock/latest/userguide/kb-test-config.html
+  - label: "Agentic retrieval overview (Azure AI Search, Microsoft Learn, last updated 2026-09-17)"
+    url: https://learn.microsoft.com/en-us/azure/search/agentic-retrieval-overview
+  - label: "Get answers and follow-ups (Agent Search, Google Cloud documentation, last updated 2026-10-26)"
+    url: https://cloud.google.com/generative-ai-app-builder/docs/answer
+  - label: "Filter with natural-language understanding (Agent Search, Google Cloud documentation)"
+    url: https://cloud.google.com/generative-ai-app-builder/docs/natural-language-queries
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import QueryLab from '../../../components/viz/QueryLab.tsx';
+
+[Chunking and retrieval quality](../chunking-and-retrieval-quality/) fixed what is in the index. This lesson fixes what goes into it. People do not write search queries. They write "what about the battery?", "can I take my dog along?" or a question with two facts in it. Every technique below changes the query before the search, and each one costs an extra model call, so each has to earn its place. Vendor details are as of 1 November 2026.
+
+## Why raw questions retrieve badly
+
+| Gap | Example | What breaks |
+|---|---|---|
+| **Vocabulary mismatch** | The person says "dog", the page says "pet" | Keyword search finds nothing; an embedding model usually copes |
+| **Missing context** | "What about the battery?" after a chat about e-bikes | The question means nothing alone, so it matches the wrong battery pages |
+| **Compound question** | "Is it worth joining if I ride twenty times a month?" | The answer needs two facts that sit in two passages; one search returns one of them |
+| **Underspecified or off-domain** | "How much is the new Night Pass?" | A new term the model has never seen |
+
+## The toolbox
+
+**Standalone rewrite.** A model reads the chat history and the latest message and writes a question that makes sense alone. This is the most common and most reliable step in chat products, and the research on conversational question answering centres on it: the QReCC dataset (Anantha et al.) has 14,000 conversations with annotations for question rewriting. A rewrite can also drop or invent a constraint ("e-bike", "last year"), so log the original with the rewrite and keep both available.
+
+**General rewriting.** Ma et al. (2023) proposed "rewrite, retrieve, read": a model rewrites the query for the search engine, and a small rewriter can be trained on feedback from the reader model. Useful as an idea: the best phrasing for a search index is not the best phrasing for a person.
+
+**Multi-query and fusion.** Ask a model for a few paraphrases, search with each plus the original, and merge the ranked lists with reciprocal rank fusion (see [vector search internals](../vector-search-and-retrieval-metrics/) for the formula). It raises recall for vague questions. The cost is several searches, and the risk is drift: the RAG-Fusion write-up reports that some answers strayed off topic when the generated queries were not relevant enough to the original. It is a single-company study with manual evaluation, so read it as a warning, not a measurement.
+
+**Decomposition.** Split a compound question into sub-questions, search each, and combine the results. Press et al. (2022) measured how often models answer every sub-question correctly yet fail the composed one. For retrieval the argument is simpler: each fact may live in a different passage, so one search for the whole question cannot reliably fetch both. If a later sub-question depends on an earlier answer ("who manages the team that built X?"), the steps must run one after another, which is an agent loop ([agents and tool use](../agents-and-tool-use/)).
+
+**HyDE.** Instead of searching with the question, ask a model to write a hypothetical answer and search with that. Gao et al. (2022) describe the hypothetical document as one that "captures relevance patterns but is unreal and may contain false details", and rely on the embedding model to ground it in the real corpus. They report strong results against an unsupervised dense retriever on web search and low-resource tasks, while also noting that fine-tuned retrievers still did better on some datasets. The risk follows from the design: if the model knows nothing about your product, its hypothetical answer is made of plausible-sounding inventions, and those pull the search towards whatever matches the inventions.
+
+**Routing.** Decide where the query goes: which index, which metadata filter, or no retrieval at all. Adaptive-RAG (Jeong et al., 2024) trains a small classifier to predict query complexity and pick between no retrieval, single-step and multi-step retrieval. A routing step can also turn words into filters: Google's documentation for natural-language understanding shows a hotel query becoming filters on star rating, price and amenities instead of words to match. Routing is a classification problem, so you evaluate it like one.
+
+<Callout title="What the vendors bundle (as of 1 November 2026)">
+**Amazon Bedrock Knowledge Bases:** an optional query decomposition setting (`QUERY_DECOMPOSITION` in the query transformation configuration) breaks a complex query into sub-queries; the docs note this can run several queries against the knowledge base. **Azure AI Search:** agentic retrieval uses an LLM to plan sub-queries from the query and chat history and runs them in parallel; the docs mark LLM-based query planning as preview, bill LLM tokens and retrieval tokens separately, and skip planning at the minimal reasoning effort. **Google Cloud Agent Search:** its answer and follow-ups feature has query rephrasing on by default, can split a complex query into sub-queries, and can synthesise follow-up questions from earlier turns. Names, availability and prices change; read the linked pages before you rely on them.
+</Callout>
+
+## Try the techniques
+
+An invented bike-share help centre, five scripted questions and three search methods. The rewrites, paraphrases and hypothetical answers are written by hand as stand-ins for a model. Begin with keyword search and keep the top 2, then try each strategy on each question, then change the search method and the number kept.
+
+<QueryLab client:visible />
+
+## Reading the lab
+
+With keyword search and the top 2 kept, the mean recall over the five questions is 30 per cent for the question as typed, 90 for a rewrite, 70 for multi-query, 60 for splitting and 90 for HyDE. The means hide the more useful pattern:
+
+- **A rewrite fixes language, not missing hops.** On "Is it worth joining?" the rewrite is a cleaner sentence and recall stays at 50 per cent. Splitting into "what does membership cost?" and "what does a pay-as-you-go ride cost?" reaches 100.
+- **Splitting a simple question does nothing.** For the stuck-bike question a decomposer has nothing to split and returns it unchanged, so you pay a model call for the same result as the raw query.
+- **Multi-query can keep the problem.** For the battery follow-up, three paraphrases that all say "battery" keep finding the scooter and phone pages, and recall stays at 0. The standalone rewrite, which used the chat history, finds the e-bike page.
+- **HyDE can hurt.** For the unknown Night Pass, the invented price and student discount drag the Night Pass page down: with only the top 1 kept, the question as typed finds it and HyDE does not.
+- **The search method changes the picture.** The embedding stand-in finds the "pet" page for "dog" with no help, which is why rewriting matters more for keyword search than for embeddings. Hybrid search blends the two, and in this lab it still needs the top 3 kept to find that page.
+
+Nothing wins everywhere, which is the point: these numbers come from a hand-built corpus, so use them to understand the mechanisms and measure on your own questions.
+
+## What each step costs
+
+| Strategy | Model calls before search | Searches |
+|---|---|---|
+| As typed | 0 | 1 |
+| Rewrite | 1 | 1 |
+| Multi-query (3 paraphrases) | 1 | 4 (with the original) |
+| Split | 1 | one per sub-question |
+| HyDE | 1 | 1, with a longer query |
+
+Each call adds latency before the first search and tokens to the bill, and they run before anything streams to the user. A common pattern is to rewrite only when the message needs it (a follow-up, a very short query), keep the original as a fallback, and run searches in parallel.
+
+## Evaluating the query step
+
+Measure it separately from the answer, as in [vector search and retrieval metrics](../vector-search-and-retrieval-metrics/).
+
+1. Build a labelled set of questions with their right passages, including chat histories and compound questions. [Building an eval dataset](../../evals/building-an-eval-dataset/) shows how.
+2. Compute recall at k for each strategy against the raw baseline, and slice by question type: follow-ups, compound, short, in-domain jargon.
+3. Check rewrites by eye on a sample for lost constraints and invented details.
+4. Record added latency and cost per query next to the quality gain.
+5. Keep a held-out set that you never tuned the prompts on.
+
+<Deep title="Why recall at k, and why the same k throughout">
+
+Rewriting changes the whole ranked list, so compare strategies at the same cut-off that the answering step will use. If the prompt only has room for five passages, recall at 5 is the number that matters, and a technique that improves recall at 50 but not at 5 has not helped the answer. The lab lets you move k to see ranks shift.
+
+</Deep>
+
+## What to remember
+
+- Questions are not queries. The gaps are vocabulary, context, compound questions and unfamiliar terms.
+- Start with a standalone rewrite for chat, hybrid search, and a measured baseline. Add splitting only for multi-fact questions, and HyDE or multi-query only if the numbers on your data justify the extra calls.
+- A rewrite cannot fix a missing hop, and HyDE invents details when the model does not know your domain.
+- Routing is classification: choose the index, the filter or no retrieval, and evaluate the choice.
+- Always keep the original query, log every rewrite, and compare against the raw baseline.
+
+Next: [vector search internals and retrieval metrics](../vector-search-and-retrieval-metrics/).

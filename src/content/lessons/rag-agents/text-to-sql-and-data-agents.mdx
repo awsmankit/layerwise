@@ -1,0 +1,169 @@
+---
+title: "Text-to-SQL and data agents: asking a database in plain English"
+track: rag-agents
+level: intermediate
+order: 4.8
+summary: How a language model turns a question into SQL, what context it needs, the ways the query can be wrong without any error, why execution accuracy beats string matching and still misleads, how to put read-only limits in front of the database, and the generate-run-inspect-repair loop.
+updated: 2026-11-01
+sources:
+  - label: "Next-Generation Database Interfaces: A Survey of LLM-based Text-to-SQL (Hong et al., 2024, v8 Nov 2025)"
+    url: https://arxiv.org/abs/2406.08426
+  - label: "Spider: a large-scale human-labeled dataset for complex and cross-domain text-to-SQL (Yu et al., 2018)"
+    url: https://arxiv.org/abs/1809.08887
+  - label: "Can LLM Already Serve as A Database Interface? BIRD (Li et al., NeurIPS 2023)"
+    url: https://arxiv.org/abs/2305.03111
+  - label: "BIRD-bench site and leaderboard (read 1 November 2026)"
+    url: https://bird-bench.github.io/
+  - label: "Spider 2.0: Evaluating Language Models on Real-World Enterprise Text-to-SQL Workflows (Lei et al., 2024)"
+    url: https://arxiv.org/abs/2411.07763
+  - label: "BEAVER: An Enterprise Benchmark for Text-to-SQL (v3, May 2026)"
+    url: https://arxiv.org/abs/2409.02038
+  - label: "Semantic Evaluation for Text-to-SQL with Distilled Test Suites (Zhong et al., 2020)"
+    url: https://arxiv.org/abs/2010.02840
+  - label: "Pervasive Annotation Errors Break Text-to-SQL Benchmarks and Leaderboards (Jin et al., 2026)"
+    url: https://arxiv.org/abs/2601.08778
+  - label: "The Death of Schema Linking? Text-to-SQL in the Age of Well-Reasoned Language Models (Maamari et al., 2024)"
+    url: https://arxiv.org/abs/2408.07702
+  - label: "Amazon Bedrock: Turning data into a knowledge base, structured data (AWS docs)"
+    url: https://docs.aws.amazon.com/bedrock/latest/userguide/kb-how-data.html
+  - label: "Amazon Bedrock: Create a knowledge base by connecting to a structured data store (AWS docs)"
+    url: https://docs.aws.amazon.com/bedrock/latest/userguide/knowledge-base-structured-create.html
+  - label: "Amazon Bedrock: Generate a query for structured data (AWS docs)"
+    url: https://docs.aws.amazon.com/bedrock/latest/userguide/knowledge-base-generate-query.html
+  - label: "Fabric data agent creation (Microsoft Learn)"
+    url: https://learn.microsoft.com/en-us/fabric/data-science/concept-data-agent
+  - label: "Conversational analytics in BigQuery (Google Cloud docs)"
+    url: https://docs.cloud.google.com/bigquery/docs/conversational-analytics
+  - label: "PostgreSQL: Row security policies"
+    url: https://www.postgresql.org/docs/current/ddl-rowsecurity.html
+  - label: "PostgreSQL: Client connection defaults (statement_timeout, default_transaction_read_only)"
+    url: https://www.postgresql.org/docs/current/runtime-config-client.html
+  - label: "SQLite: sqlite3_set_authorizer"
+    url: https://www.sqlite.org/c3ref/set_authorizer.html
+---
+
+import PipelineFlow from '../../../components/viz/PipelineFlow.tsx';
+import SqlWorkbench from '../../../components/viz/SqlWorkbench.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+A language model is a poor calculator and a decent translator. Text-to-SQL uses that: the model translates "how many customers have never ordered?" into a SQL query, and the database does the counting. The numbers come from your data, not from the model's memory, and the SQL can be shown to the user. That is the appeal. The catch is that a wrong query runs just as happily as a right one. The rest of this lesson is about how to build the translation, how to judge it honestly, and how to stop it doing damage.
+
+## The loop
+
+<PipelineFlow
+  title="A data agent answering one question"
+  loop
+  loopLabel="repair and retry, within a step limit"
+  stages={[
+    { title: 'Question', detail: 'The user asks in their own words. Ambiguous words such as "revenue" or "active" are decided here or by a question back to the user.' },
+    { title: 'Context', detail: 'Pick the relevant tables and columns and put their descriptions, sample values and a few worked examples in the prompt.' },
+    { title: 'Generate', detail: 'The model writes one SQL query, ideally against curated views rather than raw tables.' },
+    { title: 'Guard', detail: 'Your code checks it: one SELECT, allowed tables only, a row limit. Then it runs under a read-only role with a time limit.' },
+    { title: 'Inspect', detail: 'Look at the error or the result. Empty, huge, all-NULL or implausible results go back to the model to repair, or to a person.' },
+  ]}
+  client:visible
+/>
+
+This is the same loop as in [Agents and tool use](../agents-and-tool-use/), with a database as the tool. A plain pipeline (question, SQL, run, answer) is a workflow. A data agent is the version where the model may run several queries, look at what came back, and decide what to try next.
+
+## Context decides most of the quality
+
+A table called `t_ord_ln` with a column `st` tells the model nothing. The model needs what a new analyst would need.
+
+- **Descriptions.** One sentence per table and per column, in business words: "orders.status is one of shipped, cancelled, pending; revenue counts shipped only".
+- **Sample values.** Seeing `'shipped'` beats guessing whether the filter is `'Shipped'`, `'SHIPPED'` or `1`. Real data is dirty, and the BIRD benchmark was designed around that: its authors stress database values, dirty data and external knowledge, not only schemas.
+- **A semantic layer or curated views.** Define "revenue" once, in a view or a metrics layer, so that the model selects a column instead of re-deriving a definition on every question. This removes the largest source of silent disagreement.
+- **Worked examples.** Pairs of question and correct SQL, retrieved by similarity to the new question, as in [RAG from scratch](../rag-from-scratch/).
+- **Schema linking.** With hundreds of tables you cannot paste everything, so you first select the relevant ones. One 2024 paper, "The Death of Schema Linking?", reports that newer models cope with irrelevant columns and that dropping a needed column in the filtering step can hurt more than it helps; when the full schema fits in the context window their pipeline skips linking. That is one paper on one benchmark. Treat it as a reason to measure with and without linking on your own questions.
+
+The three cloud providers each package part of this. What follows is as of 1 November 2026, from each provider's own documentation; names and limits change, so check the pages.
+
+| | AWS | Azure | Google Cloud |
+|---|---|---|---|
+| Service | Amazon Bedrock Knowledge Bases with a structured data store | Microsoft Fabric data agent | Conversational analytics in BigQuery |
+| Data it queries | Amazon Redshift, or data in the AWS Glue Data Catalog | Lakehouse, warehouse, Power BI semantic model, KQL database and others | BigQuery tables, views, graphs and user-defined functions |
+| Context you supply | Table and column descriptions, include and exclude lists, curated question and SQL pairs | Instructions and example queries (up to 100 per source) | Instructions, glossary terms, verified queries |
+| What the docs say about safety | Include and exclude lists "aren't a substitute for guardrails"; generation context is non-deterministic, so verify the SQL | Read-only; uses the requesting user's credentials and permissions | Read-only, no DML; accesses only what the user may access |
+| Notable limit | A separate `GenerateQuery` call returns SQL without running it | Chat answers capped at 25 rows and 25 columns | The page I read does not state a release stage |
+
+Note what they share: descriptions, example queries and read-only access. Note also what Google's "verified queries" are: deterministic SQL that runs when a prompt matches, taking priority over glossary terms and instructions. For your most important questions, a fixed query beats a generated one.
+
+## How it goes wrong
+
+Failures that stop with an error are the easy ones: a hallucinated column name produces `no such column`, and the repair loop can fix it. The dangerous failures return a plausible number.
+
+| Failure | What happens | Example in the workbench below |
+|---|---|---|
+| Wrong join | An inner join drops the rows the question is about | Customers who never ordered: result 0 |
+| Wrong grain | Counting people when the question asked for orders, or the reverse | `COUNT(DISTINCT c.id)` for orders in the North |
+| Missing filter | Cancelled or pending rows included | Revenue 253.90 instead of 170.90 |
+| Ambiguous word | A reasonable reading that differs from the asker's | "Revenue" including pending orders: 213.90 |
+| Right answer by luck | Matches today's data, fails on tomorrow's | `customer_id <= 3` for the North region |
+
+<Callout title="Silent errors need a different defence">
+A syntax error is caught by the database. A wrong join is not. Defences are showing the SQL next to the answer, a sanity check on the result (row count, NULLs, a total that should not exceed another total), a clarifying question when a term is ambiguous, and fixed queries for the questions that matter most.
+</Callout>
+
+## Try it: run it, then judge it
+
+Choose a question, pick one of the hand-written "model" queries or edit it, and watch it run on a small invented shop database next to the gold query. The workbench is a deliberately small SQL engine written for this lesson, so it understands SELECT with joins, grouping and ordering but nothing else.
+
+<SqlWorkbench client:visible />
+
+With the main data, the gold revenue is 170.90: nine shipped order lines, 9.00 + 24.00 + 18.00 + 4.50 + 48.00 + 9.00 + 35.00 + 18.00 + 5.40. The query that forgets the status filter returns 253.90, and the one that forgets quantity returns 101.90. All three run without a single error.
+
+## Judging text-to-SQL
+
+Three ways to score a generated query, in increasing order of usefulness.
+
+1. **Exact match.** Compare the SQL text, perhaps after normalising it. Cheap, and it rejects correct queries that are written differently (aliases, layout, join order). The original Spider paper reported exact-match accuracy. Zhong and colleagues found that the Spider metric of the time had a 2.5% false negative rate on average, and 8.1% in the worst case, across the 21 leaderboard models they examined.
+2. **Execution accuracy.** Run both queries and compare the rows. This is the main metric on BIRD. Decide in advance whether row order counts (only if the question asked for an order), whether duplicates count, and how to compare floating-point numbers. It accepts the lucky query: the same rows on this database.
+3. **Test-suite accuracy.** Run on several databases built to tell queries apart and require the same rows on all of them. Zhong and colleagues proposed distilling such a suite from many randomly generated databases. The workbench uses a second database with different data for the same reason.
+
+None of these checks whether the gold query itself is right, and that matters more than it sounds.
+
+<Deep title="What the benchmark numbers say, and why not to quote them as your accuracy">
+
+All figures below are from the papers and pages linked in the sources, with the date they were read.
+
+- **BIRD** (2023): 12,751 question and SQL pairs over 95 databases (33.4 GB, 37 domains). In the paper the best model, ChatGPT, reached 40.08% execution accuracy against 92.96% for humans. On 1 November 2026 the BIRD site lists test entries above 80% execution accuracy (the top overall entry shown was 83.40), and it records several rounds of corrected annotations, including a Mini-Dev update dated 28 October 2026.
+- **Spider 2.0** (2024): 632 enterprise-style tasks, databases with over 1,000 columns, multi-query workflows. The authors' o1-preview-based agent solved 21.3%, and the same abstract gives 91.2% on Spider 1.0 and 73.0% on BIRD for comparison.
+- **BEAVER** (2024, revised May 2026): 9,128 pairs from real query logs of private data warehouses. The authors report 10.8% for leading agentic frameworks using GPT-5.2, rising to 30.1% when given oracle hints for all subtasks.
+- **Annotation errors.** An audit by Jin and colleagues (2026) judged 52.8% of the BIRD Mini-Dev examples and 62.8% of the public Spider 2.0-Snow examples to contain an annotation error (the figure for Spider 2.0-Snow differs between the paper's versions). Correcting 100 BIRD dev examples changed the relative performance of 16 agents by between -7% and +31% and moved rankings by up to 9 places.
+
+The lesson is not that the benchmarks are useless. They measure something real and let you compare approaches. But public-benchmark accuracy depends on clean, small, well-described schemas and on gold queries that are sometimes wrong, and your warehouse is none of those. Build your own set from real questions your users ask, with gold answers checked by someone who knows the data, as in [Building an eval dataset](../../evals/building-an-eval-dataset/).
+
+</Deep>
+
+## Safety: assume the SQL is hostile or wrong
+
+The model writes code that your system runs. [LLM application security](../../evals/llm-security/) already says to treat model output as untrusted and to use a read-only role. For SQL that becomes four layers, none of which depends on the model behaving.
+
+1. **A role that cannot write.** Grant `SELECT` only, on the views you intend to expose. Do not rely on a setting that a session can change back; in PostgreSQL, `default_transaction_read_only` is described as a default for each new transaction, so a grant-level restriction is the reliable one. The managed offerings above state read-only behaviour as a property of the service.
+2. **Row and column limits from the user's identity.** Run each query as the person asking, so the database enforces what they may see. PostgreSQL row security policies restrict which rows a role can read; with row security enabled and no policy, the default is that no rows are visible. Table owners and superusers bypass it unless forced, so the role the agent uses must be neither. Fabric and BigQuery both state that the agent uses the user's own permissions.
+3. **Time and size limits.** A model can write a query that scans a billion rows. PostgreSQL's `statement_timeout` aborts statements that run too long, and the Bedrock configuration has a maximum query time. Add a row limit to every query, as the workbench's guard does.
+4. **A guard that fails closed.** Parse the query before running it: exactly one statement, a SELECT, only allow-listed tables and functions, otherwise refuse. The workbench guard shows a toy version and the lab asks you to write one. A hand-written regular expression is not a real defence, because SQL has comments, quoting and dialect features; in production use a proper SQL parser, and keep the role as the backstop. SQLite offers an authoriser callback that is asked about each action while a statement is compiled, which is the same idea inside the engine.
+
+Two more risks sit outside the SQL. **Data is untrusted too:** a text column can hold a planted instruction, and the result set goes back into the model's context, which is indirect prompt injection by another route. And **a convincing answer is not a verified one:** people trust a sentence with a number in it. Show the SQL, show the row count, say which tables were used.
+
+## Repair loops, and knowing when to stop
+
+When a query fails or looks wrong, feed back the database's error message, the failing SQL and a reminder of the schema, and ask for a corrected query. Cap the attempts (for example at three), because each retry costs tokens and a stubborn model may rewrite the same mistake. Past the cap, return "I could not answer that reliably" and the last SQL, rather than a guess.
+
+Inspection is where a data agent beats a one-shot pipeline: an empty result for a question that should have rows, a count of zero, or a column of NULLs are all signs of a wrong join or a wrong filter value. Some of those checks are code, some can be a second model call, and the ambiguous ones are questions for the person.
+
+## Try the lab
+
+[Score text-to-SQL: execution accuracy and a safety guard](../../../practice/sql-execution-accuracy/) is a 20-minute pure-Python lab. You write the exact-match check, the row comparison (order, duplicates, floats), the scoring loop that shows where exact match and execution accuracy disagree, and a guard that lets one limited SELECT through. The queries have already been run and their rows are recorded in the lab, because the in-browser Python runtime used by the labs does not load the SQLite module by default.
+
+## What to remember
+
+- The model translates; the database computes. The danger is the translation that runs but means something else.
+- Context carries the quality: descriptions, sample values, curated views or a semantic layer, and retrieved examples. Fixed, verified queries beat generated ones for the questions that matter most.
+- Score by running the queries, not by comparing text, and prefer more than one database. Check the gold queries too.
+- Benchmark accuracy is not your accuracy. Build an evaluation set from your own questions.
+- Safety is layered and mostly outside the model: a role that can only read, the user's own row permissions, time and row limits, and a guard that fails closed.
+- Show the SQL, cap the repair attempts, and ask when a term is ambiguous.
+
+Next: [The tools and ecosystem](../the-tools-and-ecosystem/) maps the libraries, protocols and services you would use to build this.

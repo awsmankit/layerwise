@@ -1,0 +1,172 @@
+---
+title: "Monitoring and drift: knowing when a model has quietly got worse"
+track: systems
+level: intermediate
+order: 8
+summary: What to watch after a model ships, the three kinds of drift, how PSI and the KS test work and where they mislead, why labels arrive too late, and how to set alerts people will trust. Includes a game where you tune a drift detector.
+updated: 2026-11-01
+sources:
+  - label: "Data Distribution Shifts and Monitoring (Chip Huyen, CS 329S notes, 2022)"
+    url: https://huyenchip.com/2022/02/07/data-distribution-shifts-and-monitoring.html
+  - label: "Learning under Concept Drift: A Review (Lu, Liu, Dong, Gu, Gama, Zhang)"
+    url: https://arxiv.org/abs/2004.05785
+  - label: "Failing Loudly: An Empirical Study of Methods for Detecting Dataset Shift (Rabanser, Günnemann, Lipton)"
+    url: https://arxiv.org/abs/1810.11953
+  - label: "Production ML systems: Monitoring pipelines (Google Machine Learning Crash Course)"
+    url: https://developers.google.com/machine-learning/crash-course/production-ml-systems/monitoring
+  - label: "Rules of Machine Learning (Google)"
+    url: https://developers.google.com/machine-learning/guides/rules-of-ml
+  - label: "Data drift: how the default detection algorithm works (Evidently documentation)"
+    url: https://docs.evidentlyai.com/metrics/explainer_drift
+  - label: "Customize data drift (Evidently documentation)"
+    url: https://docs.evidentlyai.com/metrics/customize_data_drift
+  - label: "Population Stability Index metrics (Arthur documentation)"
+    url: https://docs.arthur.ai/docs/population-stability-index-psi-metrics
+  - label: "Measuring Data Drift with the Population Stability Index (Fiddler AI blog)"
+    url: https://www.fiddler.ai/blog/measuring-data-drift-population-stability-index
+  - label: "Assessing the representativeness of large medical data using population stability index (BMC Medical Research Methodology, 2025)"
+    url: https://pmc.ncbi.nlm.nih.gov/articles/PMC11844046/
+  - label: "scipy.stats.ks_2samp (SciPy documentation)"
+    url: https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.ks_2samp.html
+---
+
+import DriftSlider from '../../../components/viz/DriftSlider.tsx';
+import DriftWatch from '../../../components/viz/DriftWatch.tsx';
+import Deep from '../../../components/ui/Deep.astro';
+
+A web service that breaks, breaks loudly: errors, timeouts, a red dashboard. A model that gets worse usually does not. It keeps returning answers, in the right format, at the right speed, and they are slowly wrong. Chip Huyen puts it plainly: machine-learning systems often fail silently. This lesson is about making them fail loudly instead.
+
+## What to watch
+
+Monitoring is five layers, each answering a different question at a different speed.
+
+| Layer | Example signals | Needs labels? | How fast you learn |
+|---|---|---|---|
+| System health | Latency, error rate, throughput, memory | No | Seconds |
+| Inputs and data quality | Missing values, ranges, new categories, feature distributions | No | Minutes to days |
+| Predictions | Spread of scores, share predicted positive, average confidence | No | Hours to days |
+| Outcomes | Accuracy, precision and recall on labelled cases, per slice | Yes | Delayed, often a lot |
+| Business and user | Conversions, complaints, human overrides, refunds | Partly | Days to weeks |
+
+Read it from "cheap and early" to "meaningful and late". Real monitoring uses all five.
+
+Two cautions from Google's guidance. Check metrics per **slice** (a region, a device type), because a good average can hide a failing subset. And check for **training-serving skew**: production data or feature code differs from training. Google's *Rules of Machine Learning* describes a Google Play table that had been stale for six months; refreshing it alone raised the install rate by 2 percent.
+
+## Three kinds of change
+
+The word "drift" covers three different things. Writing the inputs as X and the answer as Y:
+
+- **Covariate shift (input drift).** The inputs change, but the rule linking inputs to answers does not. A marketing campaign brings in a richer group of customers; a customer with a given income still converts at the same rate, but the model now sees many more rich customers than it trained on.
+- **Label shift.** The share of each outcome changes. A fraud model sees twice as much fraud as it was trained on.
+- **Concept drift.** The same input now deserves a different answer. A 3-bedroom flat sells for less after a sudden shock; fraudsters change their tactics so that yesterday's pattern no longer means fraud.
+
+Changes also have a shape: **sudden** (a launch, a bug), **gradual** (sensors age) or **seasonal** (a weekly cycle). Gradual change is hardest to catch; seasonal change is easiest to mistake for a problem.
+
+The most common cause is the least glamorous. Huyen notes that much of what looks like drift is an internal error: a broken pipeline, a missing value silently filled with zero, the wrong model version. In a 2020 review of 96 failures of large ML pipelines at Google, 60 had causes not directly related to ML, as reported in the same notes. **Check the plumbing before you blame the world.**
+
+## Measuring change without labels
+
+You can always compare today's inputs with a **reference** (the training data, or a recent healthy period). Three tools do most of the work.
+
+**Simple summaries**: mean, quantiles, null rate, the categories seen. Cheap and easy to explain, but blind to a change that leaves the mean alone.
+
+**PSI, the population stability index.** Cut the reference into bins (ten bins that each hold 10 percent of the reference is common), then compare the share in each bin now with the share then. For each bin, PSI adds (current share minus reference share) times the natural log of (current share divided by reference share). A worked example with four categories of device type, using invented shares:
+
+| | Phone | Laptop | Tablet | Other |
+|---|---|---|---|---|
+| Reference | 50% | 30% | 15% | 5% |
+| This week | 35% | 30% | 20% | 15% |
+
+The phone bin adds (0.35 minus 0.50) times ln(0.35 / 0.50) = 0.053, laptops add 0, tablets add 0.014 and "other" adds 0.110. PSI is about **0.178**. PSI is typically used in financial services, and a common rule of thumb from that world reads below 0.1 as stable, 0.1 to 0.25 as moderate and 0.25 or more as large. Treat the bands as conventions. The 0.1 and 0.25 bands appear in Arthur's documentation and a 2025 peer-reviewed paper, Fiddler uses 0.2 for its upper band, and Evidently's documentation, as of 1 November 2026, uses 0.1 as its default PSI threshold.
+
+**The Kolmogorov-Smirnov (KS) test.** Draw the cumulative distribution of the reference and of today's values. The KS statistic is the largest vertical gap between the two curves, a number from 0 (identical) to 1 (no overlap). It needs no bins, but works on one number at a time. The KS test also turns the statistic into a **p-value**: the chance of a gap at least this big if both samples came from the same distribution. For categories, the chi-squared test plays the same role.
+
+What do the bands mean in units you can picture? For a bell curve that moves sideways, with ten equal bins:
+
+| Shift in the mean | PSI (large-sample value) | KS statistic |
+|---|---|---|
+| 0.1 standard deviations | 0.010 | 0.04 |
+| 0.3 | 0.086 | 0.12 |
+| 0.5 | 0.238 | 0.20 |
+| 1.0 | 0.926 | 0.38 |
+
+A shift of 0.3 standard deviations, enough to matter for some models, scores PSI 0.086, under the "stable" line., and doubling the spread scores 0.49. These are computed values for an idealised bell curve, checked against SciPy. Move the sliders to feel it.
+
+<DriftSlider client:visible />
+
+## The sample-size trap
+
+In the slider, choose the preset "Tiny shift, big sample": PSI says stable, the p-value says drift. A p-value answers "is there any difference at all?", and with enough data the answer is almost always yes. It does not say whether the difference matters.
+
+Here is one fixed, tiny shift: the mean moved by 0.05 standard deviations, which gives a KS statistic of 0.020 whatever the sample size. The p-value below is what the asymptotic test would report if the sample showed exactly that gap (a real sample scatters around it).
+
+| Values per side | KS statistic | p-value |
+|---|---|---|
+| 1,000 | 0.020 | 0.99 |
+| 10,000 | 0.020 | 0.037 |
+| 100,000 | 0.020 | about 1 in 10^17 |
+
+The verdict flips from "nothing" to "overwhelming evidence" with no change in the shift. This is why Evidently's default drift test, as of 1 November 2026, switches for reference datasets above 1,000 rows: it uses KS tests and chi-squared tests below that size, and distance measures (Wasserstein distance for numbers, Jensen-Shannon divergence for categories) with a threshold of 0.1 above it. Huyen's heuristic agrees: a difference visible in a small sample is probably serious; one that needs a huge sample probably is not. So **alert on effect size** (PSI or the KS statistic itself), and use p-values, if at all, as a sanity check.
+
+A second trap is volume of tests. Test 20 features every day at the 5 percent level and, even if nothing changes, the chance of at least one false alert on a given day is 1 minus 0.95 to the 20th power, about **64 percent**, assuming independent tests. That is roughly one false alert per day. Fixes: raise the bar per test, alert only when a share of features has drifted (Evidently's dataset-level default is 50 percent of columns), and rank features by how much the model relies on them. One-feature-at-a-time tests also miss changes in relationships between features. In *Failing Loudly*, the authors found that two-sample testing after reducing the data with a pre-trained classifier performed best among the methods they compared, which is a reason to test a model's outputs and representations, not only raw columns.
+
+<Deep title="Choosing the window and the reference">
+
+Whether a change counts as drift depends on what you compare against and over what time span. Huyen shows that if the reference is days 9 to 14 of a weekly cycle, day 15 looks like drift, but with days 1 to 14 it does not. Rules of thumb:
+
+- Use a window of at least one full seasonal cycle for the reference, or compare like with like (this Monday against recent Mondays).
+- Use a short window to catch sudden changes and a long window to catch gradual ones. Running both is normal.
+- Prefer sliding statistics to cumulative ones: a cumulative average hides a dip because older good data dilutes it.
+- A fixed reference (the training data) answers "has the world left what the model knows?". A rolling reference (the last 30 days) answers "did something change recently?". Arthur's documentation describes both uses.
+- Binning choices change PSI. Equal-frequency bins from the reference, and a small floor on empty bins so the logarithm stays finite, are the usual choices.
+
+</Deep>
+
+## Labels arrive late
+
+The most direct signal is accuracy against real outcomes, but outcomes take time. Huyen's notes give typical ranges: a recommender gets its click or no-click within seconds to hours; in fraud detection, customers can dispute a transaction for something like a month to three months, so you do not know for weeks which scored transactions were wrong. Even clicks are not instant: a study of Twitter ads reported in the same notes found most clicks within five minutes, but some hours later.
+
+So an accuracy monitor sees the past. The label delay is how long a problem can run before accuracy shows it. Input and prediction monitors fire first; accuracy confirms later. A practical pattern: alert early on input drift, then **sample and label** a few hundred recent cases on purpose to check for harm.
+
+## Drift Watch
+
+Four 120-day streams, one sensor feature each; one of them hides no change at all. Choose the statistic, threshold, window and daily sample size, and watch how quickly the detector notices and how many false alarms it raises. Reveal the truth, try the label-delay chart, then score one setting across all four streams.
+
+<DriftWatch client:visible />
+
+What the game is meant to show, using its own invented streams. A jumpy setting (KS p-value below 0.01, daily window, 200 values a day) spots the sudden shift and the unit bug on their first day, but raises 53 false alarm days on the stream that has only a weekly rhythm. A steadier setting (KS statistic of 0.15 or more over a 7-day window) raises no false alarms, and fires within 0 to 5 days of the model starting to lose accuracy. Neither setting is right everywhere. A seven-day window averages out a weekly cycle; the price is delay.
+
+## Alerts people trust
+
+A monitor nobody acts on teaches everyone to ignore alerts. **Alert fatigue** is a design problem, not a discipline problem.
+
+- **Tier the alerts.** Page a person for breakage and hard data failures (a feature suddenly all null), open a ticket for big input drift, and keep small drift on a dashboard.
+- **Give every alert an owner and a first step.** If the answer to "what do I do when this fires?" is "look at it", the alert is not ready.
+- **Track data quality separately from drift.** Evidently's documentation notes that its default drift tests do not react to changes in the share of empty values, and recommends a separate check.
+- **Retire or retune alerts that never lead to action.** Count how many fired last month and how many mattered.
+
+## When an alert fires
+
+Resist reaching for "retrain" first:
+
+1. **Check upstream.** Did a schema, unit, source or feature code change? If so, fix the data and keep the model. Retraining on broken data teaches the model the bug.
+2. **Check harm.** Look at labelled samples and slices. Drift that does not hurt the outcome, such as a harmless seasonal wave, needs a better monitor, not a new model.
+3. **Choose a response.** Fall back to a simpler rule or the previous model while you investigate; or retrain on fresh labelled data (from scratch or by continuing from the current model) and ship it through the same gates as any release, as in [Testing and deploying ML models](../testing-and-deploying-ml-models/).
+
+How often to retrain is a separate choice: on a schedule, when drift or accuracy crosses a line, or both. Huyen observes that many companies choose by gut feeling. Measure it: retrain more often and see whether quality improves enough to pay for it.
+
+## LLM features
+
+The same layers apply to an LLM feature with different signals: topic and language mix, prompt and retrieval versions, refusal and format-failure rates, judge scores on sampled traffic, and user feedback. For text, Evidently's drift check trains a classifier to tell old text from new and treats a high ROC AUC as drift, the domain-classifier idea in *Failing Loudly*. Providers also change models under you, so pin versions and re-run evals on a schedule. [LLMOps: shipping and running LLM features](../../evals/llmops-in-production/) covers the monitoring and rollback side. For devices in the field, where raw data cannot be collected, see [Shipping to a fleet](../../edge/shipping-to-a-fleet/).
+
+## What to remember
+
+- Models fail silently. Watch five layers: system health, inputs, predictions, outcomes and business metrics.
+- Separate covariate shift (inputs change), label shift (outcome mix changes) and concept drift (the right answer changes), and check for a pipeline bug before any of them.
+- PSI and the KS statistic measure how big a change is. A p-value mostly measures how much data you have, so alert on effect size.
+- Twenty tests a day will raise a false alarm most days. Alert on a share of features, and rank by importance.
+- Labels arrive late, so input monitors fire first and a small, deliberate labelling sample confirms harm.
+- Short windows are fast and noisy; long windows are slow and calm. Match the window to the seasonal cycle.
+- Fix upstream, then decide whether to roll back, fall back or retrain. Keep alerts few, owned and actionable.
+
+Next: [ML system design interviews and design reviews](../ml-system-design-interviews/) pulls monitoring together with data, serving and evaluation into one repeatable framework.

@@ -54,6 +54,7 @@ export const footerGroups = [
     title: 'This site',
     links: [
       { href: '/about/', label: 'About' },
+      { href: '/changelog/', label: 'What’s new' },
       { href: '/progress/', label: 'Your progress' },
     ],
   },

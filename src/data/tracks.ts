@@ -22,7 +22,7 @@ export const tracks = [
     ...pair('slate'),
     hue: 'slate',
     title: 'Classical ML and data',
-    blurb: 'Regression, trees, boosting, clean data and honest statistics: the methods behind most real-world prediction.',
+    blurb: 'Regression, trees, boosting, clean data and honest statistics, plus recommenders, forecasting and anomaly detection: the methods behind most real-world prediction.',
   },
   {
     id: 'skills',
@@ -106,7 +106,7 @@ export const tracks = [
     ...pair('cocoa'),
     hue: 'cocoa',
     title: 'Edge and on-device AI',
-    blurb: 'Latency, memory and power budgets when the model runs on the device.',
+    blurb: 'Latency, memory and power budgets when the model runs on the device: hardware, runtimes, real-time audio, tiny models and shipping to a fleet.',
   },
   {
     id: 'cost',
@@ -120,14 +120,14 @@ export const tracks = [
     ...pair('tangerine'),
     hue: 'tangerine',
     title: 'System design',
-    blurb: 'Reference architectures, failure modes and trade-offs for production AI.',
+    blurb: 'Reference architectures, failure modes and trade-offs for production AI, from LLM apps to the ML lifecycle, monitoring and deployment.',
   },
   {
     id: 'audio',
     ...pair('wine'),
     hue: 'wine',
     title: 'Audio and speech',
-    blurb: 'How a computer hears: sound as numbers, spectrograms and the models that listen and speak.',
+    blurb: 'How a computer hears: sound as numbers, spectrograms, speech recognition, noise suppression and the models that listen and speak.',
   },
 ] as const;
 

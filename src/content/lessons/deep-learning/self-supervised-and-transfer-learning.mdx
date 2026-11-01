@@ -1,0 +1,132 @@
+---
+title: "Self-supervised and transfer learning: pretrain once, adapt cheaply"
+track: deep-learning
+level: intermediate
+order: 4.4
+summary: How a model makes its own labels from unlabelled data (masking, next-token prediction and contrastive learning), how pretrained features are reused by freezing or fine-tuning them, and when that helps or fails, with two small demos you can run.
+updated: 2026-11-01
+sources:
+  - label: "A Simple Framework for Contrastive Learning of Visual Representations, SimCLR (Chen et al., 2020)"
+    url: https://arxiv.org/abs/2002.05709
+  - label: "Representation Learning with Contrastive Predictive Coding, the InfoNCE loss (van den Oord et al., 2018)"
+    url: https://arxiv.org/abs/1807.03748
+  - label: "Learning Transferable Visual Models From Natural Language Supervision, CLIP (Radford et al., 2021)"
+    url: https://arxiv.org/abs/2103.00020
+  - label: "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding (Devlin et al., 2018)"
+    url: https://arxiv.org/abs/1810.04805
+  - label: "Masked Autoencoders Are Scalable Vision Learners (He et al., 2021)"
+    url: https://arxiv.org/abs/2111.06377
+  - label: "wav2vec 2.0: A Framework for Self-Supervised Learning of Speech Representations (Baevski et al., 2020)"
+    url: https://arxiv.org/abs/2006.11477
+  - label: "How transferable are features in deep neural networks? (Yosinski et al., 2014)"
+    url: https://arxiv.org/abs/1411.1792
+  - label: "Universal Language Model Fine-tuning for Text Classification, ULMFiT (Howard and Ruder, 2018)"
+    url: https://arxiv.org/abs/1801.06146
+  - label: "Language Models are Few-Shot Learners, GPT-3 (Brown et al., 2020)"
+    url: https://arxiv.org/abs/2005.14165
+  - label: "Stanford CS231n: Transfer Learning"
+    url: https://cs231n.github.io/transfer-learning/
+---
+
+import ContrastiveLab from '../../../components/viz/ContrastiveLab.tsx';
+import TransferLab from '../../../components/viz/TransferLab.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+Labels are the slow, expensive part of machine learning: someone has to mark every photo, transcribe every recording, rate every answer. Unlabelled data is everywhere. This lesson covers two ideas that, together, organise most of modern AI. **Self-supervised learning** gets labels out of the data itself, so a model can learn from unlabelled data. **Transfer learning** then reuses what was learned for a new task that has only a few labels.
+
+[Three ways a machine can learn](../../start/three-ways-machines-learn/) sorted learning into supervised, unsupervised and reinforcement. Self-supervised learning sits between the first two: the data has no human labels, but the training looks supervised, because the label is hidden inside the data.
+
+## Make the data label itself
+
+A **pretext task** is a made-up exercise whose answer is already in the data. The exercise itself is not the goal. To solve it, the network has to build useful internal features, a **representation**, and that is what you keep.
+
+| Pretext task | What is hidden or compared | Example |
+|---|---|---|
+| Predict the next token | The word that comes next | Language models such as GPT |
+| Fill in the masked piece | BERT hides 15% of the tokens in a sequence; MAE hides 75% of an image's patches | BERT for text, masked autoencoders for images |
+| Match two views | Nothing is hidden; two views of one item must agree | SimCLR for images, CLIP for image and caption pairs, wav2vec 2.0 for speech |
+
+CLIP learned from 400 million image and caption pairs found on the internet; wav2vec 2.0 masks parts of speech in its internal representation and solves a contrastive task over them. Nobody labelled any of it by hand.
+
+## Contrastive learning in one picture
+
+Take a photo and make two **views** of it with **augmentation**: crop one, change the colours of the other, flip one. They are different pictures of the same thing. Contrastive training pulls the two views' embeddings together and pushes them away from the embeddings of every other photo in the batch (the **negatives**).
+
+The loss that does this is called **InfoNCE** (named in the contrastive predictive coding paper; SimCLR uses a close variant it calls NT-Xent, and CLIP applies the same idea to image and caption pairs). For one anchor it is a softmax over similarities where the right answer is the anchor's partner. A worked example with cosine similarities: the partner scores 0.9 and three negatives score 0.2, 0 and −0.3. With a temperature of 0.5 divide each by 0.5 to get 1.8, 0.4, 0 and −0.6. Exponentiating gives 6.05, 1.49, 1.00 and 0.55, which sum to 9.09. The partner's share is 6.05 ÷ 9.09 = 0.665, and the loss is −ln 0.665 = 0.41. If instead the partner scored 0.2 and one negative scored 0.9, the partner's share would fall to 0.16 and the loss would be about 1.8. A lower temperature sharpens the contrast: at 0.1 the first case has a loss of about 0.001.
+
+What the model learns depends on the augmentations, because they define what counts as "the same". The SimCLR paper reports that the combination of random crops and colour distortion is crucial, and that contrastive learning benefits from larger batches (more negatives) and more training steps than supervised learning. One way to read the colour result is that colour statistics can act as a shortcut, much like the toy's background below.
+
+## Try it: pull together, push apart
+
+This toy has 36 items with four numbers each. Two numbers (content) are near one of three class centres. Two (background) are random and mean nothing, like the table behind a photographed object. The classes are hidden from training and used only to show you the result. The encoder is a single linear map from 4 numbers to 2.
+
+<ContrastiveLab client:visible />
+
+Try these in order:
+
+1. Leave augmentation at 1.0 and press **Train 150 steps**. The same-class score rises from 36% to 100%, and the bars show the weight on the background inputs falling to nearly zero. Views of one item agree only by their content, so the encoder learned to use content. The loss also falls, and no label was used.
+2. Move augmentation to 0. Changing a setting restarts training. Train 150 steps again. Now the two views have identical backgrounds, so the background is a **shortcut**: it identifies the pair without telling you anything about the class. The weights stay on it and the same-class score stays low, about 44% here.
+3. Try 0.3. The result is between the two and depends on the start, which is a reminder that weak augmentation gives a fragile result.
+
+## Transfer learning: reuse what was learned
+
+Once a model has a good representation, you rarely train a new model from nothing. You **transfer** it. There are two main ways.
+
+- **Feature extraction** (also called a linear probe): freeze the pretrained model and train a new small head on top of its outputs. It is cheap, it is hard to overfit, and it needs few labels.
+- **Fine-tuning**: continue training the pretrained weights too, all of them or only the top layers, normally with a smaller learning rate than the new head, so the good weights are not wrecked in the first steps. It can reach higher accuracy and needs more data. It can also cause forgetting of what the model knew before, as [Fine-tuning in practice](../../llm/fine-tuning-in-practice/) explains for language models.
+
+CS231n's rule of thumb depends on two things, how much new data you have and how similar it is to the pretraining data.
+
+| | New data similar | New data very different |
+|---|---|---|
+| **Small** | Train a linear classifier on the pretrained features | Still keep it simple, and try features from earlier layers |
+| **Large** | Fine-tune the whole network | Enough data to train a lot; starting from pretrained weights usually still helps |
+
+The reason this works is that early layers learn general features (edges, colour blobs) and later layers become specific to the original task. Yosinski and colleagues measured this layer by layer. Reported results are striking. ULMFiT matched training from scratch on 100 times more data using only 100 labelled examples, and wav2vec 2.0 reached a 4.8% word error rate on a clean test set with just ten minutes of labelled speech after pretraining on 53,000 hours of unlabelled audio (see [Speech recognition](../../audio/speech-recognition/) for what WER means).
+
+At the far end of transfer there is no training at all. CLIP does **zero-shot** classification by comparing an image with a sentence for each label, and GPT-3 did few-shot tasks purely from examples written into the prompt, with no weight updates ([Prompting, RAG or fine-tuning?](../../llm/prompting-vs-rag-vs-fine-tuning/) compares the choices for language models).
+
+## Try it: accuracy against number of labels
+
+This demo reuses the contrastive encoder from the toy above, frozen, and compares a new classifier on its two output numbers with a classifier trained from scratch on the four raw numbers. Both use the same simple classifier and the same labelled examples.
+
+<TransferLab client:visible />
+
+1. With the defaults, drag the slider from 3 labels to 96. With 3 labels (one per class) the frozen features score about 97% and the from-scratch model about 45%. By 96 labels the two are about level. Pretraining bought the most when labels were scarce.
+2. Switch pretraining to **No augmentation**. The features built on the shortcut give about 54% with 3 labels and stay below 70% however many you add, and from about 6 labels they are worse than training from scratch. A poor pretext task is worse than none.
+3. Switch the new task to **Different kind of data**. Now the class signal sits in the two numbers that pretraining learned to ignore. The frozen features stay at chance (about 33%) however many labels you have, while the from-scratch model climbs past 95%.
+
+## When transfer helps, and when it fails
+
+- **The pretext task decides what survives.** A representation keeps what helps solve the pretext task and throws the rest away. If your task depends on what was thrown away, as in the third experiment, frozen features cannot recover it. Fine-tuning or training from scratch can.
+- **Distance matters.** Yosinski and colleagues found that transferability suffers when the later layers have specialised to the original task, and also when splitting a network between co-adapted layers causes optimisation difficulties. Microscope images are CS231n's example of data that is "very different" from ImageNet.
+- **You inherit the pretraining data.** A pretrained model can carry the gaps, biases and mistakes of its pretraining data ([When examples are unfair](../../responsible/when-examples-are-unfair/)), and its licence and source matter. If your test examples were also in that data, scores look better than they should.
+- **Always run the baseline.** Train something simple from scratch on your own labelled data and compare on a held-out set from your real use case, as the second demo does.
+
+<Callout title="Where this meets the rest of the track">
+
+Large language models are pretrained by next-token prediction, which is self-supervised ([The training pipeline](../../foundations/training-pipeline/)). The embeddings of [Tokens and embeddings](../../foundations/tokens-and-embeddings/) are representations in this sense, and the image and text space in [Multimodal models](../../foundations/multimodal-models/) comes from contrastive training. Transfer in vision, with a CNN trained on ImageNet, is in [How computers see](../how-computers-see/).
+
+</Callout>
+
+<Deep title="InfoNCE precisely, and what the toy leaves out">
+
+For a batch of N items with two views each, there are 2N views. For view i with partner j the loss is −log( exp(sim(z<sub>i</sub>, z<sub>j</sub>) / τ) ÷ Σ<sub>k≠i</sub> exp(sim(z<sub>i</sub>, z<sub>k</sub>) / τ) ), averaged over all 2N views, where sim is cosine similarity and τ is the temperature. Every other view is a negative, so each anchor sees 2N − 2 of them, which is why larger batches help. The lab implements exactly this and its gradient is checked against finite differences in its tests.
+
+SimCLR computes the loss on the output of a small nonlinear head and keeps the layer before the head as the representation, because it reports that adding that learnable nonlinear transformation substantially improves the representations. Other methods such as MAE avoid negatives altogether by reconstructing the masked pixels, and DINO learns without labels by self-distillation.
+
+The toy simplifies a lot. Its encoder is linear, not deep, and only its direction counts. The frozen features have two numbers, and the classifier is softmax regression. All data is invented, so the numbers show the shape of the effects (what a shortcut does, what scarce labels do, how a mismatched task hurts) and not how large they are on real data.
+
+</Deep>
+
+## What to remember
+
+- Self-supervised learning makes labels from the data: predict the next token, fill in the masked part, or match two views of one item. The goal is the representation, not the exercise.
+- Contrastive learning pulls two views together and pushes other items away. The augmentations you choose define what the model learns to ignore, and weak ones allow a shortcut.
+- Transfer learning reuses a pretrained model: freeze it and train a head when labels are few or the data is similar, and fine-tune with a small learning rate when you have more data.
+- Pretraining helps most when labels are scarce. It can fail when the new task depends on something the pretext task discarded, and you inherit the pretraining data's flaws.
+- Zero-shot and few-shot use are the limit of transfer: no weight updates at all.
+- Compare against a simple from-scratch baseline on your own held-out data.
+
+Next: [Diffusion models](../diffusion-models/) show a different way to learn to generate, by learning to undo noise.

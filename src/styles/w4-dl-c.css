@@ -1,0 +1,499 @@
+/* Styles for the interactive components in the wave 4 "dl-c" lesson batch. Keep every class under this batch's own prefix (wc-). */
+
+/* series colours that stay apart for most kinds of colour blindness; lines also differ in dash pattern */
+.wc {
+  --wc-a: #2563eb;
+  --wc-b: #d96400;
+  --wc-c: #0b7a6b;
+  --wc-d: #7a7694;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .wc {
+    --wc-a: #6ea8ff;
+    --wc-b: #ffa24d;
+    --wc-c: #4fd8ac;
+    --wc-d: #a29dc4;
+  }
+}
+:root[data-theme='dark'] .wc {
+  --wc-a: #6ea8ff;
+  --wc-b: #ffa24d;
+  --wc-c: #4fd8ac;
+  --wc-d: #a29dc4;
+}
+
+.wc .wc-intro {
+  margin: 0 0 0.8rem;
+  font-size: 0.95rem;
+  color: var(--ink-2);
+}
+.wc .wc-h {
+  margin: 1.3rem 0 0.5rem;
+  font: 650 0.98rem var(--font-display);
+  color: var(--ink);
+}
+.wc .wc-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 0.2rem 1.6rem;
+  margin-bottom: 0.8rem;
+}
+.wc input[type='range'] {
+  touch-action: pan-y;
+}
+.wc input:focus-visible,
+.wc button:focus-visible,
+.wc select:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.wc .wc-status {
+  margin: 0.8rem 0 0.2rem;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- selective gate toy ---------- */
+
+.wc-gate .wc-rows {
+  display: grid;
+  gap: 0;
+  border-top: 1px solid var(--line-soft);
+}
+.wc-gate .wc-row {
+  display: grid;
+  grid-template-columns: 7.2rem repeat(3, minmax(0, 1fr));
+  gap: 0.4rem 0.6rem;
+  align-items: center;
+  padding: 0.2rem 0;
+  border-bottom: 1px solid var(--line-soft);
+  min-height: 46px;
+}
+.wc-gate .wc-head {
+  min-height: 0;
+  padding: 0.35rem 0;
+  font-size: 0.8rem;
+  font-weight: 650;
+  color: var(--ink-3);
+  align-items: end;
+}
+.wc-gate .wc-unread {
+  opacity: 0.55;
+}
+.wc-gate .wc-later {
+  grid-column: 2 / -1;
+  font-size: 0.85rem;
+  color: var(--ink-3);
+}
+.viz .wc-tok {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.viz .wc-tok:hover {
+  border-color: var(--signal);
+}
+.viz .wc-tok[aria-pressed='true'] {
+  background: var(--signal-wash);
+  border-color: var(--signal);
+}
+.wc-gate .wc-w {
+  font: 600 0.95rem var(--font-display);
+  overflow-wrap: anywhere;
+}
+.wc-gate .wc-gv {
+  font-size: 0.75rem;
+  color: var(--ink-3);
+}
+.wc-gate .wc-cell {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+.wc-gate .wc-bar {
+  display: block;
+  height: 12px;
+  border: 1px solid var(--line-soft);
+  border-radius: 3px;
+  background: var(--surface);
+  overflow: hidden;
+}
+.wc-gate .wc-fill {
+  display: block;
+  height: 100%;
+  transition: width 0.25s var(--ease);
+}
+.wc-gate .wc-f-fixed {
+  background: var(--wc-b);
+}
+.wc-gate .wc-f-sel {
+  background: var(--wc-c);
+}
+.wc-gate .wc-f-cache {
+  background: var(--wc-d);
+  opacity: 0.7;
+}
+.wc-gate .wc-pv {
+  font-size: 0.8rem;
+  color: var(--ink-2);
+}
+@media (max-width: 420px) {
+  .wc-gate .wc-row {
+    gap: 0.3rem 0.4rem;
+    grid-template-columns: 6.4rem repeat(3, minmax(0, 1fr));
+  }
+  .wc-gate .wc-head {
+    font-size: 0.74rem;
+  }
+}
+
+/* ---------- scan visualiser ---------- */
+
+.wc-scan .wc-pics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+  gap: 1rem 1.6rem;
+  margin: 0.8rem 0 0.4rem;
+}
+.wc-scan .wc-fig {
+  margin: 0;
+  min-width: 0;
+}
+.wc-scan .wc-figcap {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ink-2);
+  margin-bottom: 0.4rem;
+}
+.wc-scan .wc-svg {
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  height: auto;
+}
+.wc-scan .wc-chain {
+  max-width: 300px;
+}
+.wc-scan .wc-frame {
+  fill: none;
+  stroke: var(--line-soft);
+}
+.wc-scan .wc-cell-p {
+  fill: var(--wc-b);
+  opacity: 0.8;
+}
+.wc-scan .wc-cell-d {
+  fill: var(--wc-b);
+}
+.wc-scan .wc-link {
+  stroke: var(--line);
+  stroke-width: 1.5;
+}
+.wc-scan .wc-node {
+  fill: var(--wc-a);
+}
+.wc-scan .wc-count {
+  margin: 0.4rem 0 0;
+  font-size: 0.9rem;
+  color: var(--ink-2);
+}
+.wc-scan .wc-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.4rem;
+}
+.viz .wc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.3rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font: 600 0.88rem var(--font-display);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.viz .wc-chip:hover {
+  border-color: var(--signal);
+}
+.viz .wc-chip[aria-pressed='true'] {
+  background: var(--signal-wash);
+  border-color: var(--signal);
+}
+.wc-scan .wc-sw {
+  flex: none;
+  width: 18px;
+  height: 0;
+  border-top: 3px solid currentColor;
+}
+.wc-scan .wc-chip.wc-l-attn .wc-sw {
+  color: var(--wc-b);
+}
+.wc-scan .wc-chip.wc-l-hyb .wc-sw {
+  color: var(--wc-c);
+  border-top-style: dashed;
+}
+.wc-scan .wc-chip.wc-l-ssm .wc-sw {
+  color: var(--wc-a);
+  border-top-style: dotted;
+}
+.wc-scan .wc-chart {
+  display: block;
+  width: 100%;
+  max-width: 560px;
+  height: auto;
+  margin: 0.6rem 0;
+}
+.wc-scan .wc-grid {
+  stroke: var(--line-soft);
+}
+.wc-scan .wc-axis {
+  stroke: var(--line);
+}
+.wc-scan .wc-ax {
+  fill: var(--ink-2);
+  font: 500 13px var(--font-display);
+}
+.wc-scan .wc-line {
+  stroke-width: 2;
+  opacity: 0.55;
+}
+.wc-scan .wc-line.wc-on {
+  stroke-width: 3.2;
+  opacity: 1;
+}
+.wc-scan .wc-line {
+  fill: none;
+}
+.wc-scan .wc-line.wc-l-attn {
+  stroke: var(--wc-b);
+}
+.wc-scan .wc-line.wc-l-hyb {
+  stroke: var(--wc-c);
+  stroke-dasharray: 8 5;
+}
+.wc-scan .wc-line.wc-l-ssm {
+  stroke: var(--wc-a);
+  stroke-dasharray: 2 4;
+  stroke-linecap: round;
+}
+.wc-scan .wc-dot {
+  stroke: var(--surface);
+  stroke-width: 1.5;
+}
+.wc-scan .wc-dot.wc-l-attn {
+  fill: var(--wc-b);
+}
+.wc-scan .wc-dot.wc-l-hyb {
+  fill: var(--wc-c);
+}
+.wc-scan .wc-dot.wc-l-ssm {
+  fill: var(--wc-a);
+}
+.wc-scan .wc-now {
+  stroke: var(--ink-3);
+  stroke-dasharray: 3 3;
+}
+.wc-scan .wc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+.wc-scan .wc-cap {
+  caption-side: top;
+  text-align: left;
+  padding-bottom: 0.3rem;
+  font-size: 0.85rem;
+  color: var(--ink-3);
+}
+.wc-scan .wc-table th,
+.wc-scan .wc-table td {
+  padding: 0.4rem 0.4rem;
+  border-bottom: 1px solid var(--line-soft);
+  text-align: left;
+  font-weight: 400;
+  vertical-align: top;
+}
+.wc-scan .wc-table td {
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* ---------- Q-learning grid lab ---------- */
+
+.wc-grid-lab .wc-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.4rem;
+}
+.wc-grid-lab .wc-three {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+}
+.wc-grid-lab .wc-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.4rem 0 0.9rem;
+}
+.viz .wc-grid-lab .btn,
+.wc-grid-lab .btn {
+  min-height: 44px;
+  justify-content: center;
+}
+.wc-grid-lab .wc-board {
+  display: grid;
+  gap: 2px;
+  max-width: 520px;
+}
+.wc-grid-lab .wc-c {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  min-width: 0;
+  padding: 0;
+  border: 1px solid var(--line-soft);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-display);
+  line-height: 1.1;
+  cursor: pointer;
+  overflow: hidden;
+}
+.wc-grid-lab .wc-wall {
+  background: var(--ink-3);
+  opacity: 0.55;
+  cursor: default;
+}
+.wc-grid-lab .wc-k-cliff {
+  background: repeating-linear-gradient(135deg, var(--line-soft) 0 5px, transparent 5px 10px);
+}
+.wc-grid-lab .wc-k-goal {
+  background: var(--tint-mint);
+}
+.wc-grid-lab .wc-k-start .wc-tag,
+.wc-grid-lab .wc-k-goal .wc-tag,
+.wc-grid-lab .wc-k-coin .wc-tag,
+.wc-grid-lab .wc-k-cliff .wc-tag {
+  font-weight: 700;
+}
+.wc-grid-lab .wc-k-coin {
+  box-shadow: inset 0 0 0 2px var(--wc-b);
+}
+.wc-grid-lab .wc-tag {
+  position: absolute;
+  top: 1px;
+  left: 3px;
+  font-size: 0.7rem;
+  color: var(--ink-2);
+}
+.wc-grid-lab .wc-arrow {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+.wc-grid-lab .wc-val {
+  font-size: 0.75rem;
+  color: var(--ink);
+}
+.wc-grid-lab .wc-path {
+  box-shadow: inset 0 0 0 2.5px var(--signal);
+}
+.wc-grid-lab .wc-k-coin.wc-path {
+  box-shadow: inset 0 0 0 2.5px var(--signal), inset 0 0 0 5px var(--wc-b);
+}
+.wc-grid-lab .wc-sel {
+  outline: 2px solid var(--ink);
+  outline-offset: -1px;
+}
+.wc-grid-lab .wc-legend {
+  margin: 0.6rem 0 0;
+  font-size: 0.85rem;
+  color: var(--ink-3);
+}
+.wc-grid-lab .wc-selected {
+  margin: 0.6rem 0 0;
+  font-size: 0.92rem;
+  color: var(--ink-2);
+}
+.wc-grid-lab .wc-bestq {
+  color: var(--ink);
+  font-weight: 650;
+  text-decoration: underline;
+}
+.wc-grid-lab .wc-fig {
+  margin: 0.8rem 0 0;
+}
+.wc-grid-lab .wc-figcap {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.wc-grid-lab .wc-ret {
+  display: block;
+  width: 100%;
+  max-width: 520px;
+  height: auto;
+}
+.wc-grid-lab .wc-grid {
+  stroke: var(--line-soft);
+}
+.wc-grid-lab .wc-ax {
+  fill: var(--ink-2);
+  font: 500 13px var(--font-display);
+}
+.wc-grid-lab .wc-retline {
+  stroke: var(--wc-c);
+  stroke-width: 2.2;
+}
+.wc-grid-lab .wc-empty {
+  font-size: 0.88rem;
+  color: var(--ink-3);
+  margin: 0.4rem 0;
+}
+
+/* the world chips and the lesson-1 chips share one look */
+.viz .wc-grid-lab .wc-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.3rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font: 600 0.88rem var(--font-display);
+  text-align: left;
+  cursor: pointer;
+}
+.viz .wc-grid-lab .wc-chip[aria-pressed='true'] {
+  background: var(--signal-wash);
+  border-color: var(--signal);
+}
+
+/* phones: cells are narrow, so let them grow taller to stay at least 44px to tap */
+@media (max-width: 520px) {
+  .wc-grid-lab .wc-c {
+    aspect-ratio: auto;
+    min-height: 44px;
+  }
+}
