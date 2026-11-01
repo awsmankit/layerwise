@@ -1,0 +1,133 @@
+---
+title: "Agent memory and context engineering"
+track: rag-agents
+level: intermediate
+order: 4.4
+summary: The context window is a budget, not a store. What to put in it, the three kinds of memory and how they differ from RAG, five strategies for long runs, how memory fails, and how to test it. Includes a simulator that replays a 40-turn session under four strategies.
+updated: 2026-11-01
+sources:
+  - label: "Effective context engineering for AI agents (Anthropic Engineering, Sep 2025)"
+    url: https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
+  - label: "How we built our multi-agent research system (Anthropic Engineering)"
+    url: https://www.anthropic.com/engineering/multi-agent-research-system
+  - label: "Lost in the Middle: How Language Models Use Long Contexts (Liu et al., 2023)"
+    url: https://arxiv.org/abs/2307.03172
+  - label: "Context Rot: How Increasing Input Tokens Impacts LLM Performance (Chroma, July 2025)"
+    url: https://research.trychroma.com/context-rot
+  - label: "MemGPT: Towards LLMs as Operating Systems (Packer et al., 2023)"
+    url: https://arxiv.org/abs/2310.08560
+  - label: "Cognitive Architectures for Language Agents, CoALA (Sumers et al., 2023)"
+    url: https://arxiv.org/abs/2309.02427
+  - label: "Mem0: Building Production-Ready AI Agents with Scalable Long-Term Memory (2025)"
+    url: https://arxiv.org/abs/2504.19413
+  - label: "Memory concepts (LangGraph documentation)"
+    url: https://docs.langchain.com/oss/python/concepts/memory
+  - label: "Memory tool (Claude Platform docs)"
+    url: https://platform.claude.com/docs/en/agents-and-tools/tool-use/memory-tool
+  - label: "Compaction overview (Claude Platform docs)"
+    url: https://platform.claude.com/docs/en/build-with-claude/compaction
+  - label: "AgentPoison: Red-teaming LLM Agents via Poisoning Memory or Knowledge Bases (Chen et al., 2024)"
+    url: https://arxiv.org/abs/2407.12784
+---
+
+import ContextCompaction from '../../../components/viz/ContextCompaction.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+An agent that works for an hour produces far more text than any window holds. Tool output, file contents and its own reasoning pile up on every step, and every step resends them. [The context window lesson](../../llm/context-window-and-caching/) covered what fills the window and why it is not free. This lesson is about deciding, step by step, what stays in, what goes out, and what is kept somewhere else. Anthropic calls that curation **context engineering**: choosing what configuration of tokens is most likely to produce the behaviour you want. Product details are as of 1 November 2026.
+
+## The window is a budget
+
+Longer windows do not remove the problem. Chroma's July 2025 report tested 18 models and found that performance becomes less reliable as input grows, even on simple tasks. Anthropic calls the effect **context rot**: as tokens increase, the ability to recall information from the context decreases, and it describes an "attention budget" that every added token draws on. Position matters too. Liu et al. found that performance is often highest when relevant information is at the beginning or end of the input, and degrades significantly when it is in the middle.
+
+Anthropic's rule is to find the smallest set of high-signal tokens that makes the outcome likely. What competes for that space:
+
+| Part | What goes there | Why it needs care |
+| --- | --- | --- |
+| System prompt | Role, rules, tone | Aim for the "right altitude": specific enough to steer, not brittle if-else logic |
+| Tool definitions | Names, descriptions, schemas | Resent every call. See [designing tools](../designing-tools-for-agents/) |
+| Retrieved facts | Passages, records, user profile | Only what this step needs |
+| History | Earlier messages and tool results | Grows every turn; the usual culprit |
+| Scratchpad | The agent's own plan and notes | Useful, but it also grows |
+
+## Three kinds of memory, and how they differ from RAG
+
+- **Short-term memory** is the message history of the current thread. LangGraph keeps it as part of the agent's state, saved in thread-scoped checkpoints.
+- **Working memory** is what the agent writes down to carry a task: a plan, a to-do list, a `NOTES.md`. Anthropic calls this structured note-taking. It sits outside the window and is read back when needed.
+- **Long-term memory** persists across sessions and is retrieved on demand. The CoALA paper and LangGraph's docs split it into **semantic** memory (facts, such as a user's preferences), **episodic** memory (past experiences, often used as few-shot examples) and **procedural** memory (instructions, such as the system prompt, which an agent may refine from feedback).
+
+MemGPT (2023) framed the whole thing like an operating system: a small fast "main context" and slower external storage, with the model moving data between them. Mem0 (2025) is one production approach, extracting, consolidating and retrieving salient facts from conversations.
+
+**Memory is not the same as RAG.** Both retrieve text into the window, often with the same embeddings, but the lifecycle differs.
+
+| | RAG | Agent memory |
+| --- | --- | --- |
+| Written by | Authors of documents, before the agent runs | The agent or your app, from its own interactions |
+| Changes | When the corpus is re-indexed | Constantly: add, update, supersede, delete |
+| Scope | Usually shared by everyone | Per user, per task or per agent |
+| Hard question | Is the right passage retrieved? | What is worth remembering, and is it still true? |
+
+LangGraph's docs make a similar point: semantic memory (stored facts) is not semantic search (a retrieval method).
+
+## Five strategies for a long run
+
+1. **Truncation or a sliding window.** Drop the oldest turns. Simple and predictable, and it silently drops early rules.
+2. **Summarisation, or compaction.** When the context nears its limit, summarise it and restart with the summary. Anthropic describes keeping architectural decisions and unresolved bugs while discarding redundant tool output, and warns that overly aggressive compaction can lose context whose importance only appears later. Its advice: tune the compaction prompt on complex traces, maximise recall first, then improve precision.
+3. **Clearing tool results.** Once a tool result is deep in the history, the agent rarely needs the raw text again. Anthropic calls this one of the safest, lightest-touch forms of compaction.
+4. **Structured notes written to files.** The agent saves decisions and progress and reads them later. Anthropic's examples include a to-do list and a `NOTES.md`, and it offers a file-based memory tool in which your application runs the file operations.
+5. **Sub-agents with clean contexts.** A sub-agent explores in its own window, perhaps using tens of thousands of tokens, and returns a summary of often 1,000 to 2,000 tokens. The cost is real: in Anthropic's data, agents used about 4 times the tokens of chat, and multi-agent systems about 15 times.
+
+A sixth idea runs through all of them: **just-in-time retrieval**. Keep lightweight references (file paths, queries, links) and load content with tools when needed, instead of loading everything up front. Anthropic notes the trade-off: it is slower than precomputed retrieval, and the agent needs good tools and heuristics to avoid dead ends. Many systems mix both, loading a small file up front and letting the agent search for the rest.
+
+Two cautions. Rewriting early context changes the start of the prompt, so a cached prefix stops matching, as the context window lesson explains. And all of these lose something, which the simulator below makes visible.
+
+## Try it: the compaction simulator
+
+A scripted coding session of 40 turns, with five facts planted along the way and five questions asked afterwards. Pick a strategy, then drag the turn slider to see when each fact is lost.
+
+<ContextCompaction client:visible />
+
+Things to notice:
+
+- **Do nothing** works until the window fills, then the run fails. Real windows are far larger than this toy one, but the same growth happens on longer runs.
+- **Truncating** keeps the window full the whole time, which is expensive, and the first rules go first.
+- **Summarising** stays under the limit. In this script the pinned user rule survives both compactions, a detail summarised twice is blurred, and details left out are gone. A summary of a summary is lossier than the first.
+- **Notes plus retrieval** is cheapest, but only as good as what the agent chose to write. Tell the agent in its prompt what must be noted, and the last two facts come back.
+
+The retention rules are scripted illustrations of typical risks. A well-tuned summary prompt can do better and a careless one worse, so test yours.
+
+## How memory fails
+
+- **Context rot and the middle.** More context can make recall worse. Put the rules that matter at the start or end, and restate a constraint when it becomes relevant.
+- **Lossy summaries.** The one constraint that mattered is the one the summary dropped. Pin user rules and safety constraints so compaction keeps them verbatim.
+- **Stale facts.** The staging URL changed, but the old note remains. Store a date with each memory, overwrite or supersede instead of appending, and expire what is not used. Anthropic's memory-tool docs suggest deleting memory files not accessed in a long time.
+- **Poisoning.** Memory that is written from untrusted text can carry an attacker's instructions into every later session. The AgentPoison paper poisoned an agent's memory or knowledge base with a poison rate under 0.1 percent and reported an average attack success rate above 80 percent across three agents. Treat memory as untrusted data: record where each entry came from, do not let content from tool results write rules, and review high-impact entries. [LLM security](../../evals/llm-security/) covers the permission boundary.
+- **Wrong-user leakage.** Scope every memory by user and tenant, in the store and in the query, not in the prompt.
+- **Privacy.** Decide what must never be remembered: credentials and API keys, payment details, health or other sensitive personal data, and anything the user asked you to forget. Anthropic's docs note that Claude usually refuses to write sensitive information to memory but advise adding your own validation that strips it. Give users a way to see and delete what is stored. Data-protection rules such as the EU's GDPR can give people rights over stored personal data, so involve your privacy team. This is not legal advice.
+
+<Deep title="Memory that the model controls, and memory the app manages">
+
+In LangGraph's terms, memory can be written "in the hot path", where the agent decides to save a fact before replying, or in the background, by a separate process that extracts memories after the conversation. Hot-path writes are immediate but add latency and rely on the agent's judgement. Background writes cost no latency and can be more thorough, but facts arrive late. The notes strategy in the simulator is a hot-path design. Its weak point is exactly what the policy checkbox shows: the agent decides what is worth noting.
+
+</Deep>
+
+## Testing memory
+
+Treat memory like any other component with a test set. [Evaluating agents](../../evals/evaluating-agents/) covers the graders; the cases below are the memory-specific ones.
+
+1. **Recall probes.** Plant a fact at turn k, ask about it at turn n, and vary both. Public benchmarks such as LongMemEval (used in Chroma's report) and LOCOMO (used in the Mem0 paper) work this way.
+2. **Update tests.** Change a fact and check that the new value wins, not the old.
+3. **Negative tests.** Give the agent a fake secret and check that it never reaches the store. Delete a memory and check that it cannot be recalled.
+4. **Isolation tests.** User A's memory must never appear in user B's session.
+5. **Poisoning probes.** Put an instruction in a tool result and check that it is not saved as a rule.
+6. **Compaction regression.** Replay the same long trace after any change to the compaction prompt and check that the pinned constraints survive.
+
+## What to remember
+
+- The window is a budget. More context is not better context, and position matters.
+- Short-term is the thread, working memory is notes, long-term is retrieved facts, episodes and instructions. Memory is written by the agent and changes. RAG is not.
+- Truncation, compaction, clearing tool output, notes, sub-agents and just-in-time retrieval all trade tokens for lost detail.
+- Memory fails by rot, lossy summaries, stale facts, poisoning, leakage and privacy. Pin rules, date entries, scope by user and treat memory as untrusted.
+- Test with planted facts, updates, deletions, isolation and injections.
+
+Next: [The tools and the ecosystem](../the-tools-and-ecosystem/). For the protocol side, see [MCP in depth](../mcp-in-depth/).

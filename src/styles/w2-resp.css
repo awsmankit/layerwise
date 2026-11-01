@@ -1,1 +1,655 @@
 /* Styles for the interactive components in the wave 2 "resp" lesson batch. Keep every class under this batch's own prefix. */
+
+/* ---------- shared bits (prefix rs-) ---------- */
+
+.rs-h {
+  margin: 1.3rem 0 0.4rem;
+  font: 600 1.02rem var(--font-display);
+  color: var(--ink);
+}
+.rs-note {
+  margin: 0 0 0.8rem;
+  font-size: 0.95rem;
+  color: var(--ink-2);
+}
+.rs-small {
+  margin: 0.35rem 0 0;
+  font-size: 0.88rem;
+  color: var(--ink-2);
+  line-height: 1.4;
+}
+.rs-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+}
+.viz .rs-actions .btn,
+.viz .rs-fl-presets .btn,
+.viz .rs-fl-tol .btn,
+.viz .rs-dp-row .btn,
+.viz .rs-rh-story .btn {
+  min-height: 44px;
+}
+.viz .btn[aria-pressed='true'] {
+  background: var(--signal-wash);
+  border-color: var(--signal);
+  color: var(--signal-ink);
+}
+.viz .btn:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.rs-result {
+  margin-top: 1rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+.rs-result p {
+  margin: 0;
+}
+.rs-result p + p {
+  margin-top: 0.35rem;
+}
+.rs-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.rs-tick,
+.rs-fl-tick,
+.rs-dp-tick {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  fill: var(--ink-3);
+}
+
+/* ---------- Threshold fairness lab (rs-fl-) ---------- */
+
+.rs-fl-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.rs-fl-groups {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.2rem 1.6rem;
+  margin-top: 0.6rem;
+}
+@media (max-width: 720px) {
+  .rs-fl-groups {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.rs-fl-group {
+  min-width: 0;
+}
+.rs-fl-svg,
+.rs-dp-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 460px;
+  margin: 0.4rem auto 0;
+}
+.rs-fl-pos {
+  fill: var(--signal);
+  opacity: 0.9;
+}
+.rs-fl-neg {
+  fill: var(--ink-3);
+  opacity: 0.4;
+}
+.rs-fl-approve {
+  fill: var(--tint-mint);
+}
+.rs-fl-axis {
+  stroke: var(--line);
+  stroke-width: 1;
+  fill: none;
+}
+.rs-fl-cut {
+  stroke: var(--ink);
+  stroke-width: 2;
+  stroke-dasharray: 5 3;
+  fill: none;
+}
+.rs-fl-legend,
+.rs-dp-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 1rem;
+  margin: 0.5rem 0 0.6rem;
+  font-size: 0.85rem;
+  color: var(--ink-2);
+}
+.rs-fl-legend span,
+.rs-dp-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.rs-fl-sw,
+.rs-dp-sw {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--line);
+  flex: none;
+}
+.rs-fl-sw-pos {
+  background: var(--signal);
+}
+.rs-fl-sw-neg {
+  background: var(--ink-3);
+  opacity: 0.45;
+}
+.rs-fl-sw-cut {
+  height: 0;
+  border: 0;
+  border-top: 2px dashed var(--ink);
+}
+.rs-fl-conf,
+.rs-fl-rates {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+.rs-fl-conf th,
+.rs-fl-conf td {
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--line-soft);
+  text-align: center;
+}
+.rs-fl-conf thead th {
+  font-weight: 650;
+  background: var(--surface);
+}
+.rs-fl-conf tbody th {
+  text-align: left;
+  font-weight: 600;
+}
+.rs-fl-conf td small {
+  display: block;
+  font-size: 0.74rem;
+  color: var(--ink-3);
+}
+.rs-fl-good {
+  background: var(--tint-mint);
+}
+.rs-fl-bad {
+  background: var(--tint-pink);
+}
+.rs-fl-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.rs-fl-scroll:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.rs-fl-rates th,
+.rs-fl-rates td {
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid var(--line-soft);
+  text-align: right;
+}
+.rs-fl-rates td {
+  white-space: nowrap;
+}
+@media (max-width: 480px) {
+  .rs-fl-rates th,
+  .rs-fl-rates td {
+    padding: 0.4rem 0.35rem;
+    font-size: 0.86rem;
+  }
+  .rs-fl-rates th small {
+    display: none;
+  }
+}
+.rs-fl-rates thead th {
+  background: var(--surface);
+  font-weight: 650;
+}
+.rs-fl-rates tbody th,
+.rs-fl-rates thead th:first-child {
+  text-align: left;
+  font-weight: 600;
+}
+.rs-fl-rates th small {
+  display: block;
+  font-weight: 400;
+  font-size: 0.76rem;
+  color: var(--ink-3);
+}
+.rs-fl-tol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  font-size: 0.92rem;
+  color: var(--ink-2);
+}
+.rs-fl-criteria {
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+.rs-fl-criteria li {
+  display: grid;
+  grid-template-columns: 1.6rem 1fr;
+  gap: 0.4rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  font-size: 0.92rem;
+  line-height: 1.4;
+  margin: 0;
+}
+.rs-fl-criteria .rs-fl-mark {
+  font-weight: 700;
+  text-align: center;
+}
+.rs-fl-criteria .rs-fl-yes {
+  background: var(--tint-mint);
+}
+.rs-fl-criteria .rs-fl-yes .rs-fl-mark {
+  color: var(--ok);
+}
+.rs-fl-criteria .rs-fl-no {
+  background: var(--tint-pink);
+}
+.rs-fl-criteria .rs-fl-no .rs-fl-mark {
+  color: var(--warn);
+}
+.rs-fl-acc {
+  font-size: 1.05rem;
+}
+.rs-fl-acc b {
+  font-size: 1.5rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Differential-privacy noise demo (rs-dp-) ---------- */
+
+.rs-dp-people {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+  gap: 0.35rem;
+}
+.rs-dp-people li {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  font-size: 0.88rem;
+  background: var(--surface);
+}
+.rs-dp-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1.5px solid var(--ink-3);
+  flex: none;
+}
+.rs-dp-flag .rs-dp-dot {
+  background: var(--signal);
+  border-color: var(--signal);
+}
+.rs-dp-target {
+  border-color: var(--signal);
+  font-weight: 650;
+}
+.rs-dp-gone {
+  opacity: 0.35;
+  text-decoration: line-through;
+}
+.rs-dp-in {
+  fill: var(--signal);
+  opacity: 0.6;
+}
+.rs-dp-out {
+  fill: var(--warn);
+  opacity: 0.5;
+}
+.rs-dp-axis {
+  stroke: var(--line);
+  stroke-width: 1;
+  fill: none;
+}
+.rs-dp-true {
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+  fill: none;
+}
+.rs-dp-true-in {
+  stroke: var(--signal-ink);
+}
+.rs-dp-true-out {
+  stroke: var(--warn);
+}
+.rs-dp-sw-in {
+  background: var(--signal);
+  opacity: 0.6;
+}
+.rs-dp-sw-out {
+  background: var(--warn);
+  opacity: 0.5;
+}
+.rs-dp-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+  font-size: 0.92rem;
+  color: var(--ink-2);
+}
+.rs-dp-budget {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  min-height: 24px;
+  margin: 0.5rem 0;
+}
+.rs-dp-budget i {
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--signal);
+  background: var(--signal-wash);
+  border-radius: 4px;
+}
+.rs-dp-budget em {
+  font-size: 0.85rem;
+  color: var(--ink-2);
+}
+.rs-dp-over {
+  color: var(--warn);
+}
+.rs-dp-line {
+  margin: 0;
+}
+
+/* ---------- Where could this leak? (rs-lk-) ---------- */
+
+.rs-lk-group {
+  margin-bottom: 0.9rem;
+}
+.rs-lk-gtitle {
+  margin: 0 0 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  color: var(--ink-3);
+}
+.rs-lk-flow {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.5rem;
+}
+.rs-lk-flow li {
+  margin: 0;
+}
+.viz .rs-lk-node {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 48px;
+  padding: 0.5rem 0.7rem;
+  text-align: left;
+  font-size: 0.92rem;
+  line-height: 1.25;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  cursor: pointer;
+}
+.viz .rs-lk-node:hover {
+  border-color: var(--signal);
+}
+.viz .rs-lk-node[aria-pressed='true'] {
+  background: var(--signal-wash);
+  border-color: var(--signal);
+  color: var(--signal-ink);
+  font-weight: 650;
+}
+.viz .rs-lk-node:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.rs-lk-n {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.rs-lk-panel {
+  margin-top: 0.6rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--tint-sky);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+.rs-lk-panel .rs-h {
+  margin-top: 0;
+}
+.rs-lk-panel p {
+  margin: 0.4rem 0 0;
+}
+.rs-lk-panel ul {
+  margin: 0.3rem 0 0;
+  padding-left: 1.2rem;
+}
+.rs-lk-panel li {
+  margin: 0.25rem 0 0;
+}
+
+/* ---------- Reward-hacking world (rs-rh-) ---------- */
+
+.rs-rh-story {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 0.5rem;
+}
+.viz .rs-rh-story .btn {
+  justify-content: flex-start;
+  text-align: left;
+  font-size: 0.92rem;
+  font-weight: 500;
+  padding: 0.55rem 0.8rem;
+  line-height: 1.3;
+}
+.rs-rh-story .btn b {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  font-size: 0.78rem;
+}
+.rs-rh-terms {
+  margin: 0.9rem 0 0;
+  padding: 0.6rem 0.8rem 0.8rem;
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+}
+.rs-rh-terms legend {
+  padding: 0 0.4rem;
+  font-size: 0.88rem;
+  color: var(--ink-2);
+}
+.rs-rh-term {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  min-height: 44px;
+  padding: 0.35rem 0;
+  cursor: pointer;
+}
+.rs-rh-term input {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin-top: 0.1rem;
+  accent-color: var(--signal);
+}
+.rs-rh-term b {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.rs-rh-term small {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--ink-2);
+}
+.rs-rh-term input:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.rs-rh-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 520px;
+  margin: 0.4rem auto 0;
+}
+.rs-rh-cell {
+  fill: var(--surface);
+  stroke: var(--line-soft);
+  stroke-width: 1;
+}
+.rs-rh-rug {
+  fill: var(--tint-pink);
+  stroke: var(--ink-3);
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+}
+.rs-rh-bin {
+  fill: var(--tint-sky);
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+.rs-rh-label {
+  font-family: var(--font-display);
+  font-size: 14px;
+  fill: var(--ink-2);
+}
+.rs-rh-count {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 650;
+  fill: var(--ink);
+}
+.rs-rh-cam rect {
+  fill: var(--ink);
+}
+.rs-rh-cam circle {
+  fill: var(--tint-sun);
+}
+.rs-rh-cam-off rect {
+  fill: var(--ink-3);
+}
+.rs-rh-cam-off circle {
+  fill: var(--surface);
+}
+.rs-rh-cross {
+  stroke: var(--warn);
+  stroke-width: 2.5;
+  fill: none;
+}
+.rs-rh-dirt circle {
+  fill: var(--cost);
+  opacity: 0.75;
+}
+.rs-rh-robot-g {
+  transition: transform 0.35s var(--ease);
+}
+@media (prefers-reduced-motion: reduce) {
+  .rs-rh-robot-g {
+    transition: none;
+  }
+}
+.rs-rh-robot {
+  fill: var(--tint-lilac);
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+.rs-rh-eye {
+  fill: var(--ink);
+}
+.rs-rh-mouth {
+  stroke: var(--ink);
+  stroke-width: 1.5;
+  fill: none;
+}
+.rs-rh-controls {
+  align-items: flex-end;
+}
+.rs-rh-scrub {
+  flex: 1 1 220px;
+}
+.rs-rh-step {
+  font-weight: 600;
+}
+.rs-rh-verdict {
+  margin-top: 0.4rem;
+}
+
+/* lists inside a lesson figure: undo the lesson body's list indent and spacing */
+.viz .rs-lk-flow,
+.viz .rs-dp-people,
+.viz .rs-fl-criteria {
+  padding-left: 0;
+  margin-left: 0;
+}
+.viz .rs-lk-flow li,
+.viz .rs-dp-people li,
+.viz .rs-fl-criteria li {
+  margin-top: 0;
+}
+.viz .rs-lk-panel ul {
+  padding-left: 1.2rem;
+}
+
+@media (max-width: 480px) {
+  .viz .rs-fl-rates th small {
+    display: none;
+  }
+  .viz .rs-fl-rates th:first-child {
+    white-space: normal;
+  }
+}

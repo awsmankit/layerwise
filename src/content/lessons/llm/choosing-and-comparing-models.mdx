@@ -1,0 +1,222 @@
+---
+title: "Choosing and comparing models: benchmarks, arenas and licences"
+track: llm
+level: intermediate
+order: 2.5
+summary: How to read a benchmark and an arena leaderboard without being fooled, how to compare models on your own task, what licences and provider terms actually say, and a selection checklist that survives model churn.
+updated: 2026-11-01
+sources:
+  - label: "Chatbot Arena: An Open Platform for Evaluating LLMs by Human Preference (Chiang et al., 2024)"
+    url: https://arxiv.org/abs/2403.04132
+  - label: "The Leaderboard Illusion (Singh et al., 2025)"
+    url: https://arxiv.org/abs/2504.20879
+  - label: "Does style matter? Disentangling style and substance in Chatbot Arena (LMSYS, 29 August 2024)"
+    url: https://lmsys.org/blog/2024-08-28-style-control/
+  - label: "LiveBench: A Challenging, Contamination-Limited LLM Benchmark (White et al., 2024)"
+    url: https://arxiv.org/abs/2406.19314
+  - label: "Benchmark Data Contamination of Large Language Models: A Survey (Xu et al., 2024)"
+    url: https://arxiv.org/abs/2406.04244
+  - label: "MMLU-Pro: A More Robust and Challenging Multi-Task Language Understanding Benchmark (Wang et al., 2024)"
+    url: https://arxiv.org/abs/2406.01574
+  - label: "Quantifying Language Models' Sensitivity to Spurious Features in Prompt Design (Sclar et al., 2023)"
+    url: https://arxiv.org/abs/2310.11324
+  - label: "Adding Error Bars to Evals (Evan Miller, 2024)"
+    url: https://arxiv.org/abs/2411.00640
+  - label: "Elo rating system (Wikipedia)"
+    url: https://en.wikipedia.org/wiki/Elo_rating_system
+  - label: "SWE-bench leaderboards"
+    url: https://www.swebench.com
+  - label: "The Open Source AI Definition 1.0 (Open Source Initiative)"
+    url: https://opensource.org/ai/open-source-ai-definition
+  - label: "Apache License, Version 2.0"
+    url: https://www.apache.org/licenses/LICENSE-2.0
+  - label: "The MIT License (Open Source Initiative)"
+    url: https://opensource.org/license/mit
+  - label: "Llama 3.3 Community License Agreement (Meta, 6 December 2024)"
+    url: https://www.llama.com/llama3_3/license/
+  - label: "Commercial Terms of Service (Anthropic, effective 17 June 2025)"
+    url: https://www.anthropic.com/legal/commercial-terms
+  - label: "Your data (OpenAI API documentation)"
+    url: https://developers.openai.com/api/docs/guides/your-data
+  - label: "Gemini API Additional Terms of Service (Google, updated 28 April 2026)"
+    url: https://ai.google.dev/gemini-api/terms
+  - label: "Data governance (Google Cloud, Gemini Enterprise Agent Platform)"
+    url: https://cloud.google.com/vertex-ai/generative-ai/docs/data-governance
+  - label: "Data protection in Amazon Bedrock (AWS documentation)"
+    url: https://docs.aws.amazon.com/bedrock/latest/userguide/data-protection.html
+  - label: "Data, privacy and security for Foundry Models sold by Azure (Microsoft Learn)"
+    url: https://learn.microsoft.com/en-us/azure/foundry/responsible-ai/openai/data-privacy
+  - label: "Model deprecations (Anthropic documentation)"
+    url: https://platform.claude.com/docs/en/about-claude/model-deprecations
+  - label: "Deprecations (OpenAI API documentation)"
+    url: https://developers.openai.com/api/docs/deprecations
+  - label: "Gemini deprecations (Google AI for Developers)"
+    url: https://ai.google.dev/gemini-api/docs/deprecations
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import EloBars from '../../../components/viz/EloBars.tsx';
+import ModelScorecard from '../../../components/viz/ModelScorecard.tsx';
+
+Most teams choose a model by looking at a leaderboard. Leaderboards are noisy, partly gamed and measure somebody else's task. Models also change every few months, so any ranking printed here would be out of date soon. This lesson teaches what survives: how to read a benchmark, how arena ratings are built and how much to trust them, how to compare models on your own work, what licences and provider terms really say, and a checklist. It names no winners on purpose.
+
+## Start with filters, not a leaderboard
+
+A sound selection has four steps, in this order.
+
+1. **Filter by hard constraints.** Licence, data residency and privacy terms, context length, modalities, price ceiling, latency ceiling. Anything that fails is out, whatever its score.
+2. **Shortlist about three** that pass, spread across size and price tiers.
+3. **Run your own eval** on your own cases ([Evals 101](../../evals/evals-101/)).
+4. **Decide on quality, cost and latency together**, then pin the exact version and keep watching.
+
+Public benchmarks and arenas help with step 2 only. They tell you which models are worth trying. They do not tell you which will work for you.
+
+## What a benchmark measures, and how it misleads
+
+A **benchmark** is a fixed set of tasks with a scoring rule, so different models can be compared on the same test. It measures how well a model does those tasks, under those prompts, with those settings. That is narrower than it sounds, and these flaws recur.
+
+| Flaw | What happens | What to do |
+|---|---|---|
+| **Contamination** | Test questions leak into training data, so the model has seen the answers. A survey of the problem describes it as inaccurate or unreliable evaluation | Prefer benchmarks that refresh their questions. LiveBench, for example, adds questions drawn from recent sources monthly |
+| **Saturation** | Top models all score near the ceiling, so the benchmark no longer separates them. The MMLU-Pro authors describe scores on the older MMLU as plateauing | Do not read a two-point gap on a saturated test as a difference |
+| **Prompt sensitivity** | The score depends on prompt wording and format. One study found differences of up to 76 accuracy points from formatting changes alone on an open model, and weak agreement between models on which format is best | Look for results across several prompt formats, not one |
+| **Cherry-picked settings** | Number of examples shown, sampling temperature, tool access, best-of-n, thinking budget and the scoring script all move the score, and a report may pick the most flattering | Compare only like with like, and read the footnotes |
+| **Not your task** | A benchmark of exam questions says little about your invoices, your tone or your tickets | Treat it as a filter, then test on your data |
+
+Benchmarks of agents and coding add one more twist: they score the model together with the scaffold around it. The SWE-bench site, as of 1 November 2026, lists a "Bash Only" leaderboard separately from others and charts results against cost limit and step limit, which is a reminder that the harness and its limits are part of the result.
+
+## How arena ratings are built
+
+A **human-preference arena** shows a person two anonymous answers to the same prompt, from two models, and asks which is better. Each vote is one head-to-head result. Chatbot Arena, the best-known example, describes its method in its paper: pairwise comparisons from a crowd of users, turned into scores.
+
+The statistical model is **Bradley-Terry**. Each model has a strength number, and the chance that A wins a vote against B depends only on the difference between their strengths. Ratings are usually shown on the **Elo** scale from chess, where a 400-point gap means 10 to 1 odds. That makes the maths easy to follow: a 20-point gap means A wins about 52.9 per cent of votes, and a 100-point gap means about 64 per cent. The Arena paper says it moved from online Elo updates to Bradley-Terry coefficients because they are better for statistical estimation. It also puts confidence intervals on the scores, using bootstrap and robust standard-error methods.
+
+Two things follow that the headline rank hides.
+
+**A small gap is a coin toss.** Take two models where A is truly 20 points stronger, so A wins 52.9 per cent of votes. With 200 votes the estimate is so noisy that the bars overlap, and in this simulation about 18 per cent of boards (72 of 400 repeated experiments) put the wrong model on top. With 1,000 votes, 3 per cent do. With 5,000 votes none flipped. To make the interval narrower than a gap of 20 points you need about 1,160 votes, and for a gap of 10 points about 4,640, because four times the votes only halves the interval.
+
+| True gap (Elo points) | A wins this share of votes | Votes before the interval is narrower than the gap (example calculation, ties excluded) |
+|---|---|---|
+| 5 | 50.7% | about 18,600 |
+| 10 | 51.4% | about 4,600 |
+| 20 | 52.9% | about 1,160 |
+| 50 | 57.1% | about 190 |
+| 100 | 64.0% | about 51 |
+
+So a gap between two models that sits inside the error bars means nothing. Do not read a published rank order beyond what the intervals support, and remember that neighbours on a list are often statistically tied.
+
+**Narrow bars can surround the wrong thing.** Votes measure which answer people prefer, not which is correct. The LMSYS team published a style-control analysis on 29 August 2024 that adjusted for answer length and markdown formatting, and found that the rankings changed noticeably, with some models dropping and others rising. A model that writes longer, tidier answers can win votes without being more accurate. More votes only make the bars tighter around the preference, not around your idea of quality.
+
+The Leaderboard Illusion paper (2025) adds a systemic point. It reports that undisclosed private testing let some providers try many variants and publish only the best score, and that proprietary models were sampled more often in battles than open-weight ones, giving some providers more data. The authors argue this leads to overfitting to the arena rather than general quality. Read it as a reason to treat any single leaderboard as one noisy, contestable signal.
+
+Try the simulator. Set a true gap and a number of votes, then repeat the experiment. Add style appeal to B to see tight bars around the wrong answer.
+
+<EloBars client:visible />
+
+<Deep title="How the error bars are drawn here">
+
+For two models, the estimated gap is the log-odds of A winning, scaled by 400 divided by the natural log of 10 (about 173.7 points per unit). The standard error of the log-odds is the square root of 1 over A's wins plus 1 over B's wins, so a 95 per cent interval is the estimate plus or minus 1.96 times that. A real arena has many models and uses the same idea in a larger fit, with bootstrap or sandwich standard errors, as the Arena paper explains. In this two-model version the two ratings are centred on 1,000, so each bar is half the width of the gap interval, and the bars overlap exactly when the gap interval includes zero. The sampling uses a seeded random generator, so results repeat.
+
+</Deep>
+
+## Compare models on your own task
+
+This is the only comparison that predicts your result.
+
+1. **Use your task and your data.** Real inputs, or realistic ones, including the awkward ones. Thirty to a hundred cases is a start. See [Evals 101](../../evals/evals-101/).
+2. **Run every model on the same cases.** That makes the comparison paired, which removes the noise from some cases being easy and others hard. [Is the difference real?](../../ml/is-the-difference-real/) shows how to put an interval on a paired difference and how many cases you need before a gap of a few points means anything.
+3. **Use the same prompt first, then tune each fairly.** A prompt written for one model can penalise another, so give each a fair chance and say how much effort each received.
+4. **Record cost and latency alongside quality.** Cost per task, time to a complete answer, and the failures. A model that scores two points higher at five times the cost is a trade-off, not a winner.
+5. **Look at the failures, not only the score.** Ten wrong answers read by a person tell you more than a mean.
+6. **Repeat a few times.** Outputs vary between runs.
+
+Then weigh the result. A scorecard makes the trade-off explicit, and shows how fragile a pick can be. Every number below is an invented example.
+
+<ModelScorecard client:visible />
+
+The scorecard also makes one point about method. A hard floor on quality is applied first, because a model that fails your bar is not a trade-off. Only among the models that pass do you weigh price and speed.
+
+## Closed API, open weights and open source
+
+Three terms get mixed up.
+
+- **Closed API (hosted).** You call a model over the network. You do not receive the weights. Your rights are set by the provider's terms of service.
+- **Open weights.** The trained parameters can be downloaded and run by you, under a licence that may be permissive or restrictive.
+- **Open source.** The Open Source Initiative's Open Source AI Definition (version 1.0) says an open source AI system grants the freedoms to use, study, modify and share, and that the preferred form for making modifications includes detailed data information, the training and inference code and the parameters, each under OSI-approved terms. Many open-weights models release the parameters without all of that, so they are open weights but not open source by this definition.
+
+This is a summary of how texts describe themselves, not legal advice. Read the licence for the exact model and version, and ask your own counsel about your use.
+
+### What the licence texts actually say
+
+- **Apache License 2.0.** Grants a copyright licence and, separately, a patent licence from each contributor, both worldwide, royalty-free and perpetual. The patent licence ends for you if you sue someone claiming the work infringes a patent. It does not grant permission to use the licensor's names or trademarks, except for describing the origin of the work. The software is provided "AS IS", without warranty.
+- **MIT License.** Grants permission, free of charge, to use, copy, modify, merge, publish, distribute, sublicense and sell copies, on condition that the copyright and permission notice are included. It is also "AS IS", with no warranty.
+- **Llama 3.3 Community License Agreement (6 December 2024).** A custom licence, not an OSI one. It grants a non-exclusive, worldwide, royalty-free limited licence to use, copy, distribute and modify. If you distribute the materials or a product containing them, you must give a copy of the agreement, display "Built with Llama" prominently, and keep an attribution notice. If you use the materials or their outputs to create, train, fine-tune or improve an AI model that you distribute, the model name must begin with "Llama". Use must follow the incorporated Acceptable Use Policy. A company whose products had more than 700 million monthly active users on the release date must request a licence from Meta, which Meta may grant at its sole discretion. Licences are version-specific, and other releases may say different things.
+
+### What provider terms say, as of 1 November 2026
+
+Hosted models come with terms about your data. These are short summaries of what each provider's own documents say on one point. They change, and they differ between plans, so read the current text.
+
+| Channel | One thing its documents say |
+|---|---|
+| Anthropic API | The commercial terms (effective 17 June 2025) say Anthropic may not train models on Customer Content from the services, and that the customer may not use the services to build a competing product, including to train competing AI models |
+| OpenAI API | Data sent to the API is not used to train or improve models unless you opt in. Abuse-monitoring logs may keep prompts and responses for up to 30 days by default, with stricter controls available to approved customers |
+| Google Gemini API | For paid quota, Google says it does not use prompts or responses to improve its products. For unpaid quota, Google says it does, and that human reviewers may read samples |
+| Google Cloud, Gemini Enterprise Agent Platform | Google says it will not use your data to train or fine-tune any AI or ML models without your prior permission or instruction |
+| Amazon Bedrock | Model providers have no access to Bedrock's logs or to customer prompts and completions, because models run in accounts operated by the Bedrock service team |
+| Microsoft Foundry (models sold by Azure) | Prompts and completions are not available to other customers or to the model provider, and are not used to train foundation models without your permission. In "Global" deployments prompts may be processed in any geography where the model is deployed, while "DataZone" deployments stay in a defined zone |
+
+The same model family can often be reached through its maker's own API and through a cloud platform. The terms, regions, quotas and retirement dates can differ by channel, so evaluate the one you will use in production. [Private and air-gapped AI](../../local/private-and-air-gapped-ai/) goes further on residency and what self-hosting does and does not protect.
+
+## Size and cost tiers, context and modalities
+
+Most families offer tiers: a small, fast, cheap model; a mid-range one; a large one for hard tasks. The price gap between tiers is often a large multiple, so your routing and cost design depends on how far down the tiers your task works ([Model routing and fallbacks](../../systems/model-routing-and-fallbacks/)). Test the smaller tier first on easy tasks, not last.
+
+Check **context length** as two numbers: how much you can send and how much the model can write back. A long window is not the same as using it well; see [Context windows and caching](../context-window-and-caching/). Check **modalities** per model and per endpoint: image, audio or document input, and image or audio output, are not uniform across a family.
+
+## Deprecation and version pinning
+
+Models are retired. As of 1 November 2026, the providers' own pages say the following.
+
+- **Anthropic:** impacted customers are notified, with at least 60 days' notice before retirement for publicly released models. Cloud partners such as Amazon Bedrock and Google-managed Claude set their own schedules, so dates can differ by platform.
+- **OpenAI:** at least 6 months' notice for generally available models, at least 3 months for specialised variants, and preview models may be retired with as little as 2 weeks. The List models endpoint has an optional shutdown date field you can monitor.
+- **Google Gemini API:** the listed shutdown dates are the earliest possible, with the exact date communicated in advance. The page also shows some retired names whose endpoint automatically routes requests to a replacement model, which means the same name can change behaviour.
+
+What to do about it:
+
+- **Pin an exact model version** where the provider offers one, rather than an alias that moves.
+- **Log the model identifier** with every trace, so a quality change can be tied to a model change.
+- **Rerun your eval on a schedule** and on every announced migration, because behaviour changes between versions.
+- **Keep a tested fallback** and a migration budget. A retirement is a project, not an email ([Model routing and fallbacks](../../systems/model-routing-and-fallbacks/)).
+
+## A practical selection checklist
+
+- [ ] The job and the cost of being wrong are written down ([When not to use an LLM](../../systems/when-not-to-use-an-llm/)).
+- [ ] Hard constraints listed: licence, residency, privacy terms, context, modalities, price and latency ceilings.
+- [ ] Licence and terms read for the exact model, version and channel, and checked by the right person.
+- [ ] A shortlist of about three across tiers, chosen using benchmarks and arenas only as hints.
+- [ ] An eval on your own cases, the same cases for every model, with cost and latency recorded.
+- [ ] The difference checked against noise before any claim of a winner.
+- [ ] Exact version pinned, model ID logged, eval scheduled.
+- [ ] A fallback chosen and tested, and a plan for retirement.
+- [ ] Self-hosting considered only after doing the arithmetic ([Self-hosting versus an API](../../local/self-hosting-vs-api-economics/)).
+
+<Callout title="Date-stamp your own decision">
+Write down which models you compared, on what date, with which prompts and how many cases. In six months the shortlist will have changed, and a dated record tells you whether to redo the work or only the part that moved.
+</Callout>
+
+## What to remember
+
+- A benchmark measures a narrow task under specific settings. Contamination, saturation, prompt sensitivity and cherry-picked settings are the usual ways it misleads, and your task is not in it.
+- An arena turns pairwise votes into Bradley-Terry strengths, shown on an Elo-like scale. A gap inside the error bars is noise: a 20-point gap needs about 1,160 votes to stand out, and a 10-point gap about four times that.
+- Votes measure preference, which includes style. Narrow bars do not make a number the right one.
+- Compare on your own task, on the same cases, with cost and latency beside quality, and check the gap against noise.
+- Open weights, open source and closed APIs differ in what the licence or terms allow. Read the actual text for your model, version and channel. This lesson is not legal advice.
+- Models get retired. Pin versions, log the model, rerun evals, keep a fallback.
+
+## Where to go next
+
+- [Prompting, retrieval or fine-tuning](../prompting-vs-rag-vs-fine-tuning/) is the next lesson, on how to adapt the model you chose.
+- [Model routing and fallbacks](../../systems/model-routing-and-fallbacks/) covers using several models at runtime.
+- [Evals 101](../../evals/evals-101/) covers building the test set this lesson depends on.
+- [Self-hosting versus an API: the economics](../../local/self-hosting-vs-api-economics/) covers when running open weights yourself pays off.

@@ -1,1 +1,107 @@
 /* Styles for the interactive components in the wave 2 "product" lesson batch. Keep every class under this batch's own prefix. */
+
+/* shared bits */
+.pr-small { margin: 0.35rem 0 0; font-size: 0.88rem; color: var(--ink-2); line-height: 1.4; }
+.pr-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+.pr-actions .btn, .pr-presets .btn { min-height: 44px; }
+.pr-big { margin: 0 0 0.3rem; font-size: 1.05rem; line-height: 1.35; }
+.pr-big b { font-variant-numeric: tabular-nums; }
+.pr-result { margin-top: 1rem; padding: 0.85rem 1rem; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.pr-result p { margin: 0 0 0.35rem; }
+.viz button:focus-visible, .viz input:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+.pr-rung-n { flex: none; width: 1.7rem; height: 1.7rem; border: 1px solid var(--line); border-radius: 50%; display: grid; place-items: center; font-size: 0.85rem; font-weight: 650; font-variant-numeric: tabular-nums; }
+.pr-rung-main { display: flex; flex-direction: column; min-width: 0; text-align: left; gap: 0.1rem; }
+.pr-rung-name { font-weight: 650; font-size: 0.98rem; line-height: 1.25; }
+.pr-rung-gist { font-size: 0.85rem; color: var(--ink-2); line-height: 1.3; }
+
+/* ToolLadder */
+.pr-rungs { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.45rem; max-width: none; }
+.pr-rungs li { margin: 0; padding: 0; max-width: none; }
+.pr-rung { width: 100%; min-height: 52px; display: flex; align-items: center; gap: 0.7rem; padding: 0.5rem 0.7rem; border: 1px solid var(--line-soft); border-radius: 10px; background: transparent; cursor: pointer; text-align: left; }
+.pr-rung:hover { border-color: var(--signal); }
+.pr-rung[aria-pressed='true'] { border-color: var(--signal); background: var(--signal-wash); }
+.pr-rung-bar { flex: none; width: 22%; max-width: 140px; height: 8px; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; margin-left: auto; }
+.pr-rung-bar i { display: block; height: 100%; background: var(--signal); }
+.pr-detail { margin-top: 0.9rem; padding: 0.8rem 1rem; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.pr-detail p { margin: 0 0 0.4rem; }
+.pr-detail p:last-child { margin-bottom: 0; }
+
+/* TicketCompare and ModelScorecard cards */
+.pr-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0.8rem; }
+.pr-card { padding: 0.85rem 1rem; border: 1px solid var(--line-soft); border-radius: 10px; background: var(--surface); min-width: 0; }
+.pr-card.pr-win { border-color: var(--ok); box-shadow: 0 0 0 1px var(--ok) inset; }
+.pr-card.pr-out { opacity: 0.55; }
+.pr-card-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin: 0; flex-wrap: wrap; }
+.pr-card-name { font-weight: 650; }
+.pr-tag { font-size: 0.78rem; font-weight: 650; padding: 0.1rem 0.5rem; border: 1px solid var(--ok); color: var(--ok); border-radius: 999px; }
+.pr-tag-out { border-color: var(--warn); color: var(--warn); }
+.pr-total { margin: 0.35rem 0 0.4rem; font-size: 1.6rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.pr-total small { font-size: 0.85rem; font-weight: 400; color: var(--ink-2); }
+.pr-stack { display: flex; height: 10px; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; margin-bottom: 0.7rem; transition: width 0.3s ease; }
+.pr-stack i, .pr-legend i { display: block; min-width: 0; }
+.pr-s-run { background: var(--signal); }
+.pr-s-err { background: var(--warn); }
+.pr-s-up { background: var(--ink-3); }
+.pr-legend { display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; margin: 0.7rem 0 0; font-size: 0.85rem; color: var(--ink-2); }
+.pr-legend span { display: inline-flex; align-items: center; gap: 0.35rem; }
+.pr-legend i { width: 12px; height: 12px; border-radius: 3px; }
+.pr-facts { margin: 0; display: grid; gap: 0.2rem; }
+.pr-facts div { display: flex; justify-content: space-between; gap: 0.8rem; font-size: 0.88rem; }
+.pr-facts dt { color: var(--ink-2); }
+.pr-facts dd { margin: 0; font-weight: 650; font-variant-numeric: tabular-nums; text-align: right; }
+.pr-note { margin: 0.9rem 0 0; font-weight: 600; }
+
+/* PickTheTool */
+.pr-progress { margin: 0 0 0.6rem; font-size: 0.85rem; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.pr-scn { padding: 0.9rem 1rem; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.pr-scn p { margin: 0 0 0.3rem; }
+.pr-scn-title { margin: 0 0 0.4rem; font-size: 1.1rem; font-weight: 700; }
+.pr-stakes { display: inline-block; font-size: 0.78rem; font-weight: 650; padding: 0.05rem 0.5rem; border-radius: 999px; border: 1px solid var(--line); margin-right: 0.3rem; }
+.pr-stakes-high { border-color: var(--warn); color: var(--warn); }
+.pr-stakes-low { border-color: var(--ok); color: var(--ok); }
+.pr-opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 0.5rem; margin-top: 0.9rem; }
+.pr-opt { display: flex; align-items: center; gap: 0.7rem; min-height: 52px; padding: 0.5rem 0.7rem; border: 1px solid var(--line-soft); border-radius: 10px; background: transparent; cursor: pointer; text-align: left; }
+.pr-opt:hover:not(:disabled) { border-color: var(--signal); }
+.pr-opt:disabled { cursor: default; opacity: 0.7; }
+.pr-opt.pr-picked { border-color: var(--signal); background: var(--signal-wash); opacity: 1; }
+.pr-opt.pr-best { border-color: var(--ok); box-shadow: 0 0 0 1px var(--ok) inset; opacity: 1; }
+.pr-fb { margin-top: 0.9rem; }
+.pr-fb:empty { display: none; }
+.pr-fb { padding: 0; }
+.pr-fb > p { margin: 0 0 0.4rem; }
+.pr-verdict { font-weight: 700; }
+.pr-v-best, .pr-v-ok { color: var(--ok); }
+.pr-v-too-simple, .pr-v-too-much { color: var(--warn); }
+.pr-score { padding: 0.9rem 1rem; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.pr-review { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; gap: 0.45rem; max-width: none; }
+.pr-review li { display: flex; gap: 0.6rem; align-items: flex-start; margin: 0; font-size: 0.92rem; line-height: 1.4; }
+.pr-r-mark { flex: none; width: 1.4rem; height: 1.4rem; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 0.85rem; border: 1px solid currentColor; }
+.pr-r-ok .pr-r-mark { color: var(--ok); }
+.pr-r-bad .pr-r-mark { color: var(--warn); }
+
+/* EloBars */
+.pr-svg { display: block; width: 100%; height: auto; max-width: 700px; margin: 0.8rem auto 0; overflow: visible; }
+.pr-axis { fill: none; stroke: var(--line); stroke-width: 1; }
+.pr-tick { font-family: var(--font-mono); font-size: 12.5px; fill: var(--ink-3); }
+.pr-lab { font-family: var(--font-display); font-size: 13.5px; font-weight: 650; fill: var(--ink); }
+.pr-lab-pm { font-weight: 400; fill: var(--ink-2); }
+.pr-bar { fill: none; stroke: var(--signal); stroke-width: 2.4; stroke-linecap: round; }
+.pr-dot { fill: var(--surface); stroke: var(--signal); stroke-width: 2.4; }
+.pr-truth { stroke: var(--ink-3); stroke-width: 1.5; stroke-dasharray: 3 3; }
+.pr-part { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(60px, 1fr) 3.2rem; align-items: center; gap: 0.6rem; font-size: 0.88rem; margin-top: 0.4rem; }
+.pr-part b { text-align: right; font-variant-numeric: tabular-nums; }
+.pr-meter { height: 8px; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; margin: 0.4rem 0 0.6rem; }
+.pr-part .pr-meter { margin: 0; }
+.pr-meter i { display: block; height: 100%; transition: width 0.4s ease; }
+.pr-meter i.pr-ok { background: var(--ok); }
+.pr-meter i.pr-bad { background: var(--warn); }
+.pr-meter i.pr-mid { background: var(--ink-3); }
+@media (max-width: 480px) {
+  .pr-part { grid-template-columns: minmax(0, 1fr) 3rem; }
+  .pr-part .pr-meter { grid-column: 1 / -1; order: 3; }
+  .pr-rung-bar { display: none; }
+  .pr-opts, .pr-cards { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pr-meter i, .pr-stack { transition: none; }
+}

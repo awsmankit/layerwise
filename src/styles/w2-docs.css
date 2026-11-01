@@ -1,1 +1,106 @@
-/* Styles for the interactive components in the wave 2 "docs" lesson batch. Keep every class under this batch's own prefix. */
+/* Styles for the interactive components in the wave 2 "docs" lesson batch. Keep every class under this batch's own prefix.
+   The prefix is dcp- (not dc-, which Disclosure already uses). */
+
+/* ---------- shared bits ---------- */
+.dcp-label { margin: 1rem 0 0.3rem; font-weight: 650; font-size: 0.92rem; color: var(--ink-2); }
+.dcp-small { margin: 0.4rem 0 0; font-size: 0.86rem; color: var(--ink-2); line-height: 1.4; }
+.dcp-goodtxt { color: var(--ok); font-weight: 650; }
+.dcp-badtxt { color: var(--warn); font-weight: 650; }
+.dcp-ro .btn, .dcp-lab .btn { min-height: 44px; }
+.dcp-ro .btn:focus-visible, .dcp-lab .btn:focus-visible, .dcp-blk:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+
+/* ---------- ReadingOrderDemo ---------- */
+.dcp-page { border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: 0.6rem 0.7rem 0.7rem; max-width: 640px; }
+.dcp-furn-line { margin: 0; padding: 0.25rem 0; text-align: center; font-size: 0.8rem; color: var(--ink-3); border-bottom: 1px dashed var(--line-soft); }
+.dcp-furn-line:last-child { border-bottom: 0; border-top: 1px dashed var(--line-soft); margin-top: 0.5rem; }
+.dcp-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-top: 0.6rem; }
+.dcp-col { display: flex; flex-direction: column; gap: 0.5rem; min-width: 0; }
+.dcp-blk { position: relative; display: block; text-align: left; width: 100%; min-height: 56px; padding: 1.35rem 0.5rem 0.5rem; border: 1px solid var(--line); border-radius: 6px; background: transparent; cursor: pointer; font-size: 0.8rem; line-height: 1.35; }
+.dcp-blk.dcp-on { border-color: var(--signal); background: var(--signal-wash); }
+.dcp-tag { position: absolute; top: 0.3rem; left: 0.5rem; font-family: var(--font-mono); font-size: 0.78rem; color: var(--ink-3); }
+.dcp-blktext { display: block; overflow-wrap: anywhere; }
+.dcp-badge { position: absolute; top: 0.25rem; right: 0.35rem; min-width: 24px; height: 24px; border-radius: 12px; background: var(--signal); color: var(--on-signal); font-weight: 700; font-size: 0.85rem; display: grid; place-items: center; font-variant-numeric: tabular-nums; }
+.dcp-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.9rem; }
+.dcp-result { margin-top: 0.4rem; }
+.dcp-seq { margin: 0; font-family: var(--font-mono); font-size: 0.88rem; overflow-wrap: anywhere; }
+.dcp-quote { margin: 0; padding: 0.6rem 0.8rem; border-left: 3px solid var(--signal); background: var(--signal-wash); font-size: 0.92rem; line-height: 1.45; overflow-wrap: anywhere; }
+.dcp-verdict { margin: 0.6rem 0 0; font-size: 0.95rem; line-height: 1.4; }
+
+/* ---------- ParsingLab ---------- */
+.dcp-tabs { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.9rem; }
+.dcp-tab[aria-pressed='true'] { background: var(--signal-wash); border-color: var(--signal); color: var(--signal-ink); }
+.dcp-grid { display: grid; gap: 1rem 1.4rem; grid-template-columns: 1fr; align-items: start; }
+@media (min-width: 760px) { .dcp-grid { grid-template-columns: minmax(0, 360px) 1fr; } }
+.dcp-fig { margin: 0; }
+.dcp-svg { display: block; width: 100%; height: auto; max-width: 420px; margin: 0 auto; overflow: visible; }
+.dcp-methods { border: 0; padding: 0; margin: 0; min-width: 0; display: flex; flex-direction: column; gap: 0.35rem; }
+.dcp-methods legend { padding: 0; margin-bottom: 0.4rem; font-weight: 650; font-size: 0.95rem; }
+.dcp-opt { display: flex; align-items: center; gap: 0.55rem; min-height: 44px; padding: 0.4rem 0.6rem; border: 1px solid var(--line-soft); border-radius: 8px; font-size: 0.92rem; line-height: 1.3; cursor: pointer; }
+.dcp-opt input { width: 20px; height: 20px; margin: 0; flex: none; accent-color: var(--signal); }
+.dcp-opt:has(input:checked) { border-color: var(--signal); background: var(--signal-wash); }
+.dcp-opt:has(input:focus-visible) { outline: 2px solid var(--signal); outline-offset: 2px; }
+.dcp-summary { margin: 1rem 0 0; font-weight: 650; }
+.dcp-out { margin-top: 0.4rem; padding: 0.2rem 0 0; }
+.dcp-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.6rem 1.2rem; margin: 0.6rem 0 0; }
+.dcp-facts dt { font-size: 0.8rem; font-weight: 650; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.03em; }
+.dcp-facts dd { margin: 0.1rem 0 0; font-size: 0.9rem; line-height: 1.4; }
+.dcp-pre { margin: 0; padding: 0.6rem 0.8rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); font-family: var(--font-mono); font-size: 0.82rem; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 260px; overflow: auto; }
+.dcp-pre:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+.dcp-stats { margin: 0.5rem 0 0; font-size: 0.88rem; color: var(--ink-2); }
+.dcp-note { margin: 0.4rem 0 0; font-size: 0.92rem; line-height: 1.45; }
+.dcp-qs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.dcp-q { display: grid; gap: 0.2rem; padding: 0.6rem 0.8rem; border: 1px solid var(--line); border-left-width: 4px; border-radius: 8px; background: var(--surface); }
+.dcp-q.dcp-right { border-left-color: var(--ok); }
+.dcp-q.dcp-risky { border-left-color: var(--warn); }
+.dcp-q.dcp-missing { border-left-color: var(--ink-3); }
+.dcp-ask { font-weight: 650; font-size: 0.95rem; }
+.dcp-chip { justify-self: start; font-size: 0.82rem; font-weight: 700; }
+.dcp-right .dcp-chip { color: var(--ok); }
+.dcp-risky .dcp-chip { color: var(--warn); }
+.dcp-missing .dcp-chip { color: var(--ink-2); }
+.dcp-line { font-size: 0.9rem; line-height: 1.4; color: var(--ink-2); }
+.dcp-cmp { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+.dcp-cmp th, .dcp-cmp td { padding: 0.4rem 0.5rem; border-bottom: 1px solid var(--line-soft); text-align: left; vertical-align: top; }
+.dcp-cmp thead th { font-weight: 650; border-bottom: 1px solid var(--line); }
+.dcp-cmp tbody th { font-weight: 500; }
+.dcp-cmp tr.dcp-cur { background: var(--signal-wash); }
+.dcp-cmp td.dcp-right { color: var(--ok); font-weight: 650; }
+.dcp-cmp td.dcp-risky { color: var(--warn); font-weight: 650; }
+.dcp-cmp td.dcp-missing { color: var(--ink-2); font-weight: 650; }
+
+/* ---------- ParsingLab drawings (SVG) ---------- */
+.dcp-sheet { fill: var(--surface); stroke: var(--line); stroke-width: 1; }
+.dcp-scan { fill: color-mix(in srgb, var(--surface) 88%, var(--ink-3)); }
+.dcp-furn { font-family: var(--font-display); font-size: 12.5px; fill: var(--ink-2); }
+.dcp-head { font-family: var(--font-display); font-size: 13px; font-weight: 700; fill: var(--ink); }
+.dcp-celltext { font-family: var(--font-display); font-size: 12.5px; fill: var(--ink); }
+.dcp-gone { opacity: 0.35; }
+.dcp-gone text { text-decoration: line-through; }
+.dcp-rule { stroke: var(--line-soft); stroke-width: 1; stroke-dasharray: 3 3; }
+.dcp-gutter { stroke: var(--line-soft); stroke-width: 1; }
+.dcp-bar { fill: var(--ink-3); opacity: 0.4; }
+.dcp-path { fill: none; stroke-width: 2.2; stroke-linejoin: round; stroke-linecap: round; stroke-dasharray: 600; stroke-dashoffset: 0; animation: dcp-draw 0.9s ease-out; }
+.dcp-bad { stroke: var(--warn); }
+.dcp-good { stroke: var(--ok); }
+.dcp-warn { stroke: var(--cost); }
+.dcp-arrowhead { fill: var(--ink-2); }
+.dcp-dot { fill: var(--cost); }
+.dcp-cell { fill: transparent; stroke: var(--line); stroke-width: 1; }
+.dcp-cell-h { fill: var(--signal-wash); }
+.dcp-cell-m { fill: color-mix(in srgb, var(--signal) 6%, transparent); }
+.dcp-cell-ok { stroke: var(--signal); stroke-width: 1.8; }
+.dcp-scantext { font-family: var(--font-mono); font-size: 15px; fill: var(--ink); opacity: 0.88; }
+.dcp-scanbold { font-weight: 700; }
+.dcp-speck { fill: var(--ink); opacity: 0.35; }
+.dcp-scratch { stroke: var(--ink-3); stroke-width: 0.8; opacity: 0.5; }
+.dcp-box { fill: none; stroke: var(--signal); stroke-width: 1.6; }
+.dcp-box-flag { stroke: var(--warn); stroke-dasharray: 4 3; }
+.dcp-stamp { fill: var(--surface); stroke: var(--warn); stroke-width: 1.6; stroke-dasharray: 5 4; }
+.dcp-stamptext { font-family: var(--font-display); font-size: 13.5px; font-weight: 700; fill: var(--warn); }
+@keyframes dcp-draw { from { stroke-dashoffset: 600; } to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) { .dcp-path { animation: none; } }
+
+@media (max-width: 420px) {
+  .dcp-blk { font-size: 0.78rem; padding-left: 0.4rem; padding-right: 0.4rem; }
+  .dcp-cmp { font-size: 0.82rem; }
+}

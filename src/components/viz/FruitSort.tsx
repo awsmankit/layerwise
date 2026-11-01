@@ -110,8 +110,8 @@ export default function FruitSort() {
           )}
 
           {/* rows */}
-          <text x="0" y="60" className="dx-small">{showNew ? 'new' : ''}</text>
-          <text x="0" y="112" className="dx-small">examples</text>
+          {!g.compact && <text x="0" y="60" className="dx-small">{showNew ? 'new' : ''}</text>}
+          {!g.compact && <text x="0" y="112" className="dx-small">examples</text>}
 
           {/* ruler */}
           <path d={`M ${xOf(g.from)} 160 H ${xOf(g.to)}`} className="dx-link" />

@@ -1,0 +1,210 @@
+---
+title: "Teaching a model to behave: alignment, RLHF's limits and red teaming"
+track: responsible
+level: advanced
+order: 7
+summary: What alignment means in practice, how supervised tuning, RLHF, DPO and constitutional-style feedback shape behaviour, why that is hard (reward hacking, sycophancy, goal misgeneralisation), how to run a small red team, what the public safety frameworks say, and what an application builder can and cannot rely on. Includes a reward-hacking toy world.
+updated: 2026-11-01
+sources:
+  - label: "A General Language Assistant as a Laboratory for Alignment (Askell and others, 2021)"
+    url: https://arxiv.org/abs/2112.00861
+  - label: "Training language models to follow instructions with human feedback (Ouyang and others, 2022)"
+    url: https://arxiv.org/abs/2203.02155
+  - label: "Training a Helpful and Harmless Assistant with Reinforcement Learning from Human Feedback (Bai and others, 2022)"
+    url: https://arxiv.org/abs/2204.05862
+  - label: "Constitutional AI: Harmlessness from AI Feedback (Bai and others, 2022)"
+    url: https://arxiv.org/abs/2212.08073
+  - label: "Direct Preference Optimization (Rafailov and others, 2023)"
+    url: https://arxiv.org/abs/2305.18290
+  - label: "Open Problems and Fundamental Limitations of Reinforcement Learning from Human Feedback (Casper and others, 2023)"
+    url: https://arxiv.org/abs/2307.15217
+  - label: "Specification gaming: the flip side of AI ingenuity (Krakovna and others, Google DeepMind, 21 April 2020)"
+    url: https://deepmind.google/discover/blog/specification-gaming-the-flip-side-of-ai-ingenuity/
+  - label: "Concrete Problems in AI Safety (Amodei and others, 2016)"
+    url: https://arxiv.org/abs/1606.06565
+  - label: "Defining and Characterizing Reward Hacking (Skalse and others, 2022)"
+    url: https://arxiv.org/abs/2209.13085
+  - label: "Scaling Laws for Reward Model Overoptimization (Gao, Schulman and Hilton, 2022)"
+    url: https://arxiv.org/abs/2210.10760
+  - label: "Towards Understanding Sycophancy in Language Models (Sharma and others, 2023)"
+    url: https://arxiv.org/abs/2310.13548
+  - label: "Goal Misgeneralization in Deep Reinforcement Learning (Langosco and others, 2021)"
+    url: https://arxiv.org/abs/2105.14111
+  - label: "Goal Misgeneralization: Why Correct Specifications Aren't Enough For Correct Goals (Shah and others, 2022)"
+    url: https://arxiv.org/abs/2210.01790
+  - label: "Sycophancy to Subterfuge: Investigating Reward-Tampering in Large Language Models (Denison and others, 2024)"
+    url: https://arxiv.org/abs/2406.10162
+  - label: "Monitoring Reasoning Models for Misbehavior and the Risks of Promoting Obfuscation (Baker and others, 2025)"
+    url: https://arxiv.org/abs/2503.11926
+  - label: "Recent Frontier Models Are Reward Hacking (METR, 5 June 2025)"
+    url: https://metr.org/blog/2025-06-05-recent-reward-hacking/
+  - label: "Red Teaming Language Models to Reduce Harms (Ganguli and others, 2022)"
+    url: https://arxiv.org/abs/2209.07858
+  - label: "Red Teaming Language Models with Language Models (Perez and others, 2022)"
+    url: https://arxiv.org/abs/2202.03286
+  - label: "Lessons From Red Teaming 100 Generative AI Products (Bullwinkel and others, Microsoft, 2025)"
+    url: https://arxiv.org/abs/2501.07238
+  - label: "Jailbroken: How Does LLM Safety Training Fail? (Wei, Haghtalab and Steinhardt, 2023)"
+    url: https://arxiv.org/abs/2307.02483
+  - label: "Universal and Transferable Adversarial Attacks on Aligned Language Models (Zou and others, 2023)"
+    url: https://arxiv.org/abs/2307.15043
+  - label: "A Safe Harbor for AI Evaluation and Red Teaming (Longpre and others, 2024)"
+    url: https://arxiv.org/abs/2403.04893
+  - label: "The CERT Guide to Coordinated Vulnerability Disclosure"
+    url: https://certcc.github.io/CERT-Guide-to-CVD/
+  - label: "Anthropic Responsible Disclosure Policy (page last updated 14 February 2025, read 1 November 2026)"
+    url: https://www.anthropic.com/responsible-disclosure-policy
+  - label: "NIST AI 600-1, Generative AI Profile (July 2024): definition of AI red-teaming"
+    url: https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf
+  - label: "Anthropic Responsible Scaling Policy, version 3.4, effective 8 July 2026 (read 1 November 2026)"
+    url: https://www.anthropic.com/responsible-scaling-policy
+  - label: "OpenAI Preparedness Framework, version 2, last updated 15 April 2025 (read 1 November 2026)"
+    url: https://cdn.openai.com/pdf/18a02b5d-6b67-4cec-ab64-68cdfbddebcd/preparedness-framework-v2.pdf
+  - label: "Google DeepMind Frontier Safety Framework, version 3.1, published 17 April 2026 (read 1 November 2026)"
+    url: https://storage.googleapis.com/deepmind-media/DeepMind.com/Blog/strengthening-our-frontier-safety-framework/frontier-safety-framework_3-1.pdf
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import PipelineFlow from '../../../components/viz/PipelineFlow.tsx';
+import RewardHackWorld from '../../../components/viz/RewardHackWorld.tsx';
+
+A trained language model can write almost anything. Turning it into an assistant that does what people mean, tells the truth and declines the right things is a second job, and it is not finished when the training run ends. This lesson covers how that job is done, why it keeps coming back, and what it means for the person building an application on top.
+
+## What "aligned" means in practice
+
+**Alignment** means getting a model to do what people actually intend, and to avoid doing harm. Askell and colleagues put it as a general assistant that is "helpful, honest, and harmless". Each word is a goal with a test you can write:
+
+- **Helpful:** it does the task the person was asking for, in the form they can use.
+- **Honest:** it says what it believes is true, admits uncertainty, and does not flatter.
+- **Harmless:** it avoids causing or assisting serious harm.
+
+The goals pull against each other. Refuse too eagerly and the model fails honest users who have a good reason to ask. That is over-refusal. Comply too eagerly and it helps the wrong person. That is under-refusal. Being pleasant and being honest can conflict when the truth is unwelcome. Bai and colleagues' paper on training helpful and harmless assistants includes an analysis of these competing objectives. There is no setting that removes the tension. Every deployed model is a choice about where to sit, and your application's context changes the right answer.
+
+## How behaviour is shaped
+
+<PipelineFlow client:visible title="How a pretrained model becomes an assistant" stages={[
+  {title: 'Pretrained model', detail: 'Trained to predict the next token on a huge text collection. It can continue any text, helpful or not. It has no particular goal of being useful.'},
+  {title: 'Supervised tuning (SFT)', detail: 'Train on written demonstrations of good answers to prompts. In InstructGPT, labelers wrote the demonstrations. This teaches the format and the manner of an assistant.'},
+  {title: 'Preference data', detail: 'People, or other models, rank several answers to the same prompt. Judging which is better is easier than writing the ideal answer.'},
+  {title: 'RLHF or DPO', detail: 'RLHF fits a reward model to the rankings, then trains the model to score well on it. DPO reaches a similar goal with a simple classification loss on preferred and rejected pairs, with no sampling loop.'},
+  {title: 'Rule-based feedback', detail: 'In Constitutional AI, a written list of principles guides a model that critiques and revises its own answers, and then judges pairs of answers. That replaces many human harm labels with AI feedback.'},
+  {title: 'Deployment layers', detail: 'A system prompt, input and output checks, tool permissions and monitoring. These are added by the application, not by the model trainer.'}
+]} caption="The first five stages are the model provider's. The last is yours." />
+
+InstructGPT (Ouyang and colleagues, 2022) showed the value of the first stages: in their human evaluations, outputs from a 1.3 billion parameter model trained this way were preferred to those of the 175 billion parameter GPT-3, and it was more truthful and less toxic. Constitutional AI (Bai and colleagues, 2022) aimed for "harmless but non-evasive" answers, which explain their objections. For the mechanics of RLHF, DPO and verifiable rewards, see [Post-training with reinforcement learning](../../deep-learning/rl-post-training/), [The training pipeline](../../foundations/training-pipeline/) and [Fine-tuning in practice](../../llm/fine-tuning-in-practice/).
+
+## Why it is hard
+
+### Specification gaming and reward hacking
+
+A reward is a stand-in for what we want. Amodei and colleagues listed "avoiding reward hacking" among five practical problems in AI safety as long ago as 2016. **Specification gaming**, in DeepMind's definition, is behaviour that "satisfies the literal specification of an objective without achieving the intended outcome". Documented examples from reinforcement learning:
+
+- In a Lego stacking task the agent was rewarded for the height of the bottom face of a red block. Instead of lifting and placing it on a blue block, it flipped the block over.
+- In the Coast Runners boat game the goal was to finish the race quickly. With a shaping reward for hitting green blocks, the agent learned to circle and hit the same blocks again and again.
+
+Both are in the DeepMind post, which collects around 60 examples. Skalse and colleagues give a formal definition of reward hacking and show that "unhackable" proxy rewards are hard to build: for the set of all stochastic policies, two reward functions can only be unhackable if one of them is constant.
+
+Try it in a toy world. The robot must put two bits of dirt in the bin. It is an exact planner, so it always finds the best plan for the reward you choose. The world is invented, and nothing in it is random.
+
+<RewardHackWorld client:visible />
+
+What you should have found, running the five buttons in order: rewarding "the camera sees no mess" makes the robot cover the camera. Charging for that makes it push the dirt under the rug. Charging for that makes it clean properly. Then a well-meant bonus for each pick-up makes it pick up, drop and pick up again forever, and never finish. Paying for the real outcome (dirt in the bin at the end) works here, because we can measure that directly. In real systems you often cannot, and that is where the difficulty lives.
+
+### It happens with language models
+
+- **Over-optimisation.** Gao and colleagues used a fixed "gold" reward model as a stand-in for people, and trained policies against a learned proxy of it. Optimising the proxy too hard hurts the gold score, as Goodhart's law predicts, and the effect follows smooth patterns as the models get bigger.
+- **Sycophancy.** Sharma and colleagues found that five AI assistants consistently showed sycophancy, meaning answers that match the user's beliefs over the truth, across four free-form tasks. In human preference data, a response was more likely to be preferred when it matched the user's views, and both people and preference models sometimes preferred convincing sycophantic answers to correct ones.
+- **Gaming the checker.** METR reported on 5 June 2025 that in its evaluations of OpenAI's o3 model, reward hacking in the form of modifying or bypassing scoring code appeared in 39 of 128 runs (30.4%) on one set of tasks, and in 0.7% of runs across another set, noting it may have missed some cases. Other recent models behaved similarly.
+- **Monitoring has limits.** Baker and colleagues found that a second model reading a reasoning model's chain of thought can catch reward hacking in coding tasks. They also found that with too much optimisation pressure on the chain of thought, agents learned to hide their intent while still hacking.
+- **Generalisation.** Denison and colleagues trained models on a series of gameable environments. A small but non-negligible share of the time, models trained on the full curriculum generalised to rewriting their own reward function. Retraining reduced but did not eliminate it.
+
+### Goal misgeneralisation and distribution shift
+
+Sometimes the reward is right and the behaviour still goes wrong. In the CoinRun game, Langosco and colleagues trained an agent where the coin always sat at the end of the level. When the coin was moved at test time, the agent kept running to the end and often skipped it. It had learned "go right", which worked in training. They found that randomising the coin in just 2% of training levels greatly improved this. Shah and colleagues call it goal misgeneralisation: the system competently pursues a goal that matched the intended one in training but not in new situations. For a language model the analogue is behaviour that was safe on the prompts it was trained and tested on, and different on a prompt nobody imagined.
+
+Casper and colleagues survey these and other limits of RLHF, and argue for a multi-faceted approach to safety instead of relying on it alone.
+
+## Red teaming
+
+A **red team** is a group that tries to make a system fail before real users or attackers do. NIST's generative AI profile defines AI red-teaming as "a structured testing exercise used to probe an AI system to find flaws and vulnerabilities such as inaccurate, harmful, or discriminatory outputs, often in a controlled environment and in collaboration with system developers".
+
+- **Manual.** People with different skills try things. Ganguli and colleagues released a dataset of 38,961 red-team attacks, and found that RLHF-trained models became harder to red-team as they grew in size, while other model types showed no such trend.
+- **Automated.** Perez and colleagues used a language model to write test cases for a 280 billion parameter chatbot, finding tens of thousands of offensive replies, at a scale that hand-written tests are too expensive to reach. Zou and colleagues showed attack strings can be found by automated search and can transfer between models. This is why a fixed list of blocked prompts goes stale.
+- **What it is not.** Microsoft's team, after red-teaming over 100 generative AI products, lists among its lessons that AI red teaming is "not safety benchmarking", that the human element is crucial, and that "the work of securing AI systems will never be complete".
+
+Wei and colleagues offer a way to think about why safety training fails, without any recipe: **competing objectives**, where the model's capabilities and its safety goals conflict, and **mismatched generalisation**, where safety training does not cover a domain in which the model is still capable.
+
+### A small red team for your own app
+
+1. **Name what would be bad for your product.** Data leaks, wrong advice in your domain, tool misuse, off-brand answers. Rank by harm.
+2. **Write the threat model.** Who might try, what can the model reach, and what is the worst thing it can do? Cut the permissions first.
+3. **Seed 50 to 100 cases** across the harm categories, including ordinary users making honest mistakes, since they are most of your traffic.
+4. **Run time-boxed sessions** with a mixed group: domain experts, a security engineer and some people who have never seen the system.
+5. **Record each finding** with the input, the output, the expected behaviour, a severity and the layer that should have stopped it.
+6. **Fix at the right layer.** A permissions bug is not fixed by a prompt edit.
+7. **Keep every case as a regression test** and rerun it when the model, the prompt or the tools change. See [Evals 101](../../evals/evals-101/).
+
+Keep working attack strings out of tickets, screenshots and public posts. Describe the category and the impact, and keep the exact text in a restricted place.
+
+### Disclosure norms
+
+- **Read the vendor's policy first.** They differ. Anthropic's disclosure policy, last updated 14 February 2025, covers technical security vulnerabilities and lists red-teaming and adversarial testing of its models as out of scope for that programme. It separately welcomes reports of safety issues and jailbreaks, through a different route. Check the current page for any vendor you test.
+- **Terms of service matter.** Longpre and colleagues argue that terms of service and enforcement can discourage good-faith safety research, because researchers fear suspension or legal action, and propose a safe harbour. Until a vendor offers one, ask for permission.
+- **Coordinate.** The CERT Guide to Coordinated Vulnerability Disclosure describes the process of gathering reports, sharing them with the right parties and disclosing once there is a fix or a mitigation. Report privately, give the vendor time, and report separately to each vendor an issue affects.
+- **Do not touch other people's data**, even to prove a point. Use your own test accounts.
+
+## Safety evaluations and frameworks
+
+The large model developers publish frameworks for the most severe risks. These are the versions I could read on 1 November 2026. They are voluntary company documents and they change often: Anthropic's page lists nine versions of its policy from September 2023 to July 2026.
+
+| Framework | What it names | How it checks |
+|---|---|---|
+| Anthropic, Responsible Scaling Policy v3.4 (effective 8 July 2026) | A table of capability thresholds with planned mitigations and industry-wide recommendations: chemical and biological weapons (two levels), misaligned AI in high-stakes settings, and automated AI research and development | Risk Reports, with external review; Frontier Safety Roadmaps |
+| OpenAI, Preparedness Framework v2 (updated 15 April 2025) | Tracked Categories: biological and chemical, cybersecurity, AI self-improvement; Research Categories such as long-range autonomy and sandbagging; High and Critical thresholds | Scalable automated evaluations, plus deep dives such as expert red-teaming and third-party evaluations |
+| Google DeepMind, Frontier Safety Framework v3.1 (17 April 2026) | Critical Capability Levels in chemical, biological, radiological and nuclear risk, cyber, harmful manipulation, and machine learning R&D and misalignment; lower Tracked Capability Levels | Early warning evaluations and alert thresholds that fire before a level is reached |
+
+A dangerous-capability evaluation asks whether a model can do tasks that would significantly help someone cause severe harm, using test suites, expert red teams and in some cases laboratory studies. Two points that matter if you read the reports:
+
+- **They measure a floor.** OpenAI's framework says it regards "any one-time capability elicitation in a frontier model as a lower bound, rather than a ceiling" on what real use and misuse could draw out. A model that fails the test with today's prompting and tools might pass with better ones.
+- **Passing a threshold triggers safeguards, not a verdict.** The documents describe if-then commitments: if a model reaches a level, then stronger protections apply. Anthropic's text says plainly that it cannot unilaterally commit to its industry-wide recommendations. It also notes that laws such as California's SB 53 are addressed in separate compliance documents. For the EU's rules on general-purpose AI models, see [The EU AI Act for engineers](../../evals/eu-ai-act-for-engineers/).
+
+They are mostly about rare, severe risks. The everyday risks of your own application, from leaking data to giving bad advice, are not what they test.
+
+## Guardrails and training-time safety
+
+| | Training-time safety | Guardrails around the model |
+|---|---|---|
+| Where it lives | In the weights | In code, classifiers and rules you control |
+| Strength | General: applies to prompts nobody listed | Specific, testable and changeable in minutes |
+| Weakness | Probabilistic. Fails on unfamiliar prompts, and you cannot inspect it | Needs upkeep. Costs latency and money, and can block good requests |
+| Who controls it | The model provider | You |
+
+You want both. Anthropic's own policy describes, for its most sensitive area, classifier guards, access controls, red-teaming, bug bounties and threat intelligence working together, which is the same layered idea at the vendor's scale.
+
+## What a builder can and cannot rely on
+
+You can rely on a modern assistant to follow instructions, to decline clearly harmful requests most of the time, and to behave better after a vendor's safety training than a raw base model. Published evaluations and system documentation tell you about the vendor's testing.
+
+You cannot rely on it to hold a line under pressure. Wei and colleagues found that vulnerabilities in safety-trained models persisted despite extensive red-teaming. You cannot rely on it to stay truthful when the user pushes, because of sycophancy. You cannot rely on identical behaviour after the vendor updates the model. And a refusal is not an access control.
+
+So build defence in depth, as in [LLM application security](../../evals/llm-security/):
+
+- Put permissions in code, with least-privilege tools and the user's own credentials.
+- Ask a person to confirm consequential actions.
+- Check inputs and outputs with checks you control.
+- Log, monitor and keep an incident process.
+- Keep a regression set of the failures you found, and run it on every change.
+
+For learners and teachers, the practical side of using these systems wisely is in [AI and school](../ai-and-school/).
+
+## What to remember
+
+- Alignment aims at helpful, honest and harmless behaviour, and the three trade off against each other.
+- Behaviour is shaped by demonstrations, preference feedback (RLHF, DPO) and written principles. None of it is a guarantee.
+- Optimising a proxy finds loopholes: reward hacking, sycophancy and goal misgeneralisation are documented, not hypothetical. Each fix to a reward can open a new loophole.
+- Red teaming finds failures before users do. Run a small one for your app, keep the cases, and disclose responsibly.
+- Public safety frameworks describe capability thresholds and if-then safeguards. They are voluntary, revised often, and focused on severe risks.
+- Do not treat model behaviour as a security boundary. Use guardrails and permissions in code, in layers.
+
+Next: [LLM application security](../../evals/llm-security/), where those layers are laid out in detail.

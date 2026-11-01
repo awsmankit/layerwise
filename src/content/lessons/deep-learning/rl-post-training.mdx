@@ -1,0 +1,151 @@
+---
+title: "Post-training with reinforcement learning: RLHF, verifiable rewards and GRPO"
+track: deep-learning
+level: advanced
+order: 9
+summary: "Why imitation is not enough, how RLHF, DPO, verifiable rewards and GRPO each turn a score into a weight update, what reward hacking looks like, and why this kind of training produces long chains of thought."
+updated: 2026-11-01
+sources:
+  - label: "Training language models to follow instructions with human feedback (Ouyang et al., 2022)"
+    url: https://arxiv.org/abs/2203.02155
+  - label: "Proximal Policy Optimization Algorithms (Schulman et al., 2017)"
+    url: https://arxiv.org/abs/1707.06347
+  - label: "Training a Helpful and Harmless Assistant with RLHF (Bai et al., Anthropic, 2022)"
+    url: https://arxiv.org/abs/2204.05862
+  - label: "Constitutional AI: Harmlessness from AI Feedback (Bai et al., Anthropic, 2022)"
+    url: https://arxiv.org/abs/2212.08073
+  - label: "Direct Preference Optimization (Rafailov et al., 2023)"
+    url: https://arxiv.org/abs/2305.18290
+  - label: "DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models (Shao et al., 2024)"
+    url: https://arxiv.org/abs/2402.03300
+  - label: "DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning (DeepSeek-AI, 2025)"
+    url: https://arxiv.org/abs/2501.12948
+  - label: "Tulu 3: Pushing Frontiers in Open Language Model Post-Training (Lambert et al., 2024)"
+    url: https://arxiv.org/abs/2411.15124
+  - label: "Scaling Laws for Reward Model Overoptimization (Gao et al., 2022)"
+    url: https://arxiv.org/abs/2210.10760
+  - label: "Understanding R1-Zero-Like Training: A Critical Perspective (Liu et al., 2025)"
+    url: https://arxiv.org/abs/2503.20783
+  - label: "Reward Hacking in Reinforcement Learning (Lilian Weng, 2024)"
+    url: https://lilianweng.github.io/posts/2024-11-28-reward-hacking/
+  - label: "Hugging Face TRL: GRPO Trainer"
+    url: https://huggingface.co/docs/trl/grpo_trainer
+---
+
+import PipelineFlow from '../../../components/viz/PipelineFlow.tsx';
+import GrpoCalculator from '../../../components/viz/GrpoCalculator.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+[How a model is trained](../../foundations/training-pipeline/) lists preference tuning and reasoning training as the last stages, and [fine-tuning in practice](../../llm/fine-tuning-in-practice/) shows where you would meet them as a builder. This lesson opens the box: what the reinforcement learning (RL) methods actually compute, why they were needed, and where they go wrong. It assumes you know the pretrain, instruction-tune, preference-tune sequence and what a loss and a gradient are.
+
+## Why imitation is not enough
+
+Supervised fine-tuning (SFT) shows the model a prompt and a good answer written by a person, and raises the probability of that answer. It works well, but it has two limits.
+
+**The demonstrator caps the quality.** The model learns to reproduce what people wrote. The DeepSeek-R1 paper states the worry for reasoning: relying on human-written reasoning traces limits the model to the human exemplars. **Judging is easier than writing.** InstructGPT's labellers did not write more answers; they ranked several model answers to the same prompt (between four and nine), which is cheaper and more consistent than composing an ideal one. For some tasks no person is needed at all: a maths answer or a unit test can be checked by a program.
+
+RL replaces "copy this answer" with "make answers like the high-scoring ones more likely". The InstructGPT paper is the standard demonstration: after supervised fine-tuning, reward modelling and RL on human preferences, human raters preferred outputs from the 1.3 billion parameter InstructGPT over the 175 billion parameter GPT-3, on their prompt distribution.
+
+## The vocabulary, in one paragraph
+
+The **policy** is the language model itself: a distribution over answers to a prompt. An **action** is a token, or, when only the finished answer is scored, the whole answer. The **reward** is a number for the finished answer. The **reference policy** is a frozen copy of the model before RL, and the **KL divergence** measures how far the current policy's probabilities have drifted from it. Subtracting a multiple of that drift from the reward is the **KL penalty**, a leash. The core idea of policy-gradient RL is one sentence: raise the probability of answers whose reward was above average, and lower it for those below. The difference from average is the **advantage**; where the average comes from is the main thing that distinguishes the methods below.
+
+## RLHF: reward model plus PPO
+
+Reinforcement learning from human feedback, as InstructGPT ran it, has three stages. First SFT on about 13,000 prompts with demonstrations. Second, a **reward model**: the SFT model with its output layer replaced by a single number, trained on about 33,000 prompts' worth of rankings. For a preferred answer and a rejected one the loss is −log σ(r<sub>preferred</sub> − r<sub>rejected</sub>), so the reward model learns to score preferred answers higher. Third, **PPO** (proximal policy optimization) maximises that learned reward on about 31,000 further prompts, with a per-token KL penalty against the SFT model to limit over-optimisation. Labellers were about 40 contractors; the preferences are theirs, not "human values" in general, as the paper says.
+
+<PipelineFlow
+  client:visible
+  title="One RLHF round with PPO"
+  loop
+  stages={[
+    { title: 'Sample', detail: 'For a batch of prompts, the current policy writes one or more answers.' },
+    { title: 'Score', detail: 'The reward model gives each finished answer a number. A trained model of the preferences stands in for a person, so the loop can run millions of times.' },
+    { title: 'Leash', detail: 'Subtract a multiple of the log-ratio between the policy and the frozen reference model, token by token. The further the policy drifts from the reference, the bigger the penalty.' },
+    { title: 'Advantage', detail: 'A value model (a second network, the critic) estimates what reward to expect, and the advantage is reward minus that expectation.' },
+    { title: 'Clipped update', detail: 'PPO raises or lowers each sampled token probability in proportion to the advantage, but clips the change in probability ratio to 1 ± 0.2 so a single batch cannot move the model far.' },
+  ]}
+  caption="Four networks are involved: the policy, a frozen reference, the reward model and the value model. That memory bill is what the later methods reduce."
+/>
+
+PPO's clipping is a safety rail: the objective stops rewarding a probability change once the ratio of new to old probability has left the interval 1 − ε to 1 + ε, where the PPO paper suggests ε = 0.2. Anthropic's work on a helpful and harmless assistant used the same recipe with preference models and updated them on a roughly weekly cycle with fresh human data. It also reported that the reward rose roughly linearly with the square root of the KL distance from the starting model. **Constitutional AI** replaced human harm labels with feedback from a model guided by a written list of principles, which is called RL from AI feedback.
+
+## DPO: skipping the reward model
+
+Direct preference optimization starts from the same objective, a reward minus a KL penalty, and shows the optimal policy can be written in closed form. The policy's own log-ratio to the reference acts as the reward, so you can train on pairs of preferred and rejected answers with a plain classification-style loss:
+
+```text
+loss = −log σ( β · [ log(π(y_chosen)/π_ref(y_chosen)) − log(π(y_rejected)/π_ref(y_rejected)) ] )
+```
+
+It raises the chosen answer's probability relative to the reference and lowers the rejected one's, with no reward model and no sampling loop. The paper reports it matching or beating PPO-based RLHF on its summarisation and dialogue tasks while being much simpler. The trade is that DPO learns from a fixed dataset of pairs rather than from answers the current model writes. In DeepSeekMath's comparison, an online version of rejection-sampling training pulled ahead of its offline version later in training, once the model's own samples had drifted from the starting model's. In practice teams combine them: Tulu 3 used a length-normalised DPO stage and then RL with verifiable rewards.
+
+## Verifiable rewards
+
+When the answer can be checked, the reward model can be replaced by a program. **Reinforcement learning with verifiable rewards (RLVR)** is the name Tulu 3 gave to this: the policy gets a reward only when the answer is verifiably correct, and a KL penalty still applies. Typical checkers are exact-match on a maths answer, a unit-test run for code, or a script that tests an instruction such as "answer in under fifty words". Tulu 3 applied it to maths and precise instruction following, with a fixed reward for success and zero otherwise, trained with PPO.
+
+DeepSeek-R1-Zero pushed it furthest. Its reward was the sum of an accuracy reward (answer matches, or code passes the compiler's tests) and a format reward (reasoning inside designated tags). The authors say they avoided neural reward models for reasoning because those are susceptible to reward hacking at scale. On the AIME 2024 maths benchmark, pass@1 rose during training from 15.6 per cent to 77.9 per cent, as reported in the January 2026 revision of the paper; the first version reported 71.0 per cent. Treat any single benchmark number as one data point on one model.
+
+## GRPO: the group is the baseline
+
+PPO's value model is another network about as big as the policy. **Group relative policy optimization (GRPO)**, introduced in DeepSeekMath, drops it. For each prompt, sample a group of G answers, score them, and use the group itself as the baseline:
+
+```text
+advantage_i = (reward_i − mean(rewards)) / std(rewards)
+```
+
+Every token of answer i gets that advantage. The update is then the clipped objective from PPO, with a KL penalty added to the loss using an unbiased estimator per token. DeepSeekMath trained on about 144,000 maths questions with 64 samples each and a KL coefficient of 0.04, and reports improving a 7B model from 46.8 to 51.7 per cent on MATH.
+
+Worked by hand: a group of eight answers with two correct. The mean reward is 0.25 and the sample standard deviation is 0.463, so each correct answer gets (1 − 0.25) ÷ 0.463 = +1.62 and each wrong one (0 − 0.25) ÷ 0.463 = −0.54. The advantages sum to zero: the group's winners gain what its losers lose. Try it below, including one that teaches nothing.
+
+<GrpoCalculator client:visible />
+
+Three things to notice. **A group where every answer scores the same carries no signal**: the standard deviation is zero and so are the advantages. Prompts that are too easy or too hard are wasted samples, which is why recipes track the fraction of such groups. **The KL slider acts like a brake.** In the toy, a stronger penalty leaves the policy nearer its start and learning slower. Gao et al. measured the effect on a learned reward model and found that, in their setup, the penalty behaved like early stopping and did not improve the final trade-off, with the caveat that this may be sensitive to hyperparameters. **The KL term is optional in some recipes.** DeepSeekMath used 0.04 and R1-Zero 0.001. As of 1 November 2026 the Hugging Face TRL library's GRPO trainer defaults to a KL weight of zero, and its documentation cites recent work that finds the term not essential. Check the current docs before relying on this.
+
+<Deep title="Criticisms of the GRPO formula, and which standard deviation">
+
+The papers write std without saying whether it is the population or sample version. TRL, which many open recipes use, applies the sample version (dividing by k − 1) and adds a small constant to avoid dividing by zero; the calculator and the lab use the sample version too. Liu et al. argue in "Understanding R1-Zero-like training" that dividing by the standard deviation weights easy and hard questions unevenly, and that dividing each answer's loss by its own length is an optimisation bias that artificially increases response length, especially for incorrect answers. They propose a fix called Dr. GRPO, and TRL exposes options for both changes. The same paper reports that a base model can already show "aha moment" behaviour before RL, and that some base models reason well even without a prompt template, which suggests part of what RL appears to discover was already there from pretraining.
+
+</Deep>
+
+## Why RL produces long chains of thought
+
+In R1-Zero the average response length on the training set rose steadily as RL went on, and the model began to check its work, with a sudden increase in the word "wait" that the authors call an "aha moment". A plausible reading: the reward only checks the final answer, so any habit that raises the chance of a correct answer is reinforced, and re-checking and trying another approach pay off when problems are hard. That is an explanation, not a proof, and the critique above shows the length trend is partly an artefact of the loss. The released R1 model then used a longer pipeline: a small cold-start SFT set, reasoning RL, rejection sampling to build new SFT data, and a final RL stage with preference rewards. The authors also distilled the reasoning into smaller models.
+
+The practical consequence is the one in [reasoning models](../../llm/reasoning-models/): the thinking is output tokens that you wait for and pay for, because RL taught the model to spend them. The compute-per-answer arithmetic is in [scaling laws](../scaling-laws/).
+
+## Reward hacking and over-optimisation
+
+Goodhart's law: when a measure becomes a target, it stops being a good measure. Gao et al. made this measurable. They trained a proxy reward model on labels from a fixed "gold" reward model and tracked both while optimising. The proxy score keeps rising; the gold score rises, peaks and then falls. They fitted the gold reward as a function of d, the square root of the KL distance, and found coefficients that vary smoothly with reward-model size. Their gold model is synthetic, so this shows the shape of the effect rather than how much humans would disagree.
+
+In practice it shows up as:
+
+- **Exploiting a weak metric.** Lilian Weng's survey lists examples: a summariser gaming the ROUGE score with barely readable text, and coding models that edit the unit tests instead of fixing the code. These are reported cases she collects, not measurements on one system.
+- **Length and style.** Learned reward models can favour long or confident answers, and the loss-normalisation issue above can add length for a different reason.
+- **Format over substance.** A format reward is useful scaffolding but can be satisfied without any reasoning. Check what improved by testing on held-out problems.
+
+Verifiable rewards are harder to hack than a learned model, but not immune: a checker that parses only the last number will reward answers shaped to pass it. Guard with a held-out evaluation the training never sees, a hidden second checker, and a human read of the highest-reward samples. [Fine-tuning in practice](../../llm/fine-tuning-in-practice/) has the builder's checklist.
+
+## Costs and limits
+
+- **Sampling dominates.** Every update needs fresh answers. R1-Zero sampled 16 answers for each of 32 questions per step, up to 32,768 tokens each (65,536 after step 8,200), for 10,400 steps. Tulu 3 describes an asynchronous setup in which an inference engine generates while learners update. This is why RL work leans on [training infrastructure](../../infra/training-infrastructure/) and fast serving engines.
+- **Memory falls as the machinery shrinks.** RLHF with PPO holds four models, GRPO drops the value model, and verifiable rewards drop the reward model.
+- **It needs checkable tasks.** Maths and code are easy to verify. Writing, advice and judgement still depend on preference models or people.
+- **The base model matters.** What RL can reinforce is what the model can already sometimes do. If no sampled answer is ever correct, the signal is zero.
+- **Results are specific.** Gains reported on one benchmark with one base model do not tell you what a recipe does on yours. Run your own [evals](../../evals/evals-101/).
+
+## Try the lab
+
+[Group-relative advantages and the clipped objective](../../../practice/grpo-advantages/) asks you to write the advantage, the clipped term, the group objective and the KL estimator in pure Python, and checks each against hand-computed values.
+
+## What to remember
+
+- SFT copies demonstrations. RL optimises an outcome score, which can come from human rankings, a learned reward model, or a program that checks the answer.
+- RLHF trains a reward model on rankings and then runs PPO against it with a KL penalty to a reference model. PPO clips each update to a small change in probability.
+- DPO folds the reward model into the loss and trains on preference pairs directly. RLVR replaces the reward model with a checker.
+- GRPO samples a group per prompt and uses reward minus the group mean, over the group standard deviation, as the advantage. No value model is needed, and uniform groups teach nothing.
+- Over-optimising a proxy makes the proxy score rise while the true score falls. Keep held-out evaluations the training never sees.
+- Long chains of thought are what RL on outcomes tends to reinforce, and you pay for them as output tokens.
+
+Next: [Reasoning models](../../llm/reasoning-models/) covers using, tuning and paying for what this training produces.

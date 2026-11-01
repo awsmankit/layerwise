@@ -1,1 +1,486 @@
-/* Styles for the interactive components in the wave 2 "dl-a" lesson batch. Keep every class under this batch's own prefix. */
+/* Styles for the interactive components in the wave 2 "dl-a" lesson batch (tokenizer and architecture lessons).
+   Every class starts with dla-. */
+
+/* two hand colours and four bar colours that stay apart for most kinds of colour blindness */
+.dla-bpe,
+.dla-cfg,
+.dla-rope {
+  --dla-a: #2563eb;
+  --dla-b: #d96400;
+  --dla-c: #0b7a6b;
+  --dla-d: #7a7694;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .dla-bpe,
+  :root:not([data-theme='light']) .dla-cfg,
+  :root:not([data-theme='light']) .dla-rope {
+    --dla-a: #6ea8ff;
+    --dla-b: #ffa24d;
+    --dla-c: #4fd8ac;
+    --dla-d: #a29dc4;
+  }
+}
+:root[data-theme='dark'] .dla-bpe,
+:root[data-theme='dark'] .dla-cfg,
+:root[data-theme='dark'] .dla-rope {
+  --dla-a: #6ea8ff;
+  --dla-b: #ffa24d;
+  --dla-c: #4fd8ac;
+  --dla-d: #a29dc4;
+}
+
+/* ---------- shared controls ---------- */
+
+.dla-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.6rem;
+  margin-block: 0.4rem;
+}
+.dla-lab {
+  font-size: 0.9rem;
+  color: var(--ink-2);
+}
+.dla-dim {
+  color: var(--ink-3);
+  font-weight: 400;
+}
+.dla-small {
+  font-size: 0.85rem;
+  margin-top: 0.4rem;
+}
+.viz .dla-chip {
+  min-height: 44px;
+  padding: 0.35rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font: 600 0.9rem var(--font-display);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.2s, background 0.2s;
+}
+.viz .dla-chip:hover {
+  border-color: var(--signal);
+}
+.viz .dla-chip[aria-pressed='true'] {
+  background: var(--signal);
+  border-color: var(--signal);
+  color: var(--on-signal);
+}
+.viz .dla-btn {
+  min-height: 44px;
+  padding: 0.5rem 1rem;
+  justify-content: center;
+}
+.dla-chip:focus-visible,
+.dla-btn:focus-visible,
+.dla-text:focus-visible,
+.dla-input:focus-visible,
+.dla-bpe input:focus-visible,
+.dla-cfg select:focus-visible,
+.dla-cfg input:focus-visible,
+.dla-rope input:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.dla-field {
+  display: block;
+  margin-top: 0.9rem;
+  font-size: 0.92rem;
+  color: var(--ink-2);
+}
+.dla-text,
+.dla-input {
+  display: block;
+  width: 100%;
+  margin-top: 0.3rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  font: 400 16px/1.45 var(--font-mono);
+  min-height: 44px;
+  resize: vertical;
+}
+.dla-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 44px;
+  font-size: 0.92rem;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.dla-check input {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  accent-color: var(--signal);
+}
+.dla-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.7rem;
+}
+.dla-slide {
+  display: block;
+  margin-top: 0.8rem;
+}
+.dla-slide > span {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.2rem 1rem;
+  font-size: 0.92rem;
+  color: var(--ink-2);
+}
+.dla-slide > span b {
+  color: var(--ink);
+}
+.dla-slide input[type='range'],
+.dla-cfg input[type='range'] {
+  touch-action: pan-y;
+  width: 100%;
+}
+.dla-sliders {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 0.6rem 1.6rem;
+  margin-bottom: 0.6rem;
+}
+.dla-status {
+  margin-block: 0.8rem 0.4rem;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.dla-h {
+  margin: 1.3rem 0 0.5rem;
+  font: 650 0.98rem var(--font-display);
+  color: var(--ink);
+}
+
+/* ---------- BPE trainer ---------- */
+
+.dla-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 2rem;
+  margin: 0.4rem 0 0;
+}
+.dla-stats dt {
+  font-size: 0.8rem;
+  color: var(--ink-3);
+}
+.dla-stats dd {
+  margin: 0;
+  font-weight: 650;
+}
+.dla-panels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 0.4rem 2rem;
+}
+.dla-panels > section {
+  min-width: 0;
+}
+.dla-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+.dla-table th,
+.dla-table td {
+  padding: 0.35rem 0.4rem;
+  border-bottom: 1px solid var(--line-soft);
+  text-align: left;
+}
+.dla-table th:last-child,
+.dla-table td:last-child {
+  text-align: right;
+}
+.dla-table code,
+.dla-merges code {
+  font: 500 0.92rem var(--font-mono);
+  padding: 0.05rem 0.3rem;
+  border: 1px solid var(--line-soft);
+  border-radius: 4px;
+  background: var(--surface);
+  white-space: pre;
+}
+.dla-hot {
+  background: var(--signal-wash);
+}
+.dla-tag {
+  font-size: 0.78rem;
+  font-weight: 650;
+  color: var(--signal-ink);
+}
+.dla-merges {
+  margin: 0;
+  padding-left: 1.6rem;
+  max-height: 14rem;
+  overflow: auto;
+  font-size: 0.92rem;
+  line-height: 1.9;
+}
+.dla-words {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.3rem;
+}
+.dla-words li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  min-width: 0;
+}
+.dla-count {
+  flex: none;
+  min-width: 2.2rem;
+  font-size: 0.85rem;
+  color: var(--ink-3);
+  text-align: right;
+}
+.dla-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin: 0;
+  min-width: 0;
+}
+.dla-tok {
+  display: inline-block;
+  min-width: 1.4rem;
+  padding: 0.1rem 0.35rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--ink);
+  font: 500 0.92rem/1.35 var(--font-mono);
+  text-align: center;
+  white-space: pre;
+}
+.dla-tok.dla-merged {
+  border-color: var(--line);
+}
+.dla-tok.dla-new {
+  border: 2px solid var(--signal);
+  font-weight: 700;
+}
+.dla-out {
+  margin-top: 0.4rem;
+}
+
+/* ---------- config calculator ---------- */
+
+.dla-shape {
+  margin: 0.2rem 0 0.8rem;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+.dla-shape b {
+  color: var(--ink);
+}
+.dla-what {
+  margin: 0 0 1rem;
+  padding: 0.7rem 0.9rem 0.8rem;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  min-width: 0;
+}
+.dla-what legend {
+  padding-inline: 0.4rem;
+  font: 650 0.92rem var(--font-display);
+  color: var(--ink-2);
+}
+.dla-what .viz-controls {
+  margin-bottom: 0.5rem;
+}
+.dla-cfg select {
+  width: 100%;
+  min-height: 44px;
+  max-width: 100%;
+  font-size: 16px;
+}
+.dla-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+  gap: 0.6rem;
+}
+.dla-card {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  min-width: 0;
+}
+.dla-k {
+  font-size: 0.8rem;
+  color: var(--ink-3);
+}
+.dla-v {
+  font: 700 1.35rem/1.2 var(--font-display);
+  color: var(--ink);
+}
+.dla-s {
+  font-size: 0.8rem;
+  color: var(--ink-2);
+  line-height: 1.35;
+}
+.dla-bar {
+  display: flex;
+  height: 26px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.dla-seg {
+  display: block;
+  height: 100%;
+  min-width: 2px;
+}
+.dla-seg-embedding {
+  background: var(--dla-a);
+}
+.dla-seg-attention {
+  background: var(--dla-b);
+}
+.dla-seg-ffn {
+  background: var(--dla-c);
+}
+.dla-seg-other {
+  background: var(--dla-d);
+}
+.dla-legend {
+  list-style: none;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.92rem;
+}
+.dla-legend li {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+.dla-sw {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  align-self: center;
+}
+.dla-note {
+  margin: 1rem 0 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.dla-note b {
+  color: var(--ink);
+}
+
+/* ---------- RoPE clock hands ---------- */
+
+.dla-clocks {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 130px), 1fr));
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+}
+.dla-clock {
+  margin: 0;
+  text-align: center;
+  font-size: 0.85rem;
+  min-width: 0;
+}
+.dla-clock svg {
+  display: block;
+  width: 100%;
+  max-width: 130px;
+  margin-inline: auto;
+}
+.dla-face {
+  fill: var(--surface);
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.dla-hand {
+  stroke-width: 3.5;
+  stroke-linecap: round;
+}
+.dla-hand-q {
+  stroke: var(--dla-a);
+}
+.dla-hand-k {
+  stroke: var(--dla-b);
+}
+.dla-pin {
+  fill: var(--ink);
+}
+.dla-legend2 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.7rem;
+  margin: 0.3rem 0 0;
+  font-size: 0.88rem;
+  color: var(--ink-2);
+}
+.dla-key {
+  display: inline-block;
+  width: 22px;
+  height: 4px;
+  border-radius: 2px;
+}
+.dla-key-q {
+  background: var(--dla-a);
+}
+.dla-key-k {
+  background: var(--dla-b);
+  margin-left: 0.8rem;
+}
+.dla-curve {
+  display: block;
+  width: 100%;
+  margin-top: 0.4rem;
+  overflow: visible;
+}
+.dla-axis {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.dla-line {
+  stroke: var(--dla-a);
+  stroke-width: 2;
+}
+.dla-dot {
+  fill: var(--dla-b);
+  stroke: var(--surface);
+  stroke-width: 2;
+}
+.dla-axis-t {
+  font: 12px var(--font-display);
+  fill: var(--ink-2);
+}
+
+@media (max-width: 420px) {
+  .dla-v {
+    font-size: 1.2rem;
+  }
+  .viz .dla-chip {
+    font-size: 0.86rem;
+  }
+}

@@ -1,1 +1,426 @@
 /* Styles for the interactive components in the wave 2 "dl-b" lesson batch. Keep every class under this batch's own prefix. */
+
+/* ---------- shared bits ---------- */
+
+.dlb-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.7rem;
+}
+.dlb-tight {
+  margin-bottom: 0.5rem;
+}
+.dlb-label {
+  font-size: 0.85rem;
+  font-weight: 650;
+  color: var(--ink-3);
+  min-width: 4.4rem;
+}
+.dlb-gap {
+  margin-left: 0.6rem;
+}
+.viz .dlb-chip {
+  min-height: 40px;
+  padding: 0.3rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font: 600 0.9rem var(--font-display);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.dlb-chip:hover {
+  border-color: var(--signal);
+}
+.viz .dlb-chip[aria-pressed='true'] {
+  background: var(--signal);
+  border-color: var(--signal);
+  color: var(--on-signal);
+}
+.dlb-preset {
+  border-style: dashed;
+}
+.dlb-chip:focus-visible,
+.dlb-tog:focus-visible,
+.dlb-in:focus-visible,
+.viz.dlb .btn:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.viz.dlb .btn {
+  min-height: 44px;
+}
+.dlb-note {
+  margin: 0.2rem 0 0.9rem;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+.dlb-in {
+  width: 100%;
+  min-height: 44px;
+  font-size: 16px;
+  font-family: var(--font-display);
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  padding: 0.4rem 0.2rem;
+  border-radius: 0;
+  box-sizing: border-box;
+}
+.dlb-controls {
+  margin-top: 0.4rem;
+}
+.dlb-live {
+  min-height: 0;
+  font-size: 0.92rem;
+  color: var(--ink-2);
+}
+.dlb-h {
+  margin: 1.2rem 0 0.4rem;
+  font: 650 1rem var(--font-display);
+}
+.dlb-calc {
+  margin: 0.4rem 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.dlb-calc b,
+.dlb-note b {
+  color: var(--ink);
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+.dlb .up {
+  color: var(--ok);
+}
+.dlb .down {
+  color: var(--warn);
+}
+
+/* ---------- planner ---------- */
+
+.dlb-answer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+.dlb-card {
+  min-width: 0;
+  padding: 0.9rem 1rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+}
+.dlb-opt {
+  border-color: var(--signal);
+}
+.dlb-alt {
+  border-color: var(--cost);
+}
+.dlb-cardtitle {
+  margin: 0 0 0.6rem;
+  font: 650 1rem var(--font-display);
+}
+.dlb-dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem 1rem;
+  margin: 0 0 0.6rem;
+}
+.dlb-dl dt {
+  font-size: 0.82rem;
+  color: var(--ink-3);
+  line-height: 1.25;
+}
+.dlb-dl dd {
+  margin: 0.1rem 0 0;
+  font-size: 1.12rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+.dlb-serve {
+  margin: 0.4rem 0 0.8rem;
+}
+.dlb-verdict {
+  margin: 0.2rem 0 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.dlb-verdict b {
+  color: var(--ink);
+}
+.dlb-warns {
+  margin: 0.8rem 0;
+  padding: 0.7rem 1rem 0.7rem 1.6rem;
+  border-left: 3px solid var(--cost);
+  background: var(--cost-wash);
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--ink);
+}
+.dlb-warns li + li {
+  margin-top: 0.35rem;
+}
+
+/* ---------- charts ---------- */
+
+.dlb-charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2rem;
+  margin-top: 1rem;
+}
+.dlb-fig {
+  margin: 0;
+  min-width: 0;
+}
+.dlb-figcap {
+  font: 650 0.92rem var(--font-display);
+  margin-bottom: 0.3rem;
+}
+.dlb-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.dlb-ax {
+  font: 12px var(--font-display);
+  fill: var(--ink-3);
+}
+.dlb-grid {
+  stroke: var(--line-soft);
+}
+.dlb-axis,
+.dlb-tick {
+  stroke: var(--line);
+}
+.dlb-line {
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.dlb-l-opt {
+  stroke: var(--signal);
+}
+.dlb-l-alt {
+  stroke: var(--cost);
+}
+.dlb-l-ghost {
+  stroke: var(--ink-3);
+  stroke-dasharray: 5 5;
+  stroke-width: 2;
+}
+.dlb-mark {
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+.dlb-m-opt {
+  fill: var(--signal);
+}
+.dlb-m-alt {
+  fill: var(--cost);
+}
+.dlb-legend {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--ink-3);
+}
+.dlb-key {
+  display: inline-block;
+  width: 1.4rem;
+  height: 0;
+  border-top: 3px solid var(--signal);
+  vertical-align: middle;
+  margin: 0 0.3rem 0 0.2rem;
+}
+.dlb-k-alt {
+  border-top-color: var(--cost);
+}
+.dlb-k-ghost {
+  border-top: 2px dashed var(--ink-3);
+}
+
+/* ---------- GRPO calculator ---------- */
+
+.dlb-prompt {
+  margin: 0 0 0.8rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.dlb-prompt b {
+  color: var(--ink);
+}
+.dlb-answers {
+  list-style: none;
+  margin: 0.4rem 0 0.4rem;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+.dlb-ans {
+  display: grid;
+  grid-template-columns: 5.6rem 5.6rem minmax(0, 1fr) 6.2rem;
+  align-items: center;
+  gap: 0.6rem;
+}
+.viz .dlb-tog {
+  min-height: 40px;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink-3);
+  font: 600 0.85rem var(--font-display);
+  cursor: pointer;
+}
+.viz .dlb-tog[aria-pressed='true'] {
+  border-color: var(--ok);
+  color: var(--ok);
+  background: transparent;
+}
+.dlb-atext {
+  font: 650 0.98rem var(--font-display);
+  overflow-wrap: anywhere;
+}
+.dlb-bar {
+  position: relative;
+  height: 14px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface);
+}
+.dlb-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 6px;
+  background: var(--ink-3);
+  transition: width 0.4s var(--ease);
+}
+.dlb-fill.ok {
+  background: var(--ok);
+}
+.dlb-ref {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--ink);
+}
+.dlb-pv {
+  font-size: 0.95rem;
+  text-align: right;
+  white-space: nowrap;
+}
+.dlb-pv small {
+  font-size: 0.78rem;
+}
+.dlb-step {
+  margin-top: 0.6rem;
+  padding-top: 0.2rem;
+  border-top: 1px dashed var(--line);
+}
+.dlb-samples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin: 0.3rem 0;
+}
+.dlb-s {
+  padding: 0.15rem 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font: 600 0.85rem var(--font-display);
+}
+.dlb-s.ok {
+  border-color: var(--ok);
+  color: var(--ok);
+}
+.dlb-s.no {
+  color: var(--ink-3);
+}
+.dlb-flat {
+  margin: 0.4rem 0;
+  padding: 0.6rem 0.9rem;
+  border-left: 3px solid var(--cost);
+  background: var(--cost-wash);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+.dlb-tablewrap {
+  overflow-x: auto;
+  margin: 0.5rem 0;
+}
+.dlb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+.dlb-table th,
+.dlb-table td {
+  padding: 0.35rem 0.6rem;
+  border-bottom: 1px solid var(--line-soft);
+  text-align: right;
+  white-space: nowrap;
+}
+.dlb-table th:first-child {
+  text-align: left;
+}
+.dlb-table thead th {
+  font-size: 0.8rem;
+  color: var(--ink-3);
+  font-weight: 650;
+}
+.dlb-leash {
+  margin-top: 1.2rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid var(--line);
+}
+
+@media (max-width: 720px) {
+  .dlb-answer,
+  .dlb-charts {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 560px) {
+  .dlb-ans {
+    grid-template-columns: 5.4rem minmax(0, 1fr) 5.2rem;
+    grid-template-areas:
+      'tog text pv'
+      'bar bar bar';
+    row-gap: 0.25rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .dlb-ans .dlb-tog {
+    grid-area: tog;
+  }
+  .dlb-ans .dlb-atext {
+    grid-area: text;
+  }
+  .dlb-ans .dlb-bar {
+    grid-area: bar;
+  }
+  .dlb-ans .dlb-pv {
+    grid-area: pv;
+  }
+  .dlb-label {
+    min-width: 100%;
+  }
+  .dlb-gap {
+    margin-left: 0;
+  }
+}

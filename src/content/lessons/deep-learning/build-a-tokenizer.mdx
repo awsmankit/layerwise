@@ -1,0 +1,214 @@
+---
+title: "Build a tokenizer: byte-pair encoding and vocabulary design"
+track: deep-learning
+level: intermediate
+order: 6
+summary: "Train a byte-pair-encoding tokenizer by hand and in the browser, see why the vocabulary size is a trade-off, and learn why numbers, code, other languages and stray spaces behave oddly."
+updated: 2026-11-01
+sources:
+  - label: "Neural Machine Translation of Rare Words with Subword Units (Sennrich, Haddow and Birch, 2015)"
+    url: https://arxiv.org/abs/1508.07909
+  - label: "Language Models are Unsupervised Multitask Learners (GPT-2 paper, Radford et al., 2019), section 2.2 on byte-level BPE"
+    url: https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf
+  - label: "tiktoken: the encodings and their pre-tokenisation patterns (openai_public.py)"
+    url: https://github.com/openai/tiktoken/blob/main/tiktoken_ext/openai_public.py
+  - label: "Hugging Face tokenizers: the tokenization pipeline"
+    url: https://huggingface.co/docs/tokenizers/pipeline
+  - label: "Hugging Face LLM course: Byte-Pair Encoding tokenization"
+    url: https://huggingface.co/learn/llm-course/chapter6/5
+  - label: "minbpe: minimal byte-level BPE in Python, with lecture notes (Andrej Karpathy)"
+    url: https://github.com/karpathy/minbpe
+  - label: "The Llama 3 Herd of Models (Meta, 2024), section 3.2 on the 128K vocabulary"
+    url: https://arxiv.org/abs/2407.21783
+  - label: "Llama 3 reference tokenizer and chat format (meta-llama/llama3, tokenizer.py)"
+    url: https://github.com/meta-llama/llama3/blob/main/llama/tokenizer.py
+  - label: "Hugging Face Transformers: chat templates"
+    url: https://huggingface.co/docs/transformers/chat_templating
+  - label: "Language Model Tokenizers Introduce Unfairness Between Languages (Petrov et al., NeurIPS 2023)"
+    url: https://arxiv.org/abs/2305.15425
+  - label: "Tokenization counts: the impact of tokenization on arithmetic in frontier LLMs (Singh and Strouse, 2024)"
+    url: https://arxiv.org/abs/2402.14903
+  - label: "Fishing for Magikarp: Automatically Detecting Under-trained Tokens in Large Language Models (Land and Bartolo, EMNLP 2024)"
+    url: https://arxiv.org/abs/2405.05417
+  - label: "Prompt boundaries and token healing (guidance notebook)"
+    url: https://github.com/guidance-ai/guidance/blob/main/notebooks/art_of_prompt_design/prompt_boundaries_and_token_healing.ipynb
+  - label: "Subword Regularization: Improving Neural Network Translation Models with Multiple Subword Candidates (Kudo, 2018, the unigram language model)"
+    url: https://arxiv.org/abs/1804.10959
+  - label: "SentencePiece: a simple and language independent subword tokenizer (Kudo and Richardson, 2018)"
+    url: https://arxiv.org/abs/1808.06226
+  - label: "Byte Latent Transformer: Patches Scale Better Than Tokens (Pagnoni et al., 2024)"
+    url: https://arxiv.org/abs/2412.09871
+  - label: "Gemma 3 Technical Report (Google DeepMind, 2025)"
+    url: https://arxiv.org/abs/2503.19786
+  - label: "Qwen3 Technical Report (2025)"
+    url: https://arxiv.org/abs/2505.09388
+---
+
+import BpeTrainer from '../../../components/viz/BpeTrainer.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+[Tokens and embeddings](../../foundations/tokens-and-embeddings/) said that text is cut into pieces from a fixed vocabulary and gave byte-pair encoding one parenthesis. This lesson opens it. You will train a tokenizer on a tiny corpus, then use what you learn to explain behaviour that people blame on "the model": letters that cannot be counted, arithmetic that goes wrong, a language that costs three times as much, a prompt that breaks when a space is added.
+
+Every token count below was computed on 1 November 2026 with the `tiktoken` library (version 0.14.0) and its published encodings. The training corpus is a toy of my own.
+
+## Why subwords, and how BPE builds them
+
+Word-level vocabularies must be cut off somewhere, so rare words become "unknown". Letter-level vocabularies never run out but make sequences very long. **Subword** tokenization is the middle: frequent words are one piece, rare words are assembled from smaller ones. Sennrich, Haddow and Birch (2015) adapted byte-pair encoding (BPE), a 1994 compression method by Gage, to do this for translation; the original Transformer used it with a shared vocabulary of about 37,000 tokens.
+
+The method is one loop:
+
+1. Write every word as a list of single symbols.
+2. Count every adjacent pair, weighting each word by how often it occurs.
+3. Merge the most frequent pair into one new symbol, everywhere.
+4. Repeat.
+
+The only setting is the number of merges: final vocabulary size is the initial vocabulary plus the number of merges, the paper says, and pairs that cross word boundaries are not considered. Here is a toy corpus of 68 characters, made up for this lesson and far too small to be realistic:
+
+```text
+the cat sat on the mat. the cat ate the rat. the rat sat on the mat.
+```
+
+Cut into nine distinct words (a leading space belongs to its word), it starts as 68 single-byte tokens. These figures come from a Python reference implementation and match the tool below:
+
+| Step | Top pair counts | Merge | Corpus after |
+|---|---|---|---|
+| 1 | a+t 9, h+e 6, t+h 6, space+t 5 | a+t becomes `at` | 59 tokens |
+| 2 | h+e 6, t+h 6, space+t 5 | h+e becomes `he` | 53 tokens |
+| 3 | t+he 6, space+t 5, space+c 2 | t+he becomes `the` | 47 tokens |
+| 4 | space+the 5, space+c 2 | space+the becomes ` the` | 42 tokens |
+
+In step 2, `h+e` and `t+h` tie; this implementation prefers the pair with smaller ids, and real ones break ties differently, which changes the table a little but not the idea. Merges build on merges: step 3 uses the token made in step 2. After 14 merges no pair occurs twice, so training stops at a vocabulary of 270 and a corpus of 22 tokens, about 3.1 characters per token.
+
+<BpeTrainer client:visible />
+
+Type a word the corpus never contained, such as "that". It is not unknown: it is split into known pieces. With 14 merges, "the cat sat on the mat." takes 7 tokens for 23 bytes, but "that rat ate the mat" takes 9 for 20. Text unlike the training text compresses worse, which is what happens to whole languages later.
+
+## Bytes as the base: nothing is unknown
+
+Sennrich et al. started from characters, so an unseen character was still unknown. The GPT-2 paper noted that covering all Unicode code points would need a base vocabulary of over 130,000 symbols before any merge, and ran BPE on UTF-8 bytes instead: a base of exactly 256, and every string encodable. In the tool, an accented letter the corpus never had appears as hex bytes such as `0xC3`. GPT-2's 50,257 tokens are 256 bytes, 50,000 merges and one special token, and its earliest merges look like the toy's: ` t`, ` a`, `he`, `in`, `re`, `on`, ` the`, `er`, ` s`, `at`. A character outside ASCII is two to four bytes, so if its bytes were never merged, one letter costs several tokens.
+
+## Pre-tokenisation: where merges may not go
+
+Without a guard, BPE would learn merges that span words. The GPT-2 paper adds that frequency-based merging creates many versions of common words ("dog", "dog.", "dog!"), wasting vocabulary, so it prevents merging across character categories, with an exception for spaces. In practice a regular expression first cuts the text into pre-tokens, and BPE runs inside each. The original GPT-2 pattern, from the tiktoken source:
+
+```text
+'s|'t|'re|'ve|'m|'ll|'d| ?[\p{L}]+| ?[\p{N}]+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+
+```
+
+That is contractions, letters, digits, other symbols and whitespace, each with an optional leading space. It is why the space belongs to the following word and ` cat` and `cat` are different tokens. Later patterns changed: `cl100k_base` and the Llama 3 reference tokenizer limit digit runs to three (`\p{N}{1,3}`). Hugging Face describes the whole pipeline as normalisation, pre-tokenisation, the model (BPE here), then post-processing, which adds special tokens. When two libraries disagree on the tokens, the difference is usually in the first or last stage.
+
+## The vocabulary-size trade-off
+
+A bigger vocabulary gives shorter sequences (cheaper attention, more text per context window) but a bigger embedding table and output matrix, more rare tokens that are seen too seldom to be learned, and a costlier softmax. At model width 4,096 one matrix costs vocabulary times 4,096 parameters:
+
+| Encoding | Vocabulary | One matrix at width 4,096 |
+|---|---|---|
+| GPT-2 | 50,257 | 206 million |
+| `cl100k_base` | 100,277 | 411 million |
+| Llama 3 | 128,256 | 525 million |
+| `o200k_base` | 200,019 | 819 million |
+
+Double these if input and output matrices are separate. For Llama 3 8B the two are about 1.05 billion of 8.03 billion parameters (13 per cent); for Mistral 7B, with 32,000 tokens, 0.26 of 7.24 billion (3.6 per cent). The [config calculator](../modern-llm-architecture/) in the next lesson lets you drag the vocabulary and watch this.
+
+The benefit is compression. The Llama 3 paper reports that its 128K vocabulary (100,000 tokens from tiktoken plus 28,000 for non-English languages) raised English compression from 3.17 to 3.94 characters per token over Llama 2's, about 20 per cent fewer tokens for the same text. Its reference tokenizer has 128,256 entries because the code adds 256 reserved special tokens. Vocabularies have grown from about 32,000 in early open models to 151,669 in Qwen3 and about 262,000 in Gemma 3, but the gain flattens as the rare-token problem grows.
+
+## Special tokens and chat templates
+
+Some tokens are reserved for structure, not learned from text: end of document, start of message, end of turn. GPT-2 has one (`<|endoftext|>`, id 50256); Llama 3 reserves 256, including `<|start_header_id|>`, `<|end_header_id|>` and `<|eot_id|>`. A **chat template** turns a list of messages into the exact text the model was trained on. The Llama 3 reference code builds:
+
+```text
+<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+
+You are a helpful assistant.<|eot_id|><|start_header_id|>user<|end_header_id|>
+
+What is BPE?<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+
+```
+
+The model continues from the assistant header until it writes `<|eot_id|>`. Other families use other markers, such as `<|im_start|>`. Three rules follow:
+
+- **Use the model's own template.** Hugging Face says the template should already contain the special tokens and that adding more is often incorrect or duplicated. If you use `apply_chat_template(tokenize=False)`, set `add_special_tokens=False` when tokenizing later.
+- **A wrong template fails quietly**: answers get a little worse. If an API and your own deployment of the same weights differ, compare token sequences first.
+- **Decide what happens to special-token text a user types.** tiktoken raises an error by default on the literal text `<|endoftext|>`; the Llama 3 reference code treats it as ordinary text by default. Either is fine if you know which you have. The danger is a pipeline that turns user-typed markers into real control tokens.
+
+## Why numbers, code and other languages differ
+
+The tokenizer compresses what its training mix contained.
+
+**Numbers.** GPT-2's pattern lets any digit run be one pre-token, so `1000000` is `1` and `000000`. `cl100k_base` and `o200k_base` cut digit runs into groups of up to three from the left: `1234567890123` becomes `123 | 456 | 789 | 012 | 3` and `12345678` becomes `123 | 456 | 78`, so a digit's place value depends on where the number starts. Singh and Strouse (2024) note that LLaMA and PaLM use single-digit tokens while GPT-3.5 and GPT-4 have tokens for one to three digits, and found that right-to-left grouping, forced by writing numbers with commas, improved GPT-3.5 and GPT-4 arithmetic. Gemma 3 splits digits. Tokenization does not decide arithmetic ability, but it sets how hard the job is.
+
+**Code and whitespace.** Indentation is a run of spaces. This 50-character snippet takes 29 tokens in GPT-2, which lacks merged-whitespace tokens, and 18 in both `cl100k_base` and `o200k_base`, 38 per cent fewer:
+
+```python
+def f(x):
+    if x:
+        return 1
+    return 2
+```
+
+Re-indenting with tabs or two spaces changes the token sequence the model sees.
+
+**Other languages.** The same short sentence, in my own translations, so illustrations and not a benchmark:
+
+| Language | Characters | UTF-8 bytes | GPT-2 | `cl100k_base` | `o200k_base` |
+|---|---|---|---|---|---|
+| English: The cat sat on the mat. | 23 | 23 | 7 | 7 | 7 |
+| French | 31 | 31 | 10 | 10 | 9 |
+| German | 30 | 30 | 11 | 9 | 7 |
+| Chinese | 7 | 21 | 14 | 12 | 8 |
+| Hindi (roughly: the cat is sitting on the mat) | 23 | 61 | 37 | 27 | 11 |
+| Arabic | 22 | 41 | 23 | 14 | 8 |
+
+The Hindi sentence needs five times the tokens of the English one in GPT-2, nearly four times in `cl100k_base`, and about one and a half times in `o200k_base`. Scripts that were rare in the training mix were never merged and fall back toward bytes. Petrov et al. (2023) measured parallel texts and found lengths differing by up to 15 times, even for tokenizers built for multilingual use. Larger vocabularies and more balanced training text close part of the gap.
+
+## Artefacts that surprise people
+
+- **Leading spaces and case.** In GPT-2, `hello` is id 31373, ` hello` 23748, `Hello` 15496 and ` Hello` 18435. `HELLO` is three tokens (`HE`, `LL`, `O`). Each form is learned separately.
+- **Trailing spaces.** A prompt ending in a space ends on a lone space token, which the model rarely saw in training: "The quick brown fox: " ends with a `' '` token that "The quick brown fox:" does not. The guidance project's write-up describes the general problem, that greedy tokenization can leave a prompt ending on a token that would normally have merged with what follows, and its fix, "token healing": back up one token and force the first generated token to start with those characters. Without that, avoid ending prompts on a space or a fragment.
+- **Spelling.** The model sees `st | raw | berry`, not ten letters.
+- **Glitch tokens.** ` SolidGoldMagikarp` is one token (id 43453) in GPT-2's vocabulary but five ordinary tokens in `cl100k_base` and `o200k_base`. Land and Bartolo (2024) trace such under-trained tokens to the disconnect between building the tokenizer and training the model, and show how to detect them automatically. If you train your own, check that the model's data contains the tokenizer's tokens.
+
+## Other algorithms, and none at all
+
+The unigram language model (Kudo, 2018) starts large and prunes. **SentencePiece** (Kudo and Richardson, 2018) implements it and BPE, trains from raw text and treats whitespace as an ordinary symbol (▁), so it needs no language-specific pre-tokenizer. Gemma 3 uses it with split digits and byte-level encodings; Qwen3 uses byte-level BPE. Meta's Byte Latent Transformer drops the fixed vocabulary: it groups raw bytes into patches whose length follows how predictable the next byte is, and reports matching token-based models up to 8 billion parameters in a controlled study. Fixed vocabularies remain the norm.
+
+## What it does to cost and context
+
+Prices and context limits count tokens, not characters. On `cl100k_base` the Hindi example uses about 3.9 times the tokens of the English one, so at the same price per token it costs about 3.9 times as much and fills the context 3.9 times as fast; on `o200k_base` the gap is 1.6 times. That is why [where the tokens go](../../cost/where-the-tokens-go/) says to count with the real tokenizer of the model you will call: switching models can change your bill without a price change. Log token counts per feature and language, and budget context in tokens.
+
+## The lab
+
+The `bpe-merges` lab has you write the pair counter and the merge step, train on the toy corpus, then encode and decode. Automatic checks use values from an independent reference, including the tie-break rule, the 14-merge stopping point and a round trip on "café 猫 🙂".
+
+<Callout title="The lab runs in your browser">
+Plain Python, no libraries. If you built the engine in [Backpropagation from scratch](../backprop-from-scratch/), this will feel familiar. Karpathy's [minbpe](https://github.com/karpathy/minbpe) and his lecture on the GPT tokenizer go further, with the regex stage and the GPT-4 tokenizer; the lab is written independently.
+</Callout>
+
+<Deep title="Encoding in plain Python, and why real training is faster">
+
+Encoding applies the learned merges in the order they were learned:
+
+```python
+def encode_word(word_bytes, merges):          # merges: list of ((a, b), new_id)
+    ids = tuple(word_bytes)
+    for pair, new_id in merges:
+        ids = merge_pair(ids, pair, new_id)   # replace every a,b by new_id, left to right
+    return ids
+```
+
+Production encoders repeatedly merge the lowest-ranked adjacent pair and cache results per pre-token. Naive training recounts every pair after every merge. Real trainers keep counts in a heap, update only the words a merge touched, and count distinct pre-tokens with frequencies, as this lesson's tool does.
+
+</Deep>
+
+## What to remember
+
+- BPE merges the most frequent adjacent pair again and again; the number of merges sets the vocabulary size.
+- A base of 256 bytes means nothing is unknown: new words and scripts split into smaller known pieces.
+- A pre-tokenisation pattern runs first so merges stay inside words, and it is part of the tokenizer.
+- A bigger vocabulary shortens sequences but adds embedding parameters and rare tokens.
+- Use the model's chat template, and know how your pipeline treats special-token text.
+- Digits, indentation and non-English text are where tokenizers differ most, as costs, context limits and accuracy.
+- Leading and trailing spaces, capitals and glitch tokens are tokenizer artefacts. Count tokens with the real tokenizer.
+
+Next: [A modern LLM architecture tour](../modern-llm-architecture/) moves inside the model, with a calculator for how vocabulary size, attention sharing and experts change parameters and KV cache.

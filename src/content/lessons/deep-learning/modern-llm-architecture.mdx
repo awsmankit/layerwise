@@ -1,0 +1,185 @@
+---
+title: "A modern LLM architecture tour: what changed since 2017"
+track: deep-learning
+level: advanced
+order: 7
+summary: "Each difference between the 2017 Transformer and today's open decoder-only models, with the reason for it: pre-norm and RMSNorm, RoPE and long-context scaling, SwiGLU, GQA and MLA, sliding windows, mixture of experts, tied embeddings, and the state-space alternative. Includes a config calculator checked against published parameter counts."
+updated: 2026-11-01
+sources:
+  - label: "Attention Is All You Need (Vaswani et al., 2017)"
+    url: https://arxiv.org/abs/1706.03762
+  - label: "Language Models are Unsupervised Multitask Learners (GPT-2, Radford et al., 2019)"
+    url: https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf
+  - label: "On Layer Normalization in the Transformer Architecture (Xiong et al., 2020)"
+    url: https://arxiv.org/abs/2002.04745
+  - label: "Root Mean Square Layer Normalization (Zhang and Sennrich, 2019)"
+    url: https://arxiv.org/abs/1910.07467
+  - label: "RoFormer: Enhanced Transformer with Rotary Position Embedding (Su et al., 2021)"
+    url: https://arxiv.org/abs/2104.09864
+  - label: "Extending Context Window of Large Language Models via Position Interpolation (Chen et al., 2023)"
+    url: https://arxiv.org/abs/2306.15595
+  - label: "Effective Long-Context Scaling of Foundation Models (Xiong et al., 2023)"
+    url: https://arxiv.org/abs/2309.16039
+  - label: "YaRN: Efficient Context Window Extension of Large Language Models (Peng et al., 2023)"
+    url: https://arxiv.org/abs/2309.00071
+  - label: "GLU Variants Improve Transformer (Shazeer, 2020)"
+    url: https://arxiv.org/abs/2002.05202
+  - label: "Fast Transformer Decoding: One Write-Head is All You Need (Shazeer, 2019)"
+    url: https://arxiv.org/abs/1911.02150
+  - label: "GQA: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints (Ainslie et al., 2023)"
+    url: https://arxiv.org/abs/2305.13245
+  - label: "DeepSeek-V2: A Strong, Economical, and Efficient Mixture-of-Experts Language Model (MLA)"
+    url: https://arxiv.org/abs/2405.04434
+  - label: "DeepSeek-V3 Technical Report"
+    url: https://arxiv.org/abs/2412.19437
+  - label: "DeepSeek-V3.2 (DeepSeek Sparse Attention)"
+    url: https://arxiv.org/abs/2512.02556
+  - label: "The Llama 3 Herd of Models (Meta, 2024)"
+    url: https://arxiv.org/abs/2407.21783
+  - label: "Mistral 7B (Jiang et al., 2023)"
+    url: https://arxiv.org/abs/2310.06825
+  - label: "Mixtral of Experts (Jiang et al., 2024)"
+    url: https://arxiv.org/abs/2401.04088
+  - label: "DeepSeekMoE: Towards Ultimate Expert Specialization (Dai et al., 2024)"
+    url: https://arxiv.org/abs/2401.06066
+  - label: "Qwen3 Technical Report (2025)"
+    url: https://arxiv.org/abs/2505.09388
+  - label: "Gemma 3 Technical Report (Google DeepMind, 2025)"
+    url: https://arxiv.org/abs/2503.19786
+  - label: "OLMo 2 Furious (Ai2, 2024)"
+    url: https://arxiv.org/abs/2501.00656
+  - label: "gpt-oss-120b and gpt-oss-20b model card (OpenAI, 2025)"
+    url: https://arxiv.org/abs/2508.10925
+  - label: "Mamba: Linear-Time Sequence Modeling with Selective State Spaces (Gu and Dao, 2023)"
+    url: https://arxiv.org/abs/2312.00752
+  - label: "Jamba: A Hybrid Transformer-Mamba Language Model (Lieber et al., 2024)"
+    url: https://arxiv.org/abs/2403.19887
+  - label: "Kimi Linear: An Expressive, Efficient Attention Architecture (2025)"
+    url: https://arxiv.org/abs/2510.26692
+  - label: "The Big LLM Architecture Comparison (Sebastian Raschka), a running survey of open models"
+    url: https://magazine.sebastianraschka.com/p/the-big-llm-architecture-comparison
+---
+
+import ConfigCalculator from '../../../components/viz/ConfigCalculator.tsx';
+import RopeHands from '../../../components/viz/RopeHands.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+[Inside a transformer block](../../foundations/inside-a-transformer/) followed one token through attention and a feed-forward network. This lesson asks what an engineer needs next: when you open the config of Llama 3, Mixtral, Qwen3, DeepSeek-V3 or gpt-oss, why does it look different from the 2017 paper, and what does each difference do to parameters, memory and speed?
+
+First, a reality check from Meta. The Llama 3 paper calls its model a standard dense Transformer that "does not deviate significantly" from Llama and Llama 2, and says its gains came mainly from data quality and scale. The changes below are mostly about training stability, long context and serving cost, not new abilities. Configurations in this lesson were read on 1 November 2026 from the papers and Hugging Face `config.json` files cited, and they change with every release.
+
+## The changes at a glance
+
+| Part | 2017 Transformer | Typical open model, 2024 to 2026 | Reason |
+|---|---|---|---|
+| Layout | Encoder and decoder | Decoder only | One stack, trained to predict the next token |
+| Normalisation | Post-norm LayerNorm | Pre-norm RMSNorm, sometimes extra norms on outputs and QK-norm | Stable training; cheaper |
+| Positions | Sinusoids added to the input | RoPE on queries and keys | Relative distance, extendable |
+| Feed-forward | Two matrices, ReLU, width 4d | Gated (SwiGLU), three matrices | Better quality per parameter |
+| Attention | One K and V per head | Shared K and V (GQA), or a compressed latent (MLA); windows in some layers | Smaller KV cache |
+| Capacity | Dense | Dense or mixture of experts | More parameters per unit of compute |
+| Embeddings | Shared with the output matrix | Separate in large models; tied in some small ones | Memory against flexibility |
+
+The 2017 model is the original paper's base setting: six layers per stack, width 512, feed-forward width 2,048 with ReLU, normalisation after each residual add, sinusoidal positions, and one weight matrix shared between the embeddings and the output layer.
+
+## Pre-norm and RMSNorm
+
+The original block computed `LayerNorm(x + Sublayer(x))`. GPT-2 moved the normalisation to the input of each sub-block. Xiong et al. showed why it matters: with the norm after the residual, the expected gradients near the output are large at initialisation, so a learning-rate warm-up is essential; with the norm inside the residual branch, gradients are well-behaved and warm-up can be removed or shortened. That stability is what lets very deep stacks train.
+
+RMSNorm drops LayerNorm's re-centring (subtracting the mean) and keeps only the rescaling by the root mean square, which Zhang and Sennrich found as good and cheaper. Newer models add more: Qwen3, OLMo 2 and Gemma 3 normalise queries and keys (QK-norm), and OLMo 2 and Gemma 3 also normalise the outputs of attention and the feed-forward network. There is no consensus on placement, which is a good reason to read the config and not assume.
+
+## Rotary position embeddings
+
+RoPE (Su et al.) cuts each query and key into pairs of numbers, treats each pair as a point on a plane, and turns it by an angle equal to the token's position times a speed that depends on the pair: speed `θ_i = 10000^(-2i/d)`. Picture a set of clocks, each with a query hand and a key hand. The score `q·k` adds up how well the hands agree, and the angle between a query hand and a key hand depends only on the difference of the two positions. Move both tokens by the same amount and every angle between hands stays as it was.
+
+<RopeHands client:visible />
+
+Fast clocks distinguish neighbouring tokens; slow ones encode coarse distance. A model trained on positions up to some length has never seen the hands in angles beyond it, which is why quality collapses past the trained length. Three levers extend it, often combined:
+
+- **Raise the base.** Llama 3 raised the RoPE base to 500,000, which its paper says supports longer contexts; the Xiong et al. work it cites found this effective up to 32,768 tokens. Mixtral and Qwen3 configs use 1,000,000.
+- **Interpolate positions.** Chen et al. linearly scale position indices down to fit the original window, extending LLaMA models to 32,768 tokens in about 1,000 fine-tuning steps. Tick the "squeeze" box above to see it: the hands turn a quarter as far per token.
+- **YaRN** (Peng et al.) refines this and needs about 10 times fewer tokens than earlier methods. DeepSeek-V3 used it to extend from 4K to 32K and then 128K, and gpt-oss extends its dense layers to 131,072 tokens with it.
+
+Extension is staged: Llama 3 trained at 8K and increased the length in six stages to 128K using about 800 billion tokens, because attention cost grows with the square of the length. Quality can still decay. Gemma 3 reports that its models generalise to 128K but degrade rapidly beyond it, and Qwen3's model card warns that applying YaRN to short inputs may degrade performance. Always measure at the length you will use.
+
+## Gated feed-forward layers
+
+A gated MLP (Shazeer's SwiGLU) multiplies two projections elementwise before projecting back, so it has three weight matrices instead of two. Shazeer cut the hidden width to two thirds to keep parameters equal, which turns the classic 4d into about 8d/3. OLMo 2 uses that rule, rounded up to a multiple of 128: 11,008 for width 4,096. Llama 3 8B uses 14,336, which is 3.5 times the width, so it spends more here. The feed-forward block holds most of a dense model's parameters: for Llama 3 8B, 70 per cent (the calculator below shows it).
+
+## Sharing keys and values: MQA, GQA and MLA
+
+Attention needs every earlier token's keys and values, and storing them is the [KV cache](../../serving/kv-cache-and-memory/). Per token, per layer, plain multi-head attention stores `2 x heads x head_dim` values. Multi-query attention (Shazeer, 2019) shares one K and V across all heads; grouped-query attention (Ainslie et al., 2023) shares one per group, close to full quality at close to MQA speed. With 32 query heads and 8 KV heads the cache is a quarter of the size:
+
+| Model (16-bit cache) | Layout | KV bytes per token | One 8,192-token sequence |
+|---|---|---|---|
+| OLMo 2 7B | 32 KV heads (plain multi-head) | 524,288 | 4.29 GB |
+| Llama 3 8B | 8 KV heads | 131,072 | 1.07 GB |
+| Qwen3 30B-A3B | 4 KV heads | 98,304 | 0.81 GB |
+| Mistral 7B | 8 KV heads, 4,096 window | 131,072 | 0.54 GB (window) |
+| DeepSeek-V3 | MLA latent | 70,272 | 0.58 GB |
+| gpt-oss-20b | 8 KV heads, half the layers windowed | 49,152 | 0.20 GB |
+
+The per-token column counts all layers at full length; the last column is computed by the calculator below, with 1 GB = 10^9 bytes. DeepSeek-V3's **multi-head latent attention** (MLA, from DeepSeek-V2) goes further: it compresses keys and values into one shared latent of 512 values plus a 64-value RoPE key per layer, and caches only that. At 61 layers and 2 bytes, that is 70,272 bytes per token, about 71 times smaller than caching full keys and values for all 128 heads, for a 671B model.
+
+**Sliding windows** attack the other factor, the number of cached tokens. In Mistral 7B each layer attends to the last 4,096 tokens, and a rolling buffer keeps the cache that size; because layers stack, information can still travel about 131K tokens in theory. Newer models mix kinds: gpt-oss alternates banded layers (window 128) with full layers, and Gemma 3 uses five local layers (a window of 1,024) for each global one, and in an ablation with a 1:3 ratio and a 1,024 window, the memory overhead of the cache at 32K context fell from 60 per cent with all-global layers to under 15 per cent. Sparse attention goes after compute instead: DeepSeek-V3.2 added "DeepSeek Sparse Attention" for long contexts.
+
+## Mixture of experts
+
+In a mixture-of-experts layer the feed-forward network is replaced by many experts and a small router that picks a few per token. Mixtral 8x7B has 8 experts per layer and uses 2: the paper reports 47B total parameters but only 13B active. The calculator gives 46.70B and 12.88B from the config alone.
+
+Recent models use many smaller experts. DeepSeekMoE splits experts finely and sets some aside as **shared** experts every token uses. DeepSeek-V3 has 1 shared and 256 routed experts of width 2,048 per layer (after three dense layers), with 8 routed experts per token: 671B total, 37B active. Qwen3-30B-A3B has 128 experts, uses 8, and has no shared expert. Keeping experts evenly used needs a balancing mechanism: Qwen3 uses a load-balancing loss, while DeepSeek-V3 mainly adds a bias to the routing scores, nudged after each step according to each expert's load, keeping only a small sequence-wise loss.
+
+The trade is **compute for memory**. A token only runs its chosen experts, so work per token follows active parameters, roughly two operations per active parameter. But any token might need any expert, so all of them must be loaded: DeepSeek-V3's 671 billion parameters are 671 GB at one byte each, however few are active. In the calculator, raise Mixtral's experts from 8 to 64 and watch the total jump while the active count barely moves. Serving large MoE models spreads experts across GPUs ([multi-GPU parallelism](../../infra/multi-gpu-parallelism-and-interconnect/)) and often quantizes them: gpt-oss stores its expert weights in 4.25-bit MXFP4 so that the 20B model fits in 16 GB ([quantization](../../serving/quantization/)).
+
+## Try the calculator
+
+Pick a model, then change one knob at a time. Everything is computed from the configuration: each preset cites where its numbers were read, and the unit tests compare the totals with the authors' published figures.
+
+<ConfigCalculator client:visible />
+
+Experiments worth running:
+
+1. **Llama 3 8B, drag KV heads to 32.** Attention parameters rise from 1.34B to 2.15B and the cache quadruples to 524,288 bytes per token. That is GQA's whole argument.
+2. **Raise the vocabulary.** Each extra 1,000 tokens adds 4.1 million parameters per matrix at width 4,096 (8.2 million with separate input and output matrices). On Mistral 7B the two matrices are 3.6 per cent of the model; on Qwen3 4B, with tied embeddings, one matrix is 9.7 per cent.
+3. **Qwen3 8B, tie the embeddings.** One vocabulary-by-width matrix, 622 million parameters, disappears.
+4. **DeepSeek-V3.** Compare total and active, then the KV cache with Llama 3 70B's: more than nine times the parameters, an even smaller cache.
+5. **Mixtral, 8 to 64 experts, 2 used.** Memory scales with the first number and compute with the second.
+
+<Callout title="Parameters, not hyperparameters">
+The widths, layer counts and expert counts you changed are hyperparameters chosen before training. The totals are parameters learned during it. See [Parameters and hyperparameters](../../llm/parameters-and-hyperparameters/).
+</Callout>
+
+## The other family: state-space and hybrid models
+
+Attention's cost grows with context length, and its cache grows with every token. A **state-space model** such as Mamba (Gu and Dao, 2023) carries a fixed-size state forward instead and runs in linear time. Mamba's key change was to make the state's parameters depend on the current token, so the model can choose what to keep and what to forget. The price is exact recall: a fixed state cannot keep every detail a cache could.
+
+So current designs mix them. Jamba interleaves one attention layer for every seven Mamba layers, with mixture of experts every second layer: 52B total, 12B active, and a 256K-token KV cache of 4 GB, against 32 GB for Mixtral and 128 GB for Llama-2 7B in the paper's table. Qwen3-Next-80B-A3B (80B total, 3B active) repeats three Gated DeltaNet layers, a linear-attention variant, for each full-attention layer: 12 of its 48 layers keep a cache, which with 2 KV heads of size 256 is 24,576 bytes per token, a quarter of what 48 full layers would need. Kimi Linear (48B total, 3B active) mixes linear Kimi Delta Attention with MLA layers in a similar way. As of 1 November 2026 these are a fast-moving research direction, not a settled recipe; Raschka's comparison tracks them.
+
+<Deep title="Where the parameters go, as formulas">
+
+For width d, L layers, vocabulary V, H query heads, G KV heads of size h, and a gated feed-forward of width F:
+
+```text
+embeddings   = V x d            (twice if input and output are separate)
+attention    = L x (d x H x h + 2 x d x G x h + H x h x d)
+feed-forward = L x 3 x d x F
+norms        = L x 2 x d + d     (small)
+```
+
+Llama 3 8B (d 4,096, L 32, H 32, G 8, h 128, F 14,336, V 128,256): attention 1.34B, feed-forward 5.64B, embeddings 1.05B, total 8.03B. For a mixture of experts, the feed-forward term becomes `L x (experts + shared) x 3 x d x F_expert` plus a router of `d x experts` per layer, and the active count uses `topK + shared` in place of `experts + shared`. With MLA, the K and V projections go through a latent of size `c`, and the cache per layer is `c + rope_dim`.
+
+KV cache per token is `2 x G x h x bytes` per layer for grouped-query attention, `(c + rope_dim) x bytes` for MLA; windowed layers stop growing at the window size. These are the exact functions the calculator and its tests use. Vendors differ on what "active" means: gpt-oss's 3.61B counts the output matrix but not the input embedding, while the calculator counts both, so it shows 4.19B.
+
+</Deep>
+
+## What to remember
+
+- Most changes since 2017 serve training stability (pre-norm, RMSNorm, QK-norm), long context (RoPE and its extensions) or serving cost (GQA, MLA, windows, MoE), not new abilities.
+- RoPE rotates each query and key pair by position times a speed, so scores depend on distance. Long context comes from a higher base, interpolation or YaRN, staged training, and measurement.
+- The KV cache is `2 x layers x KV heads x head size x bytes` per token for GQA. Fewer KV heads, a compressed latent, windows and 8-bit storage each shrink it.
+- MoE total parameters set memory; active parameters set compute. Dense models have both equal.
+- Embeddings are a real share of small models: vocabulary times width, once if tied, twice if not.
+- State-space and hybrid models trade exact recall for a fixed-size state, and are still evolving.
+
+Next: [The KV cache and GPU memory](../../serving/kv-cache-and-memory/) shows what these cache sizes mean for how many users fit on one GPU.

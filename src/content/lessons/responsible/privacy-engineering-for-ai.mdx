@@ -1,0 +1,174 @@
+---
+title: "Privacy engineering for AI: memorisation, PII, differential privacy and federated learning"
+track: responsible
+level: advanced
+order: 6
+summary: What an AI system can leak (the model, the prompt, the logs, the retriever), how to handle personal data in an LLM app, differential privacy with a worked Laplace example and a noise demo, federated learning and its limits, and what deletion and unlearning can and cannot do.
+updated: 2026-11-01
+sources:
+  - label: "Extracting Training Data from Large Language Models (Carlini and others, 2020)"
+    url: https://arxiv.org/abs/2012.07805
+  - label: "Quantifying Memorization Across Neural Language Models (Carlini and others, 2022)"
+    url: https://arxiv.org/abs/2202.07646
+  - label: "Scalable Extraction of Training Data from (Production) Language Models (Nasr and others, 2023)"
+    url: https://arxiv.org/abs/2311.17035
+  - label: "Deduplicating Training Data Mitigates Privacy Risks in Language Models (Kandpal, Wallace and Raffel, 2022)"
+    url: https://arxiv.org/abs/2202.06539
+  - label: "Deduplicating Training Data Makes Language Models Better (Lee and others, 2021)"
+    url: https://arxiv.org/abs/2107.06499
+  - label: "Membership Inference Attacks against Machine Learning Models (Shokri and others, 2016)"
+    url: https://arxiv.org/abs/1610.05820
+  - label: "Do Membership Inference Attacks Work on Large Language Models? (Duan and others, 2024)"
+    url: https://arxiv.org/abs/2402.07841
+  - label: "The Algorithmic Foundations of Differential Privacy (Dwork and Roth, 2014): Definition 2.4, Theorem 2.2, Definition 3.3, Theorem 3.6, section 3.3, Theorem 3.16"
+    url: https://www.cis.upenn.edu/~aaroth/Papers/privacybook.pdf
+  - label: "NIST SP 800-226, Guidelines for Evaluating Differential Privacy Guarantees (final, March 2025)"
+    url: https://csrc.nist.gov/pubs/sp/800/226/final
+  - label: "Deep Learning with Differential Privacy (Abadi and others, 2016)"
+    url: https://arxiv.org/abs/1607.00133
+  - label: "Large Language Models Can Be Strong Differentially Private Learners (Li and others, 2021)"
+    url: https://arxiv.org/abs/2110.05679
+  - label: "Communication-Efficient Learning of Deep Networks from Decentralized Data (McMahan and others, 2016)"
+    url: https://arxiv.org/abs/1602.05629
+  - label: "Federated Learning for Mobile Keyboard Prediction (Hard and others, 2018)"
+    url: https://arxiv.org/abs/1811.03604
+  - label: "Advances and Open Problems in Federated Learning (Kairouz and others, 2019)"
+    url: https://arxiv.org/abs/1912.04977
+  - label: "Deep Leakage from Gradients (Zhu, Liu and Han, 2019)"
+    url: https://arxiv.org/abs/1906.08935
+  - label: "Practical Secure Aggregation for Federated Learning on User-Held Data (Bonawitz and others, 2016)"
+    url: https://arxiv.org/abs/1611.04482
+  - label: "Machine Unlearning (Bourtoule and others, 2019)"
+    url: https://arxiv.org/abs/1912.03817
+  - label: "NIST AI 600-1, Generative AI Profile (July 2024): Data Privacy risk and action MS-2.10-001"
+    url: https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf
+  - label: "European Commission: Principles of the GDPR (read 1 November 2026)"
+    url: https://commission.europa.eu/law/law-topic/data-protection/information-business-and-organisations/principles-gdpr_en
+  - label: "European Commission: Legal grounds for processing data (read 1 November 2026)"
+    url: https://commission.europa.eu/law/law-topic/data-protection/information-business-and-organisations/legal-grounds-processing-data_en
+  - label: "European Commission: Dealing with requests from individuals (read 1 November 2026)"
+    url: https://commission.europa.eu/law/law-topic/data-protection/information-business-and-organisations/dealing-requests-individuals_en
+  - label: "EDPB Opinion 28/2024 on data protection aspects of AI models (adopted 17 December 2024; read from the Internet Archive's copy of the EDPB PDF, because the EDPB site blocks automated downloads)"
+    url: https://web.archive.org/web/2025/https://www.edpb.europa.eu/system/files/2024-12/edpb_opinion_202428_ai-models_en.pdf
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import LeakMap from '../../../components/viz/LeakMap.tsx';
+import DpNoiseDemo from '../../../components/viz/DpNoiseDemo.tsx';
+
+<Callout title="Not legal advice" kind="note">
+The legal parts of this lesson describe what the European Commission's and the European Data Protection Board's own documents say, as read on 1 November 2026. They are not advice about your product, and other countries have other rules. Ask a lawyer or your data-protection officer what applies to you.
+</Callout>
+
+[AI and your private life](../ai-and-your-private-life/) was about where your words go when you type them. This lesson is about the system you build: what it can give away, even when everybody means well, and the engineering tools that limit it.
+
+## What can leak
+
+Five channels cover most cases. Pick one in the map below to see the example and the fix.
+
+<LeakMap client:visible />
+
+**1. The model itself.** Language models can memorise parts of their training data and emit it when prompted. Carlini and colleagues extracted hundreds of verbatim sequences from GPT-2 (names, phone numbers, email addresses, code), even though each appeared in only one training document, and found larger models were more vulnerable. A follow-up found memorisation grows with model size, with the number of times a sequence is repeated, and with the length of the prompt used to coax it out. Repetition matters most: Kandpal and colleagues found that a sequence present 10 times is generated on average about 1,000 times more often than one present once, and that deduplicating the data made the attacks much weaker. Lee and colleagues reported that deduplication let models emit memorised text ten times less often. In 2023, Nasr and colleagues extracted gigabytes of training data from open and semi-open models, and from ChatGPT with a new attack, and concluded that alignment training does not remove memorisation. Vendors fix specific attacks, so read that result as a demonstration of the principle and not as a current exploit.
+
+**2. Membership inference.** An attacker holds a record and asks "was this in the training set?". Shokri and colleagues showed it works against classifiers trained by machine-learning-as-a-service providers. For large language models the picture is less clear: Duan and colleagues tested pre-trained models up to 12 billion parameters and found that attacks "barely outperform random guessing" in most settings, with apparent successes often explained by a shift between the member and non-member data. That study is about pre-training data. If you fine-tune a model on a small private set, test it yourself.
+
+**3. Prompt and context.** Anything in the context window can be repeated. [LLM application security](../../evals/llm-security/) covers system-prompt extraction and the "private data, untrusted content and a way out" combination.
+
+**4. Logs, traces and caches.** The quiet leak: prompts and answers copied into stores with wide access and long retention.
+
+**5. Retrieval.** If the index mixes everyone's documents and permission checks happen after ranking, the model will quote a document the user may not read. The fix is to filter by the caller's permissions inside the query. See [RAG service architecture](../../systems/rag-service-architecture/) and [RAG from scratch](../../rag-agents/rag-from-scratch/).
+
+NIST's generative AI profile lists "Data Privacy" among its risks, including leakage, unauthorised use and de-anonymisation of personal data, and suggests red-teaming for output of training data samples and membership inference (action MS-2.10-001).
+
+## Handling personal data in an LLM app
+
+Treat personal data (PII) as a lifecycle: detect it, collect less, redact what you keep, limit how long you keep it, control who can read it, and be able to delete it.
+
+| Step | In practice | Watch out for |
+|---|---|---|
+| Collect less | Design the input around the task. Do not send the whole ticket thread when the last message will do | A free-text box invites everything |
+| Detect | Patterns for emails, card numbers and phone numbers; a named-entity model for names and places | Detectors miss things. Measure recall on a labelled sample and report it like any other eval |
+| Redact | Replace with typed placeholders, for example `[PERSON_1]` and `[EMAIL_1]`, before logging or sending to a third party | If you keep a mapping to restore names, store it separately, with its own access control |
+| Limit retention | Give every store a lifetime: logs, caches, vector index, analytics, backups | A forgotten store keeps data forever |
+| Control access | Check the user's rights at retrieval and at every tool call | A prompt saying "do not reveal other customers" is not access control |
+| Delete | Know every place a person's data lives, including embeddings and training sets | See the unlearning section below |
+
+An invented example of redaction, before and after: "I'm Maria Lopez, my card ending 4242 was charged twice, email me at maria@example.com" becomes "I'm [PERSON_1], my card ending [CARD_LAST4] was charged twice, email me at [EMAIL_1]". The model can still answer. The log no longer holds the identity.
+
+## Differential privacy in plain words
+
+Redaction removes what you can recognise. **Differential privacy** (DP) gives a mathematical limit on what any answer can reveal about one individual, even to an attacker who knows everything else.
+
+The idea is to make the output barely depend on whether any one person is in the data. A randomised algorithm is ε-differentially private if, for any two datasets that differ in one record, the probability of every possible output changes by at most a factor of e^ε (Dwork and Roth, Definition 2.4). The number **ε (epsilon)** is a dial. Small ε means strong privacy and more noise. Large ε means weak privacy and accurate answers.
+
+### Worked example: a noisy count
+
+The **Laplace mechanism** answers a numeric query by adding noise from a Laplace distribution. The noise scale is the query's sensitivity (the most one person can change the answer) divided by ε. A count has sensitivity 1, because adding or removing one person changes it by at most 1, so you add noise of scale 1/ε. The expected error is 1/ε, however large the data set is (Dwork and Roth, section 3.3).
+
+In the demo below, 20 invented people each have a flag, and 7 of them have it. Remove Hana, who has it, and the exact count is 6. These are the numbers for a single answer, computed from the formulas and checked in the lesson's tests:
+
+| ε | Noise scale | Chance the answer is within 1 of the truth | Best attacker's accuracy at guessing whether Hana is in | Most the odds can shift (e^ε) |
+|---|---|---|---|---|
+| 0.1 | 10 | 9.5% | 52.4% | 1.11 |
+| 0.5 | 2 | 39.3% | 61.1% | 1.65 |
+| 1 | 1 | 63.2% | 69.7% | 2.72 |
+| 5 | 0.2 | 99.3% | 95.9% | 148.4 |
+
+The attacker column assumes the attacker knows every other person, sees one noisy answer, and has even prior odds. It is 1 - 0.5 x e^(-ε/2). The trade-off is visible: at ε = 5 the answers are nearly exact and so is the attacker's guess. At ε = 0.1 the count is almost useless, and so is the attack.
+
+<DpNoiseDemo client:visible />
+
+### The budget runs out
+
+Every answer costs privacy. With simple composition, the epsilons of separate answers add up (Dwork and Roth, Theorem 3.16): ten answers at ε = 0.1 cost a total of 1. Asking the same question again does not average the noise away for free. It spends more of the budget, and averaging 100 fresh answers cuts the noise tenfold. So a DP system needs a **privacy budget** for the whole data set, a record of what has been spent, and a refusal when it is gone.
+
+Two cautions. Epsilon alone does not tell you how safe a system is: the unit that counts as "one record" matters, because a person who contributes k records is protected at roughly kε (group privacy, Dwork and Roth Theorem 2.2). And implementation mistakes matter. NIST's SP 800-226 (final, March 2025) is written to help practitioners evaluate DP claims, and describes common pitfalls it calls privacy hazards.
+
+### DP-SGD in one paragraph
+
+To train a neural network with differential privacy, Abadi and colleagues' DP-SGD changes each step of gradient descent. It computes the gradient for each example separately, clips each one to a fixed maximum length so that no single example can pull hard on the update, averages them, adds Gaussian noise, and then takes the step. An accountant tracks the total privacy cost over all steps. The price is accuracy and compute. Li and colleagues report that starting from a large pre-trained model and tuning the training settings narrows the gap for text models.
+
+## Federated learning
+
+In **federated learning**, the training data stays where it is created, such as phones, hospitals or hearing devices. Each client trains on its own data for a few steps and sends back an update. The server averages the updates into a new shared model, then repeats (McMahan and colleagues, the FederatedAveraging algorithm). Hard and colleagues used it to train a phone keyboard's next-word model without exporting what people typed. Kairouz and colleagues describe it as embodying "focused data collection and minimization".
+
+What it is not: a privacy guarantee. An update is computed from private data, and updates can leak. Zhu and colleagues recovered training images and text from shared gradients in their experiments. The usual extra protections are **secure aggregation**, where the server only ever sees the sum of many clients' updates (Bonawitz and colleagues), and differential privacy applied to the updates. Federated learning is a natural fit for edge devices. See [Edge versus cloud inference](../../edge/edge-vs-cloud-inference/) for the on-device side.
+
+## On-device and local processing
+
+The strongest privacy tool is often not sending the data at all. A model on the device, or inside your own network, removes the provider path. It does not remove logging, access-control mistakes, prompt injection or model memorisation. [Private and air-gapped AI](../../local/private-and-air-gapped-ai/) covers what "private" does and does not guarantee.
+
+## Data protection as engineering requirements
+
+This is the EU's GDPR, as the European Commission's own pages describe it. Other regimes differ in detail. Several of the principles are engineering requirements in disguise.
+
+- **Purpose limitation.** Personal data may be collected and processed "only for a specific purpose", which must be indicated to individuals when it is obtained. Engineering consequence: tag each data store with its purpose, and do not reuse it for something new without checking.
+- **Data minimisation.** Collect and process only what is necessary for that purpose. Consequence: justify every field that goes into a prompt, a log or a training set.
+- **Storage limitation.** Keep data for no longer than necessary. Consequence: retention timers that are enforced.
+- **Lawful basis.** The Commission lists six grounds: consent, contract, legal obligation, public interest, vital interests and legitimate interests. Consequence: someone must decide which applies to each purpose, and a record of that decision.
+- **Individuals' rights.** Requests for access, rectification, erasure and portability must be answered without undue delay, and in principle within one month. Consequence: you need to be able to find and delete one person's data across your stores.
+
+## Deletion and "unlearning"
+
+Deleting a person's rows is the easy part. A trained model may still carry what it learned from them. Bourtoule and colleagues note that making a model unlearn is "notoriously difficult". A naive way to make a model provably forget is to retrain it from scratch, which is costly. Their SISA training strategically limits the influence of each data point during training, so less has to be retrained when a deletion arrives. They also point out that differential privacy is not the same thing: it keeps each point's contribution small, while forgetting requires that a point have zero contribution. The reliable routes are some form of retraining, or never baking the data into the weights.
+
+The EDPB, the body of EU data-protection authorities, adopted Opinion 28/2024 on 17 December 2024. It says AI models trained with personal data cannot in all cases be considered anonymous. For a model to be anonymous, both the likelihood of extracting personal data from it and the likelihood of obtaining it from queries must be "insignificant", taking into account all means reasonably likely to be used. Among the mitigating measures it lists are output filters to prevent regurgitation of personal data, and letting people submit claims of memorisation so the controller can assess "relevant unlearning techniques". Authorities judge each case on its facts, so this is not a rule of thumb you can apply mechanically.
+
+A practical posture:
+
+- Keep facts that people may ask you to delete in a retrieval store, not in model weights. Deleting from the store works at once.
+- Know which datasets trained which model version, so you can answer "was this person's data used?".
+- Remove personal data and duplicates before fine-tuning.
+- Test the tuned model for extraction before release, using planted canary strings.
+- Where a claim cannot be fully met, say so, and filter outputs while you schedule a retrain.
+
+## What to remember
+
+- Models can memorise rare, repeated text, and a system leaks through logs, caches, prompts and retrieval at least as often as through the model.
+- Handle PII as a lifecycle: collect less, detect and redact, set retention, check access at retrieval, and know where to delete.
+- Differential privacy limits what any answer reveals about one person, using calibrated noise. Epsilon is the dial, and the budget is spent with every answer.
+- Federated learning keeps raw data on the device, and its updates can still leak without secure aggregation or noise.
+- Deleting from a store is easy. Making a trained model forget is not, so design so you rarely need to.
+
+Next: [Teaching a model to behave](../teaching-a-model-to-behave/), on how a model's behaviour is shaped and where that shaping falls short. For the rules around high-risk systems, see [The EU AI Act for engineers](../../evals/eu-ai-act-for-engineers/), and for the classroom side of privacy, [AI and school](../ai-and-school/).

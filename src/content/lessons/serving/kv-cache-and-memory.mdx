@@ -69,3 +69,7 @@ A long-context, high-concurrency workload is expensive largely because of the KV
 - Size the GPU for weights plus the cache for your target concurrency and context length, with headroom for activations and runtime overhead.
 - Use a serving engine with paged cache management and continuous batching rather than writing your own loop.
 - Load-test with realistic prompt and output lengths. Averages hide the long tail that exhausts memory.
+
+## Go deeper
+
+- [A modern LLM architecture tour](../../deep-learning/modern-llm-architecture/): grouped-query attention, mixture of experts and a calculator that sizes the cache from a real config.

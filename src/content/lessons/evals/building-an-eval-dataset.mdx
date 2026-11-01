@@ -1,0 +1,161 @@
+---
+title: "Building an eval dataset: error analysis, labelling and synthetic cases"
+track: evals
+level: intermediate
+order: 1.5
+summary: "Where eval cases come from, why twenty real ones beat a thousand invented ones, how to find your biggest failures by reading transcripts and counting, how to label with more than one person and measure agreement with Cohen's kappa, and how to use synthetic cases without fooling yourself."
+updated: 2026-11-01
+sources:
+  - label: "Your AI Product Needs Evals (Hamel Husain, 2024)"
+    url: https://hamel.dev/blog/posts/evals/
+  - label: "A Field Guide to Rapidly Improving AI Products (Hamel Husain, 2025)"
+    url: https://hamel.dev/blog/posts/field-guide/
+  - label: "LLM Evals: Frequently Asked Questions (Hamel Husain and Shreya Shankar), read 1 November 2026"
+    url: https://hamel.dev/blog/posts/evals-faq/
+  - label: "Who Validates the Validators? Aligning LLM-Assisted Evaluation of LLM Outputs with Human Preferences (Shankar et al., 2024)"
+    url: https://arxiv.org/abs/2404.12272
+  - label: "Judging the Judges: Evaluating Alignment and Vulnerabilities in LLMs-as-Judges (Thakur et al., 2024)"
+    url: https://arxiv.org/abs/2406.12624
+  - label: "Create strong empirical evaluations (Claude Platform docs), read 1 November 2026"
+    url: https://platform.claude.com/docs/en/test-and-evaluate/develop-tests
+  - label: "scikit-learn: cohen_kappa_score"
+    url: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.cohen_kappa_score.html
+  - label: "Presidio: open-source PII detection and anonymisation"
+    url: https://data-privacy-stack.github.io/presidio/
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import ErrorAnalysisBoard from '../../../components/viz/ErrorAnalysisBoard.tsx';
+import KappaCalculator from '../../../components/viz/KappaCalculator.tsx';
+
+[Evals 101](../evals-101/) says to build a first eval set in an afternoon. This lesson is about what goes in it, and how to stop it misleading you. Everything downstream, from judges to release gates, is only as good as the cases and labels underneath. Most of the advice here comes from practitioners who have done it many times, chiefly Hamel Husain and Shreya Shankar; where I rely on them I say so.
+
+## Where cases come from
+
+| Source | Good for | Watch out for |
+|---|---|---|
+| Real traffic (logged conversations) | The true mix of what users ask, including things you never imagined | Needs sampling and a privacy plan; mostly easy cases |
+| Support tickets and complaints | Cases already known to hurt | Biased towards what people bother to report |
+| Expert-written cases | Hard, high-stakes and rare situations | Experts imagine problems users do not have |
+| Synthetic (model-generated) | Starting before you have traffic; rare cases | Generic and too tidy; says nothing about how common a failure is |
+| Adversarial (deliberately awkward) | Rules you must never break; prompt injection; refusals | Can drift far from real use; keep it a separate slice |
+
+Use several. Real cases anchor the set; the others fill gaps you have found.
+
+## Start small, and real
+
+A rule of thumb from practitioners: twenty to fifty real cases beat a thousand invented ones. The agent-evals guidance from Anthropic says much the same (see [Evaluating agents](../evaluating-agents/)). The reason is not that small is statistically better. It is that real cases show you failures you would never think to write, and you can only learn from failures you read.
+
+Be clear about what a small set can do. At 30 cases and an 80% pass rate the standard error is the square root of 0.8 x 0.2 / 30, about 0.073, so a rough 95% range is 66% to 94% (a worked example, not a measurement). That is enough to find problems and catch a collapse. It is not enough to tell whether a new prompt is 3 points better; [Is the difference real?](../../ml/is-the-difference-real/) shows how many cases that takes.
+
+Vendor guidance leans the other way. As read on 1 November 2026, Anthropic's evaluation docs say to prioritise volume over quality: more questions with automated grading beat fewer hand-graded ones. Both can be right. Start with a small real set you read closely, find out what matters, then scale with automated graders once you have checked them against people.
+
+## Error analysis: the engine
+
+Error analysis is how you decide what to measure. Hamel Husain calls it the most valuable activity in AI development; his field guide describes the method, adapted from qualitative research.
+
+1. **Sample.** Collect around 100 diverse traces (a trace is one whole conversation or run). If you have no traffic, generate some (see below).
+2. **Open coding.** Read each one and write a free-text note about anything that went wrong from the user's point of view. Do not use a checklist yet. Note the **first** failure, because early errors cause later ones.
+3. **Group.** Cluster the notes into a failure taxonomy: a short list of named kinds of failure.
+4. **Count.** Tally each category. The counts, not your feelings, say where to work.
+5. **Fix the biggest, then re-read.** Stop reading when new traces stop revealing new failure kinds (researchers call this saturation).
+
+In the field guide's example, a leasing assistant failed on date handling two-thirds of the time. After the team categorised the failures and built targeted tests, the post reports the success rate going from 33% to 95%. Just three issues made up over 60% of the problems.
+
+Try it. The board below has twenty invented transcripts from a bike shop's chatbot. Tag each with the first failure you see, then watch the chart and the fix ranking build.
+
+<ErrorAnalysisBoard client:visible />
+
+Three habits are worth copying. Read the transcripts yourself before asking a model to cluster them; the FAQ advises annotating at least 30 yourself. Record problems that are not the model's fault, such as a missing feature, because they still hurt users. And postpone root-cause hunting until the counts tell you which problem deserves it.
+
+<Callout title="Counts are not the whole story">
+The biggest bucket is a good first guess, not a law. One transcript where a customer was hurt can outweigh five about tone. Weigh severity and effort next to the count.
+</Callout>
+
+## Reference answers and rubrics
+
+A **reference answer** is an example of a good response. A **rubric** is the set of criteria for judging any response, such as "follows the returns policy". Both help, with two cautions.
+
+**Write the rubric after your first pass, not before.** Shankar and colleagues studied people building evaluators and named the effect criteria drift: you need criteria to grade outputs, but grading outputs is how you discover your criteria. A rubric written in advance makes reviewers look only at what it lists. Draft a rough one, then revise it as you read.
+
+**Make each criterion a yes or no question.** "Does the reply state the 30-day window correctly?" is checkable. "Rate the helpfulness from 1 to 5" is not: people differ on a 3 against a 4. Both practitioners and [LLM-as-judge pitfalls](../llm-as-judge-pitfalls/) favour binary checks with a short written critique carrying the nuance. Where a rule can be coded (valid JSON, no order ID in the reply), code it instead.
+
+Also write cases in both directions. A bot that refunds everything passes every "should refund" case. Add cases where it should refuse or hand over.
+
+## Labelling with more than one person
+
+If two people label the same outputs, how do you know they mean the same thing? Raw agreement misleads, because two people guessing will often agree. **Cohen's kappa** corrects for that:
+
+kappa = (p<sub>o</sub> &minus; p<sub>e</sub>) / (1 &minus; p<sub>e</sub>)
+
+where p<sub>o</sub> is the share of items they agree on and p<sub>e</sub> is the agreement you would expect if each labelled at random at their own rates. A worked example: two labellers grade 50 answers pass or fail.
+
+| | B: pass | B: fail |
+|---|---|---|
+| **A: pass** | 20 | 5 |
+| **A: fail** | 10 | 15 |
+
+They agree on 20 + 15 = 35 of 50, so p<sub>o</sub> = 0.70. A passes 25 of 50 (0.5) and B passes 30 (0.6). Chance of both passing is 0.5 x 0.6 = 0.30, of both failing 0.5 x 0.4 = 0.20, so p<sub>e</sub> = 0.50. Kappa = (0.70 &minus; 0.50) / (1 &minus; 0.50) = 0.40. Seventy per cent agreement sounds good; kappa says half of it was chance.
+
+<KappaCalculator client:visible />
+
+Try the second preset: 90% agreement but kappa of about 0.44, because almost every answer passes and chance agreement is already 82%. The Judging the Judges paper makes the same point about model judges: use measures beyond percent agreement. For judge-versus-human checks Hamel's FAQ suggests precision and recall (true positive and true negative rates) when classes are unbalanced.
+
+### When they disagree
+
+1. Have each person label the same set independently, before any discussion.
+2. Measure agreement and collect the items where they differ.
+3. For each disagreement, ask which rule in the rubric would have settled it. Usually the rubric is vague, not the person wrong.
+4. Fix the rubric, add the case as a worked example, and relabel.
+
+For small teams the FAQ recommends the opposite of a committee: one domain expert as final decision-maker, a "benevolent dictator", which avoids endless conflict. Use several labellers when the domain is broad or the stakes need a second opinion, and then measure.
+
+## Dev, held-out and overfitting
+
+If you tune your prompt on the same 40 cases forever, it learns those cases. Keep two sets:
+
+- **Dev set**: the cases you look at, iterate on and add failures to.
+- **Held-out set**: cases you rarely run and never tune on, used to check that dev improvements are real.
+
+When you are validating a model judge, Hamel's FAQ suggests splitting labelled examples about 10 to 20% train (examples that may appear in the judge prompt), 40 to 45% dev and 40 to 45% test, with 30 to 50 passes and fails in each of dev and test when you can. These are practitioner guidelines, not laws. If test scores fall well below dev, you have probably overfitted.
+
+Split by the thing that repeats. If five cases come from one conversation, one document or one customer, keep them all in the same split, or the held-out set quietly shares answers with dev.
+
+## Synthetic cases
+
+A model can draft test inputs when you have no traffic, and the field guide reports this works well when done carefully:
+
+- **Define dimensions first.** For the bike shop: issue type (returns, delivery, repairs), customer mood (calm, upset), and context (new, follow-up). Write about 20 combinations by hand.
+- **Two steps.** Have the model expand tuples of dimension values, then turn each tuple into a natural message in a separate call. This avoids a pile of near-identical phrasings.
+- **Generate inputs, not expected outputs.** Otherwise the cases inherit the generator's blind spots.
+- **Ground them** in real constraints: real order formats, real policies, real catalogue.
+- **Check they trigger what you meant**, then run them through your actual system and read the traces.
+
+The risks are real. Synthetic data tends to be generic and tidy, it cannot tell you how common a failure is in production, and the FAQ lists domains where it is unreliable: specialised documents, low-resource languages, high-stakes fields and under-represented users. Compare it with real traffic as soon as you have some.
+
+## Hygiene
+
+- **Deduplicate.** Exact copies, and near copies with different wording, inflate the score on easy cases.
+- **Prevent leakage.** Do not put a test case in your prompt as a few-shot example. Do not tune on held-out cases. If cases come from public sources, a model may have seen them in training.
+- **Version it.** Give the dataset an ID and record it with every result, as [LLMOps](../llmops-in-production/) does for releases. When you add cases, old and new scores stop being comparable; that is fine, but write it down.
+- **Scrub personal data.** Real traces contain names, emails and order numbers. Redact before storing or sharing. Open-source tools such as Presidio can detect and anonymise personal data, but the FAQ warns that redaction tools miss things, so check the output. Rules on retention and consent vary; ask your privacy team (this is not legal advice).
+
+## Coverage: the slices that matter
+
+An overall score hides weak spots. Tag every case with the slices you care about: topic, language, difficulty, customer type, short against long conversations, **unanswerable** questions, and adversarial cases. Report each slice, and keep critical cases (a harmful reply, a data leak) in their own list with a zero-tolerance rule. Small slices have wide error bars, so do not read much into 3 of 5.
+
+## Keep it alive
+
+Datasets go stale as the product and users change. Hamel's FAQ suggests re-running error analysis after significant changes and reading 10 to 20 fresh traces a week in between. Turn each production failure into a case, as in the loop from [LLMOps](../llmops-in-production/). Retire evals that always pass; they cost to run and tell you nothing.
+
+## What to remember
+
+- Start with 20 to 50 real cases and read them. Scale after you know what matters.
+- Error analysis is: read, note the first failure, group, count, fix the biggest, repeat.
+- Write rubrics after reading, as yes or no questions with a short critique.
+- Two labellers: measure kappa, not raw agreement, and fix the rubric where they differ.
+- Keep a held-out set; split by conversation, document or user.
+- Synthetic cases start you off, from dimensions and tuples; real traffic corrects them.
+- Dedupe, version, scrub personal data, report by slice, and feed failures back in.
+
+Next: [LLM-as-judge and its pitfalls](../llm-as-judge-pitfalls/), where you check an automated grader against the labels you have just made.

@@ -1,1 +1,636 @@
 /* Styles for the interactive components in the wave 2 "agents-a" lesson batch. Keep every class under this batch's own prefix. */
+
+/* ---------- shared ---------- */
+
+.aa-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- Tool lab ---------- */
+
+.aa-lab {
+  min-width: 0;
+}
+.aa-banner {
+  margin: 0 0 0.6rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px dashed var(--line);
+  border-radius: var(--r-sm);
+  background: var(--tint-sun);
+  font-size: 0.92rem;
+  color: var(--ink);
+}
+.aa-task {
+  margin: 0 0 0.7rem;
+  font-size: 0.95rem;
+  overflow-wrap: anywhere;
+}
+.aa-data {
+  color: var(--ink-3);
+}
+.aa-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin: 0 0 0.8rem;
+}
+.viz .aa-controls .btn {
+  min-height: 44px;
+  font-size: 0.92rem;
+  padding: 0.5rem 0.8rem;
+}
+.aa-check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  font-size: 0.95rem;
+  color: var(--ink);
+  cursor: pointer;
+}
+.aa-check input {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--signal);
+  flex: none;
+}
+
+.aa-score {
+  width: 100%;
+  margin: 0 0 1rem;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+  table-layout: fixed;
+}
+.aa-score caption {
+  text-align: left;
+  padding: 0 0 0.3rem;
+  font: 600 0.82rem var(--font-display);
+  color: var(--ink-3);
+}
+.aa-score th,
+.aa-score td {
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--line-soft);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.aa-score thead th {
+  background: var(--paper-2);
+  color: var(--ink);
+  font-weight: 600;
+}
+.aa-score tbody th {
+  text-align: left;
+  font-weight: 500;
+  color: var(--ink-2);
+  width: 46%;
+}
+.aa-score td.is-right {
+  color: var(--ok);
+  font-weight: 700;
+}
+.aa-score td.is-wrong {
+  color: var(--warn);
+  font-weight: 700;
+}
+
+.aa-tabs {
+  display: flex;
+  gap: 0.4rem;
+  margin: 0 0 0.7rem;
+}
+.aa-tab {
+  flex: 1;
+  min-height: 44px;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--ink);
+  font: 600 0.92rem var(--font-display);
+  cursor: pointer;
+}
+.aa-tab[aria-pressed='true'] {
+  background: var(--signal);
+  border-color: var(--signal);
+  color: var(--on-signal);
+}
+.aa-tab:focus-visible,
+.aa-edit textarea:focus-visible,
+.aa-check input:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+
+.aa-cols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+  align-items: start;
+}
+.aa-panel {
+  min-width: 0;
+  padding: 0.7rem 0.75rem;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+}
+.aa-ph {
+  margin: 0 0 0.15rem;
+  font: 600 1rem var(--font-display);
+  color: var(--ink);
+}
+.aa-th {
+  margin: 0.9rem 0 0.4rem;
+  font: 600 0.9rem var(--font-display);
+  color: var(--ink-2);
+}
+.aa-sub {
+  margin: 0 0 0.6rem;
+  font-size: 0.88rem;
+  color: var(--ink-3);
+}
+.aa-tools {
+  display: grid;
+  gap: 0.5rem;
+}
+.aa-tool {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+.aa-tool code,
+.aa-call {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.82rem;
+  color: var(--ink);
+}
+.aa-tool-d {
+  margin-left: 0.4rem;
+}
+.aa-edit label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+  color: var(--ink);
+}
+.aa-tag-edit {
+  margin-left: 0.3rem;
+  padding: 0 0.35rem;
+  border: 1px solid var(--signal);
+  border-radius: 99px;
+  font-size: 0.72rem;
+  color: var(--signal-ink);
+}
+.aa-edit textarea {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--paper);
+  color: var(--ink);
+  font: 16px/1.4 var(--font-body, inherit);
+  resize: vertical;
+}
+.aa-cues {
+  margin: 0.35rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.3rem;
+}
+.aa-cues li {
+  font-size: 0.84rem;
+  color: var(--ink-2);
+}
+.aa-cue-state {
+  display: inline-block;
+  margin-right: 0.3rem;
+  padding: 0 0.4rem;
+  border-radius: 99px;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+.aa-cues .is-met .aa-cue-state {
+  background: var(--tint-mint);
+  color: var(--ok);
+}
+.aa-cues .is-open .aa-cue-state {
+  background: var(--tint-pink);
+  color: var(--warn);
+}
+.aa-words {
+  color: var(--ink-3);
+}
+
+.aa-log {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.55rem;
+}
+.aa-turn {
+  min-width: 0;
+  padding: 0.45rem 0.55rem;
+  border-left: 3px solid var(--line);
+  background: var(--paper);
+}
+.aa-turn.is-host {
+  border-left-color: var(--ok);
+}
+.aa-turn.is-final {
+  border-left-color: var(--signal);
+}
+.aa-turn-top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.5rem;
+  align-items: baseline;
+}
+.aa-call {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.aa-chip {
+  flex: none;
+  padding: 0 0.45rem;
+  border-radius: 99px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+.aa-chip.is-good {
+  background: var(--tint-mint);
+  color: var(--ok);
+}
+.aa-chip.is-bad {
+  background: var(--tint-pink);
+  color: var(--warn);
+}
+.aa-chip.is-plain {
+  background: var(--signal-wash);
+  color: var(--signal-ink);
+}
+.aa-result {
+  margin: 0.3rem 0 0;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  font: 0.8rem/1.4 var(--font-mono, ui-monospace, monospace);
+  color: var(--ink-2);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.aa-more {
+  color: var(--warn);
+  font-weight: 700;
+}
+.aa-note {
+  margin: 0.3rem 0 0;
+  font-size: 0.85rem;
+  color: var(--ink-2);
+}
+.aa-final {
+  margin: 0.3rem 0 0;
+  font-size: 0.92rem;
+  color: var(--ink);
+}
+.aa-outcome {
+  margin: 0.7rem 0 0;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  font-size: 0.92rem;
+  overflow-wrap: anywhere;
+}
+.aa-outcome.is-right {
+  background: var(--tint-mint);
+  color: var(--ink);
+}
+.aa-outcome.is-wrong {
+  background: var(--tint-pink);
+  color: var(--ink);
+}
+
+@media (max-width: 760px) {
+  .aa-cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---------- Context-compaction simulator ---------- */
+
+.aa-sim {
+  min-width: 0;
+}
+.aa-strats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 0 0 0.7rem;
+}
+.aa-strat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-height: 44px;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+.aa-strat:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.aa-strat-t {
+  font: 600 0.95rem var(--font-display);
+}
+.aa-strat-b {
+  font-size: 0.8rem;
+  line-height: 1.3;
+  color: var(--ink-2);
+}
+.aa-strat[aria-pressed='true'] {
+  background: var(--signal);
+  border-color: var(--signal);
+  color: var(--on-signal);
+}
+.aa-strat[aria-pressed='true'] .aa-strat-b {
+  color: var(--on-signal);
+}
+
+.aa-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0.4rem 0 0;
+}
+.aa-grid {
+  stroke: var(--line-soft);
+  stroke-width: 1;
+}
+.aa-axis {
+  fill: var(--ink-3);
+  font-size: 13px;
+}
+.aa-budget {
+  stroke: var(--warn);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 4;
+}
+.aa-budget-t {
+  fill: var(--warn);
+  font-size: 13px;
+  font-weight: 700;
+}
+.aa-thresh {
+  stroke: var(--cost);
+  stroke-width: 1.2;
+  stroke-dasharray: 2 4;
+}
+.aa-line {
+  stroke: var(--signal);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+.aa-cmark {
+  stroke: var(--ok);
+  stroke-width: 1.5;
+}
+.aa-cursor {
+  stroke: var(--ink);
+  stroke-width: 1.5;
+  opacity: 0.55;
+}
+.aa-fact-dot {
+  fill: var(--tint-sun);
+  stroke: var(--ink);
+  stroke-width: 1.2;
+}
+.aa-fact-t {
+  fill: var(--ink-2);
+  font-size: 13px;
+  font-weight: 700;
+}
+.aa-over {
+  fill: var(--warn);
+}
+.aa-over-t {
+  fill: var(--warn);
+  font-size: 13px;
+  font-weight: 700;
+}
+.aa-legend {
+  margin: 0.3rem 0 0.7rem;
+  font-size: 0.82rem;
+  color: var(--ink-2);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.7rem;
+  align-items: center;
+}
+.aa-key {
+  display: inline-block;
+  width: 18px;
+  height: 0;
+  margin-right: 0.2rem;
+  vertical-align: middle;
+  border-top: 3px solid var(--signal);
+}
+.aa-key-budget {
+  border-top: 2px dashed var(--warn);
+}
+.aa-key-thresh {
+  border-top: 2px dotted var(--cost);
+}
+.aa-key-fact {
+  width: 9px;
+  height: 9px;
+  border: 1.5px solid var(--ink);
+  border-radius: 50%;
+  background: var(--tint-sun);
+}
+
+.aa-scrub {
+  display: grid;
+  gap: 0.2rem;
+  margin: 0 0 0.6rem;
+}
+.aa-scrub label {
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+.aa-scrub input[type='range'] {
+  width: 100%;
+  min-height: 32px;
+}
+.aa-state p {
+  margin: 0 0 0.35rem;
+  font-size: 0.92rem;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.aa-event {
+  color: var(--ok);
+  font-weight: 600;
+}
+.aa-stopped {
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--tint-pink);
+}
+.aa-meter {
+  display: flex;
+  width: 100%;
+  height: 22px;
+  border: 1px solid var(--ink);
+  border-radius: 3px;
+  background: var(--surface);
+  overflow: hidden;
+}
+.aa-seg {
+  display: block;
+  height: 100%;
+  border-right: 1px solid var(--surface);
+}
+.aa-seg-system {
+  background: var(--paper-2);
+}
+.aa-seg-summary {
+  background: var(--tint-lilac);
+}
+.aa-seg-notes {
+  background: var(--tint-mint);
+}
+.aa-seg-chat {
+  background: var(--tint-sky);
+}
+.aa-seg-tool {
+  background: var(--tint-sun);
+}
+.aa-seg-stub {
+  background: var(--tint-pink);
+}
+.aa-kinds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.9rem;
+  margin: 0.4rem 0 0.2rem;
+  padding: 0;
+  list-style: none;
+  font-size: 0.82rem;
+  color: var(--ink-2);
+}
+.aa-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 0.25rem;
+  border: 1px solid var(--ink-3);
+  vertical-align: -1px;
+}
+.aa-h {
+  margin: 1rem 0 0.4rem;
+  font: 600 0.98rem var(--font-display);
+  color: var(--ink);
+}
+.aa-facts,
+.aa-qs {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.4rem;
+}
+.aa-facts li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.2rem 0.5rem;
+  align-items: center;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  font-size: 0.9rem;
+}
+.aa-fid {
+  display: inline-block;
+  min-width: 1.8rem;
+  padding: 0 0.3rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--tint-sun);
+  font: 700 0.78rem var(--font-mono);
+  text-align: center;
+  color: var(--ink);
+}
+.aa-fturn {
+  color: var(--ink-3);
+  font-size: 0.82rem;
+}
+.aa-q {
+  padding: 0.45rem 0.6rem;
+  border-left: 4px solid var(--line);
+  background: var(--paper);
+}
+.aa-q.is-yes {
+  border-left-color: var(--ok);
+}
+.aa-q.is-partly {
+  border-left-color: var(--cost);
+}
+.aa-q.is-no {
+  border-left-color: var(--warn);
+}
+.aa-q p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.aa-q-a {
+  margin-top: 0.2rem !important;
+  color: var(--ink-2) !important;
+}
+.aa-score-line {
+  margin: 0.7rem 0 0;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--signal-wash);
+  font-size: 0.92rem;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 760px) {
+  .aa-strats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 420px) {
+  .aa-facts li {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .aa-facts li .aa-chip {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}

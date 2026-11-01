@@ -1,0 +1,185 @@
+---
+title: "Fairness for builders: measure it, then reduce it"
+track: responsible
+level: intermediate
+order: 5
+summary: Where bias enters a machine-learning pipeline, the group-fairness metrics defined from a confusion table, why they cannot all hold at once, how to pick one for a decision, three ways to reduce the gaps, and what to document. Includes a threshold lab with invented data.
+updated: 2026-11-01
+sources:
+  - label: "Inherent Trade-Offs in the Fair Determination of Risk Scores (Kleinberg, Mullainathan and Raghavan, 2016)"
+    url: https://arxiv.org/abs/1609.05807
+  - label: "Fair prediction with disparate impact: A study of bias in recidivism prediction instruments (Chouldechova, 2016)"
+    url: https://arxiv.org/abs/1610.07524
+  - label: "Equality of Opportunity in Supervised Learning (Hardt, Price and Srebro, 2016)"
+    url: https://arxiv.org/abs/1610.02413
+  - label: "The Measure and Mismeasure of Fairness (Corbett-Davies, Gaebler, Nilforoshan and others, 2018)"
+    url: https://arxiv.org/abs/1808.00023
+  - label: "Preventing Fairness Gerrymandering: Auditing and Learning for Subgroup Fairness (Kearns, Neel, Roth and Wu, 2017)"
+    url: https://arxiv.org/abs/1711.05144
+  - label: "A Reductions Approach to Fair Classification (Agarwal and others, 2018)"
+    url: https://arxiv.org/abs/1803.02453
+  - label: "Mitigating Unwanted Biases with Adversarial Learning (Zhang, Lemoine and Mitchell, 2018)"
+    url: https://arxiv.org/abs/1801.07593
+  - label: "Fairlearn user guide: Mitigations (version 0.16.0.dev0 page, read 1 November 2026)"
+    url: https://fairlearn.org/main/user_guide/mitigation/index.html
+  - label: "Fairlearn user guide: Postprocessing and ThresholdOptimizer (read 1 November 2026)"
+    url: https://fairlearn.org/main/user_guide/mitigation/postprocessing.html
+  - label: "Fairlearn user guide: Fairness in machine learning (metric definitions, read 1 November 2026)"
+    url: https://fairlearn.org/main/user_guide/fairness_in_machine_learning.html
+  - label: "Google Machine Learning Crash Course: Fairness, Mitigating bias (read 1 November 2026)"
+    url: https://developers.google.com/machine-learning/crash-course/fairness/mitigating-bias
+  - label: "Gender Shades: Intersectional Accuracy Disparities in Commercial Gender Classification (Buolamwini and Gebru, 2018)"
+    url: https://proceedings.mlr.press/v81/buolamwini18a.html
+  - label: "Model Cards for Model Reporting (Mitchell and others, 2018)"
+    url: https://arxiv.org/abs/1810.03993
+  - label: "Datasheets for Datasets (Gebru and others, 2018)"
+    url: https://arxiv.org/abs/1803.09010
+  - label: "BBQ: A Hand-Built Bias Benchmark for Question Answering (Parrish and others, 2021)"
+    url: https://arxiv.org/abs/2110.08193
+  - label: "Bias and Fairness in Large Language Models: A Survey (Gallegos and others, 2023)"
+    url: https://arxiv.org/abs/2309.00770
+  - label: "NIST AI 100-1, Artificial Intelligence Risk Management Framework 1.0, section 3.7 (Fair, with harmful bias managed)"
+    url: https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf
+  - label: "NIST AI 600-1, Generative AI Profile, section 2.6 (Harmful bias and homogenization, July 2024)"
+    url: https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf
+  - label: "EU AI Act, Article 10: data and data governance (AI Act Service Desk, read 1 November 2026)"
+    url: https://ai-act-service-desk.ec.europa.eu/en/ai-act/article-10
+  - label: "29 CFR 1607.4: information on impact, including the four-fifths rule (US Uniform Guidelines on Employee Selection Procedures, eCFR, read 1 November 2026)"
+    url: https://www.ecfr.gov/current/title-29/subtitle-B/chapter-XIV/part-1607/section-1607.4
+  - label: "42 U.S.C. 2000e-2, subsection (l): prohibition of discriminatory use of test scores (GovInfo, 2023 edition)"
+    url: https://www.govinfo.gov/content/pkg/USCODE-2023-title42/html/USCODE-2023-title42-chap21-subchapVI-sec2000e-2.htm
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import ThresholdFairnessLab from '../../../components/viz/ThresholdFairnessLab.tsx';
+
+<Callout title="Not legal advice" kind="note">
+This lesson is engineering education. It quotes a few legal texts to show that the rules exist, as read on 1 November 2026. Laws differ by country and by sector, and change. Ask a lawyer what applies to your product.
+</Callout>
+
+[When the examples are unfair](../when-examples-are-unfair/) showed that one overall score can hide a group the system serves badly. This lesson is the builder's follow-up: how to put numbers on the gap, why you cannot close every gap at once, and what you can do about it.
+
+## Where bias enters
+
+Bias is not one bug in one place. Walk the pipeline and ask the same question at each step.
+
+- **Data collection.** Who is in the data, and who is missing? A sample taken from the people who already use your product says little about the people who do not.
+- **Labels.** Is the "right answer" a measurement or someone's past decision? A model trained to predict who was hired learns who was hired.
+- **Features and proxies.** A postcode can stand in for ethnicity, and a gap in someone's work history for caring duties. Dropping the sensitive column often does not remove the pattern, because other columns carry it.
+- **The objective.** Optimising overall accuracy favours the biggest group, because its errors count the most.
+- **Deployment and feedback loops.** A model's decisions change what data arrives next. If only approved applicants ever show whether they repay, the model never learns about the refused.
+
+NIST's AI Risk Management Framework adds that bias is broader than demographic balance. It names systemic, computational and statistical, and human-cognitive bias, and notes that systems in which harmful biases are mitigated are "not necessarily fair" (NIST AI 100-1, section 3.7).
+
+## Measuring: a confusion table per group
+
+Every group metric starts from the same thing you already know, a confusion table, computed separately for each group. Here is the table for two invented groups, A and B, scored by a made-up lending-style model. Approve if the score is at least 0.50. "Positive" means the person would repay.
+
+| | Group A: approved | Group A: refused | Group B: approved | Group B: refused |
+|---|---|---|---|---|
+| Would repay | 1,203 (TP) | 201 (FN) | 339 (TP) | 203 (FN) |
+| Would not repay | 357 (FP) | 639 (TN) | 101 (FP) | 957 (TN) |
+
+Group A has 2,400 applicants and Group B has 1,600. All numbers in this lesson and in the lab are invented examples. From the table:
+
+| Metric | Formula | Group A | Group B |
+|---|---|---|---|
+| Approval rate (selection rate) | (TP + FP) / everyone | 65.0% | 27.5% |
+| True positive rate (TPR) | TP / (TP + FN) | 85.7% | 62.5% |
+| False positive rate (FPR) | FP / (FP + TN) | 35.8% | 9.5% |
+| Precision (positive predictive value, PPV) | TP / (TP + FP) | 77.1% | 77.0% |
+| Share who would repay (base rate) | (TP + FN) / everyone | 58.5% | 33.9% |
+
+Each fairness criterion asks that one of these rates, or the meaning of the score, be the same across groups.
+
+- **Demographic parity** (also called statistical parity): the same approval rate. Fairlearn defines it as the prediction being statistically independent of the sensitive feature.
+- **Equal opportunity**: the same true positive rate. People who would repay have the same chance of approval, whichever group they are in. Hardt and colleagues introduced it.
+- **Equalised odds**: the same true positive rate and the same false positive rate.
+- **Predictive parity**: the same precision. An approval means the same thing in each group.
+- **Calibration within groups**: among people given a score of 0.8, about 80% repay, in every group.
+
+One legal rule of thumb uses the approval rate. In US employment selection, the Uniform Guidelines say a selection rate below four-fifths (80%) of the highest group's rate "will generally be regarded by the Federal enforcement agencies as evidence of adverse impact". The same text adds that smaller differences can still matter, and that larger ones may not when numbers are small (29 CFR 1607.4(D)). It is a screening heuristic in one legal setting, not a general pass mark. In the toy data the ratio is 27.5 / 65.0 = 0.42.
+
+In the toy data this model is calibrated and has equal precision, yet its approval rates (65% and 27.5%) and true positive rates (86% and 63%) are far apart. Nothing is broken. The groups differ in how many would repay, and one threshold applied to both groups passes that difference straight through.
+
+## Try it: the threshold fairness lab
+
+Move the two thresholds. Watch the tables, the rates, which criteria hold, and what each choice costs in correct decisions. Start with the presets.
+
+<ThresholdFairnessLab client:visible />
+
+## Why you cannot have all of them
+
+Kleinberg, Mullainathan and Raghavan proved that, "except in highly constrained special cases", no method can satisfy three natural fairness conditions at once: calibration within groups, and balance of the scores for the positive and for the negative class. Chouldechova showed a related result for precision: when base rates differ across groups, a score that satisfies predictive parity can still produce "considerable disparate impact" in error rates.
+
+You can see why with the numbers above. Precision, true positive rate, false positive rate and base rate are tied together:
+
+FPR = base / (1 - base) x (1 - PPV) / PPV x TPR
+
+where base is the share who would repay. For Group A: (0.585 / 0.415) x (0.2288 / 0.7712) x 0.8568 = 0.358, the 35.8% in the table. For Group B: (0.3388 / 0.6612) x (0.2295 / 0.7705) x 0.6255 = 0.095. If both groups keep the same precision and the same true positive rate, then different base rates force different false positive rates. To equalise all three you would need equal base rates, or a perfect predictor.
+
+The lab shows the cost in practice. Matching approval rates means lowering group B's threshold to 0.15. Group B's precision then falls to 50.1%, and 236 more of the 4,000 decisions are wrong. Matching true positive rates (threshold 0.25 for B) leaves B's precision at 59.6% against A's 77.1%, with 92 more wrong decisions. Fixing one gap opens another.
+
+## Choosing a metric is choosing who bears the cost
+
+Because you cannot have everything, the choice is about the decision and its harms. Corbett-Davies and colleagues argue that fairness should be judged by consequences in context. In their examples, enforcing popular formal definitions led to policies that were worse on both of their measures, and could "perversely, harm the very groups they were designed to protect".
+
+| If the main harm is... | Look first at | Because |
+|---|---|---|
+| A qualified person being refused (a loan, a job interview) | Equal opportunity (true positive rate) | It asks that people who would succeed have the same chance in each group |
+| People being wrongly flagged (a fraud or investigation flag) | False positive rate | It asks that people who did nothing wrong are flagged equally often |
+| People or staff reading the score as a probability | Calibration within groups | A 0.7 should mean the same thing for everyone |
+| Fair access to a limited benefit, where past data is itself skewed | Demographic parity, with care | It does not depend on labels that may carry past unfairness, but it ignores real differences in need |
+
+Write the choice down with the reason. Whoever audits it later, or whoever inherits the system, needs to know it was a decision and not an accident.
+
+## Reducing the gap: data, training, post-processing
+
+| Stage | What you do | Trade-offs |
+|---|---|---|
+| **Data** | Collect more examples for weak slices, audit and repair labels, reweight or resample, rethink proxy features | Often the most effective, and sometimes impossible: Google's course notes more data can be infeasible because of cost, time or legal and privacy limits |
+| **Training** | Add a fairness penalty or constraint to the loss (MinDiff and counterfactual logit pairing in Google's course; the reductions approach of Agarwal and colleagues, which Fairlearn implements), or train an adversary to fail at guessing the sensitive attribute | Usually needs the sensitive attribute during training, and costs some accuracy; a method that drives a metric towards zero does not make the system fair, as Fairlearn's own guide says |
+| **Post-processing** | Choose a different threshold for each group, as in the lab. Hardt and colleagues show how to adjust any trained predictor to meet equal opportunity or equalised odds | Fast and needs no retraining, but the sensitive attribute must be available when the model runs, and Fairlearn notes the exact fit often costs accuracy |
+
+<Callout title="Group thresholds can be unlawful in some settings" kind="note">
+In US employment law, 42 U.S.C. 2000e-2(l) makes it an unlawful employment practice, in connection with selecting or promoting people, "to adjust the scores of, use different cutoff scores for, or otherwise alter the results of, employment related tests on the basis of race, color, religion, sex, or national origin". Other fields and other countries have different rules. Using the sensitive attribute at decision time is a legal question as well as an engineering one, so check before you ship it.
+</Callout>
+
+Human review helps for borderline cases, but it adds its own bias, and a reviewer who rubber-stamps the score removes the benefit.
+
+## Slices, intersections and small samples
+
+Report every metric for each slice, and for the slices that cross: age and gender, region and language. The Gender Shades study found the largest errors for darker-skinned women, a group that single-attribute reports would have averaged away. Kearns and colleagues call the risk "fairness gerrymandering": a classifier can look fair on each broad group and still be unfair to a structured subgroup.
+
+The catch is sample size. Suppose 2,000 test cases are spread over 40 combinations of age band, gender and region. The average slice has 50 cases, and a rare one may have 5. A slice accuracy of 70% on 20 cases has a rough 95% range of about 50% to 90%. On 200 cases it is about 64% to 76%. Putting an interval on every slice, as in [Is the difference real?](../../ml/is-the-difference-real/), stops you from chasing noise, or from being reassured by it. If a slice is too small to measure, say so in the report instead of leaving it out.
+
+## Document it
+
+A model card is a short document shipped with a model. Mitchell and colleagues propose benchmarked evaluation "across different cultural, demographic, or phenotypic groups" and intersectional groups, plus the intended use and how the evaluation was done. A datasheet does the same for a dataset: why it was made, what is in it, how it was collected, and what it should and should not be used for (Gebru and colleagues). At minimum record:
+
+- The decision the model supports, and who can be harmed by a wrong decision.
+- The groups and slices you measured, the sample size of each, and the intervals.
+- The fairness metric you chose, why, and what you traded away.
+- What you tried, what it cost in accuracy, and what you left unfixed.
+
+The EU AI Act asks something similar for high-risk systems. Article 10, as shown on the Commission's AI Act Service Desk on 1 November 2026, lists among the data-governance practices "examination in view of possible biases" that are likely to affect health and safety, harm fundamental rights or lead to prohibited discrimination, and "appropriate measures to detect, prevent and mitigate" them. [The EU AI Act for engineers](../../evals/eu-ai-act-for-engineers/) covers which systems this reaches and when.
+
+## Fairness for language models, briefly
+
+Language models are harder to measure, because the output is text and not a yes or no. NIST's generative AI profile names harmful bias as one of its risks, including performance gaps between subgroups or languages. Two practical checks:
+
+- **Paired prompts.** Write the same request twice and change only one thing: a name, a pronoun, a dialect marker. Run both versions many times and compare something you can count: refusal rate, the decision, a score for tone. A consistent gap across many pairs is evidence, and one odd pair is not. Treat the pairs as a sample, and put an interval on the difference.
+- **Benchmarks as probes.** BBQ is a hand-built question-answering set. In its authors' 2021 tests, models relied on stereotypes when the context was under-informative, and were up to 3.4 percentage points more accurate when the correct answer matched a stereotype than when it did not. Gallegos and colleagues survey many more metrics and datasets, organised by whether they look at embeddings, probabilities or generated text.
+
+Benchmark scores are not certificates. They cover a few attributes, in one culture and language, for the models tested at the time. Test your own application, with your users' languages and the situations they face.
+
+## What to remember
+
+- Compute every metric per group, from a confusion table, and put an interval on small slices.
+- Demographic parity, equal opportunity, equalised odds, predictive parity and calibration answer different questions. With different base rates they cannot all hold, unless the predictor is perfect.
+- Pick the metric from the decision and its harms, and write down why.
+- Fix the data first; use training constraints or group thresholds knowing what they cost, and check what the law says about using the sensitive attribute.
+- Document the slices, the choice and the trade-offs in a model card and a datasheet.
+
+Next: [Privacy engineering for AI](../privacy-engineering-for-ai/), where the question changes from "who does it serve badly?" to "what does it give away?".

@@ -1,0 +1,153 @@
+---
+title: "When not to use an LLM: AI product thinking"
+track: systems
+level: intermediate
+order: 0.5
+summary: A way to decide whether a feature needs an LLM at all. Start from the user's job and the cost of being wrong, climb a ladder from no AI to an agent, price the options with worked numbers, and practise on ten scenarios.
+updated: 2026-11-01
+sources:
+  - label: "Rules of Machine Learning: Best Practices for ML Engineering (Google Developers)"
+    url: https://developers.google.com/machine-learning/guides/rules-of-ml
+  - label: "AI Engineering: Building Applications with Foundation Models, table of contents (Chip Huyen, O'Reilly 2025)"
+    url: https://github.com/chiphuyen/aie-book/blob/main/ToC.md
+  - label: "Building effective agents (Anthropic, 2024)"
+    url: https://www.anthropic.com/research/building-effective-agents
+  - label: "AI agent orchestration patterns: start with the right level of complexity (Microsoft Azure Architecture Center)"
+    url: https://learn.microsoft.com/en-us/azure/architecture/ai-ml/guide/ai-agent-design-patterns
+  - label: "A Field Guide to Rapidly Improving AI Products (Hamel Husain, 2025)"
+    url: https://hamel.dev/blog/posts/field-guide/
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import ToolLadder from '../../../components/viz/ToolLadder.tsx';
+import TicketCompare from '../../../components/viz/TicketCompare.tsx';
+import PickTheTool from '../../../components/viz/PickTheTool.tsx';
+
+The most expensive mistake in AI product work is not choosing the wrong model. It is building an LLM feature where a formula, a database query, a search box, a small classifier or a person would have done the job better. An LLM is a general tool, and general tools carry costs that a specific tool does not. This lesson gives you a way to decide, and ends with a game where you practise the decision.
+
+## Start from the job and the cost of being wrong
+
+Before you name a technology, write down five things about the job.
+
+1. **What the user is trying to get done**, in their words, not "add AI".
+2. **Value if it is right.** Minutes saved, a sale kept, a risk avoided.
+3. **Cost if it is wrong.** Who notices, how soon, and what it costs to put right. A wrong meeting summary is an awkward moment. A wrong contract clause or a wrong payment is a loss.
+4. **Volume and variety.** Twenty items a month, or two million. The same few shapes, or a different shape every time.
+5. **What you already have.** Labelled history, clean tables, an existing search index, people who do this today.
+
+The answers push you up or down the ladder in the next section. A high cost of being wrong does not rule an LLM out, but it means you design a check, a person or a fallback around it before you write a prompt.
+
+Google's *Rules of Machine Learning* opens with the same instinct. Rule 1 is "Don't be afraid to launch a product without machine learning", and it says that if you think machine learning will give a 100 per cent boost, a heuristic will get you 50 per cent of the way. Chapter 1 of Chip Huyen's *AI Engineering* likewise has a section on use case evaluation, with further sections on setting expectations, milestone planning and maintenance.
+
+## The ladder
+
+Options differ in cost, in how they fail, and in how much you must maintain. Put them in order, then choose the lowest rung that meets the bar. Anthropic's guide to building agents says the same about its own subject: find the simplest solution possible, and increase complexity only when needed, which might mean not building an agentic system at all. Microsoft's Azure architecture guidance makes the point in almost the same words: use the lowest level of complexity that reliably meets your requirements.
+
+<ToolLadder client:visible />
+
+Two details matter. First, the rungs are not a quality ranking. A rule is not a worse tool than an LLM; for adding up an invoice it is the better one. Second, moving up is sometimes right. Google's Rule 3 says to choose machine learning over a complex heuristic, because a simple heuristic can ship a product, but a complex one is unmaintainable. When your rules grow into hundreds of special cases, that is the signal to climb.
+
+Whatever you pick, measure the rung below it first. A keyword search or a regex is the baseline everything fancier must beat, and the beating must show up in numbers, not in a demo.
+
+## Where an LLM is the wrong tool
+
+- **Exact arithmetic and lookups.** Sums, unit conversions, "what is the price of item 4417". A language model predicts plausible text. It can get a sum wrong and may give a different answer on a second run. Code and a database give the same correct answer every time.
+- **Hard real-time or very low latency.** A model call takes from a fraction of a second to many seconds, and the time varies. A system that must answer in milliseconds, such as a sensor alarm or a fraud check inside a payment, needs something that runs locally in a fixed time.
+- **Deterministic compliance logic.** If a regulation says "reject if the amount exceeds 10,000", write that as code, with a test, so you can show an auditor exactly what happens. A prompt cannot be audited the same way.
+- **Tiny volumes.** If a person can do the job in ten minutes a month, the prompt, evals, monitoring and upkeep cost more than the job.
+- **High stakes with nobody reviewing.** A model can be confidently wrong. If a wrong output causes harm and no person or check sits between the output and the effect, you are relying on a tool that no one can guarantee.
+- **When a regex or SQL does it.** "Find orders over 500 dollars shipped to Germany last month" is a query. Text-to-SQL is a different job, for people who cannot write the query, and even then the generated query needs checking.
+
+## Where an LLM shines
+
+LLMs earn their cost on **fuzzy language tasks**, where the input is free-form text and no short list of rules covers it: summarising, rewriting, translating, extracting facts from messy documents, answering questions in natural language over a document you supply, and drafting. They are strong on **long-tail variation**, where the same intent arrives in endless wordings and a rule or a classifier would need examples of every one. And they are a fast way to **get a first version working** when you have no labelled data, because a prompt takes an afternoon and a classifier takes a labelled dataset.
+
+That last point is useful and a trap. A prompt gets you started quickly, but the labelled test set you must build to check it is the same data you would need to train a cheaper classifier later.
+
+## A worked comparison: routing support tickets
+
+A support team sends each ticket to one of six queues. Compare three designs. **Every number in this comparison is an invented example** chosen to show the shape of the calculation. Measure your own before you decide.
+
+| | Keyword rules | Small classifier | LLM call |
+|---|---|---|---|
+| Correctly routed (example) | 71% | 88% | 91% |
+| Time per ticket (example) | 1 ms | 5 ms | 900 ms |
+| Running cost per 1,000 tickets | $0.00 | $0.02 | $1.35 |
+| Monthly upkeep (example) | $300 | $800 | $1,500 |
+
+The LLM figure is computed from tokens: 400 input and 10 output tokens per ticket, at example prices of 3 dollars per million input tokens and 15 per million output tokens, which is 0.12 plus 0.015 cents, so 0.135 cents a ticket or $1.35 per 1,000 tickets. The upkeep rows stand for maintaining rules, retraining a classifier and its labels, or running evals, monitoring and prompt changes. Total cost per month is the running cost, plus the cost of mistakes, plus upkeep.
+
+Now add the number most teams leave out, the cost of a misrouted ticket. Suppose each one costs 80 cents of rework. At 100,000 tickets a month, the totals work out to about $23,500 for rules, $10,400 for the classifier and $8,800 for the LLM. The mistakes dominate, and the more accurate option wins even though it costs the most to run. Now suppose a mistake costs 10 cents: the totals become about $3,200, $2,000 and $2,500, and the classifier wins. At 2,000 tickets a month and 10 cents a mistake, the rules are cheapest at about $360 against $820 and $1,520.
+
+The same three designs give three different winners. Move the sliders.
+
+<TicketCompare client:visible />
+
+What to take from it: the accuracy gap only pays for itself when mistakes are costly or volume is high; latency rules the LLM out where milliseconds count; and a hybrid is often better than any one rung, for example rules for the obvious tickets and a model for the rest.
+
+## The hidden costs of an LLM feature
+
+The price per token is the visible part. The rest is work you have to do for as long as the feature lives.
+
+- **Evals.** You need a test set and a way to score outputs, and you must rerun it on every change ([Evals 101](../../evals/evals-101/)).
+- **Monitoring.** A trace per request, quality sampling, drift checks and an on-call route when quality drops.
+- **Latency.** Seconds, not milliseconds, which shapes the interface. Streaming helps the feel, not the total.
+- **Token cost.** It grows with prompt length, retrieved context, history, retries and agent steps ([Where the tokens go](../../cost/where-the-tokens-go/)).
+- **Privacy and security.** Prompts can contain personal or confidential data, and untrusted text can steer the model, so you need data terms, redaction and an LLM-specific security review.
+- **Vendor risk.** Prices, limits and models change, and providers retire models on a schedule. Each retirement is a migration you did not plan.
+- **Maintenance when models change.** A new model version can change formatting, refusals and quality. Prompts tuned for one model are not guaranteed to work on another.
+
+Hamel Husain, writing from work with 30+ companies, reports that the teams who succeed barely talk about tools and obsess over measurement and iteration. The hidden costs above are mostly that measurement.
+
+## Build, buy or call
+
+"Should we use an LLM" has a sibling question: where does the capability come from?
+
+- **Buy the feature.** A product that already does translation, transcription, OCR or support routing. You get a finished capability and little control. Check its data terms and how it will be priced when you scale.
+- **Call a model API.** You write the prompt, the evals and the guardrails. You control the product and depend on the provider.
+- **Host or fine-tune a model.** You get control over data and cost at high, steady volume, and you take on serving, upgrades and security. See [Self-hosting versus an API](../../local/self-hosting-vs-api-economics/) for the arithmetic.
+
+Buy when the capability is not what makes your product different. Build where it is. And remember that a dedicated model for one narrow job, such as speech recognition or machine translation, is often better than a general LLM for it.
+
+## Put a person in the loop, and plan the fallback
+
+Two ideas turn a risky model output into something you can ship.
+
+**A human in the loop** means a person sits between the model and the effect. Match the placement to the risk. For a low-stakes draft, the person edits after the fact. For a customer message, the person approves before it goes out. For a contract or a payment, the person decides and the model only prepares the ground. Approvals must be meaningful: show the person the proposed change and the evidence, not just an "Are you sure?" button, or they will click through.
+
+**A fallback** is what happens when the model is slow, wrong or down. The chain usually runs from the LLM's answer, to a cheaper check or a source link, to a plain rule, to a person. "I am not sure, let me get a colleague" is a good output. [Model routing and fallbacks](../model-routing-and-fallbacks/) covers the mechanics.
+
+<Callout title="A test for the decision">
+Imagine the LLM feature is switched off tomorrow. If the answer is "we would write a rule and be fine", the LLM is a convenience, and you should price it as one. If the answer is "the product stops working", you need the fallback, the evals and the monitoring from the start.
+</Callout>
+
+## Practise: Pick the Tool
+
+Ten scenarios. For each, choose the simplest approach that does the job, then read why, and what would have gone wrong with a simpler or a heavier choice. Some have two acceptable answers.
+
+<PickTheTool client:visible />
+
+<Deep title="Why a model that sounds right is not the same as a rule that is right">
+
+A rule or a query has a specification: for the same input it gives the same output, and you can test every branch. A language model has a distribution: it usually gives a good answer, sometimes a different one, and occasionally a confident wrong one. You manage that with evals that measure how often, not with a proof that it never happens.
+
+That is acceptable when a wrong output is cheap or caught, and it is the wrong foundation when the output must be exactly right. Tool use can narrow the gap, for example letting a model call a calculator or run a query, but then the calculator or the query is doing the exact work, and the model's job is only to decide to call it.
+
+</Deep>
+
+## What to remember
+
+- Start from the user's job and the cost of being wrong, not from the technology.
+- Climb the ladder one rung at a time: a person or no feature, code and rules, search, a trained model, one LLM call, an agent. Stop at the first rung that meets the bar, and measure the baseline below it.
+- LLMs are the wrong tool for exact arithmetic, hard real-time work, auditable compliance logic, tiny volumes, unreviewed high stakes and anything a regex or SQL can do. They shine on fuzzy language and long-tail variation.
+- Compare options on total cost: running cost, plus the cost of mistakes, plus upkeep. The winner depends on volume and on what a mistake costs.
+- The hidden costs are evals, monitoring, latency, tokens, privacy, vendor risk and rework when models change.
+- Design the human check and the fallback before you ship, not after the first incident.
+
+## Where to go next
+
+- [System design for LLM apps: the building blocks](../llm-app-system-design/) is the next lesson, and shows the parts of a production feature once you have decided one is warranted.
+- [Prompting, retrieval or fine-tuning](../../llm/prompting-vs-rag-vs-fine-tuning/) covers the choices inside the LLM rung.
+- [Model routing and fallbacks](../model-routing-and-fallbacks/) covers sending each request to the right model and handling failure.
+- [Is the difference real?](../../ml/is-the-difference-real/) covers whether an accuracy gap like 88 against 91 per cent means anything on your test set.

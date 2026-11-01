@@ -1,0 +1,140 @@
+---
+title: "Scaling laws and compute-optimal training"
+track: deep-learning
+level: advanced
+order: 8
+summary: "How loss falls as a power law in parameters, data and compute, what Chinchilla corrected, how to turn 6ND FLOPs into GPU-hours and dollars, why production models are over-trained, and what a scaling law cannot tell you."
+updated: 2026-11-01
+sources:
+  - label: "Scaling Laws for Neural Language Models (Kaplan et al., 2020)"
+    url: https://arxiv.org/abs/2001.08361
+  - label: "Training Compute-Optimal Large Language Models (Hoffmann et al., 2022)"
+    url: https://arxiv.org/abs/2203.15556
+  - label: "Chinchilla Scaling: A replication attempt (Besiroglu et al., Epoch AI, 2024)"
+    url: https://arxiv.org/abs/2404.10102
+  - label: "Resolving Discrepancies in Compute-Optimal Scaling of Language Models (Pearce and Song, 2024)"
+    url: https://arxiv.org/abs/2406.19146
+  - label: "Beyond Chinchilla-Optimal: Accounting for Inference in Language Model Scaling Laws (Sardana et al., 2023)"
+    url: https://arxiv.org/abs/2401.00448
+  - label: "Scaling Data-Constrained Language Models (Muennighoff et al., 2023)"
+    url: https://arxiv.org/abs/2305.16264
+  - label: "Will we run out of data? Limits of LLM scaling based on human-generated data (Villalobos et al.)"
+    url: https://arxiv.org/abs/2211.04325
+  - label: "DeepSeek LLM: Scaling Open-Source Language Models with Longtermism (2024)"
+    url: https://arxiv.org/abs/2401.02954
+  - label: "The Llama 3 Herd of Models (Llama Team, Meta, 2024)"
+    url: https://arxiv.org/abs/2407.21783
+  - label: "Llama 3.1 model card (Meta)"
+    url: https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/MODEL_CARD.md
+  - label: "Scaling LLM Test-Time Compute Optimally can be More Effective than Scaling Model Parameters (Snell et al., 2024)"
+    url: https://arxiv.org/abs/2408.03314
+  - label: "Emergent Abilities of Large Language Models (Wei et al., 2022)"
+    url: https://arxiv.org/abs/2206.07682
+  - label: "Are Emergent Abilities of Large Language Models a Mirage? (Schaeffer et al., 2023)"
+    url: https://arxiv.org/abs/2304.15004
+  - label: "NVIDIA H100 Tensor Core GPU"
+    url: https://www.nvidia.com/en-us/data-center/h100/
+  - label: "Stanford CS336: Language Modeling from Scratch"
+    url: https://cs336.stanford.edu/
+---
+
+import ScalingPlanner from '../../../components/viz/ScalingPlanner.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+[How a model is trained](../../foundations/training-pipeline/) says pretraining is the most expensive stage and that smaller models trained on more data can match bigger ones. This lesson puts numbers on both statements. A frontier pretraining run is an expensive one-shot decision: you choose the model size and the amount of data before you spend the money. **Scaling laws** are the empirical rules that let teams make that choice from small, cheap experiments. They are also why a well-trained 70 billion parameter model (Chinchilla, below) could beat a 280 billion parameter one.
+
+## Loss falls as a power law
+
+In 2020 Kaplan and colleagues at OpenAI trained many transformer language models of different sizes and found that the test loss followed simple curves. When one factor is the bottleneck, loss falls as a **power law** of the number of non-embedding parameters N, the dataset size D in tokens, or the training compute C. Their fitted exponents were about 0.076 for N, 0.095 for D and 0.050 for compute used efficiently, with trends spanning more than seven orders of magnitude.
+
+A power law is a straight line on log-log axes. Its exponent tells you what a multiplication buys. Doubling N multiplies the loss by 2<sup>−0.076</sup> = 0.95, a 5 per cent drop. Multiplying compute by ten multiplies the loss by 10<sup>−0.05</sup> = 0.89, an 11 per cent drop. The returns are steady but slow, which is why each step costs so much more than the last. The same paper estimated that for a growing budget most of it should go into model size: N should grow roughly as C<sup>0.73</sup> and D only as C<sup>0.27</sup>.
+
+## The Chinchilla correction
+
+Two years later Hoffmann and colleagues at DeepMind trained over 400 models, from under 70 million to over 16 billion parameters on 5 to 500 billion tokens, and reached a different answer. For a fixed compute budget, **parameters and tokens should grow together**: for every doubling of model size, double the tokens. Kaplan's recipe, in their words, suggested that a ten-fold budget should give a 5.5 times bigger model but only 1.8 times more data. The Chinchilla result was about 3.2 times for each (a ten-fold budget split equally is the square root of ten for both).
+
+They tested it. Gopher had 280 billion parameters trained on 300 billion tokens. Chinchilla used the same compute with 70 billion parameters on 1.4 trillion tokens, and beat Gopher, GPT-3 and others on a wide range of tasks. At the time most large models had been trained on about 300 billion tokens whatever their size.
+
+**Where "20 tokens per parameter" comes from.** Hoffmann et al. estimated the compute-optimal frontier three ways. Two of them gave exponents very close to one half for both N and D, so the ratio D/N stays roughly constant as the budget grows. Their Table 3 lists the optimal tokens for a given size: 20.2 billion tokens for a 1 billion parameter model, 205 billion for 10 billion, and 1.5 trillion for 67 billion. That is about 20 each time, and Chinchilla itself used 1.4 trillion ÷ 70 billion = 20. The number is a measured property of their data and setup, not a law of nature.
+
+<Callout title="The fit and the rule of thumb disagree on paper">
+The third method fits a formula, L(N, D) = E + A/N<sup>α</sup> + B/D<sup>β</sup>. In 2024 Epoch AI tried to replicate it and found the published constants did not fit the reconstructed data well. Two reasons: the constants in the paper body were rounded, and the optimiser had stopped early. Using the constants as printed, the optimal allocation at Chinchilla's budget works out at about 93 tokens per parameter, not 20. Epoch's re-fit gives about 18, consistent with the other two methods and with the Chinchilla model. The planner below lets you switch between the two so you can see the difference. Their reconstruction used data digitised from the paper's figure, so it is itself an estimate.
+</Callout>
+
+Why did Kaplan and Hoffmann differ? Pearce and Song reproduced Kaplan's setup and identified three factors: how the compute of the last layer was counted, the warmup length, and how the optimiser was tuned at small scale. With those corrected they recovered the Chinchilla result. The lesson is that small details of how an experiment is run move the answer.
+
+## Compute: C ≈ 6ND
+
+To use any of this you need a way to count the compute of a run. For a dense transformer, a forward pass costs about 2 FLOPs per parameter per token (one multiply and one add) and the backward pass about twice that, so **training costs about 6 FLOPs per parameter per token**: C ≈ 6·N·D. Kaplan et al. use C ≈ 6N per training token, ignoring the attention term that depends on context length, which is small for the models they study. Serving costs about 2N per token.
+
+| Model | N | D | 6·N·D |
+|---|---|---|---|
+| GPT-3 | 175 billion | 300 billion | 3.15e23 |
+| Chinchilla | 70 billion | 1.4 trillion | 5.88e23 |
+| Llama 3 8B | 8 billion | about 15 trillion | about 7.2e23 |
+| Llama 3 405B | 405 billion | 15.6 trillion | 3.79e25 |
+
+Parameter and token counts are from the Chinchilla paper, the Llama 3 paper and the Llama 3.1 model card; the last column is my arithmetic. For Llama 3 405B it matches the 3.8 × 10<sup>25</sup> FLOPs Meta reports. The Chinchilla paper counts FLOPs more exactly than 6ND, which is why its own table lists 5.76e23 for a 67 billion parameter model on 1.5 trillion tokens, where 6ND gives 6.03e23.
+
+**From FLOPs to GPU time.** A GPU does not deliver its peak. **Model FLOPs utilisation (MFU)** is the share of the chip's peak speed that goes into useful model arithmetic. The Llama 3 paper reports 38 to 43 per cent for its 405B pretraining configurations, and [training infrastructure](../../infra/training-infrastructure/) explains why communication and memory-bound work eat the rest. An H100 SXM peaks at about 989 teraFLOPS in BF16 for dense work (NVIDIA's headline 1,979 assumes sparsity; see [reading a GPU spec sheet](../../infra/reading-a-gpu-spec-sheet/)). At 40 per cent that is 396 teraFLOPS.
+
+Worked through for Llama 3 405B: 3.79e25 ÷ 3.96e14 = 9.6e10 GPU-seconds, which is 26.6 million GPU-hours. Meta's model card reports 30.84 million H100 hours for that model. The estimate is 14 per cent below it, which is the sort of gap you should expect from a calculation this simple (the card does not say how the hours split between stages, so I cannot say what accounts for it). For the 8B model the same method gives 0.5 million hours against 1.46 million reported, a factor of about three. Small models are harder to keep busy, and the 15 trillion is a lower bound on the tokens ("15T+" on the card), but again I cannot attribute the whole gap. Use 6ND for the order of magnitude and expect to be off by tens of per cent.
+
+Money follows from hours. At an example $2 per GPU-hour, 26.6 million hours is about $53 million. That price is a placeholder: real contracts, reservations and utilisation differ, and [the cost lessons](../../cost/where-the-tokens-go/) cover the other side of the bill, which is serving.
+
+## The scaling planner
+
+Pick a fit and a budget, in FLOPs or in GPU-days, and see the compute-optimal model, the hardware time, and an over-trained alternative that reaches the same loss. For example, Chinchilla's budget of 5.76e23 FLOPs under the Epoch re-fit gives about 72 billion parameters on 1.33 trillion tokens, close to what DeepMind actually built. On 2,048 H100s at 40 per cent MFU it comes to about 8 days and, at the example price, around $0.8 million.
+
+<ScalingPlanner client:visible />
+
+Look at the second chart. The loss bowl is shallow. At 1e24 FLOPs, a model half or double the optimal size, with tokens adjusted to use the same budget, loses only about 0.004 in predicted loss. A model a quarter or four times the optimal size loses about 0.018. The Llama 3 paper makes the same observation: its IsoFLOP curves flatten near the minimum, so the result is robust to small changes in the size-versus-data trade. That flat region is what makes the next section possible.
+
+## Why production models are over-trained
+
+Chinchilla optimises training compute for a given loss. Most of the cost of a successful model is serving it. Sardana and colleagues modify the objective to count both: the total FLOPs are 6·N·D<sub>train</sub> + 2·N·D<sub>inference</sub>, minimised for a target loss. If you expect heavy use (their example is about a billion requests), the best model is smaller and trained longer than Chinchilla says. They trained 47 models of 150 million to 6 billion parameters on 10 to 10,000 tokens per parameter and saw loss keep falling at the extreme ratios, with no saturation in that range.
+
+You can see the mechanics in the planner. At 1e24 FLOPs under the Epoch fit, the compute-optimal model has about 96 billion parameters. A model half that size reaches the same loss with 4.4 trillion tokens, which is 91 tokens per parameter and 1.26 times the training FLOPs. That multiple depends only on the size fraction under this fit, not on the budget. In exchange, every token served costs half as much. The break-even is where the saved serving FLOPs repay the extra training: about 2.7 trillion served tokens here. Move the lifetime-tokens slider across it and the verdict flips.
+
+Real practice has gone further. The Llama 3 paper says its 405B flagship is about compute-optimal in size for its budget, while "we also train our smaller models for much longer than is compute-optimal", and that the result performs better than compute-optimal models at the same inference budget. Dividing the reported tokens by the parameters, the 8B model saw about 1,900 tokens per parameter against Chinchilla's 20. When someone says "7B on 15 trillion tokens", this is what they mean.
+
+<Deep title="Deriving the compute-optimal split">
+
+Minimise L = E + A/N<sup>α</sup> + B/D<sup>β</sup> subject to 6ND = C. Substituting D = C/(6N) and setting dL/dN to zero gives N<sub>opt</sub> = G·(C/6)<sup>β/(α+β)</sup> and D<sub>opt</sub> = G<sup>−1</sup>·(C/6)<sup>α/(α+β)</sup>, with G = (αA / βB)<sup>1/(α+β)</sup>. With the Epoch constants α = 0.3478 and β = 0.3658, the exponent on N is 0.513 and on D is 0.487: nearly equal, which is the Chinchilla finding. With the printed constants (α = 0.34, β = 0.28) they are 0.452 and 0.548, and the optimum drifts towards more data per parameter as the budget grows. The planner computes exactly this; the code and its tests are in the site's repository.
+
+</Deep>
+
+## Data runs out, and repeating it
+
+Chinchilla-style fits assume every token is new. Muennighoff and colleagues trained about 400 models with up to 900 billion tokens and up to 9 billion parameters to study repetition. They found that, for a fixed compute budget, training with up to about 4 epochs on repeated data gave negligible change in loss compared with new data. With more repetition the value of extra compute decays towards zero, and at 40 epochs repeating is worthless in their experiments. Their proposed law for repeated data favours smaller models trained for more epochs than the Chinchilla rule would. A separate study (Villalobos et al.) projects that, if trends continue, training sets could be roughly the size of the whole stock of public human-written text between 2026 and 2032, sooner for heavily over-trained models. That is a forecast with wide uncertainty, and the same authors point to synthetic data, other data sources and data efficiency as ways forward.
+
+Data quality changes the constants too. DeepSeek's LLM paper reports that the better the data, the more of an extra budget should go into model size. So a tokens-per-parameter rule fitted on one corpus does not transfer to another.
+
+## Test-time compute is a second axis
+
+Everything above is about compute spent before the model is used. A reasoning model spends compute while answering, as covered in [reasoning models](../../llm/reasoning-models/). Snell and colleagues found that how much extra test-time compute helps depends on how hard the prompt is, and that on problems where a smaller model already had some success, extra inference compute could beat a 14 times larger model in a compute-matched comparison. That is a result on specific tasks, not a general trade.
+
+The arithmetic is worth doing. Generating 4,000 thinking tokens with a 70 billion parameter model costs about 2 × 70e9 × 4,000 = 5.6e14 FLOPs per question. Chinchilla's 5.88e23 training FLOPs equal about a billion such answers. An application answering a billion such questions spends about as much compute on answers as the whole pretraining run, which is the same message as the previous section: serving can outweigh training. [Post-training with reinforcement learning](../rl-post-training/) is the next lesson: it covers how models are trained to use that thinking budget well.
+
+## What scaling laws do not tell you
+
+- **They predict loss, not abilities.** A fit to next-token loss does not say when a model will pass a given exam. The Llama 3 paper notes that scaling laws typically predict next-token loss rather than benchmark performance, and bridges the gap with a second fit from loss to accuracy on one benchmark, which it reports extrapolated over four orders of magnitude and only slightly underestimated the final result.
+- **Emergence is contested.** Wei et al. described abilities that appear only at larger scale and cannot be predicted by extrapolating smaller models. Schaeffer et al. argued that many such jumps come from the choice of a sharp metric, and that continuous metrics give smooth curves. Both are about particular tasks and metrics; neither makes a smooth loss curve a safe guide to a specific capability.
+- **Data and recipe change the constants.** Quality, mix, tokeniser, optimiser tuning and architecture all move the fit, as the Kaplan and Chinchilla discrepancy showed. Teams therefore fit their own laws on their own data, as the Llama 3 team did with runs from 6e18 to 1e22 FLOPs before extrapolating to 3.8e25.
+- **Extrapolation is a bet.** The planner warns when you leave the range the fit was made from, and the lab below shows how a plain power law can look excellent on the data and still miss by several per cent one decade later, and by far more if you assume the wrong floor. The ranges quoted by the papers are statistical estimates; Epoch found the printed Chinchilla confidence intervals implausibly narrow.
+
+## Fit one yourself
+
+The practice lab [Fit a scaling law](../../../practice/fit-a-scaling-law/) gives you eight invented (compute, loss) points. You fit a power law with least squares in log-log space in pure Python, predict two held-back runs, and then see how the extrapolation changes with an assumed floor under the loss.
+
+## What to remember
+
+- Loss falls as a power law in parameters, data and compute. Exponents are small, so each gain costs several times more than the last.
+- Kaplan et al. favoured bigger models; Hoffmann et al. (Chinchilla) showed parameters and tokens should grow together, at about 20 tokens per parameter in their setup. Treat 20 as a measured value for one data set, and expect it to shift with data quality.
+- C ≈ 6·N·D FLOPs for training and 2·N per token for serving. Divide by peak speed times MFU for GPU-seconds, then by price for dollars. Expect the estimate to be within tens of per cent.
+- Inference dominates the lifetime cost of a successful model, so production models are trained far past compute-optimal: smaller and longer.
+- Repeated data helps for a few epochs and then stops. Data quality changes the optimum.
+- Scaling laws predict loss on a distribution, not capabilities, and every extrapolation is a hedge. Test-time compute is a second axis that the same arithmetic applies to.
+
+Next: [Post-training with reinforcement learning](../rl-post-training/) covers what happens after pretraining. For how models are trained stage by stage, see [How a model is trained](../../foundations/training-pipeline/), and for the fine-tuning you will actually do yourself, [fine-tuning in practice](../../llm/fine-tuning-in-practice/).

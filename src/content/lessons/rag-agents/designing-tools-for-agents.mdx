@@ -1,0 +1,154 @@
+---
+title: "Designing tools for agents: schemas, descriptions and errors"
+track: rag-agents
+level: intermediate
+order: 4.2
+summary: A tool is an interface for a reader that is a model. Write names, descriptions and schemas as prompts, build fewer and higher-level tools, return small readable results, make errors tell the model how to recover, guard destructive actions, and measure it all with realistic tasks.
+updated: 2026-11-01
+sources:
+  - label: "Writing effective tools for AI agents (Anthropic Engineering, Sep 2025)"
+    url: https://www.anthropic.com/engineering/writing-tools-for-agents
+  - label: "Building effective agents, Appendix 2: Prompt engineering your tools (Anthropic Engineering, Dec 2024)"
+    url: https://www.anthropic.com/engineering/building-effective-agents
+  - label: "Define tools (Claude Platform docs)"
+    url: https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools
+  - label: "Handle tool calls: errors with is_error (Claude Platform docs)"
+    url: https://platform.claude.com/docs/en/agents-and-tools/tool-use/handle-tool-calls
+  - label: "Tool search tool (Claude Platform docs)"
+    url: https://platform.claude.com/docs/en/agents-and-tools/tool-use/tool-search-tool
+  - label: "Tool evaluation cookbook (Anthropic)"
+    url: https://platform.claude.com/cookbook/tool-evaluation-tool-evaluation
+  - label: "MCP specification 2026-07-28: Tools"
+    url: https://modelcontextprotocol.io/specification/2026-07-28/server/tools
+  - label: "MCP specification 2026-07-28: schema reference (ToolAnnotations)"
+    url: https://modelcontextprotocol.io/specification/2026-07-28/schema
+  - label: "Function calling guide, best practices for defining functions (OpenAI)"
+    url: https://developers.openai.com/api/docs/guides/function-calling
+  - label: "Function calling with the Gemini API, best practices (Google)"
+    url: https://ai.google.dev/gemini-api/docs/function-calling
+  - label: "Idempotent requests (Stripe API reference)"
+    url: https://docs.stripe.com/api/idempotent_requests
+  - label: "RFC 9110: HTTP Semantics, idempotent methods"
+    url: https://www.rfc-editor.org/rfc/rfc9110.html
+---
+
+import ToolLab from '../../../components/viz/ToolLab.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+[Agents and tool use](../agents-and-tool-use/) showed a tool schema and said that descriptions are part of the prompt. This lesson turns that line into a design method. Product details below are as of 1 November 2026 and the vendors' own pages are linked, because they change.
+
+## A tool is an interface for a reader that guesses
+
+Anthropic's engineering team describes a tool as a contract between a deterministic system and a non-deterministic agent. Given "Should I bring an umbrella today?", a model might call the weather tool, answer from memory, or ask which city you mean. So you do not write a tool the way you write an API for another developer. You write it for a reader that sees only a name, a description and a schema, and may misread any of them.
+
+Those three things are inserted into the model's context. OpenAI's guide says function definitions are injected into the system message and count against the context limit as input tokens. Anthropic's docs say the same of its own tool prompt. **Treat the name, the description and each parameter as prompt text.** The practical tests come from the vendors:
+
+- **The new-hire test.** Describe the tool as you would to a new colleague, making implicit things explicit: query formats, niche terms, how resources relate (Anthropic). OpenAI calls it the intern test: could a human use the function from only what the model sees?
+- **Say when, and when not.** Anthropic's docs call the description the most important factor in tool performance, and suggest at least three or four sentences: what it does, when to use it and when not to, what each parameter means, and what it does not return.
+- **Name parameters without ambiguity.** `user_id`, not `user` (Anthropic).
+- **Make invalid states unrepresentable.** OpenAI's example is `toggle_light(on: bool, off: bool)`, which allows both to be true. Use enums and structure instead. OpenAI recommends enabling strict mode, so calls must match the schema rather than being best effort.
+- **Poka-yoke the arguments.** Anthropic's agent for the SWE-bench coding benchmark made mistakes with relative file paths once it had left the root directory. The fix was to require absolute paths, after which the model used the tool "flawlessly". They spent more time on the tools than on the overall prompt.
+
+```jsonc
+// Before: the model must guess the unit, and whether it is safe to retry.
+{ "name": "refund", "description": "Refunds a payment.",
+  "input_schema": { "properties": { "payment_id": {"type": "string"}, "amount": {"type": "number"} } } }
+
+// After: unit in the name, a preview step, one place to look for IDs.
+{ "name": "billing_refund_charge",
+  "description": "Refund all or part of one charge, in dollars. The first call only previews; call again with confirm=true to carry it out.",
+  "input_schema": { "properties": { "charge_ref": {"type": "string", "description": "From billing_get_order_charges, e.g. c2"},
+                                    "amount_usd": {"type": "number"}, "confirm": {"type": "boolean"} } } }
+```
+
+Only the model's own reading of this text decides which tool is called, so the next sections follow the same rule: ask what the model will do with each word.
+
+## Fewer, higher-level tools
+
+A common mistake, in Anthropic's words, is tools that merely wrap existing API endpoints. Computer memory is cheap, but an agent's context is not. A `list_contacts` tool that returns everyone forces the model to read every contact token by token. Anthropic's examples of consolidation:
+
+| Instead of | Build |
+| --- | --- |
+| `list_users`, `list_events`, `create_event` | `schedule_event`, which finds availability and books |
+| `read_logs` | `search_logs`, returning matching lines with a little context |
+| `get_customer_by_id`, `list_transactions`, `list_notes` | `get_customer_context` |
+
+OpenAI gives two more rules of the same kind. Do not make the model fill in arguments your code already knows: if you have the `order_id`, define `submit_refund()` with no parameters. And combine functions that are always called in sequence. Anthropic's docs add that one tool with an `action` parameter can replace separate `create_pr`, `review_pr` and `merge_pr` tools, which reduces selection ambiguity.
+
+**Namespace** tools that sit among many others: group by service (`asana_search`, `jira_search`) and by resource. Anthropic reports that prefix versus suffix naming had non-trivial effects in its own evaluations and that the effect varies by model, so measure rather than copy.
+
+## What a tool returns
+
+Return what the next step needs, not what the API happened to send.
+
+- **Readable over cryptic.** Anthropic found that replacing arbitrary UUIDs with meaningful names, or even a 0-indexed ID scheme, significantly improved retrieval precision by reducing hallucinations. Keep an ID when a later call needs one, but make it short and say where it came from.
+- **Let the model choose the size.** Offer a `response_format` of `concise` or `detailed`. In Anthropic's Slack example the detailed response was 206 tokens and the concise one 72, about a third.
+- **Cap and steer.** Use pagination, filters, range selection and truncation with sensible defaults. Claude Code caps tool responses at 25,000 tokens by default. When you truncate, say how to narrow the request.
+- **Test the format.** JSON, XML and Markdown can all change results, and there is no universal winner.
+
+## Errors are observations
+
+When a call fails, the error text goes back into the model's context and decides the next step. The MCP specification separates two kinds. **Protocol errors** (unknown tool, malformed request) are standard JSON-RPC errors, which models are less likely to fix. **Tool execution errors** (an API failure, a bad date, a business rule) are returned in the result with `isError: true`, and clients "SHOULD" pass them to the model so it can correct itself. The spec's example is "Invalid departure date: must be in the future. Current date is 08/08/2025." Anthropic's docs say the same: instead of "failed", say what went wrong and what to try next, such as "Rate limit exceeded. Retry after 60 seconds."
+
+| Unhelpful | Helpful |
+| --- | --- |
+| `Error: 404` | `No customer with ID "maya.chen@example.com". get_customer needs an ID like cus_8f3a21. Call search with an email to find one.` |
+| `payment_state_invalid` | `This payment is already captured, so it cannot be voided. Use refund instead.` |
+| A stack trace | `Invalid which: "last". Use "latest", "all", or an order number. Try again with which="latest".` |
+
+A good message names the problem, shows what is allowed, and says whether to retry, change the arguments or stop. Whether a failure is worth retrying is something the model cannot always tell, so say it.
+
+## Destructive actions: confirm, and make retries safe
+
+The MCP spec says there "SHOULD always be a human in the loop with the ability to deny tool invocations", with confirmation prompts for operations. It also defines tool **annotations**: `readOnlyHint`, `destructiveHint`, `idempotentHint` and `openWorldHint`. Two cautions from the spec. They are hints, not guarantees, and clients must treat them as untrusted unless they come from a trusted server. The defaults are cautious: unless a tool says otherwise it is assumed to be destructive and not idempotent.
+
+A tool is **idempotent** if repeating it has no further effect. RFC 9110 defines this for HTTP methods (PUT and DELETE are idempotent, POST is not). Stripe's API shows the usual fix for operations that are not: the caller sends an idempotency key, and a retry with the same key returns the saved result instead of repeating the work. This matters for agents because replies get lost and models retry. Generate the key in your code from the request, as OpenAI advises for anything your code already knows, and never ask the model for it.
+
+A common design, not mandated by any spec, is two steps: the first call previews and changes nothing, the second carries it out after a person approves. The prompt-injection lesson in [LLM security](../../evals/llm-security/) explains why the approval belongs in your code and not in the prompt.
+
+## Try it: the tool lab
+
+The same refund task, run against a thin set of six endpoint wrappers (set A) and a set designed for the agent (set B). Edit set A's descriptions and watch which branch runs, then switch on the timeout.
+
+<ToolLab client:visible />
+
+Things to notice. The vague descriptions cost three failed calls, a result of several thousand tokens, and a refund of 42 cents that the agent reports as success. A careful rewrite of three descriptions removes all of that and brings the two sets close on tokens, because better descriptions fix guessing. What descriptions do not fix is the timeout: set A refunds twice, because nothing in its design makes a retry safe. The scripted numbers are estimates for this one task and do not generalise to yours.
+
+## How many tools is too many
+
+There is no exact number, and the vendors say so. As of 1 November 2026:
+
+- OpenAI suggests fewer than 20 functions available at the start of a turn, as a soft suggestion, and says to evaluate with different numbers.
+- Google's Gemini docs say to keep the active set to 10 to 20 tools.
+- Anthropic's docs say selection accuracy degrades once you exceed 30 to 50 tools, and that a typical five-server setup can use about 55,000 tokens of definitions before any work starts.
+
+The common answer is **dynamic loading**: give the model a search tool and load full definitions only when needed. Anthropic's tool search tool and OpenAI's tool search with deferred functions both work this way, and Anthropic says it typically cuts definition tokens by over 85 percent. It is the same idea as just-in-time retrieval in the [context window lesson](../../llm/context-window-and-caching/). Fewer, clearer tools come first; loading on demand is for when you still have many.
+
+## Evaluate the tools, not only the agent
+
+Anthropic's process is a loop you can run in an afternoon.
+
+1. **Prototype** the tools and use them yourself.
+2. **Write realistic tasks.** Strong tasks need several calls: "Customer ID 9182 reported being charged three times. Find the log entries and see whether others were affected." Weak ones are thin: "Search the payment logs for `purchase_complete`". Pair each with a checkable outcome, and avoid verifiers that reject valid alternatives.
+3. **Run each task** in a simple loop of model call and tool call, and record accuracy, number of calls, tokens, errors and runtime.
+4. **Read the transcripts**, not only the scores. Many errors on invalid parameters point to unclear descriptions. Many repeated calls point to a missing limit or filter. Anthropic found Claude adding "2025" to web search queries and fixed it with a description change.
+5. **Change one thing, re-run, and keep a held-out set** so you do not overfit. Anthropic reports that small description refinements helped its SWE-bench results markedly.
+
+[Evaluating agents](../../evals/evaluating-agents/) covers graders and pass^k for the runs themselves.
+
+<Callout title="One reader, many tools" kind="note">
+A tool that works with one model can confuse another. Re-run the evaluation when you change model, and again when you connect a tool you did not write, such as a third-party MCP server. [MCP in depth](../mcp-in-depth/) covers trusting those.
+</Callout>
+
+## What to remember
+
+- Names, descriptions and schemas are prompts for a reader that guesses. Pass the new-hire test.
+- Build a few tools around jobs, not one per endpoint. Namespace, and do not ask for what your code knows.
+- Return short, readable results with a size control. Truncate with a hint.
+- An error is the model's next instruction: say what is wrong, what is allowed and what to do.
+- Preview, confirm and make retries safe for anything that changes the world.
+- Tool counts degrade selection and cost tokens. Load on demand if you must have many.
+- Measure with realistic tasks and read the transcripts.
+
+Next: [Agent memory and context engineering](../agent-memory-and-context-engineering/).

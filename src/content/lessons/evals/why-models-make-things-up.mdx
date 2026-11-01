@@ -1,0 +1,145 @@
+---
+title: "Why models make things up, and how to cut it down"
+track: evals
+level: intermediate
+order: 2.5
+summary: "Why language models state false things fluently, the four kinds of error to look for, how to measure faithfulness against a source and factuality against the world, and which mitigations have real evidence behind them, each with its cost."
+updated: 2026-11-01
+sources:
+  - label: "Why Language Models Hallucinate (Kalai, Nachum, Vempala and Zhang, 2025)"
+    url: https://arxiv.org/abs/2509.04664
+  - label: "Survey of Hallucination in Natural Language Generation (Ji et al., 2022)"
+    url: https://arxiv.org/abs/2202.03629
+  - label: "A Survey on Hallucination in Large Language Models (Huang et al., 2023)"
+    url: https://arxiv.org/abs/2311.05232
+  - label: "NIST AI 600-1: Artificial Intelligence Risk Management Framework, Generative AI Profile (2024), section 2.2 Confabulation"
+    url: https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf
+  - label: "Towards Understanding Sycophancy in Language Models (Sharma et al., 2023)"
+    url: https://arxiv.org/abs/2310.13548
+  - label: "How Language Model Hallucinations Can Snowball (Zhang et al., 2023)"
+    url: https://arxiv.org/abs/2305.13534
+  - label: "FActScore: Fine-grained Atomic Evaluation of Factual Precision in Long Form Text Generation (Min et al., 2023)"
+    url: https://arxiv.org/abs/2305.14251
+  - label: "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks (Lewis et al., 2020)"
+    url: https://arxiv.org/abs/2005.11401
+  - label: "Teaching language models to support answers with verified quotes (Menick et al., 2022)"
+    url: https://arxiv.org/abs/2203.11147
+  - label: "R-Tuning: Instructing Large Language Models to Say 'I Don't Know' (Zhang et al., 2023)"
+    url: https://arxiv.org/abs/2311.09677
+  - label: "Language Models (Mostly) Know What They Know (Kadavath et al., 2022)"
+    url: https://arxiv.org/abs/2207.05221
+  - label: "Self-Consistency Improves Chain of Thought Reasoning in Language Models (Wang et al., 2022)"
+    url: https://arxiv.org/abs/2203.11171
+  - label: "SelfCheckGPT: Zero-Resource Black-Box Hallucination Detection (Manakul et al., 2023)"
+    url: https://arxiv.org/abs/2303.08896
+  - label: "Chain-of-Verification Reduces Hallucination in Large Language Models (Dhuliawala et al., 2023)"
+    url: https://arxiv.org/abs/2309.11495
+  - label: "The Effect of Sampling Temperature on Problem Solving in Large Language Models (Renze and Guven, 2024)"
+    url: https://arxiv.org/abs/2402.05201
+  - label: "Fine-tuning Language Models for Factuality (Tian et al., 2023)"
+    url: https://arxiv.org/abs/2311.08401
+  - label: "Does Fine-Tuning LLMs on New Knowledge Encourage Hallucinations? (Gekhman et al., 2024)"
+    url: https://arxiv.org/abs/2405.05904
+  - label: "Lost in the Middle: How Language Models Use Long Contexts (Liu et al., 2023)"
+    url: https://arxiv.org/abs/2307.03172
+  - label: "Reduce hallucinations (Claude Platform docs), read 1 November 2026"
+    url: https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/reduce-hallucinations
+  - label: "Contextual grounding check (Amazon Bedrock Guardrails), read 1 November 2026"
+    url: https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-contextual-grounding-check.html
+  - label: "Groundedness detection (Azure AI Content Safety), read 1 November 2026"
+    url: https://learn.microsoft.com/en-us/azure/ai-services/content-safety/concepts/groundedness
+  - label: "Grounding overview (Google Cloud, Gemini Enterprise Agent Platform), read 1 November 2026"
+    url: https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/grounding/overview
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import GroundingLab from '../../../components/viz/GroundingLab.tsx';
+
+A **hallucination** is fluent output that is not supported by the evidence or by the world. The beginner version is in [How a chatbot decides what to say](../../start/how-a-chatbot-answers/): a model writes what sounds right, one token at a time. This lesson goes one level down. Why does that produce false statements, what kinds are there, how do you measure them, and which fixes have evidence? A caution up front: no technique removes the problem, so the goal is to make wrong answers rarer and cheaper to catch. NIST, in its generative AI risk profile, calls this risk "confabulation".
+
+## Why it happens
+
+**The objective rewards plausible text.** A language model is trained to predict the next token of text people wrote. Fluent, specific text scores well whether or not the specific detail is right. For facts with a pattern, such as grammar or common knowledge, plausible and true usually coincide. For arbitrary facts, such as one person's birthday, there is no pattern to learn. Kalai and colleagues (2025) show that for such facts a base model should be wrong on at least roughly the share of facts that appear exactly once in its training data. Their example: if 20% of birthday facts appear once, expect at least 20% errors on those.
+
+**Rare facts.** The long tail of one-off details is where this bites hardest.
+
+**Guessing is rewarded.** The same paper argues that most benchmarks grade right or wrong, with no credit for "I don't know". Under that scoring a model that always guesses beats one that admits uncertainty, so training and evaluation push towards confident guesses. It is the exam-student bluff. Their proposed fix is to change how benchmarks score abstentions, not only to add hallucination tests.
+
+**Errors feed on themselves.** At generation time a model conditions on its own earlier output, which it never saw during training (this is called exposure bias). Zhang et al. (2023) found "snowballing": having stated a wrong answer, models went on to justify it with false claims they could separately recognise as wrong; in their tests GPT-4 and ChatGPT identified 87% and 67% of their own mistakes when asked afresh. That is a 2023 result on specific datasets.
+
+**Long context.** Liu et al. (2023) found that models used information best at the start and end of a long input, and often missed it in the middle. A passage you supplied can still be ignored.
+
+**Sycophancy, with nuance.** Sharma et al. (2023) found five assistants trained with human feedback tended to agree with the user's stated views, and that human and preference-model ratings sometimes favoured a convincing agreeable answer over a correct one. They conclude this is likely driven in part by preferences in the training data. It is related to, but not the same as, fabrication: the model may know better and still defer. If a user asserts a wrong premise ("since the warranty is ten years, ..."), expect some models to build on it.
+
+## Four kinds of error
+
+| Kind | Example | Notes |
+|---|---|---|
+| Fabricated facts and citations | A case, paper or URL that does not exist | Looks exactly like a real one; check existence |
+| Unfaithful summaries and answers | A summary adds a detail the source lacks, or contradicts it | Ji et al. call these extrinsic (unverifiable from the source) and intrinsic (contradicting it) |
+| Wrong tool outputs | Reports a database result the tool never returned, or misreads it | Log the raw tool output beside the reply |
+| Reasoning slips | A valid-looking chain with an arithmetic or logic error | See [Reasoning models](../../llm/reasoning-models/) |
+
+Huang et al. (2023) split the whole space into **factuality** hallucinations (against real-world facts) and **faithfulness** hallucinations (against the user's instruction or supplied context). The distinction matters for measurement.
+
+## How to measure it
+
+**Faithfulness** asks: is each claim supported by the text the model was given? You can check it with only the source and the answer, which is why it is the workhorse for RAG. **Factuality** asks: is it true in the world? You need an outside reference. A claim can be faithful and false (the source is wrong or stale) or true and unfaithful (the model got lucky).
+
+Score claims one at a time, because one answer mixes true and false claims. FActScore (Min et al., 2023) splits a generation into atomic facts and reports the share supported by a knowledge source; in their 2023 study of biographies, ChatGPT scored 58%. That is one dated result, but the method transfers: break answers into claims, check each.
+
+Managed services offer groundedness checks. As of 1 November 2026: Amazon Bedrock Guardrails has a contextual grounding check that scores grounding and relevance for a response against a source and a query, with thresholds you set between 0 and 0.99. Azure AI Content Safety has groundedness detection, but its documentation says it retires on 30 April 2027 and points to Microsoft Foundry evaluation tooling or your own validation. Google Cloud documents grounding with Google Search, Maps and your own data (through RAG Engine and other sources) on the Gemini Enterprise Agent Platform, with links back to sources. Treat their scores as one signal and calibrate against labels you made yourself ([Building an eval dataset](../building-an-eval-dataset/)).
+
+Model judges can do the same job, with the same bias problems: a fluent wrong answer can pass. [LLM-as-judge pitfalls](../llm-as-judge-pitfalls/) covers calibration. Give the judge the source, ask yes or no questions per claim, and compare with human labels.
+
+Finally, put **unanswerable questions** in your eval set, and track three outcomes, not two: right, wrong and abstained. A system that cuts wrong answers by abstaining on everything has not improved.
+
+Now try the lab. One question, four setups, canned answers.
+
+<GroundingLab client:visible />
+
+The pattern to take away: with no context the model guesses; with the answer in context it is mostly faithful but can embellish; with the wrong context it can still answer, and a claim can be true by luck; with permission to abstain it stays within the evidence and may leave the customer without an answer. Good retrieval ([Chunking and retrieval quality](../../rag-agents/chunking-and-retrieval-quality/)) matters as much as the instruction.
+
+## What reduces it, and the evidence
+
+Evidence levels here are my reading of the sources listed, not a ranking from a benchmark.
+
+| Technique | Evidence | Trade-off |
+|---|---|---|
+| Ground with retrieval; give sources | Research and vendor docs agree. RAG models were more factual than a parametric-only baseline in Lewis et al. (2020) | Retrieval misses, stale or conflicting passages, and unfaithful use of good ones |
+| Tell it to say "I don't know"; use only the provided text | Vendor guidance (Anthropic's docs say it can reduce false information); few independent numbers | Over-refusal on answerable questions; models may still guess |
+| Abstention training | Research: R-Tuning taught models to refuse beyond their knowledge. Kadavath et al. found models can estimate whether they know an answer, with imperfect calibration on new tasks | Needs data and training; calibration can fail out of domain |
+| Citations, then verify them | GopherCite (2022): abstaining on the third of questions it was least sure of lifted human-rated quality from 80% to 90% on one set. The authors note that claims supported by evidence are not always true | Check the quote exists and says what is claimed; fake or irrelevant citations are possible |
+| Structured output and constrained answers | Engineering practice, little published measurement | Constrains shape (an enum, or `not_found`), not truth |
+| Lower temperature | Weak. Renze and Guven (2024) found no significant effect on problem-solving accuracy from 0.0 to 1.0 | Less variation, not more truth; a model can be consistently wrong |
+| Self-consistency | Wang et al. (2022): large gains on reasoning benchmarks. SelfCheckGPT: samples disagree more when a fact is invented | N times the cost; consistent errors survive |
+| Verification or a second pass | Chain-of-Verification reduced hallucination in several tasks; Anthropic's docs suggest asking for a supporting quote per claim and retracting those without one | Extra latency and cost; a checker can share the generator's blind spots |
+| Tools for facts and arithmetic | Sound by construction: a calculator or database returns the answer | Wrong arguments, or misreporting the result; validate tool output |
+| Fine-tuning on refusals or factuality | Tian et al. (2023) improved factuality with preference training. Gekhman et al. (2024): fine-tuning on new facts raised hallucination | Teach behaviour, not new facts; needs data and upkeep |
+| Human review for high stakes | A process control, not a model fix | Slow and costly; reviewers need sources at hand |
+
+A sensible order: ground, then constrain, then allow abstention, then verify, then add tools where an answer is computable, with human review where a wrong answer is costly. Measure after each step. See [Prompting and structured output](../../llm/prompting-and-structured-output/) for the output-shaping steps and [Agents and tool use](../../rag-agents/agents-and-tool-use/) for tools.
+
+<Deep title="When should it abstain? A worked rule">
+
+Kalai et al. suggest telling the model its scoring rule: +1 for a correct answer, 0 for "I don't know", and a penalty of t / (1 - t) for a wrong one, so it should answer only if it is more than t confident. Check with t = 0.75: a wrong answer costs 0.75 / 0.25 = 3 points. If the chance of being right is p = 0.6, the expected score of answering is 0.6 - 0.4 x 3 = -0.6, worse than abstaining (0). At p = 0.75 it is exactly 0. (The paper's own text lists the penalty for t = 0.75 as 2; I computed 3 from its formula.) Choose t from the real cost of a wrong answer in your product.
+
+</Deep>
+
+## What the user sees
+
+- **Show sources**, ideally the quoted passage, so a person can check in seconds. Vendor grounding features return links for the same reason.
+- **Show uncertainty honestly.** "I could not find this in the policy documents" with a next step is better than a made-up answer or a bare refusal. Be wary of showing a model's own confidence number; it can be poorly calibrated. Evidence-based signals ("supported by two sources") are easier to defend.
+- **Make a wrong answer cheap to catch**, and for high stakes keep a person in the loop.
+- **Collect feedback** on wrong answers and feed them into your eval set, as in the dataset lesson.
+
+## What to remember
+
+- Hallucination follows from how models are trained and scored: plausible text is rewarded, and guessing often beats abstaining.
+- Look for four kinds: fabricated facts, unfaithful summaries, wrong tool outputs, reasoning slips.
+- Measure faithfulness (against the source) and factuality (against the world) claim by claim, and track right, wrong and abstained.
+- Grounding and abstention have the strongest support; lower temperature has the weakest.
+- Every mitigation has a cost; design so errors are visible and cheap.
+
+Next: [LLM security](../llm-security/), where the input is hostile rather than merely hard.

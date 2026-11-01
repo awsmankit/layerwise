@@ -1,0 +1,178 @@
+---
+title: "AI-assisted software development: from autocomplete to coding agents"
+track: llm
+level: intermediate
+order: 8
+summary: "The spectrum from autocomplete to agents that run your tests, why a fast pass-or-fail check matters most, how to give an agent context, a hands-on diff review, the security risks and their controls, what the productivity studies do and do not show, and what to keep human."
+updated: 2026-11-01
+sources:
+  - label: "GitHub Copilot in IDEs: code suggestions, chat, agents (GitHub Docs)"
+    url: https://docs.github.com/en/copilot/concepts/copilot-surfaces/copilot-in-ides
+  - label: "Building effective agents, Appendix 1: coding agents (Anthropic)"
+    url: https://www.anthropic.com/research/building-effective-agents
+  - label: "Best practices for Claude Code (Anthropic documentation)"
+    url: https://code.claude.com/docs/en/best-practices
+  - label: "AGENTS.md: a README for agents"
+    url: https://agents.md/
+  - label: "Agents in VS Code (Visual Studio Code documentation)"
+    url: https://code.visualstudio.com/docs/agents/overview
+  - label: "Cursor documentation"
+    url: https://cursor.com/docs
+  - label: "Codex documentation (OpenAI)"
+    url: https://learn.chatgpt.com/docs
+  - label: "Gemini CLI (Google, open source)"
+    url: https://github.com/google-gemini/gemini-cli
+  - label: "Jules documentation (Google)"
+    url: https://jules.google/docs
+  - label: "Aider: AI pair programming in your terminal"
+    url: https://aider.chat/
+  - label: "SWE-bench: Can Language Models Resolve Real-World GitHub Issues? (Jimenez et al., 2023)"
+    url: https://arxiv.org/abs/2310.06770
+  - label: "We Have a Package for You! Package hallucinations by code-generating LLMs (Spracklen et al., 2024)"
+    url: https://arxiv.org/abs/2406.10279
+  - label: "Asleep at the Keyboard? The security of GitHub Copilot's code contributions (Pearce et al., 2021)"
+    url: https://arxiv.org/abs/2108.09293
+  - label: "Not what you've signed up for: Indirect Prompt Injection (Greshake et al., 2023)"
+    url: https://arxiv.org/abs/2302.12173
+  - label: "OWASP Top 10 for LLM Applications: LLM01 Prompt Injection"
+    url: https://genai.owasp.org/llmrisk/llm01-prompt-injection/
+  - label: "The Impact of AI on Developer Productivity: Evidence from GitHub Copilot (Peng et al., 2023)"
+    url: https://arxiv.org/abs/2302.06590
+  - label: "Measuring the Impact of Early-2025 AI on Experienced Open-Source Developer Productivity (METR, 2025)"
+    url: https://arxiv.org/abs/2507.09089
+  - label: "METR: results from the 2025 study, marked out of date (METR blog)"
+    url: https://metr.org/blog/2025-07-10-early-2025-ai-experienced-os-dev-study/
+  - label: "We are Changing our Developer Productivity Experiment Design (METR, 24 February 2026)"
+    url: https://metr.org/blog/2026-02-24-uplift-update/
+  - label: "State of AI-assisted Software Development 2025 (DORA)"
+    url: https://dora.dev/research/2025/dora-report/
+  - label: "A New Chapter for A2A: Joining the Agentic AI Foundation (names AGENTS.md as a sibling project)"
+    url: https://a2a-protocol.org/latest/blog/2026/08/27/a-new-chapter-for-a2a-joining-the-agentic-ai-foundation/
+---
+
+import PipelineFlow from '../../../components/viz/PipelineFlow.tsx';
+import ReviewDiff from '../../../components/viz/ReviewDiff.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+
+For most engineers, writing code is the first place they use an LLM and the place they use it most. The tools range from a suggestion that finishes your line to an agent that works on a ticket for twenty minutes. The difference matters, because as the tool gets more autonomous, your job moves from writing code to specifying it, checking it and being accountable for it.
+
+## A spectrum, not a product
+
+GitHub's documentation describes the same range in one sentence: move between "code suggestions, focused edits, interactive chat, planning, and autonomous agent work as your task evolves". Laid out by how much you hand over:
+
+| Mode | What the model does | What you review | What closes the loop |
+| --- | --- | --- | --- |
+| Autocomplete | Predicts the next lines as you type | Each suggestion, as it appears | You |
+| Chat | Answers questions about code you share with it | What you copy out | You |
+| Edit in place | Proposes changes across files in the editor | A diff, before you accept it | You, running the tests |
+| Agentic coding | Reads files, runs commands, edits, runs tests, repeats | The final diff and what it ran | Tests, type checker, linter |
+| Background agent | The same, in a remote sandbox, on a task you hand off | A pull request | CI, then you |
+
+The tools come in matching types. The table gives examples of each, for what they are, as of 1 November 2026 and from each vendor's own documentation. It is not a ranking, and most products span several rows.
+
+| Type | Examples | What the documentation says it is |
+| --- | --- | --- |
+| Editor assistant | GitHub Copilot in IDEs | inline suggestions, chat and agent features inside the editor |
+| Editor agent | Agents in VS Code; Cursor's agent | agent sessions that read, edit and run code from inside the editor |
+| Terminal agent | Claude Code; Codex CLI; Gemini CLI; Aider | works in your repository from the command line; Gemini CLI is open source |
+| Cloud or background agent | Jules; Codex Cloud; Cursor cloud agents | runs in a remote environment; Jules says it clones your code in a virtual machine |
+
+Which suits you depends on your language, your repository, your organisation's rules on where code may go, and your budget.
+
+## What a coding agent actually does
+
+An agent is the loop from [Agents and tool use](../../rag-agents/agents-and-tool-use/), with tools for files and a shell:
+
+<PipelineFlow
+  title="A coding agent's loop"
+  loop
+  loopLabel="repeat until the checks pass or a limit is hit"
+  stages={[
+    { title: 'Read', detail: 'Searches the repository, opens files, reads your instruction file and the failing test or the ticket.' },
+    { title: 'Plan', detail: 'Decides which files to change and how it will know it worked. Asking for a plan before edits lets you correct a wrong direction cheaply.' },
+    { title: 'Edit', detail: 'Writes the change as edits to files, usually several small ones.' },
+    { title: 'Run', detail: 'Runs the tests, type checker, linter or build, and reads the output, including the errors.' },
+  ]}
+  client:visible
+/>
+
+Anthropic's agents guide calls coding a good fit because "code solutions are verifiable through automated tests" and agents "can iterate on solutions using test results as feedback", while noting "human review remains crucial for ensuring solutions align with broader system requirements". The SWE-bench benchmark (2,294 tasks from real GitHub issues in 12 Python repositories, introduced in 2023) is the usual yardstick. A benchmark score does not measure your repository, so try your own tasks.
+
+## Why tests and a fast feedback loop matter most
+
+Claude Code's documentation puts the problem neatly: the agent "stops when the work looks done", and without something to run, "looks done" is all it has. Give it a command that returns pass or fail, and it can fix its own mistakes before you see them. The check can be a test file, a build's exit code, a linter or a script that diffs output against a fixture.
+
+Speed matters because the agent repeats the loop. As an example, suppose a task takes 8 iterations. With a 20-second test run that is under 3 minutes of waiting. With a 10-minute suite it is 80 minutes, so the agent will be run less, with larger steps and fewer chances to correct itself. A fast, targeted test command is among the best things to put in your instruction file.
+
+Quality matters as much as speed. A test that cannot fail gives false confidence, and the exercise below has one. Ask the agent to show the command it ran and its output, not only "all tests pass". And separate two kinds of instruction: a request in a prompt is advisory, so the model may skip it, while a hook, a CI gate or a deny rule is enforced. Anything that must always happen belongs in the second kind.
+
+## Giving the agent context
+
+The agent knows your language, but not your project. Four habits help:
+
+- **An instruction file.** **AGENTS.md** is an open format described on its site as "a README for agents": setup commands, how to run tests, code style, things to avoid. Its site lists many tools that read it, and Claude Code uses a file called CLAUDE.md for the same job. Keep it short, put the test command first and never put secrets in it. A model reads it, so it guides rather than guarantees.
+- **Small, scoped tasks.** One behaviour per task, with the files named and a way to check it. A task you could not describe to a colleague in a few sentences is too big.
+- **Plan first** for anything that touches more than a couple of files, and read the plan.
+- **Version control as the undo button.** Start from a clean branch, commit before a large task, and review the diff, not the chat.
+
+## Reviewing AI-written code
+
+The author is fast, confident and has never run your production system. Failure patterns worth knowing:
+
+- **Invented names.** A study of package hallucination (Spracklen et al., 2024) generated 576,000 code samples from 16 models and found that, on average, at least 5.2 per cent of recommended packages did not exist for commercial models and 21.7 per cent for open-source ones. An attacker can register a name a model tends to invent. Check every new dependency exists, is the one you meant and is maintained.
+- **Plausible but wrong logic**, such as an off-by-one that tests never touch.
+- **Security flaws.** An early study (Pearce et al., 2021) found about 40 per cent of 1,689 programs a Copilot version generated in 89 risky scenarios were vulnerable. That is old and about one tool, but it shows why generated code needs the same security review as any other.
+- **Removed checks.** The model was told to make an error go away.
+- **Tests that assert nothing.**
+- **Secrets and licences.** Credentials in code, and code that may resemble licensed code. Follow your organisation's policy and use a licence or similarity scanner if it requires one; this is not legal advice.
+
+Try it. Each diff below is an invented change an agent might produce. Tap the lines you would flag, then submit. One of the five is fine.
+
+<ReviewDiff client:visible />
+
+## Risks and controls
+
+**Prompt injection through the repository.** The agent reads text, and it cannot always tell your instructions from instructions hidden in a README, an issue, a dependency's documentation, a web page it fetches or a tool result. [Greshake et al. (2023)](https://arxiv.org/abs/2302.12173) showed how data an application retrieves can carry attacks, and OWASP lists prompt injection first in its LLM Top 10. A stern line in the prompt is not a defence. The permission boundary is, as in [LLM application security](../../evals/llm-security/).
+
+**Running commands.** An agent in your terminal runs shell commands as you. Controls, from weakest to strongest:
+
+- Approval prompts for risky commands, and allow and deny rules for tools and files.
+- An OS-level **sandbox** that limits files and network for the commands it runs. Claude Code's documentation warns that rules "match tool calls, not intent": a file-read deny rule catches `cat .env` but not a script that opens the file. VS Code, Codex and Gemini CLI each document approvals, permissions or sandboxing; read the current pages for the tool you use.
+- A container or virtual machine with no production credentials in it, and read-only tokens.
+- Branch protection, so a person approves the merge.
+
+**Leaking secrets.** Whatever is in the agent's context goes to the model provider. Keep real keys out of prompts, files and logs, deny reads of `.env` files, and turn on secret scanning and push protection in the repository. If code must not leave your machine, an open-weight model on your own hardware is an option, with quality and speed trade-offs: see [Run a model on your own computer](../../local/run-models-locally/).
+
+## Measuring productivity honestly
+
+Self-reports and vendor numbers are weak evidence, so use the studies, with what each does and does not show:
+
+- **Peng et al. (2023)** ran a controlled experiment where developers implemented an HTTP server in JavaScript. Those with the AI pair programmer finished 55.8 per cent faster. It was one isolated, self-contained task.
+- **METR (2025)** ran a randomised trial: 16 experienced open-source developers, 246 real tasks in repositories they knew well, each task randomly allowed or disallowed early-2025 AI tools. With AI, tasks took 19 per cent longer. Developers had predicted 24 per cent faster, and afterwards still believed AI had made them 20 per cent faster. METR stresses that this does not show AI fails to speed up most developers, and now marks the results out of date.
+- **METR (February 2026)** reported a follow-up with newer tools whose data it called unreliable: more developers declined to work without AI, and 30 to 50 per cent said they withheld some tasks they did not want to do without it. Its point estimates were an 18 per cent reduction in time for returning developers and 4 per cent for new ones, with intervals that include no change, and METR said speedups were likely larger by then. It is changing its design.
+- **DORA's 2025 report** describes AI as "an amplifier, magnifying an organization's existing strengths and weaknesses".
+
+The honest reading is that the effect depends on the task, developer, codebase and tool, has been changing quickly, and that people misjudge their own speed. So measure your own: cycle time from first commit to merge, review time, rework (follow-up fixes and reverts within two weeks), and escaped defects. Lines generated and suggestions accepted measure activity, not value. Compare like with like, ideally by randomising which tasks use AI.
+
+## What to automate and what to keep human
+
+| Automate more freely | Keep a person in charge |
+| --- | --- |
+| Boilerplate, scaffolding, mechanical refactors with strong tests | Deciding what to build and what "done" means |
+| Drafting tests for existing behaviour (then review the assertions) | Architecture, trade-offs and naming that others live with |
+| Explaining unfamiliar code, summarising diffs | Authentication, payments, cryptography, data deletion |
+| Migrations you can verify with a script | Approving merges and deployments |
+| First drafts of docs and pull request descriptions | Anything touching secrets or production access |
+
+The rule underneath: the costlier and harder to undo a mistake, and the weaker your automated checks, the more human attention it needs.
+
+## What to remember
+
+- The tools run from autocomplete to background agents. The more autonomy, the more your job is specifying and checking.
+- An agent is only as good as its feedback loop: a fast, trustworthy pass-or-fail check.
+- Give it context in a short instruction file, small tasks and version control.
+- Review every diff for invented names, subtle logic, removed checks, secrets and tests that cannot fail.
+- Repository text is untrusted input. Sandbox, restrict credentials and keep a human on the merge.
+- Measure cycle time and rework in your own team. The public studies disagree because tasks and tools differ and have been changing.
+
+Next: [Reasoning models](../reasoning-models/) explains the thinking budget many coding agents use. For the loop itself, see [Agents and tool use](../../rag-agents/agents-and-tool-use/), and for writing instructions, [Prompting and structured output](../prompting-and-structured-output/).

@@ -1,1 +1,386 @@
 /* Styles for the interactive components in the wave 2 "evals" lesson batch. Keep every class under this batch's own prefix. */
+
+/* ---------- shared ---------- */
+
+.ev-note,
+.ev-illus {
+  margin: 0 0 0.7rem;
+  font-size: 0.95rem;
+  color: var(--ink-2);
+}
+.ev-illus {
+  padding: 0.35rem 0.6rem;
+  border-left: 2px solid var(--warn);
+  background: var(--tint-sun);
+  color: var(--ink);
+}
+.ev-h {
+  margin: 1.4rem 0 0.5rem;
+  font: 600 1.02rem var(--font-display);
+  color: var(--ink);
+}
+.ev-h:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 3px;
+}
+.ev-say {
+  margin: 0.8rem 0 0.4rem;
+  min-height: 2.6em;
+}
+.ev-who {
+  display: block;
+  margin-bottom: 0.1rem;
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.ev-bar-track {
+  display: block;
+  height: 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  overflow: hidden;
+}
+.ev-bar-fill {
+  display: block;
+  height: 100%;
+  background: var(--signal);
+  transition: width 0.25s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ev-bar-fill {
+    transition: none;
+  }
+}
+
+/* ---------- error-analysis board ---------- */
+
+.ev-card {
+  margin: 0 0 1rem;
+  padding: 0.6rem 0.9rem 0.6rem 1.8rem;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-sm);
+  background: var(--tint-sky);
+  font-size: 0.92rem;
+}
+.ev-card li + li {
+  margin-top: 0.2rem;
+}
+.ev-strip {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 4px;
+  margin-bottom: 0.4rem;
+}
+.viz .ev-dot {
+  min-height: 40px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.viz .ev-dot.is-done {
+  background: var(--tint-mint);
+}
+.viz .ev-dot.is-here {
+  border: 2px solid var(--signal);
+  font-weight: 700;
+}
+.viz .ev-dot:focus-visible,
+.viz .ev-tag:focus-visible,
+.viz .ev-setup:focus-visible,
+.viz .ev-mark:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.ev-chat {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0.4rem 0 0.9rem;
+}
+.ev-line {
+  margin: 0;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-sm);
+  overflow-wrap: anywhere;
+}
+.ev-customer {
+  background: var(--surface);
+}
+.ev-bot {
+  background: var(--signal-wash);
+  border-color: var(--line);
+}
+.ev-tags {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 6px;
+}
+.viz .ev-tag {
+  min-height: 44px;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  text-align: left;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.viz .ev-tag.is-on {
+  border: 2px solid var(--signal);
+  background: var(--signal-wash);
+  font-weight: 650;
+}
+.ev-feedback {
+  min-height: 2.8em;
+  margin: 0.7rem 0 0.2rem;
+  font-size: 0.95rem;
+  color: var(--ink-2);
+}
+.ev-nav,
+.ev-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.viz .ev-nav .btn,
+.viz .ev-presets .btn {
+  min-height: 44px;
+}
+.ev-bars,
+.ev-fixes,
+.ev-summary,
+.ev-claims,
+.ev-steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ev-bars li {
+  display: grid;
+  grid-template-columns: minmax(0, 11rem) minmax(0, 1fr) 2ch;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.25rem 0;
+  font-size: 0.95rem;
+}
+.ev-bar-n {
+  text-align: right;
+}
+.ev-fixes {
+  display: grid;
+  gap: 6px;
+  counter-reset: fix;
+}
+.ev-fixes li {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  font-size: 0.95rem;
+}
+.ev-fixes li.is-best {
+  border: 2px solid var(--ok);
+  background: var(--tint-mint);
+}
+.ev-fix-meta {
+  font-size: 0.85rem;
+  color: var(--ink-3);
+}
+.ev-agree {
+  margin-top: 0.9rem;
+  padding: 0.5rem 0.8rem;
+  border-left: 2px solid var(--signal);
+  background: var(--signal-wash);
+  font-size: 0.95rem;
+}
+
+/* ---------- kappa calculator ---------- */
+
+.ev-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin: 1rem 0;
+  max-width: 28rem;
+}
+.ev-cell {
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.9rem;
+  color: var(--ink-2);
+}
+.ev-cell input {
+  min-height: 44px;
+  width: 100%;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  font: 600 16px var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
+.ev-cell input:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.ev-steps {
+  display: grid;
+  gap: 0.5rem;
+}
+.ev-steps li {
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  overflow-wrap: anywhere;
+}
+
+/* ---------- grounding lab ---------- */
+
+.ev-question {
+  margin: 0 0 0.9rem;
+}
+.ev-setups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 6px;
+  margin-bottom: 1rem;
+}
+.viz .ev-setup {
+  display: grid;
+  gap: 0.15rem;
+  min-height: 56px;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  text-align: left;
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+.viz .ev-setup small {
+  font-size: 0.8rem;
+  color: var(--ink-3);
+}
+.viz .ev-setup.is-done {
+  background: var(--tint-mint);
+}
+.viz .ev-setup.is-on {
+  border: 2px solid var(--signal);
+  font-weight: 650;
+}
+.ev-given {
+  margin: 0 0 0.5rem;
+}
+.ev-source {
+  margin: 0 0 0.7rem;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-sm);
+  background: var(--tint-sky);
+  font-size: 0.92rem;
+}
+.ev-source p {
+  margin: 0;
+}
+.ev-source-label {
+  margin-bottom: 0.2rem !important;
+  font-size: 0.8rem;
+  font-weight: 650;
+  color: var(--ink-3);
+}
+.ev-output {
+  margin: 0 0 1rem;
+  padding: 0.55rem 0.8rem;
+  border-left: 3px solid var(--signal);
+  background: var(--signal-wash);
+  overflow-wrap: anywhere;
+}
+.ev-claims {
+  display: grid;
+  gap: 0.6rem;
+}
+.ev-claim {
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+}
+.ev-claim-text {
+  margin: 0 0 0.4rem;
+  overflow-wrap: anywhere;
+}
+.ev-claim-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.viz .ev-mark {
+  min-height: 44px;
+  padding: 0.35rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.viz .ev-mark.is-on {
+  border: 2px solid var(--ok);
+  background: var(--tint-mint);
+  font-weight: 650;
+}
+.viz .ev-mark.ev-no.is-on {
+  border-color: var(--warn);
+  background: var(--tint-pink);
+}
+.ev-why {
+  margin: 0.45rem 0 0;
+  font-size: 0.92rem;
+  color: var(--ink-2);
+}
+.ev-summary {
+  display: grid;
+  gap: 0.7rem;
+}
+.ev-sum-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.95rem;
+}
+.ev-sum-text {
+  margin: 0.25rem 0 0;
+  font-size: 0.9rem;
+  color: var(--ink-2);
+}
+
+@media (max-width: 480px) {
+  .ev-bars li {
+    grid-template-columns: minmax(0, 1fr) 2ch;
+  }
+  .ev-bars .ev-bar-track {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  .ev-bars li {
+    row-gap: 0.15rem;
+  }
+  .ev-strip {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+  .ev-tags {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

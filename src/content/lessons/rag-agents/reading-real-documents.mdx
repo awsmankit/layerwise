@@ -1,0 +1,251 @@
+---
+title: "Reading real documents: parsing, OCR, tables and multimodal RAG"
+track: rag-agents
+level: intermediate
+order: 1.5
+summary: Most RAG failures start before embedding. How to get text, tables and figures out of PDFs, scans and slides, choose between parsers, OCR, vision models and page-image retrieval, and test the parsing step itself.
+updated: 2026-11-01
+sources:
+  - label: "ColPali: Efficient Document Retrieval with Vision Language Models (Faysse et al., ICLR 2025)"
+    url: https://arxiv.org/abs/2407.01449
+  - label: "OmniDocBench: Benchmarking Diverse PDF Document Parsing with Comprehensive Annotations"
+    url: https://arxiv.org/abs/2412.07626
+  - label: "Introducing Contextual Retrieval (Anthropic)"
+    url: https://www.anthropic.com/news/contextual-retrieval
+  - label: "Docling (GitHub README)"
+    url: https://github.com/docling-project/docling
+  - label: "Tesseract OCR (GitHub README)"
+    url: https://github.com/tesseract-ocr/tesseract
+  - label: "Tesseract: improving the quality of the output"
+    url: https://tesseract-ocr.github.io/tessdoc/ImproveQuality.html
+  - label: "PyMuPDF (GitHub README)"
+    url: https://github.com/pymupdf/PyMuPDF
+  - label: "pdfminer.six (GitHub)"
+    url: https://github.com/pdfminer/pdfminer.six
+  - label: "Unstructured open-source library (GitHub)"
+    url: https://github.com/Unstructured-IO/unstructured
+  - label: "MinerU licence (GitHub)"
+    url: https://github.com/opendatalab/MinerU/blob/master/LICENSE.md
+  - label: "Marker (GitHub README)"
+    url: https://github.com/datalab-to/marker
+  - label: "What is Amazon Textract? (AWS documentation)"
+    url: https://docs.aws.amazon.com/textract/latest/dg/what-is.html
+  - label: "AnalyzeDocument API reference (Amazon Textract)"
+    url: https://docs.aws.amazon.com/textract/latest/dg/API_AnalyzeDocument.html
+  - label: "Block object reference (Amazon Textract)"
+    url: https://docs.aws.amazon.com/textract/latest/dg/API_Block.html
+  - label: "Amazon Textract FAQs"
+    url: https://aws.amazon.com/textract/faqs/
+  - label: "What is Azure Document Intelligence in Foundry Tools? (Microsoft Learn)"
+    url: https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/overview
+  - label: "Document Intelligence layout model (Microsoft Learn)"
+    url: https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/prebuilt/layout
+  - label: "Data, privacy and security for Document Intelligence (Microsoft Learn)"
+    url: https://learn.microsoft.com/en-us/azure/ai-foundry/responsible-ai/document-intelligence/data-privacy-security
+  - label: "Document AI overview (Google Cloud)"
+    url: https://docs.cloud.google.com/document-ai/docs/overview
+  - label: "Process documents with Gemini layout parser (Google Cloud Document AI)"
+    url: https://docs.cloud.google.com/document-ai/docs/layout-parse-chunk
+  - label: "Document AI security and compliance (Google Cloud)"
+    url: https://docs.cloud.google.com/document-ai/docs/security
+---
+
+import PipelineFlow from '../../../components/viz/PipelineFlow.tsx';
+import ReadingOrderDemo from '../../../components/viz/ReadingOrderDemo.tsx';
+import ParsingLab from '../../../components/viz/ParsingLab.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+
+The RAG lessons so far start from clean text. Real corpora do not: they are PDFs with two columns, scans of signed forms, slide decks, spreadsheets and web pages. A RAG system embeds whatever the parser hands it. If the parser mangled the page, a better embedding model, reranker or prompt cannot put the missing sentence back, and nothing raises an error. This lesson is about the step before [chunking](../chunking-and-retrieval-quality/): getting faithful text, structure and figures out of the file.
+
+<PipelineFlow
+  title="Where parsing sits in the indexing pipeline"
+  stages={[
+    { title: 'Identify', detail: 'Work out what each file and each page is: born-digital, scanned, slide, spreadsheet. Route it to the right extractor. Decide per page, not per file.' },
+    { title: 'Extract', detail: 'Get characters out, by reading the text layer, running OCR on a page image, or asking a vision model to read it.' },
+    { title: 'Clean', detail: 'Fix reading order, drop repeated headers and footers, repair hyphenation and ligatures.' },
+    { title: 'Structure', detail: 'Keep tables as tables, attach captions to figures, describe charts, record headings and page numbers.' },
+    { title: 'Chunk and tag', detail: 'Split along the document structure and attach metadata: source, page, section, date, access group.' },
+    { title: 'Embed and index', detail: 'Only now do the embedding model and the index see anything.' },
+  ]}
+  client:visible
+/>
+
+## Where RAG failures start
+
+| What goes wrong | What it looks like | Effect on RAG |
+|---|---|---|
+| Garbled characters | Ligature glyphs, words split by line-end hyphens, wrong encodings | Keyword search misses the term; embeddings of the chunk drift |
+| Lost reading order | Two columns read straight across the page | Sentences are cut in two; an answer is detached from its question |
+| Repeated page furniture | "Confidential", a title line and "Page 4 of 12" in every chunk | Chunks look alike, retrieval blurs, tokens are wasted |
+| Flattened tables | Numbers with no row or column labels | The right number is attached to the wrong label |
+| Scanned pages | No text layer, so an empty or near-empty chunk | A silent hole in the index |
+| Figures and charts | Ignored, or only the axis labels survive | Questions about a trend or diagram cannot be answered |
+
+All six are silent. The pipeline still indexes something and the model still answers, so the symptom turns up later as a wrong or missing answer that looks like a model problem.
+
+## Know your source
+
+Different files need different handling, and one corpus usually has all of them.
+
+| Source | What is really inside | What it needs |
+|---|---|---|
+| Born-digital PDF | Glyphs with coordinates. Paragraphs, reading order and tables are not stored; they are inferred | Text extraction plus layout analysis; check characters per page |
+| Scanned PDF or photo | One image per page, no text | OCR, with a clean image (Tesseract's documentation advises at least 300 dpi), then layout analysis |
+| Mixed PDF | Some pages with a text layer, some scanned | A per-page check: pages with almost no characters go to OCR |
+| Word, PowerPoint, HTML | A structured container with styles, headings and tables | Parse natively. Printing to PDF first throws the structure away |
+| Slides | Little text; meaning sits in the picture; speaker notes | Extract notes, describe images, treat a slide as the chunk |
+| Spreadsheets | Grids, several sheets, merged header cells, formulas | Keep sheet and header row; for big tables use a database, not embeddings |
+| Images and charts | Pixels | OCR for text in the image; a vision model to describe the rest |
+
+## The extraction toolbox
+
+Judge an approach by what it does well and badly on your pages, not by a ranking. The tools named are examples; licences and features as read from each project's own pages on 1 November 2026.
+
+| Approach | Does well | Does badly | Examples |
+|---|---|---|---|
+| Text-layer extraction | Exact characters, very fast, free to run | Scans; reading order; tables; page furniture | PyMuPDF (AGPL-3.0 or a commercial licence from Artifex), pdfminer.six (MIT) |
+| Layout analysis and conversion pipelines | Reading order, headings, tables, Markdown or JSON output | Model weight and set-up; odd pages; model licences can differ from code licences | Docling (code under MIT), Unstructured (Apache-2.0 open-source library), MinerU (Apache-2.0 with extra terms), Marker (code Apache-2.0, model weights under a modified OpenRAIL-M licence with revenue conditions) |
+| OCR engines | Scans and photos, run locally | Look-alike characters (8 and B, 0 and O); little structure | Tesseract (Apache-2.0; LSTM engine that works on lines, over 100 languages) |
+| Vision-language models reading page images | Odd layouts, charts, handwriting, in one step | Silent digit changes, no confidence score, cost and latency | General multimodal models; Docling supports vision models such as GraniteDocling, and Marker can optionally call an LLM |
+| Managed document services | Scale, forms and tables, per-word confidence, nothing to host | Per-page price; pages leave your boundary; features change | The three below |
+
+<Callout title="Read licences, not just READMEs">
+MinerU's licence adds a commercial-licence threshold (monthly active users above 100 million, or monthly revenue above USD 20 million) and an attribution duty for online services. PyMuPDF is AGPL-3.0 unless you buy a commercial licence. Marker's weights carry their own terms. Check the licence of the code and of every model it downloads before shipping, and ask your legal team if in doubt.
+</Callout>
+
+### The three managed services, as of 1 November 2026
+
+| | AWS: Amazon Textract | Azure: Document Intelligence in Foundry Tools | Google Cloud: Document AI |
+|---|---|---|---|
+| Text only | DetectDocumentText | Read model (printed and handwritten) | Enterprise Document OCR processor |
+| Structure | AnalyzeDocument with feature types TABLES, FORMS, QUERIES, SIGNATURES and LAYOUT. Layout blocks include title, header, footer, section header, figure, table and page number | Layout model: paragraphs with roles (title, section heading, page header, page footer, page number, footnote), tables with row and column spans, optional Markdown output | Form Parser and Layout Parser processors. Layout Parser returns context-aware chunks that carry their ancestor headings |
+| Inputs per its docs | JPEG, PNG, PDF, TIFF | PDF, images, Word, Excel, PowerPoint, HTML (v4.0, 2024-11-30) | Layout Parser page lists HTML, PDF, DOCX, PPTX, XLSX and XLSM as generally available file types |
+| Latency shape | Synchronous for single pages; asynchronous operations for multi-page files | Asynchronous analyse-then-poll | Online and batch requests |
+| Data handling, from its docs | An AWS Organizations opt-out policy stops your content being used to improve its AI services | Processed in the resource's region; input and results kept for 24 hours, then deleted, or earlier through a delete call | Google states customer content is not used to train Document AI models; online requests are processed in memory; batch inputs are stored briefly (failsafe of one day) |
+| Notes | Human review through Amazon A2I is in maintenance mode and not open to new customers since July 2026, per the API reference | Table output in Markdown uses HTML tables for merged cells. Azure Content Understanding is the LLM-powered sibling | Gemini-based Layout Parser versions were Preview or Release Candidate; some use a global endpoint that Google says is not data-residency compliant |
+
+All three change often: re-read the vendor pages before you commit, and measure on your own pages.
+
+## Reading order, in your hands
+
+A two-column page is the classic trap. Put the blocks in the order a person reads them and see what the parser would emit.
+
+<ReadingOrderDemo client:visible />
+
+The naive result is not random. It is a consistent rule applied to the wrong layout. That is why a layout model, which finds the columns first, fixes it.
+
+## The parsing lab
+
+Three invented pages and five methods. Change the method and watch the text, and the questions a RAG system could answer, change with it. Notice that no method is best on all three pages, and that a question can survive a bad parse if its sentence happens to sit somewhere safe.
+
+<ParsingLab client:visible />
+
+Three lessons from the lab. First, a clean text layer is the cheapest win, but only if the order and furniture are handled. Second, a scan returns zero characters from a text extractor, so you must count characters per page and route empty pages to OCR. Third, OCR and vision models both fail on digits, in different ways, so any field that matters (a total, a date, a dosage) should be checked against the page image or a confidence score.
+
+## Tables
+
+A table is a set of relations, not a string. Keep the relations.
+
+- **Format.** Markdown is compact and models read it well, but it cannot merge cells, so repeat the merged value on each row. HTML keeps `rowspan` and `colspan`. JSON with cell coordinates suits code. Azure's layout model, for instance, writes tables as HTML in Markdown output for exactly this reason.
+- **Repeat the header on every piece.** Example: a 400-row table split into chunks of 60 rows makes 7 chunks. Unless the header row is repeated, 6 of the 7 chunks have no column names.
+- **Row-level chunks.** For lookup questions, write each row as a sentence that carries its labels and context: `Personal group. Plan: Plus; Monthly: £8; Storage: 200 GB`. Keep the whole table too, so comparisons still work.
+- **Big tables.** Thousands of rows should not be embedded. Load them into a database and let the model write a query over the schema (text-to-SQL), with a read-only role, then return the result and the query as the citation.
+- **Captions and units.** The caption and the units line ("in thousands of pounds") belong with the table. Without them the numbers are wrong by a factor.
+
+## Layout-aware chunking
+
+Your parser now knows headings, lists, tables and figures, so use them. Split on structure first, carry the section path into each chunk, keep a table or figure whole with its caption, and drop page furniture. The helper behind this lesson's tests does exactly that. On a small example (two pages, a table with a caption, a figure with a caption) it produces four chunks:
+
+| Chunk | Kind | Section | Pages | Content |
+|---|---|---|---|---|
+| 1 | text | Claims > Escape of water | 1 | Two paragraphs packed together |
+| 2 | table | Claims > Escape of water | 2 | "Table 2: Excess by claim type" plus the table |
+| 3 | figure | Claims > Escape of water | 2 | Description of the chart plus "Figure 1: ..." |
+| 4 | text | Claims > Jewellery | 2 | One paragraph |
+
+The text that is embedded is the section path plus the chunk, for example `Claims > Jewellery` followed by the paragraph. Anthropic's Contextual Retrieval write-up reports that prepending chunk-specific context cut top-20 retrieval failures by 49 per cent when combined with BM25 on its test sets (5.7 per cent to 2.9 per cent); treat that as evidence the idea works, not as a number for your data.
+
+## Metadata that must survive
+
+Parsing is the last place where the origin of a piece of text is still known, so record it here.
+
+```python
+chunk = {
+    "text": "No single item is covered above £500.",
+    "doc_id": "policy-summary-2026-03",   # stable id, for updates and deletion
+    "source_uri": "s3://policies/home/summary.pdf",
+    "page": 4,
+    "section": ["Claims", "Jewellery"],
+    "kind": "text",                        # text | table | figure
+    "doc_date": "2026-03-01",
+    "parser": "layout-v2",                 # which parser version made this chunk
+    "acl": ["group:claims-team"],          # carried from the source, checked at query time
+}
+```
+
+Without `page` and `section` you cannot cite. Without `doc_date` you cannot prefer the newest version. Without `parser` you cannot tell which chunks to rebuild after a parser change. Without `acl` you cannot stop a person seeing a page they are not allowed to read; see [the RAG service architecture](../../systems/rag-service-architecture/) for enforcing it at retrieval time.
+
+## Multimodal: captions, page images and late interaction
+
+Three routes handle what text extraction cannot.
+
+1. **Caption at ingest.** A vision model describes each figure or chart once, and the description is indexed as text next to the caption. Cheap at query time, but descriptions can omit or invent details.
+2. **Retrieve with text, read with pictures.** Find the page with text search, then show the page image to a multimodal model when answering. See [multimodal models](../../foundations/multimodal-models/) for how such models read images.
+3. **Embed the page image.** ColPali (Faysse et al., ICLR 2025) skips parsing. It feeds the page image to a vision-language model and keeps one vector per image patch, then scores a query with late interaction: for each query token vector, take the best match among the page's patch vectors, and add up those maxima.
+
+Late interaction worked example (made-up numbers). The query has two token vectors, (1, 0) and (0, 1). The page has three patch vectors: (0.9, 0.1), (0.2, 0.8) and (0.5, 0.5). The first query vector matches best with the first patch (0.9). The second matches best with the second patch (0.8). The page scores 0.9 + 0.8 = 1.7.
+
+**What the paper claims.** It introduces ViDoRe, a benchmark of page-level retrieval tasks, and says that retrieval pipelines that depend on extracted text struggle with visual cues, and that ColPali "largely outperforms modern document retrieval pipelines while being drastically simpler, faster and end-to-end trainable". On one NVIDIA L4 GPU they measure per-page indexing of 7.22 seconds for an Unstructured-based pipeline (layout detection 0.81, OCR 2.67, captioning 3.71, encoding 0.03) against 0.39 seconds for ColPali. That is one setup on their benchmark, not a general figure.
+
+**What it costs.** The paper stores 1,030 vectors per page (1,024 image patches plus 6 text tokens), each projected to 128 values in 16 bits: 1,030 x 128 x 2 = 263,680 bytes per page, which it reports as 257.5 KB. A text pipeline with 2.1 chunks per page and a 1,024-dimension float32 vector each needs about 8,600 bytes, so the page-image index is roughly 31 times larger, about 26 GB per 100,000 pages (example arithmetic from the paper's figures). The authors say pooling vectors by centroid cluster, or quantising them to binary, can cut storage by two orders of magnitude with minimal loss; verify that on your own pages.
+
+**What it does not claim.** The benchmark is the authors' own, covers retrieval and not answering, and you still need a vision model to read the retrieved page. Check the licences of the base model and adapters you would deploy.
+
+<Deep title="Which route when">
+
+Text-heavy born-digital documents with clean layout: a parser plus text retrieval is cheaper and easier to debug. Pages where meaning lives in charts, diagrams, slides or forms: add captioning or page images. Mixed corpora often do both: text retrieval for most files and page-image retrieval for the visually rich ones, fused with the methods in [vector search and retrieval metrics](../vector-search-and-retrieval-metrics/).
+
+</Deep>
+
+## Test the parsing step itself
+
+Do not wait for end-to-end answers to reveal parsing faults. Build a small gold set: 30 to 50 pages from your own corpus, covering every source type in the table above, with the correct text, reading order and table cells written down once.
+
+- **Character and word error rate.** Edit distance divided by the reference length. Example: reference `Total due £1,284.50` against OCR output `Total due £1,2B4.5O`. Two wrong characters out of 19 is a character error rate of about 10.5 per cent, and one wrong word out of three is a word error rate of 33 per cent. Yet the answer is wrong. Rates average over everything, so also score key fields (totals, dates, identifiers) by exact match.
+- **Reading order.** Compare the produced block sequence with the true one; a normalised edit distance works.
+- **Table structure.** Check row and column counts, then compare cells one by one, including merged ones.
+- **Spot-check dashboard.** On every ingest run, report characters per page (zeros mean scans), lines that repeat on more than half the pages (furniture), table counts against expectation, and a random sample of pages shown beside their extracted text.
+
+Public benchmarks such as OmniDocBench (nine document sources, including handwritten notes and dense newspapers) show how different the failure modes are, but your pages decide. Then tie this to retrieval: recall at k before and after a parser change, as in [vector search and retrieval metrics](../vector-search-and-retrieval-metrics/), and the habits in [evals 101](../../evals/evals-101/).
+
+## Cost, latency and privacy
+
+Cost depends on pages, not users: you pay once per parse, and again each time you change the parser. Keep the original files and page images so that re-parsing needs no re-download.
+
+| Approach | Cost shape | Latency shape |
+|---|---|---|
+| Text layer | Compute only | Milliseconds to a fraction of a second per page |
+| Layout pipeline | Compute, a GPU helps | Slower per page than the text layer |
+| OCR engine | Compute | Slower than a text layer |
+| Managed service | Per-page price | Network call; synchronous for single pages, asynchronous for long files |
+| Vision model | Image tokens in, text tokens out | Seconds per page |
+
+Worked example with **example prices, not any vendor's**: 200,000 pages. A service at $1.50 per 1,000 pages costs 200 x 1.50 = $300. A vision model with an assumed 1,500 input and 1,000 output tokens per page, at $1 and $5 per million tokens, costs 200,000 x (1,500 x 1 + 1,000 x 5) / 1,000,000 = $1,300. Real prices change; read each vendor's pricing page ([Textract](https://aws.amazon.com/textract/pricing/), [Document Intelligence](https://azure.microsoft.com/en-us/pricing/details/ai-document-intelligence/), [Document AI](https://cloud.google.com/document-ai/pricing)) and run a sample first.
+
+<Callout title="Privacy: ask before a page leaves your boundary" kind="cost">
+Sending a page to a managed service or a hosted model is a disclosure of that page. Classify documents first, send only what is approved, check the region, retention and data-use terms in the vendor's own documentation, and log what went where. For sensitive or air-gapped material, run a local parser and OCR instead; Docling's README describes local execution for sensitive data. See [private and air-gapped AI](../../local/private-and-air-gapped-ai/). Also treat extracted text as untrusted input: documents can hold text that a reader never sees (white on white, tiny type), and it can carry instructions aimed at your model. See [LLM application security](../../evals/llm-security/).
+</Callout>
+
+## What to remember
+
+- Most RAG failures start before embedding, and parsing failures are silent. Add checks that make them loud.
+- Route by source type, and by page: count characters per page and send empty pages to OCR.
+- Fix reading order, drop repeated headers and footers, and keep tables, captions and headings as structure.
+- Describe approaches by what they do well and badly, then test on your own pages. No parser wins everywhere.
+- Carry source, page, section, date, parser version and access control through to every chunk.
+- Page-image retrieval such as ColPali is a real alternative for visually rich pages, with a much larger index.
+- Score the parsing step on a small gold set, with exact-match checks on key fields, before and after every change.
+- Do not send sensitive pages to an external service without approval.
+
+Next: [Chunking and retrieval quality](../chunking-and-retrieval-quality/) turns structured blocks into the passages you search. Related: [vector search and retrieval metrics](../vector-search-and-retrieval-metrics/), [RAG service architecture](../../systems/rag-service-architecture/) and [evals 101](../../evals/evals-101/).

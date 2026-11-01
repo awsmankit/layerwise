@@ -1,0 +1,157 @@
+---
+title: "Multi-agent systems: when, which pattern, and what they cost"
+track: rag-agents
+level: intermediate
+order: 4.6
+summary: "Why one agent is the default, the three reasons that justify more, six patterns for organising several, what coordination costs in tokens, time and reliability, how to bound the failures, how A2A differs from MCP, and how to test it all."
+updated: 2026-11-01
+sources:
+  - label: "Building effective agents (Anthropic)"
+    url: https://www.anthropic.com/research/building-effective-agents
+  - label: "How we built our multi-agent research system (Anthropic, June 2025)"
+    url: https://www.anthropic.com/research/multi-agent-research-system
+  - label: "Don't Build Multi-Agents (Cognition, June 2025)"
+    url: https://cognition.com/blog/dont-build-multi-agents
+  - label: "A practical guide to building agents (OpenAI)"
+    url: https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf
+  - label: "Agent orchestration (OpenAI Agents SDK documentation)"
+    url: https://openai.github.io/openai-agents-python/multi_agent/
+  - label: "Workflows: multi-agent, multi-node applications (Google Agent Development Kit)"
+    url: https://adk.dev/workflows/
+  - label: "Why Do Multi-Agent LLM Systems Fail? (Cemri et al., 2025)"
+    url: https://arxiv.org/abs/2503.13657
+  - label: "Towards a Science of Scaling Agent Systems (2025)"
+    url: https://arxiv.org/abs/2512.08296
+  - label: "Improving Factuality and Reasoning in Language Models through Multiagent Debate (Du et al., 2023)"
+    url: https://arxiv.org/abs/2305.14325
+  - label: "A2A Protocol: home (read 1 November 2026)"
+    url: https://a2a-protocol.org/latest/
+  - label: "A2A and MCP: detailed comparison"
+    url: https://a2a-protocol.org/latest/topics/a2a-and-mcp/
+  - label: "A2A specification, latest released version 1.0.0"
+    url: https://a2a-protocol.org/latest/specification/
+  - label: "A New Chapter for A2A: Joining the Agentic AI Foundation (27 August 2026)"
+    url: https://a2a-protocol.org/latest/blog/2026/08/27/a-new-chapter-for-a2a-joining-the-agentic-ai-foundation/
+  - label: "Best practices for Claude Code: what subagents cost (Anthropic documentation)"
+    url: https://code.claude.com/docs/en/best-practices
+---
+
+import PatternGallery from '../../../components/viz/PatternGallery.tsx';
+import PatternExplorer from '../../../components/viz/PatternExplorer.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+
+[Agents and tool use](../agents-and-tool-use/) showed one agent: a model, some tools and a loop. A **multi-agent system** is several of them working together. The idea is attractive and often wrong. This lesson covers how to tell the difference, and how to price the mistake before you make it.
+
+## Start with one agent
+
+Both big vendors' guides begin in the same place. Anthropic recommends "finding the simplest solution possible, and only increasing complexity when needed". OpenAI's says to "maximize a single agent's capabilities first", because more agents "can introduce additional complexity and overhead".
+
+Three reasons justify more than one:
+
+- **Parallel breadth.** The work splits into independent investigations. Anthropic found its multi-agent research setup strongest on "breadth-first queries that involve pursuing multiple independent directions simultaneously", and said parallel subagents cut research time by up to 90 per cent.
+- **Separate contexts.** Each worker reads a lot and returns a short summary, so the lead's context is not filled with raw material.
+- **Different tools or permissions.** OpenAI suggests splitting when prompts are full of conditional branches, or when a model keeps choosing the wrong tool after you have clarified them. The trouble, it says, is overlap rather than count: some agents manage more than 15 distinct tools, others struggle with fewer than 10 that overlap.
+
+Tidiness is not on the list.
+
+There is a serious argument against. Cognition's post rests on two principles: share full context, not only messages, and remember that "actions carry implicit decisions", so workers acting on different assumptions produce work that does not fit together. Anthropic agrees for some tasks: most coding tasks "involve fewer truly parallelizable tasks than research". Reading in parallel merges easily. Writing in parallel does not.
+
+## Six patterns
+
+The names differ by vendor and the shapes repeat. Anthropic names five workflows; OpenAI's guide calls two shapes *manager* (agents as tools) and *decentralized* (hand-offs); Google's Agent Development Kit documents sequential, parallel and loop workflows and a coordinator with sub-agents (as of 1 November 2026). The question to ask of each is who decides the steps: your code (a **workflow**) or a model.
+
+<PatternGallery client:visible />
+
+| Pattern | Steps decided by | Reach for it when | Watch for |
+| --- | --- | --- | --- |
+| Pipeline | your code | fixed steps, each easier alone | latency adds up; early errors flow on |
+| Routing | a classifier call | distinct kinds of input need different prompts or tools | a wrong label sends work to the wrong place |
+| Parallelisation | your code | independent subtasks known in advance | the combine step cannot check the parts |
+| Orchestrator-workers | a lead model | subtasks cannot be listed in advance | planning and synthesis calls; summaries lose detail |
+| Evaluator-optimiser | your code | clear criteria, and feedback measurably helps | at least one extra call, every time |
+| Hand-off | each agent | the right specialist changes mid-conversation | the transcript travels on; nobody owns the final check |
+
+Parallelisation has two forms in Anthropic's post: *sectioning* (different subtasks at once) and *voting* (the same task several times). Voting is a cousin of the multi-agent debate in [Du et al. (2023)](https://arxiv.org/abs/2305.14325). Both spend tokens to buy confidence.
+
+## What coordination costs
+
+**Tokens multiply.** Anthropic reports that agents use about 4 times the tokens of a chat and multi-agent systems about 15 times, and that token use alone explained 80 per cent of the variance on a browsing benchmark: part of why multi-agent setups work is that they spend more. Take a 6,000-token chat and a round example price of $6 per million tokens, blended (both example numbers):
+
+| | Tokens per task | Cost per task | 10,000 tasks a day |
+| --- | --- | --- | --- |
+| Chat | 6,000 | $0.036 | $360 |
+| Single agent (4x) | 24,000 | $0.144 | $1,440 |
+| Multi-agent (15x) | 90,000 | $0.54 | $5,400 |
+
+Anthropic's conclusion is that such systems "require tasks where the value of the task is high enough to pay for the increased performance".
+
+**Time.** A pipeline adds its steps. Parallel work waits for the slowest worker. Orchestration adds a planning call before and a synthesis call after.
+
+**Reliability multiplies.** If each step succeeds 95 per cent of the time and failures are independent, ten steps in a row succeed 0.95<sup>10</sup>, about 60 per cent; four workers that must all be right, about 81 per cent. Real steps are not independent, but the direction holds. Anthropic notes that "errors compound" in long-running agents.
+
+**Debugging and shared state.** The same prompt takes different paths on different runs, so "it did not find it" needs a trace to explain. Shared state is harder: Cognition's example has two subagents building one game, one drawing a Mario-style background and the other a bird in another style. Anthropic's workaround is to have subagents write outputs to a file store and pass back a reference, avoiding a "game of telephone".
+
+As of 1 November 2026, Claude Code's documentation puts the default plainly: a subagent costs mostly tokens, can be slower because it must gather context the main conversation already had, and by default runs the same model or a smaller one. You get "parallelism or a fresh pair of eyes", not a smarter answer.
+
+## Try it: seven ways to do one job
+
+The explorer runs one scripted task through the single agent and the six patterns. It is an illustrative simulation with example numbers, so read the shapes, not the decimals.
+
+<PatternExplorer client:visible />
+
+What the example numbers show:
+
+- **1 lookup per order, batching ticked.** One agent: about $0.017 and 7.0 s. Orchestrator: about $0.035 and 8.0 s. Twice the price and a second slower, because each worker's job is too small to repay the planning.
+- **6 lookups per order.** An agent making one tool call per turn costs $0.233 and takes 30.4 s, resending a growing context 20 times. The orchestrator costs $0.117 and takes 15.1 s. Tick batching and the single agent falls to $0.100 and 21.3 s: cheaper than the orchestrator but slower.
+- **The pipeline** costs $0.025 and 9.6 s at 6 lookups. Workflows are cheap here because your code knows every lookup in advance. Patterns where a model decides pay for that freedom.
+- **Wrong fact on.** In every pattern except evaluator-optimiser the wrong fact reaches the customer. Topology does not make workers right.
+- **Checker on.** The orchestrator run goes from $0.046 to $0.071 and 9.4 s to 15.7 s, because the bad worker and the synthesis are repeated. A hand-off repeats five calls against the parallel pattern's two, because everything after the bad step inherited it.
+
+## Failure modes, and how to bound them
+
+The [MAST study](https://arxiv.org/abs/2503.13657) (Cemri et al., 2025) annotated more than 1,600 traces from seven multi-agent frameworks and grouped 14 failure modes into three families: system design, inter-agent misalignment and task verification. Anthropic's early agents made errors like "spawning 50 subagents for simple queries" and "distracting each other with excessive updates". The controls are ordinary engineering:
+
+- **Budgets in code.** Cap steps, tokens, time and workers spawned, per run and per worker. Anthropic also put effort rules in prompts (one agent for a simple fact-find, two to four subagents for a comparison) because models misjudge effort. The prompt is guidance and the cap is the guarantee.
+- **Clear task boundaries.** Each subagent needs an objective, an output format, guidance on tools and sources, and boundaries. Vague delegation produced duplicated work and gaps.
+- **Structured hand-offs.** Workers return a schema with the answer, the record ids behind it and a confidence flag. Pass large outputs by reference.
+- **A verifier that sees the sources**, as in the explorer: the checker works because it reads the original records, not the workers' summaries.
+- **Least privilege per agent.** A reviewer that can read but not edit beats one told not to edit.
+- **Tracing and resumption.** Log every call with the agent that made it, and resume from checkpoints instead of restarting. See the [agent loop guardrails](../agents-and-tool-use/#guardrails-that-matter) and [LangGraph](../langchain-and-langgraph/).
+
+## Agents talking to agents: A2A
+
+Everything so far assumed you own all the agents. The **Agent2Agent (A2A) protocol** is for when you do not. As of 1 November 2026 its site calls it "an open standard for seamless communication and collaboration between AI agents" built by different vendors on different frameworks.
+
+- **Agent Card.** A JSON document with an agent's identity, skills, endpoint and authentication needs, typically at `/.well-known/agent-card.json`. Clients read it to decide whether the agent fits.
+- **Tasks.** A reply is a message, or a **task**: a stateful unit of work that can finish as completed, failed, canceled or rejected, or pause as input-required or auth-required. Results come back as **artifacts**.
+- **Transport.** Polling, server-sent-event streaming and push notifications; the specification defines JSON-RPC, gRPC and HTTP/REST bindings.
+- **Opacity.** A remote agent is a black box. Its memory, tools and logic stay hidden.
+
+**Who governs it.** The site says Google developed it and donated it to the Linux Foundation. An announcement dated 27 August 2026 says it was accepted as a Growth Stage project at the Agentic AI Foundation, a Linux Foundation-directed body that also hosts MCP. The latest released specification is 1.0.0, and its notes list breaking changes from 0.3, so check which version a library speaks.
+
+**Against MCP.** [MCP](../mcp-in-depth/) connects an agent to tools and data. A2A connects an agent to other agents. The A2A site says it is not a sub-agent or tool-call protocol: inside your own system, use your framework's primitives or MCP. It is for the boundary where another team, company or trust domain owns the other agent.
+
+<Callout kind="note" title="What you give up across that boundary">
+Opacity protects the other side, and it hides what Cognition says you want to share: context, assumptions, intermediate steps. You get an output back. Verify it, and treat it as untrusted input, because another agent's reply can carry injected instructions ([LLM application security](../../evals/llm-security/)). This is the lesson's reasoning, not a claim of the A2A documents.
+</Callout>
+
+## Evaluating a multi-agent system
+
+[Agent evals](../../evals/evaluating-agents/) apply: grade the outcome, not the route, run several trials and read transcripts. Anthropic notes agents may take "completely different valid paths". Beyond that:
+
+- **Compare with a single-agent baseline** on the same tasks: quality, cost per solved task, latency, pass^k. A 2025 study of 260 configurations reported relative changes from about +81 per cent on a decomposable finance task to −70 per cent on sequential planning, and found coordination stopped paying once a single agent was already strong. Those are controlled conditions, not yours.
+- **Test the parts and the whole.** Give each worker a small eval against its output schema, then run end-to-end tasks.
+- **Inject failures.** Make a worker return something wrong and see whether anything catches it, and what the repair costs.
+- **Count waste in traces:** duplicated searches, workers per task, context lost at hand-offs. Re-run everything when the lead prompt changes, since Anthropic saw small lead changes alter subagent behaviour unpredictably.
+- **Start small.** Anthropic began with about 20 queries and a rubric-based LLM judge, and human testers still caught a bias towards content farms over authoritative sources.
+
+## What to remember
+
+- Start with one agent and an eval. Add agents for parallel breadth, separate context or different tools and permissions.
+- If you can write the steps, a workflow is cheaper and steadier than a model deciding them.
+- Tokens, latency and error rates all multiply. Price the multiple first.
+- A wrong result in one worker travels on unless something that sees the sources checks it.
+- Bound the system in code: budgets, boundaries, schemas, least privilege, traces.
+- A2A is for agents across ownership boundaries and MCP is for tools. Inside one system you probably need neither.
+
+Next: [The tools and the ecosystem](../the-tools-and-ecosystem/) places skills, MCP and frameworks side by side, and [Agents and tool use](../agents-and-tool-use/) has the guardrails every worker still needs.
