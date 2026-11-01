@@ -5,7 +5,7 @@ import { releases, latestRelease } from './releases';
 import { tracks } from './tracks';
 import { glossary } from './glossary';
 import { labs } from './labs';
-// @ts-expect-error plain JavaScript helper shared with the release workflow
+// @ts-ignore plain JavaScript helper shared with the release workflow (typed or untyped depending on the checker)
 import { changelog } from '../../scripts/changelog.mjs';
 
 const semver = /^\d+\.\d+\.\d+$/;

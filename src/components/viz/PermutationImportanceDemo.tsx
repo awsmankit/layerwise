@@ -33,7 +33,7 @@ export default function PermutationImportanceDemo() {
   const values: Record<ColumnId, number> = Object.fromEntries(
     COLUMNS.map((c, i) => [c.id, repeated ? many[i].mean : once[i]]),
   ) as Record<ColumnId, number>;
-  const max = Math.max(0.5, ...COLUMNS.map((c, i) => (repeated ? many[i].max : once[i])));
+  const max = Math.max(0.5, ...COLUMNS.map((_c, i) => (repeated ? many[i].max : once[i])));
   const ranked = [...COLUMNS].sort((a, b) => values[b.id] - values[a.id]);
 
   const status = repeated

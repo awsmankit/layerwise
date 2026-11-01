@@ -9,7 +9,6 @@ import {
   isolationTrace,
   madScoreMax,
   makeAnomalyData,
-  meanPathLength,
   totalCost,
   zScoreMax,
   type AnomalyKind,

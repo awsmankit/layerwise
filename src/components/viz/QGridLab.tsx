@@ -69,7 +69,6 @@ export default function QGridLab() {
 
   const path = useMemo(() => greedyPath(w, learner.q), [w, learner.q]);
   const onPath = useMemo(() => new Set(path.cells.map(([x, y]) => cellId(w, x, y))), [path, w]);
-  const rec = recent(learner, 50);
 
   // shade by the best value in each cell, relative to the range seen so far
   const values: (number | null)[] = [];
