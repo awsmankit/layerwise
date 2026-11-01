@@ -1,0 +1,142 @@
+---
+title: "AI and work: what the evidence shows, and what it does not"
+track: responsible
+level: intermediate
+order: 16
+summary: "Tasks versus jobs, what five field studies of AI at work measured and what each leaves out, what official labour statistics and early payroll data show as of 1 November 2026, who seems to gain, what is unknown, and how workers and managers can plan without a forecast. A task sorter lets you break a job apart."
+updated: 2026-11-01
+sources:
+  - label: "Acemoglu and Autor (2010), Skills, Tasks and Technologies: Implications for Employment and Earnings (NBER Working Paper 16082)"
+    url: https://www.nber.org/papers/w16082
+  - label: "Autor (2015), Why Are There Still So Many Jobs? The History and Future of Workplace Automation (Journal of Economic Perspectives; the publisher blocks automated checks, the DOI was confirmed through Crossref)"
+    url: https://doi.org/10.1257/jep.29.3.3
+  - label: "Eloundou, Manning, Mishkin and Rock (2023), GPTs are GPTs: An Early Look at the Labor Market Impact Potential of Large Language Models"
+    url: https://arxiv.org/abs/2303.10130
+  - label: "Brynjolfsson, Li and Raymond (2025), Generative AI at Work, Quarterly Journal of Economics (blocks automated checks; DOI confirmed through Crossref)"
+    url: https://doi.org/10.1093/qje/qjae044
+  - label: "Noy and Zhang (2023), Experimental evidence on the productivity effects of generative artificial intelligence, Science (blocks automated checks; DOI confirmed through Crossref)"
+    url: https://doi.org/10.1126/science.adh2586
+  - label: "Peng, Kalliamvakou, Cihon and Demirer (2023), The Impact of AI on Developer Productivity: Evidence from GitHub Copilot"
+    url: https://arxiv.org/abs/2302.06590
+  - label: "Dell'Acqua and others (2023), Navigating the Jagged Technological Frontier (Harvard Business School Working Paper 24-013; abstract read in the working-paper PDF)"
+    url: https://mitsloan.mit.edu/sites/default/files/2023-10/SSRN-id4573321.pdf
+  - label: "METR (10 July 2025), Measuring the Impact of Early-2025 AI on Experienced Open-Source Developer Productivity"
+    url: https://metr.org/blog/2025-07-10-early-2025-ai-experienced-os-dev-study/
+  - label: "METR (24 February 2026), We are Changing our Developer Productivity Experiment Design"
+    url: https://metr.org/blog/2026-02-24-uplift-update/
+  - label: "US Bureau of Labor Statistics (27 August 2026), Employment Projections 2025-2035 (blocks automated link checks; read directly on 1 November 2026)"
+    url: https://www.bls.gov/news.release/ecopro.nr0.htm
+  - label: "US Bureau of Labor Statistics: Artificial Intelligence (AI) impacts on employment projections (same note)"
+    url: https://www.bls.gov/emp/factsheets/ai-impacts.htm
+  - label: "US Bureau of Labor Statistics: Artificial Intelligence (AI) exposure categories (same note)"
+    url: https://www.bls.gov/emp/publications/ai-exposure-categories.htm
+  - label: "Brynjolfsson, Chandar and Chen, Canaries in the Coal Mine? (Stanford Digital Economy Lab, post of 12 August 2026 on the August 2026 revision)"
+    url: https://digitaleconomy.stanford.edu/news/canariesaug26/
+  - label: "Humlum and Vestergaard, Still Waters, Rapid Currents: Early Labor Market Transformation under Generative AI (NBER Working Paper 33777, revised March 2026)"
+    url: https://www.nber.org/papers/w33777
+  - label: "Acemoglu (2024), The Simple Macroeconomics of AI (NBER Working Paper 32487)"
+    url: https://www.nber.org/papers/w32487
+  - label: "Autor (2024), Applying AI to Rebuild Middle Class Jobs (NBER Working Paper 32140)"
+    url: https://www.nber.org/papers/w32140
+  - label: "Shao and others (2025), Future of Work with AI Agents: Auditing Automation and Augmentation Potential across the U.S. Workforce"
+    url: https://arxiv.org/abs/2506.06576
+  - label: "International Labour Organization (May 2025), Generative AI and jobs: a 2025 update"
+    url: https://www.ilo.org/publications/generative-ai-and-jobs-2025-update
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import TaskSorter from '../../../components/viz/TaskSorter.tsx';
+
+<Callout title="How this lesson treats evidence" kind="note">
+Every study below was read through its own abstract or page, and the lesson says what that source covers and what it leaves out. All dates are as of 1 November 2026, and several of these results have already been revised. The lesson gives no forecast. Where a page could not be read, it says so.
+</Callout>
+
+"Will AI take my job?" assumes a job is one thing that a machine either can or cannot do. The evidence is more useful than that question, and less dramatic.
+
+## Jobs are bundles of tasks
+
+Economists model work as **tasks**, the units a job is made of. Acemoglu and Autor's task-based model lets technology replace labour in some tasks while others stay with people, and Autor's 2015 essay argues that automation both substitutes for labour and complements it. Whether a job shrinks, changes or grows depends on which tasks are affected, how much time they take, and what happens to demand for the finished work.
+
+Eloundou and colleagues rated US occupations by whether a large language model could cut the time a task takes. Combining human and GPT-4 ratings, they found around 80% of US workers could have at least 10% of their tasks affected, and about 19% could have at least half. The authors say they make no prediction about timing or adoption. That is an **exposure** measure: it says a tool could touch the task, not that an employer will use it, that it will be good enough, or that jobs will go. The US Bureau of Labor Statistics (BLS) states this directly: "Exposure does not imply job loss, productivity gains, automation probability, or wage effects."
+
+## Try it: break a job into tasks
+
+The sorter uses two invented jobs with ten tasks each. Sort each task, then change the assumptions. It is a thinking tool, not a measurement.
+
+<TaskSorter client:visible />
+
+With the starting view and the "in between" assumptions (80% of time saved on tasks AI does, 25% on tasks it assists, a quarter of the first saving spent checking), the receptionist keeps about 30.35 of 40 hours, so 9.65 hours (24%) are freed. The accountant keeps 24.25, so 15.75 hours (39%) are freed. These come from the lesson's code and tests. Two things are worth noticing. Handing every task to AI at those settings would still leave 16 of 40 hours, because checking remains. And the freed hours do not turn into a verdict on the job: that depends on whether there is more work to do, what customers will pay for, and what managers choose.
+
+## What field studies measured
+
+Five well-known studies, each read at the level of its own abstract or page. None of them measures jobs lost.
+
+| Study | Setting | Result reported | What it leaves out |
+|---|---|---|---|
+| Brynjolfsson, Li and Raymond (QJE, 2025) | 5,172 customer-support agents at one firm; staggered rollout of an AI assistant | Issues resolved per hour up 15% on average. Less experienced and lower-skilled workers improved speed and quality; the most experienced saw small speed gains and small quality declines | One firm, one tool, one kind of work |
+| Noy and Zhang (Science, 2023) | 453 college-educated professionals in a preregistered online experiment, midlevel writing tasks | Time down 40%, quality up 18%; inequality between workers fell | Short, incentivised tasks, not a whole job over months |
+| Peng and others (2023) | Recruited developers asked to write an HTTP server in JavaScript | The group with Copilot finished 55.8% faster | One small, well-defined task |
+| Dell'Acqua and others (HBS working paper, 2023) | 758 BCG consultants, GPT-4, preregistered | On 18 tasks inside the AI's range: 12.2% more tasks, 25.1% faster, higher quality. On one task outside it, AI users were 19 percentage points less likely to be correct | One firm, one model (GPT-4, 2023); the outside-range task was chosen to be hard for AI |
+| METR (2025) | 16 experienced open-source developers, 246 tasks in their own projects, each randomly allowed or not allowed AI | Tasks took 19% longer with AI. Developers had expected 24% faster, and afterwards believed it was 20% faster | By the authors' own caveats: not representative of most software work, only software, a snapshot of early-2025 tools |
+
+The numbers look contradictory (55.8% faster, 19% slower) until you compare what was measured: different tasks, people, tools and dates. The METR result also moved. METR now says on its page that the 2025 results are out of date. Its February 2026 follow-up (57 developers, 800+ tasks) gave estimates of -18% for returning developers and -4% for new ones, meaning shorter task times, but both intervals include zero, and METR calls the data "an unreliable signal of the current productivity effect of AI tools". Many developers would not work without AI, and between 30% and 50% held back tasks they would not do without it. So the honest summary is not "AI slows developers" or "AI speeds them up". It is that a careful lab could not get a clean answer twice, for good reasons.
+
+One finding from the 2025 trial is about perception, not speed: developers believed AI had sped them up by about 20% when the measured effect was the opposite. Time yourself. For how coding tools are used well, see [AI-assisted software development](../../llm/ai-assisted-software-development/).
+
+## What labour statistics show
+
+Official statistics and early payroll studies measure real employment, which the experiments cannot.
+
+- **BLS projections (published 27 August 2026).** Total employment is projected to grow 3.5%, from 170.3 million to 176.2 million, between 2025 and 2035. Office and administrative support is projected to fall 4.0% (752,100 jobs, the most of any major group), which BLS links mainly to "the continued integration of automation tools, including those powered by AI". Sales and related occupations are projected to fall 1.4%, partly from AI tools in the sales process. Data scientists are projected to grow 34.6%. BLS says AI's effects are highly uncertain: "the uncertainty about potential impacts remains very high". These are projections under stated assumptions, not forecasts, and BLS applies AI adjustments "conservatively".
+- **Payroll data, United States.** Stanford's Digital Economy Lab (revision of August 2026, using ADP payroll data) reports no "widespread, economy-wide job displacement associated with AI", but employment of 22 to 25 year olds in the most exposed occupations about 19% below where it would be had it tracked less-exposed peers (15% in the July 2025 data). Experienced workers show no comparable gap. The authors write that these are "descriptive patterns, not causal estimates", that gaps shrink when education is accounted for, and that some trends predate generative AI.
+- **Administrative data, Denmark.** Humlum and Vestergaard (revised March 2026) combine surveys and official records and find precise null effects on earnings and recorded hours, ruling out effects above 2% two years after ChatGPT launched. They find that work was reorganised: employers reassigned tasks around content generation and AI oversight.
+
+These do not conflict as much as they seem. They cover different groups (all workers or young workers in exposed jobs), different outcomes (earnings and hours, or headcount and hiring), different countries and different dates. They are early and descriptive.
+
+## Who seems to gain
+
+Several studies find the biggest gains for the least experienced: support agents, writers and, in the BCG study, below-average consultants. That points to AI narrowing gaps between people doing the same task. Autor's 2024 paper argues, as a possibility and not a forecast, that AI could extend expert judgement to more workers.
+
+The payroll evidence points to a worry on a different axis: fewer entry-level hires in exposed occupations, which could matter for how people gain experience. Neither finding cancels the other. At the level of the whole economy, Acemoglu's task-based estimate (2024, under the paper's stated assumptions) is for a total productivity gain of no more than 0.66% over ten years, and he argues the gap between capital and labour income may widen. Other economists use other assumptions. Treat every economy-wide number as a scenario, not a result.
+
+## Skills and training
+
+The evidence on training is thin. The most useful finding is the BCG one: consultants who used AI on a task outside its range did worse, and the paper says they relied too much on it, so judgement about where AI helps matters. A 2025 study asked 1,500 workers which of 844 tasks they would want AI agents to automate or assist, and compared that with experts' view of what the technology can do. It suggests mismatches in both directions, plus early signs of skill demands shifting from information handling towards interpersonal skills. It is stated preferences plus expert opinion, not observed outcomes. The International Labour Organization's 2025 update, which finds about one in four workers in an occupation with some exposure, concludes that most such jobs are more likely transformed than eliminated, and calls for managing the change through social dialogue.
+
+## What is unknown
+
+- How fast tools improve, and how fast employers change how work is organised.
+- Whether results from one firm or one task type carry over. Most studies cover knowledge work in rich countries.
+- Effects on pay beyond the first two years, and on how people build skills early in a career.
+- Which new tasks appear. Statistics built on today's job lists cannot see them.
+- Whether benefits are shared. That depends on policy, bargaining and market power as much as technology.
+
+## Planning without a forecast
+
+**For workers.** List your tasks with rough hours, as in the sorter. Try tools on low-stakes ones and time yourself. Keep up the habit of checking, because the evidence says over-trust costs people. Ask what training and rules your employer has. Build knowledge of your own field, which is what lets you tell good output from plausible output.
+
+**For managers.** Pilot with a comparison group and measure quality and rework, not just speed. Do not carry a laboratory number over to your own work. Decide in advance what happens to freed time. Use [human oversight](../human-oversight-and-when-ai-should-not-decide/) that really works, and involve staff early. Check legal duties with a qualified adviser, since this lesson gives no legal advice; see [the EU AI Act for engineers](../../evals/eu-ai-act-for-engineers/) and [running AI governance](../running-ai-governance/).
+
+<Deep title="Why one number is never enough: effect, population and measure">
+
+A productivity study answers a narrow question: for these people, on these tasks, with this tool, over this period, what changed in the measured outcome? To get from there to "this job" you need to know the share of the job's time spent on such tasks and how quality, rework and demand respond. To get to "this economy" you also need how many firms adopt, how prices move and how labour markets adjust. Every step adds assumptions.
+
+Randomised trials give strong internal validity for the setting studied. Payroll and administrative data cover real employment but cannot easily separate AI from interest rates, post-pandemic hiring patterns or education effects, which is why the Stanford authors call their results descriptive. The METR follow-up shows another hazard: if people who benefit most refuse to take part, the estimate shifts. Look for the population, the outcome, the comparison and the date before you trust a headline.
+
+</Deep>
+
+## What I could not check
+
+The BLS pages block automated link checks, so they were read directly in a browser-style fetch on 1 November 2026. The World Economic Forum's Future of Jobs Report 2025 could not be read at the time of writing, so nothing from it is used. The Science, Quarterly Journal of Economics and Journal of Economic Perspectives pages block automated checks; their DOIs were confirmed through Crossref, and the abstracts were read there. The Dell'Acqua paper was read as the 2023 working paper, and a later published version may differ.
+
+## What to remember
+
+- Jobs are bundles of tasks. Exposure of a task is not job loss.
+- Field studies measure tasks and productivity, not jobs lost, and they differ in tasks, people, tools and dates.
+- The same lab can get two different answers a year apart. Check the date and what the authors themselves say about their limits.
+- Official projections and payroll data show no broad collapse in employment so far, along with early signs of weaker hiring for young workers in exposed jobs. Both are descriptive and uncertain.
+- Gains appear largest for less experienced workers in several studies, and the evidence on careers and entry-level hiring is still open.
+- Plan by measuring your own tasks, keeping checking skills sharp and asking what happens to freed time.
+
+Next: [AI for accessibility](../ai-for-accessibility/), on where AI opens up work, school and daily life for disabled people, and where it fails them.

@@ -1,10 +1,19 @@
 import { MotionConfig } from 'motion/react';
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { stampCompletions } from '../../lib/certificate';
+import { COMFORT_EVENT, isCalm } from '../../lib/comfort';
 
 /** Every island is wrapped in this so reduced-motion preferences are honoured. */
 export function Root({ children }: { children: ReactNode }) {
-  return <MotionConfig reducedMotion="user">{children}</MotionConfig>;
+  // calm mode (the comfort menu) forces reduced motion, whatever the device asks for
+  const [calm, setCalm] = useState(isCalm);
+  useEffect(() => {
+    const sync = () => setCalm(isCalm());
+    sync();
+    window.addEventListener(COMFORT_EVENT, sync);
+    return () => window.removeEventListener(COMFORT_EVENT, sync);
+  }, []);
+  return <MotionConfig reducedMotion={calm ? 'always' : 'user'}>{children}</MotionConfig>;
 }
 
 export const EASE = [0.22, 1, 0.36, 1] as const;

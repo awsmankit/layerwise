@@ -70,6 +70,8 @@ export const KEYS = {
   name: 'layerwise:name',
   /** When each learning path was first completed, for the certificates. */
   certs: 'layerwise:certs',
+  /** Spaced-repetition boxes for review questions, the days a question was answered, and the streak switch. */
+  review: 'layerwise:review',
 } as const;
 
 export type GameRecord = { best: number; plays: number; stars?: number };

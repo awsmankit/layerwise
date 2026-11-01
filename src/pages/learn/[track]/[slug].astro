@@ -5,6 +5,7 @@ import Level from '../../../components/ui/Level.astro';
 import HairFigure from '../../../components/viz/HairFigure.tsx';
 import { figureFor } from '../../../data/figures';
 import DepthToggle from '../../../components/ui/DepthToggle.astro';
+import ReadAloud from '../../../components/ui/ReadAloud.astro';
 import GlossaryTips from '../../../components/ui/GlossaryTips.astro';
 import Quiz from '../../../components/ui/Quiz.tsx';
 import PathNext from '../../../components/ui/PathNext.tsx';
@@ -73,6 +74,7 @@ const groups = tracks.map((t) => ({
           <span>Updated {formatDate(lesson.data.updated)}</span>
         </div>
         {hasDeep && <DepthToggle />}
+        <ReadAloud />
       </div>
       <div class="lesson-hero-art"><HairFigure client:visible name={figureFor(track.id)} tone="track" intensity={0.7} play /></div>
     </div>

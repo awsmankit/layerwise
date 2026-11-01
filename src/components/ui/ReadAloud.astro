@@ -1,0 +1,256 @@
+---
+/**
+ * "Listen to this lesson": reads the lesson prose aloud with the browser's own
+ * speech synthesis (the voice comes from the device; nothing is sent anywhere).
+ * The whole control stays hidden unless `speechSynthesis` exists. The logic is
+ * in src/lib/read-aloud*.ts; this file is markup and thin glue.
+ */
+import { RATES } from '../../lib/comfort';
+---
+
+<div class="cm-listen" id="cm-listen" hidden>
+  <button type="button" class="cm-listen-btn" id="cm-listen-btn" aria-expanded="false" aria-controls="cm-player">
+    <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M3 8v4h3l4 3.5v-11L6 8z"></path>
+      <path d="M13.2 7.2a3.8 3.8 0 0 1 0 5.6M15.6 5a7 7 0 0 1 0 10"></path>
+    </svg>
+    Listen to this lesson
+  </button>
+  <p class="cm-listen-note">Read aloud by a voice on your device. Nothing is sent anywhere.</p>
+</div>
+
+<div class="cm-player" id="cm-player" role="region" aria-label="Read aloud" hidden>
+  <div class="cm-player-top">
+    <p class="cm-player-status" id="cm-player-status">Ready</p>
+    <button type="button" class="cm-pbtn cm-pbtn-text" id="cm-opts-btn" aria-expanded="false" aria-controls="cm-opts" aria-label="Voice and speed">Voice</button>
+    <button type="button" class="cm-pbtn" id="cm-close-btn" aria-label="Close the reader">
+      <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15"></path></svg>
+    </button>
+  </div>
+  <div class="cm-player-row" role="group" aria-label="Playback">
+    <button type="button" class="cm-pbtn" id="cm-prev" aria-label="Previous paragraph">
+      <svg viewBox="0 0 20 20" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M5 4h2v12H5zM16 4.5v11L8.5 10z"></path></svg>
+    </button>
+    <button type="button" class="cm-pbtn cm-pbtn-main" id="cm-play" aria-label="Play" data-state="idle">
+      <svg class="cm-i-play" viewBox="0 0 20 20" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M6 3.5v13L17 10z"></path></svg>
+      <svg class="cm-i-pause" viewBox="0 0 20 20" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M5 3.5h3.6v13H5zM11.4 3.5H15v13h-3.6z"></path></svg>
+    </button>
+    <button type="button" class="cm-pbtn" id="cm-stop" aria-label="Stop">
+      <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor" aria-hidden="true"><rect x="4" y="4" width="12" height="12" rx="1.5"></rect></svg>
+    </button>
+    <button type="button" class="cm-pbtn" id="cm-next" aria-label="Next paragraph">
+      <svg viewBox="0 0 20 20" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M13 4h2v12h-2zM4 4.5v11L11.5 10z"></path></svg>
+    </button>
+  </div>
+  <div class="cm-player-opts" id="cm-opts" hidden>
+    <label>
+      <span>Speed</span>
+      <select id="cm-rate">
+        {RATES.map((r) => <option value={String(r)}>{r}x</option>)}
+      </select>
+    </label>
+    <label>
+      <span>Voice</span>
+      <select id="cm-voice"></select>
+    </label>
+    <p>The voice comes from your device or browser, so it sounds different on each one. Code, diagrams, quizzes and tables are skipped.</p>
+  </div>
+  <p class="cm-sr" id="cm-player-live" role="status" aria-live="polite"></p>
+</div>
+
+<script>
+  import { clampRate, readComfort, saveComfort } from '../../lib/comfort';
+  import { blocksOf } from '../../lib/read-aloud-dom';
+  import { buildPlan, chooseVoice, pickVoices, voiceLabel } from '../../lib/read-aloud';
+  import { ReadAloudPlayer } from '../../lib/read-aloud-player';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T | null;
+  const synth = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window ? window.speechSynthesis : null;
+  const prose = document.querySelector<HTMLElement>('.lesson-body .prose');
+  const box = $('cm-listen');
+  const listenBtn = $<HTMLButtonElement>('cm-listen-btn');
+  const bar = $('cm-player');
+
+  if (synth && prose && box && listenBtn && bar) {
+    box.hidden = false;
+    // the lesson header is its own stacking context, so the fixed bar lives on <body> to stay above the lesson
+    document.body.appendChild(bar);
+
+    const html = document.documentElement;
+    const status = $('cm-player-status')!;
+    const live = $('cm-player-live')!;
+    const playBtn = $<HTMLButtonElement>('cm-play')!;
+    const optsBtn = $<HTMLButtonElement>('cm-opts-btn')!;
+    const opts = $('cm-opts')!;
+    const rateSel = $<HTMLSelectElement>('cm-rate')!;
+    const voiceSel = $<HTMLSelectElement>('cm-voice')!;
+
+    let blocks = blocksOf(prose, false);
+    let reading: Element | null = null;
+    let lastUserScroll = 0;
+    let forceScroll = false;
+
+    /* ---- voice and speed (saved with the comfort settings, in this browser only) ---- */
+    let rate = readComfort().rate;
+    let voiceURI = readComfort().voice;
+    let offered: SpeechSynthesisVoice[] = [];
+
+    const currentVoice = () => chooseVoice(offered, voiceURI);
+    const fillVoices = () => {
+      offered = pickVoices(synth.getVoices());
+      const chosen = currentVoice();
+      voiceSel.replaceChildren(
+        ...(offered.length ? [] : [new Option('Device default', '')]),
+        ...offered.map((v) => new Option(voiceLabel(v), v.voiceURI, false, v === chosen)),
+      );
+      voiceSel.disabled = offered.length === 0;
+    };
+    fillVoices();
+    synth.addEventListener?.('voiceschanged', fillVoices);
+    rateSel.value = String(rate);
+    if (rateSel.value !== String(rate)) rateSel.value = '1';
+
+    const make = (text: string) => {
+      const u = new SpeechSynthesisUtterance(text);
+      const v = currentVoice();
+      if (v) {
+        u.voice = v;
+        u.lang = v.lang;
+      } else u.lang = 'en-GB';
+      u.rate = rate;
+      return u;
+    };
+
+    /* ---- the player ---- */
+    const label = (b: number | null) => {
+      if (b === null) return;
+      const kind = blocks[b]?.kind === 'heading' ? 'Heading' : 'Paragraph';
+      status.textContent = `${kind} ${b + 1} of ${blocks.length}`;
+    };
+
+    const topLimit = () => (document.querySelector('.site-header')?.getBoundingClientRect().bottom ?? 60) + 16;
+    const follow = (el: Element) => {
+      const r = el.getBoundingClientRect();
+      const barTop = bar.hidden ? window.innerHeight : bar.getBoundingClientRect().top;
+      const inZone = r.top >= topLimit() && r.top <= barTop - 80;
+      const userBusy = Date.now() - lastUserScroll < 2500;
+      if (inZone || (userBusy && !forceScroll)) return;
+      forceScroll = false;
+      const smooth = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      window.scrollTo({ top: window.scrollY + r.top - window.innerHeight * 0.3, behavior: smooth ? 'smooth' : 'auto' });
+    };
+
+    const player = new ReadAloudPlayer(synth, make, buildPlan([]), {
+      onBlock: (b) => {
+        reading?.classList.remove('cm-reading');
+        reading = b === null ? null : (blocks[b]?.ref ?? null);
+        if (reading) {
+          reading.classList.add('cm-reading');
+          follow(reading);
+        }
+        label(b);
+      },
+      onState: (s) => {
+        playBtn.dataset.state = s;
+        playBtn.setAttribute('aria-label', s === 'playing' ? 'Pause' : s === 'paused' ? 'Resume' : 'Play');
+        live.textContent = s === 'playing' ? 'Reading.' : s === 'paused' ? 'Paused.' : 'Stopped.';
+        if (s === 'idle') status.textContent = 'Stopped';
+        else if (s === 'paused' && player.block !== null) label(player.block);
+      },
+    });
+
+    const prepare = () => {
+      blocks = blocksOf(prose, html.getAttribute('data-depth') === 'essentials');
+      player.setPlan(buildPlan(blocks));
+    };
+
+    /** The first paragraph on screen when the reader has already scrolled into the lesson, else the start. */
+    const startBlock = () => {
+      if (prose.getBoundingClientRect().top >= 0) return 0;
+      const top = topLimit();
+      const i = blocks.findIndex((b) => b.ref && (b.ref as Element).getBoundingClientRect().bottom > top);
+      return i < 0 ? 0 : i;
+    };
+
+    const openBar = () => {
+      bar.hidden = false;
+      document.body.classList.add('cm-listening');
+      listenBtn.setAttribute('aria-expanded', 'true');
+    };
+    const closeBar = () => {
+      player.stop();
+      bar.hidden = true;
+      document.body.classList.remove('cm-listening');
+      listenBtn.setAttribute('aria-expanded', 'false');
+      status.textContent = 'Ready';
+    };
+
+    listenBtn.addEventListener('click', () => {
+      openBar();
+      if (player.state === 'idle') {
+        prepare();
+        forceScroll = true;
+        player.play(startBlock());
+      }
+      playBtn.focus({ preventScroll: true });
+    });
+    playBtn.addEventListener('click', () => {
+      if (player.state === 'idle') {
+        prepare();
+        forceScroll = true;
+        player.play(startBlock());
+      } else player.toggle();
+    });
+    $('cm-stop')!.addEventListener('click', () => player.stop());
+    $('cm-next')!.addEventListener('click', () => {
+      forceScroll = true;
+      player.next();
+    });
+    $('cm-prev')!.addEventListener('click', () => {
+      forceScroll = true;
+      player.prev();
+    });
+    $('cm-close-btn')!.addEventListener('click', () => {
+      closeBar();
+      listenBtn.focus({ preventScroll: true });
+    });
+    bar.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeBar();
+        listenBtn.focus({ preventScroll: true });
+      }
+    });
+
+    optsBtn.addEventListener('click', () => {
+      opts.hidden = !opts.hidden;
+      optsBtn.setAttribute('aria-expanded', String(!opts.hidden));
+    });
+    rateSel.addEventListener('change', () => {
+      rate = clampRate(Number(rateSel.value));
+      saveComfort({ rate });
+      player.restartChunk();
+    });
+    voiceSel.addEventListener('change', () => {
+      voiceURI = voiceSel.value;
+      saveComfort({ voice: voiceURI });
+      player.restartChunk();
+    });
+
+    /* ---- leave quietly: navigation, a hidden tab, or a change of detail level ---- */
+    window.addEventListener('pagehide', () => synth.cancel());
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && player.state !== 'idle') player.stop();
+    });
+    new MutationObserver(() => {
+      if (player.state !== 'idle') player.stop();
+    }).observe(html, { attributes: true, attributeFilter: ['data-depth'] });
+
+    /* ---- do not fight the reader's own scrolling ---- */
+    const touched = () => (lastUserScroll = Date.now());
+    window.addEventListener('wheel', touched, { passive: true });
+    window.addEventListener('touchmove', touched, { passive: true });
+    window.addEventListener('keydown', (e) => {
+      if (['PageDown', 'PageUp', 'ArrowDown', 'ArrowUp', 'Home', 'End', ' '].includes(e.key)) touched();
+    });
+  }
+</script>

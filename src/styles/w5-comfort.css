@@ -1,0 +1,564 @@
+/* Wave 5: reading comfort menu, comfort settings and read aloud. Every class here starts with cm-. */
+
+/* ---------- the settings themselves (set on <html> before first paint) ---------- */
+
+/* text size: rem-based type scales with the root size; the header is pinned so it still fits on a phone */
+html[data-cm-text='115'] {
+  font-size: 115%;
+}
+html[data-cm-text='130'] {
+  font-size: 130%;
+}
+html[data-cm-text] .site-header .wrap {
+  height: 57.6px;
+}
+html[data-cm-text] .site-header .brand {
+  font-size: 19.2px;
+}
+@media (min-width: 1101px) {
+  html[data-cm-text] .site-header .nav {
+    font-size: 15.7px;
+  }
+}
+
+/* line spacing */
+html[data-cm-space='roomy'] body {
+  line-height: 1.95;
+}
+html[data-cm-space='roomy'] .prose p,
+html[data-cm-space='roomy'] .prose li,
+html[data-cm-space='roomy'] .takeaways li,
+html[data-cm-space='roomy'] .callout p,
+html[data-cm-space='roomy'] .lesson-head .summary {
+  line-height: 1.95;
+}
+html[data-cm-space='roomy'] .prose > * + * {
+  margin-top: 1.4em;
+}
+html[data-cm-space='roomy'] .prose li + li {
+  margin-top: 0.6em;
+}
+
+/* reading width: --measure is the lesson column's text width */
+html[data-cm-width='narrow'] {
+  --measure: 50ch;
+}
+
+/* calm mode: no decorative motion. Demos keep working, their motion is reduced (see also Root and the matchMedia
+   note in Base.astro, which make the motion library and scripted demos treat the page as "reduce motion"). */
+html[data-cm-calm] {
+  scroll-behavior: auto;
+}
+html[data-cm-calm] *,
+html[data-cm-calm] *::before,
+html[data-cm-calm] *::after {
+  animation-duration: 0.001ms !important;
+  animation-delay: 0s !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  transition-delay: 0s !important;
+  scroll-behavior: auto !important;
+}
+html[data-cm-calm].js [data-reveal],
+html[data-cm-calm].js [data-reveal].is-in {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+html[data-cm-calm].js [data-reveal] .ti .p {
+  stroke-dashoffset: 0;
+}
+html[data-cm-calm] .squig::after {
+  transform: scaleX(1);
+}
+html[data-cm-calm] .lesson-hero-art,
+html[data-cm-calm] .lp-hero h1 span,
+html[data-cm-calm] .hf,
+html[data-cm-calm] .hf * {
+  animation: none !important;
+}
+html[data-cm-calm] .confetti {
+  display: none;
+}
+
+/* ---------- the header button and panel ---------- */
+
+/* the four header buttons are one size, and finger-sized */
+.header-tools .icon-btn {
+  width: 40px;
+  height: 40px;
+}
+.cm-btn[data-active] {
+  background: var(--signal-wash);
+  border-color: var(--ink);
+}
+.cm-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: var(--gutter);
+  z-index: 60;
+  width: min(22rem, calc(100vw - 2 * var(--gutter)));
+  max-height: calc(100vh - 5rem);
+  overflow-y: auto;
+  padding: 1rem 1.1rem 0.9rem;
+  background: var(--surface);
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  border-radius: var(--r-md);
+  box-shadow: 5px 5px 0 var(--shadow-ink);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  line-height: 1.4;
+}
+.cm-panel[hidden] {
+  display: none;
+}
+@media (min-width: 1101px) {
+  /* the header row is centred at 1200px; the header itself is the anchor here */
+  .cm-panel {
+    right: max(var(--gutter), calc((100vw - 1200px) / 2 + var(--gutter)));
+  }
+}
+.cm-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+.cm-head h2 {
+  font-size: 1.25rem;
+}
+.cm-close {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin-right: -8px;
+  background: none;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  color: inherit;
+  cursor: pointer;
+}
+.cm-close:hover {
+  border-color: var(--ink);
+  background: var(--signal-wash);
+}
+.cm-group {
+  min-width: 0;
+  margin: 0 0 0.9rem;
+  padding: 0;
+  border: 0;
+}
+.cm-group legend {
+  padding: 0;
+  margin-bottom: 0.35rem;
+  font-size: 0.9rem;
+  font-weight: 650;
+  color: var(--ink-2);
+}
+.cm-seg {
+  display: flex;
+  gap: 0.4rem;
+}
+.cm-seg label {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+}
+.cm-seg input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.cm-seg span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  min-height: 2.75rem;
+  padding: 0.3rem 0.5rem;
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  font-weight: 650;
+  font-size: 0.95rem;
+  text-align: center;
+}
+.cm-seg input:hover + span {
+  background: var(--signal-wash);
+}
+.cm-seg input:checked + span {
+  background: var(--ink);
+  color: var(--paper);
+}
+/* a tick as well as the colour, so the choice never depends on colour alone */
+.cm-seg input:checked + span::before {
+  content: '';
+  width: 0.55em;
+  height: 0.3em;
+  margin-right: 0.15em;
+  border-left: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-0.08em) rotate(-45deg);
+}
+.cm-seg input:focus-visible + span,
+.cm-switch input:focus-visible ~ .cm-track {
+  outline: 3px solid var(--signal);
+  outline-offset: 2px;
+}
+
+.cm-switch {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  min-height: 2.75rem;
+  cursor: pointer;
+}
+.cm-switch input {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 3rem;
+  height: 2.75rem;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.cm-track {
+  flex: none;
+  position: relative;
+  width: 3rem;
+  height: 1.75rem;
+  margin-top: 0.5rem;
+  background: var(--paper-2);
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  transition: background 0.2s;
+}
+.cm-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 1.15rem;
+  height: 1.15rem;
+  background: var(--ink);
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+.cm-switch input:checked ~ .cm-track {
+  background: var(--signal-wash);
+}
+.cm-switch input:checked ~ .cm-track .cm-knob {
+  transform: translateX(1.25rem);
+}
+.cm-switch input:checked ~ .cm-track .cm-knob::after {
+  content: '';
+  position: absolute;
+  left: 0.3rem;
+  top: 0.28rem;
+  width: 0.5rem;
+  height: 0.25rem;
+  border-left: 2px solid var(--paper);
+  border-bottom: 2px solid var(--paper);
+  transform: rotate(-45deg);
+}
+.cm-switch-text {
+  min-width: 0;
+  padding-top: 0.2rem;
+}
+.cm-switch-text b {
+  display: block;
+  font-size: 1rem;
+}
+.cm-switch-text small {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--ink-2);
+}
+.cm-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--line);
+}
+.cm-foot p {
+  font-size: 0.85rem;
+  color: var(--ink-2);
+  text-align: right;
+}
+.cm-reset {
+  min-height: 2.5rem;
+  padding: 0.3rem 1.1rem;
+  background: none;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  color: inherit;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+.cm-reset:hover {
+  background: var(--signal-wash);
+}
+.cm-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- listen: the lesson header control and the player bar ---------- */
+
+.cm-listen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.9rem;
+  margin-top: 1rem;
+}
+.cm-listen[hidden] {
+  display: none;
+}
+.cm-listen-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0.35rem 1.1rem 0.35rem 0.9rem;
+  background: none;
+  border: 2px solid currentColor;
+  border-radius: 999px;
+  color: inherit;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 650;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.cm-listen-btn:hover,
+.cm-listen-btn[aria-expanded='true'] {
+  background: var(--on-track);
+  color: var(--track);
+}
+.cm-listen-btn:focus-visible {
+  outline: 3px solid var(--on-track);
+  outline-offset: 3px;
+}
+.cm-listen-note {
+  flex: 1 1 14rem;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  line-height: 1.4;
+  opacity: 0.92;
+}
+
+.cm-player {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 70;
+  padding: 0.6rem var(--gutter) calc(0.6rem + env(safe-area-inset-bottom, 0px));
+  background: var(--surface);
+  color: var(--ink);
+  border-top: 2px solid var(--ink);
+  box-shadow: 0 -4px 0 var(--line-soft);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+.cm-player[hidden] {
+  display: none;
+}
+.cm-player > * {
+  max-width: 40rem;
+  margin-inline: auto;
+}
+.cm-player-top {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.cm-player-status {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 650;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cm-player-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-top: 0.2rem;
+}
+.cm-pbtn {
+  display: inline-grid;
+  place-items: center;
+  min-width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+.cm-pbtn:hover {
+  background: var(--signal-wash);
+}
+.cm-pbtn-main {
+  width: 3.25rem;
+  height: 3.25rem;
+  background: var(--ink);
+  color: var(--paper);
+}
+.cm-pbtn-main:hover {
+  background: var(--ink-2);
+}
+.cm-pbtn-text {
+  flex: none;
+  width: auto;
+  white-space: nowrap;
+  padding: 0 0.9rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 650;
+}
+.cm-pbtn-text[aria-expanded='true'] {
+  background: var(--signal-wash);
+}
+#cm-close-btn {
+  border-color: transparent;
+  background: none;
+}
+#cm-close-btn:hover {
+  border-color: var(--ink);
+}
+.cm-pbtn-main .cm-i-pause,
+.cm-pbtn-main[data-state='playing'] .cm-i-play {
+  display: none;
+}
+.cm-pbtn-main[data-state='playing'] .cm-i-pause {
+  display: block;
+}
+.cm-pbtn:focus-visible,
+.cm-player select:focus-visible,
+.cm-reset:focus-visible,
+.cm-close:focus-visible {
+  outline: 3px solid var(--signal);
+  outline-offset: 2px;
+}
+.cm-player-opts {
+  display: grid;
+  grid-template-columns: 8.5rem minmax(0, 1fr);
+  gap: 0.6rem;
+  margin-top: 0.6rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--line);
+}
+.cm-player-opts[hidden] {
+  display: none;
+}
+.cm-player-opts label {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+  font-size: 0.85rem;
+  font-weight: 650;
+  color: var(--ink-2);
+}
+.cm-player-opts select {
+  width: 100%;
+  min-width: 0;
+  min-height: 2.75rem;
+  padding: 0.3rem 0.6rem;
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: var(--r-sm);
+  color: var(--ink);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 500;
+}
+.cm-player-opts p {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--ink-2);
+}
+@media (max-width: 420px) {
+  .cm-player-opts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* room under the lesson so the bar never covers its last lines */
+body.cm-listening {
+  padding-bottom: 8.5rem;
+}
+
+/* the paragraph being read: a tint, plus a bar on its left edge so it never relies on colour alone */
+.cm-reading {
+  background: color-mix(in srgb, var(--track, var(--signal)) 20%, transparent);
+  box-shadow: -0.55rem 0 0 var(--track, var(--signal)), 0.4rem 0 0 color-mix(in srgb, var(--track, var(--signal)) 20%, transparent);
+  border-radius: 2px;
+}
+html[data-theme='dark'] .cm-reading {
+  background: color-mix(in srgb, var(--track, var(--signal)) 32%, transparent);
+}
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme='light']) .cm-reading {
+    background: color-mix(in srgb, var(--track, var(--signal)) 32%, transparent);
+  }
+}
+
+@media (max-width: 420px) {
+  .cm-panel {
+    right: 0.5rem;
+    width: calc(100vw - 1rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cm-track,
+  .cm-knob,
+  .cm-listen-btn {
+    transition: none;
+  }
+}
+
+@media print {
+  .cm-wrap,
+  .cm-listen,
+  .cm-player {
+    display: none !important;
+  }
+  .cm-reading {
+    background: none;
+    box-shadow: none;
+  }
+}

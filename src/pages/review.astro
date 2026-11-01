@@ -1,0 +1,19 @@
+---
+import Base from '../layouts/Base.astro';
+import ReviewPage from '../components/ui/ReviewPage.tsx';
+import { getLessons, slugOf } from '../lib/content';
+
+const lessons = await getLessons();
+const titles = Object.fromEntries(lessons.map((l) => [`${l.data.track}/${slugOf(l)}`, l.data.title]));
+---
+
+<Base title="Daily review" description="Five short questions a day from lessons you have finished, brought back at growing gaps so they stick. Saved only in your browser.">
+  <div class="wrap">
+    <header class="page-head">
+      <h1>Daily review</h1>
+      <p>Five short questions from lessons you have finished, brought back a little later each time so they stick. No accounts, no scores to beat, and nothing leaves your browser.</p>
+    </header>
+    <noscript><p>Daily review needs JavaScript, because your progress is kept in this browser.</p></noscript>
+    <ReviewPage client:load titles={titles} />
+  </div>
+</Base>

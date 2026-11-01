@@ -1,0 +1,36 @@
+---
+/**
+ * Offline mode, page side: registers the service worker (https or localhost only, in production
+ * builds; in development only after opting in, so hot reload is never affected), links the web
+ * app manifest, and shows the small status notes. All of it fails quietly: if the worker cannot
+ * be registered the site works exactly as before.
+ */
+import { withBase } from '../../lib/url';
+---
+
+<div
+  class="pw-root"
+  id="pw-root"
+  data-sw={withBase('/sw.js')}
+  data-scope={withBase('/')}
+  data-manifest={withBase('/manifest.webmanifest')}
+  data-icon={withBase('/icons/apple-touch-icon.png')}
+  data-offline={withBase('/offline/')}
+  data-base={withBase('/')}
+  data-dev={import.meta.env.DEV ? '1' : '0'}
+>
+  <div class="pw-stack" role="status" aria-live="polite"></div>
+</div>
+
+<script>
+  import { initPwa } from '../../lib/pwa-client';
+  const root = document.getElementById('pw-root');
+  if (root) {
+    const d = root.dataset;
+    try {
+      initPwa(root, { sw: d.sw ?? '', scope: d.scope ?? '/', manifest: d.manifest ?? '', icon: d.icon ?? '', offline: d.offline ?? '', base: d.base ?? '/', dev: d.dev === '1' });
+    } catch {
+      /* offline mode is an extra: never let it break a page */
+    }
+  }
+</script>

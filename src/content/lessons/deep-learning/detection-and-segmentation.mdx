@@ -1,0 +1,198 @@
+---
+title: "Detection and segmentation: boxes, masks, IoU and mAP"
+track: deep-learning
+level: intermediate
+order: 4.1
+summary: Find every object and say where it is. Work out intersection over union by hand, see how non-maximum suppression removes duplicate boxes, compare anchor-based, one-stage and transformer detectors, learn the segmentation family from U-Net to SAM, and compute average precision step by step.
+updated: 2026-11-01
+sources:
+  - label: "Rich feature hierarchies for accurate object detection, R-CNN (Girshick et al., 2013)"
+    url: https://arxiv.org/abs/1311.2524
+  - label: "Faster R-CNN: Towards Real-Time Object Detection with Region Proposal Networks (Ren et al., 2015)"
+    url: https://arxiv.org/abs/1506.01497
+  - label: "You Only Look Once: Unified, Real-Time Object Detection (Redmon et al., 2015)"
+    url: https://arxiv.org/abs/1506.02640
+  - label: "SSD: Single Shot MultiBox Detector (Liu et al., 2015)"
+    url: https://arxiv.org/abs/1512.02325
+  - label: "Focal Loss for Dense Object Detection, RetinaNet (Lin et al., 2017)"
+    url: https://arxiv.org/abs/1708.02002
+  - label: "End-to-End Object Detection with Transformers, DETR (Carion et al., 2020)"
+    url: https://arxiv.org/abs/2005.12872
+  - label: "Deformable DETR (Zhu et al., 2020)"
+    url: https://arxiv.org/abs/2010.04159
+  - label: "Fully Convolutional Networks for Semantic Segmentation (Long et al., 2014)"
+    url: https://arxiv.org/abs/1411.4038
+  - label: "Mask R-CNN (He et al., 2017)"
+    url: https://arxiv.org/abs/1703.06870
+  - label: "Panoptic Segmentation (Kirillov et al., 2018)"
+    url: https://arxiv.org/abs/1801.00868
+  - label: "U-Net: Convolutional Networks for Biomedical Image Segmentation (Ronneberger et al., 2015)"
+    url: https://arxiv.org/abs/1505.04597
+  - label: "Segment Anything (Kirillov et al., 2023)"
+    url: https://arxiv.org/abs/2304.02643
+  - label: "SAM 2: Segment Anything in Images and Videos (Ravi et al., 2024)"
+    url: https://arxiv.org/abs/2408.00714
+  - label: "COCO detection evaluation metrics (official page)"
+    url: https://cocodataset.org/#detection-eval
+  - label: "COCO evaluation code, pycocotools cocoeval.py"
+    url: https://github.com/cocodataset/cocoapi/blob/master/PythonAPI/pycocotools/cocoeval.py
+  - label: "TIDE: A General Toolbox for Identifying Object Detection Errors (Bolya et al., 2020)"
+    url: https://arxiv.org/abs/2008.08115
+  - label: "Dive into Deep Learning: Computer Vision"
+    url: https://d2l.ai/chapter_computer-vision/index.html
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import PipelineFlow from '../../../components/viz/PipelineFlow.tsx';
+import IouLab from '../../../components/viz/IouLab.tsx';
+import NmsLab from '../../../components/viz/NmsLab.tsx';
+import SegmentationKinds from '../../../components/viz/SegmentationKinds.tsx';
+import UNetDiagram from '../../../components/viz/UNetDiagram.tsx';
+import ApWalk from '../../../components/viz/ApWalk.tsx';
+
+<Callout title="In plain words">
+Classification says what is in a picture. Detection says what is in it and where, with a box and a score around each object. Segmentation goes further and labels every pixel. A detector first proposes many overlapping boxes, then throws away the duplicates. To grade it, you ask how much each box overlaps the true one (intersection over union), and how well its ranked boxes find the real objects (average precision).
+</Callout>
+
+This lesson follows [how computers see](../how-computers-see/), which built the convolutional backbone. Here we use that backbone for harder questions. You need only the idea of a feature map, and multiplication and addition.
+
+## From one label to boxes and masks
+
+A classifier returns one answer for the whole picture: "cat". That is no use for a street scene with six people and two cars. Three tasks add detail.
+
+- **Object detection** returns a list of objects. Each has a box (four numbers), a class and a confidence score.
+- **Semantic segmentation** gives every pixel a class, so it outlines regions but does not count objects.
+- **Instance segmentation** gives each object its own mask, so two people standing together stay separate.
+
+A box is usually stored as two corners, (x1, y1) and (x2, y2). The first thing every detector needs is a way to say how close one box is to another.
+
+## Intersection over union, by hand
+
+**Intersection over union (IoU)** is the area two boxes share divided by the area they cover together. It is 1 for identical boxes and 0 for boxes that do not touch.
+
+Work one example. Box A runs from (2, 2) to (8, 6), so it is 6 wide and 4 tall: area 24. Box B runs from (4, 3) to (10, 8): 6 wide, 5 tall, area 30. They overlap from x = 4 to 8 (width 4) and y = 3 to 6 (height 3), so the intersection is 4 × 3 = 12. The union is 24 + 30 − 12 = 42, because the shared part was counted twice. IoU = 12 / 42 = 0.29.
+
+Now move boxes yourself. The solid box is the truth and the dashed one is a detector's guess. The working shows under the picture.
+
+<IouLab client:visible />
+
+Things to try:
+
+- "Spot on" scores close to 1. "A bit off" is only a modest shift and already falls to about 0.6.
+- "Half missed" has the same size as the truth, shifted by half its width. Its IoU is about a third, not a half.
+- "Far too big" contains the whole truth box, yet scores low, because the union grows. IoU punishes boxes that are too large as well as too small.
+
+The usual rule is that a detection is a hit when its IoU with a true box is at least 0.5. That cut-off is a convention, and the benchmark section shows why it matters.
+
+## How a detector makes boxes
+
+Most detectors do not draw boxes from nothing. They start from many candidates and score each.
+
+<PipelineFlow
+  client:visible
+  title="A typical detector, left to right"
+  stages={[
+    { title: 'Backbone', detail: 'A CNN or transformer turns the picture into feature maps, as in the last lesson.' },
+    { title: 'Candidates', detail: 'The network proposes a large number of boxes. Many are at different places and sizes, so most overlap the same few objects.' },
+    { title: 'Score and refine', detail: 'Each candidate gets a class score and small corrections to its corners.' },
+    { title: 'Filter', detail: 'A score cut-off drops weak boxes. Non-maximum suppression removes duplicates of the same object.' },
+    { title: 'Detections', detail: 'What is left is the final list: box, class and confidence for each object.' },
+  ]}
+  caption="DETR-style detectors skip the candidate flood and the duplicate filter, as described below."
+/>
+
+Three families of detector differ in how they make candidates (readings are from the original papers; later versions changed many details):
+
+| Family | How candidates arise | Example, and what the paper reports |
+| --- | --- | --- |
+| Two-stage | A first step proposes regions, a second step classifies and refines them. | R-CNN classified about 2,000 proposals per image. Faster R-CNN shares the backbone with a Region Proposal Network, using 9 **anchors** per position (3 scales, 3 aspect ratios), and ran at 5 frames a second with VGG-16 on a GPU. |
+| One-stage | One pass predicts boxes and classes at every position, with no separate proposal step. | YOLO divides the image into an S × S grid, each cell predicts boxes and class probabilities, and the base model ran at 45 frames a second. SSD and RetinaNet use anchor-like default boxes on several feature maps. |
+| Transformer | A fixed set of learned queries predicts the objects directly. | DETR predicts a set of 100 boxes and trains with a matching loss, so it needs no anchors and no NMS. |
+
+An **anchor** is a reference box of a chosen size and shape placed at every position. The network predicts a small shift from an anchor to a nearby real object. Faster R-CNN gives an anchor a positive label when its IoU with a true box is above 0.7, so IoU is also used in training.
+
+The RetinaNet paper argues that one-stage detectors trailed two-stage ones mainly because almost all candidates are easy background, so it reshaped the loss (focal loss) to focus on hard examples. The DETR paper reports accuracy on par with a well-tuned Faster R-CNN on COCO, but with a very long training schedule and weaker results on small objects. Deformable DETR targets both problems.
+
+## Non-maximum suppression
+
+A detector that works well gives several boxes to the same object. NMS is the usual way to keep one. It is greedy:
+
+1. Sort the boxes by score, highest first.
+2. Keep the best box. Remove every remaining box whose IoU with it is above a threshold.
+3. Take the best box still left, keep it, and repeat until none are left.
+
+Below are eight boxes around two people who stand close together, plus one wrong box on empty ground. The two people overlap each other by an IoU of about 0.28 (example numbers for a made-up scene). Move the threshold and watch.
+
+<NmsLab client:visible />
+
+What to notice:
+
+- At 0.5, each person keeps one box. The wrong box stays, because NMS compares boxes only with each other. Removing it takes a score cut-off.
+- Set the threshold low, such as 0.2, and the second person's best box is removed, because it overlaps the first person's better box by more than 0.2. The more crowded the scene, the worse this gets.
+- Set it high, such as 0.9, and the duplicates all stay. Both extremes lose.
+
+The crowd problem is why detectors that need no NMS are attractive. The YOLO paper reports that NMS added 2 to 3 points of mAP. The DETR paper reports that its set-based loss makes NMS unnecessary, and that NMS slightly lowered AP at the last layer by removing true detections. Treat these as readings from those papers.
+
+## Segmentation
+
+Segmentation labels pixels instead of drawing boxes. There are three levels, and the picture shows all three on one scene.
+
+<SegmentationKinds client:visible />
+
+**Fully convolutional networks** (Long et al.) showed that a CNN can take an image of any size and output a map of the same size, one class per pixel. **Mask R-CNN** extended Faster R-CNN with a branch that predicts a mask for each detected object, giving instance segmentation. **Panoptic segmentation** (Kirillov et al.) unifies the two: countable "things" such as people get instances, and uncountable "stuff" such as sky and road get one class each.
+
+### U-Net in one picture
+
+U-Net was designed for biomedical images, where training pictures are scarce. It has a contracting path that captures context and a symmetric expanding path that restores precise outlines. Step through it.
+
+<UNetDiagram client:visible />
+
+Skips matter because shrinking throws away exact edge positions. The U-Net paper copies the sharp early maps across and joins them to the upsampled ones.
+
+### Promptable segmentation: SAM
+
+Segment Anything (SAM) changes the question. Instead of a fixed class list, you give a prompt, such as a click or a box, and it returns a mask for what you meant. The paper trained it with a data collection loop that produced the SA-1B dataset, with over 1 billion masks on 11 million images. Because a click can be ambiguous (a shirt or the whole person?), SAM can return several masks. SAM 2 (2024) extends the idea to video.
+
+## Measuring a detector: from IoU to average precision
+
+Plain accuracy does not fit, because a detector outputs a ranked list of boxes and there is no sensible count of "true negatives". The standard measure is **average precision (AP)**, built in three steps.
+
+First, decide which boxes are hits. Take boxes from the highest score down. Each box may claim one true object that nobody has claimed yet, if its IoU with that object is at least the threshold. A second box on an already claimed object is a miss.
+
+Second, after each box, work out two numbers. **Precision** is the share of boxes so far that were hits. **Recall** is the share of true objects found so far. Going down the ranking, recall can only rise, while precision goes up and down.
+
+Third, AP is the area under the precision-against-recall curve, using at each recall the best precision at that recall or higher. Step through it with ten boxes and six real objects.
+
+<ApWalk client:visible />
+
+Notice how the threshold changes the answer. At 0.5, five of the six objects are found. At 0.75 the loosely drawn boxes stop counting, and AP falls. So COCO does not use a single threshold. Its headline AP averages over ten IoU thresholds, 0.50 to 0.95 in steps of 0.05, which rewards well-placed boxes. It also reports small, medium and large objects separately (small means under 32 × 32 pixels, and the COCO page says about 41 per cent of its objects are small). Averaging AP over classes gives **mAP**; COCO uses the two names for the same thing.
+
+For segmentation, the same method works with the IoU of masks (the overlap of two pixel sets) instead of boxes.
+
+## Where detectors fail
+
+- **Small objects.** Fewer pixels means weaker features. The DETR paper reports lower performance on small objects.
+- **Crowds and occlusion.** Overlapping true objects clash with NMS, as in the lab, and hidden parts shrink the evidence.
+- **Distribution shift.** A detector trained on daytime street photos may fail at night, in fog or on a new camera. Test on pictures that look like production.
+- **Label noise.** Loosely drawn or inconsistent ground-truth boxes cap the IoU any detector can reach, so a strict threshold can punish good predictions. Compare AP at 0.5 and 0.75.
+- **Which kind of mistake.** TIDE splits errors into six types: wrong class, wrong place, both, duplicate, background and missed object. The dominant type tells you whether to fix the labels, the model or the post-processing.
+
+<Deep title="Detail: what the benchmark code actually does">
+The COCO code matches detections in score order. For each IoU threshold, a detection takes the unmatched true object with the highest IoU that is at least the threshold. It builds the precision and recall lists, makes the precision monotone from the right, and reads it at 101 recall levels (0, 0.01 and so on up to 1), using zero where that recall is never reached. It then averages over the ten thresholds. Older PASCAL VOC evaluations used a similar idea with different rules, so numbers from different benchmarks are not directly comparable. The lab uses the plain "area under the envelope" version so you can add the slices by hand. The code behind the labs is checked against torchvision (for IoU and NMS) and pycocotools (for the 101-point AP) on the same boxes, run offline.
+</Deep>
+
+<Deep title="Detail: practical advice for builders">
+Pick the metric to match the product. A counting application cares about recall at a fixed score cut-off. A safety alert may care about missed objects far more than duplicates. Fix the NMS threshold and score cut-off on a validation set that looks like production, not on the benchmark. Start from a pretrained backbone and fine-tune, as in [self-supervised and transfer learning](../self-supervised-and-transfer-learning/). For cameras and phones, a compact one-stage detector is the usual starting point, and the trade-offs are in [edge versus cloud inference](../../edge/edge-vs-cloud-inference/).
+</Deep>
+
+## What to remember
+
+- Detection gives a box, class and score for each object. Segmentation labels pixels: semantic by class, instance by object, panoptic both.
+- IoU is shared area over combined area. The worked example gives 12 / 42 = 0.29. A hit usually means IoU of at least 0.5.
+- Detectors propose many boxes. NMS keeps the best and removes boxes that overlap it by more than a threshold. Too low removes real neighbours, too high keeps duplicates.
+- Two-stage detectors propose then refine, one-stage ones predict everywhere in one pass, and DETR predicts a set directly without anchors or NMS.
+- U-Net shrinks to see context, grows to get outlines, and uses skips to bring back detail. SAM takes a prompt and returns a mask.
+- AP is the area under the precision-recall curve. COCO averages over ten IoU thresholds. Look at small objects and error types, not one number.
+
+Next: [RNNs and LSTMs](../rnns-and-lstms/).

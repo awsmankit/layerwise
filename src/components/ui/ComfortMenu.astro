@@ -1,0 +1,157 @@
+---
+/**
+ * The comfort menu: a header icon button that opens a small panel with text
+ * size, line spacing, reading width and calm mode. Settings are saved in this
+ * browser only (src/lib/comfort.ts) and applied before first paint by the
+ * inline script in Base.astro. The panel is a non-modal dialog: Escape or a
+ * tap outside closes it and focus goes back to the button.
+ */
+---
+
+<div class="cm-wrap">
+  <button type="button" class="icon-btn cm-btn" id="comfort-toggle" aria-label="Reading comfort" aria-expanded="false" aria-controls="comfort-panel" aria-haspopup="dialog" title="Reading comfort">
+    <svg viewBox="0 0 20 20" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M2.5 16 6.6 5l4.1 11M3.9 12.4h5.4"></path>
+      <path d="M12.6 16l2.6-6.8 2.6 6.8M13.4 14h3.6"></path>
+    </svg>
+  </button>
+
+  <div class="cm-panel" id="comfort-panel" role="dialog" aria-labelledby="cm-title" hidden>
+    <div class="cm-head">
+      <h2 id="cm-title">Reading comfort</h2>
+      <button type="button" class="cm-close" data-cm-close aria-label="Close reading comfort">
+        <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15"></path></svg>
+      </button>
+    </div>
+
+    <fieldset class="cm-group">
+      <legend>Text size</legend>
+      <div class="cm-seg">
+        <label><input type="radio" name="cm-text" value="100" /><span>100%</span></label>
+        <label><input type="radio" name="cm-text" value="115" /><span>115%</span></label>
+        <label><input type="radio" name="cm-text" value="130" /><span>130%</span></label>
+      </div>
+    </fieldset>
+
+    <fieldset class="cm-group">
+      <legend>Line spacing</legend>
+      <div class="cm-seg">
+        <label><input type="radio" name="cm-space" value="normal" /><span>Normal</span></label>
+        <label><input type="radio" name="cm-space" value="roomy" /><span>Roomier</span></label>
+      </div>
+    </fieldset>
+
+    <fieldset class="cm-group">
+      <legend>Reading width</legend>
+      <div class="cm-seg">
+        <label><input type="radio" name="cm-width" value="normal" /><span>Normal</span></label>
+        <label><input type="radio" name="cm-width" value="narrow" /><span>Narrower</span></label>
+      </div>
+    </fieldset>
+
+    <div class="cm-group">
+      <label class="cm-switch">
+        <input type="checkbox" id="cm-calm" role="switch" />
+        <span class="cm-track" aria-hidden="true"><span class="cm-knob"></span></span>
+        <span class="cm-switch-text">
+          <b>Calm mode</b>
+          <small>Turns off decorative motion and softens the motion in demos. Demos still work.</small>
+        </span>
+      </label>
+    </div>
+
+    <div class="cm-foot">
+      <button type="button" class="cm-reset" id="cm-reset">Reset</button>
+      <p>Saved only in this browser.</p>
+    </div>
+    <p class="cm-sr" id="cm-status" role="status" aria-live="polite"></p>
+  </div>
+</div>
+
+<script>
+  import { applyComfort, readComfort, saveComfort, DEFAULT_COMFORT, type Comfort } from '../../lib/comfort';
+
+  const btn = document.getElementById('comfort-toggle') as HTMLButtonElement | null;
+  const panel = document.getElementById('comfort-panel') as HTMLElement | null;
+  const status = document.getElementById('cm-status');
+
+  if (btn && panel) {
+    const radios = Array.from(panel.querySelectorAll<HTMLInputElement>('input[type="radio"]'));
+    const calm = document.getElementById('cm-calm') as HTMLInputElement;
+
+    const paint = (c: Comfort) => {
+      for (const r of radios) {
+        const key = r.name.replace('cm-', '') as 'text' | 'space' | 'width';
+        r.checked = String(c[key]) === r.value;
+      }
+      calm.checked = c.calm;
+      // the button shows when something has been changed
+      btn.toggleAttribute('data-active', c.text !== 100 || c.space !== 'normal' || c.width !== 'normal' || c.calm);
+    };
+    const say = (m: string) => {
+      if (status) status.textContent = m;
+    };
+
+    paint(readComfort());
+
+    const isOpen = () => !panel.hidden;
+    const open = () => {
+      paint(readComfort());
+      panel.hidden = false;
+      btn.setAttribute('aria-expanded', 'true');
+      (panel.querySelector('input:checked') as HTMLElement | null)?.focus({ preventScroll: true });
+    };
+    const close = (restoreFocus = true) => {
+      if (!isOpen()) return;
+      panel.hidden = true;
+      btn.setAttribute('aria-expanded', 'false');
+      if (restoreFocus) btn.focus({ preventScroll: true });
+    };
+
+    btn.addEventListener('click', () => (isOpen() ? close() : open()));
+    panel.querySelector('[data-cm-close]')?.addEventListener('click', () => close());
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && isOpen()) {
+        e.stopPropagation();
+        close();
+      }
+    });
+    document.addEventListener('pointerdown', (e) => {
+      if (isOpen() && !panel.contains(e.target as Node) && !btn.contains(e.target as Node)) close(false);
+    });
+    // tabbing out of the panel closes it, so it never sits over the page while focus is elsewhere
+    panel.addEventListener('focusout', (e) => {
+      const to = e.relatedTarget as Node | null;
+      if (to && !panel.contains(to) && !btn.contains(to)) close(false);
+    });
+
+    panel.addEventListener('change', (e) => {
+      const t = e.target as HTMLInputElement;
+      if (t.type === 'radio') {
+        const key = t.name.replace('cm-', '') as 'text' | 'space' | 'width';
+        const value = key === 'text' ? Number(t.value) : t.value;
+        paint(saveComfort({ [key]: value } as Partial<Comfort>));
+        say(`${key === 'text' ? 'Text size' : key === 'space' ? 'Line spacing' : 'Reading width'} set to ${t.nextElementSibling?.textContent}.`);
+      } else if (t === calm) {
+        paint(saveComfort({ calm: calm.checked }));
+        say(calm.checked ? 'Calm mode on.' : 'Calm mode off.');
+      }
+    });
+
+    document.getElementById('cm-reset')?.addEventListener('click', () => {
+      const keep = readComfort();
+      // reset the page settings; the read-aloud speed and voice are kept
+      paint(saveComfort({ ...DEFAULT_COMFORT, rate: keep.rate, voice: keep.voice }));
+      say('Reading comfort reset to the defaults.');
+    });
+
+    // another tab or the read-aloud bar changed something
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'layerwise:comfort') {
+        const c = readComfort();
+        applyComfort(c);
+        paint(c);
+      }
+    });
+  }
+</script>

@@ -1,0 +1,525 @@
+/* Styles for the wave 5 "lessons-a" work. Keep every class under this batch's own prefix. */
+
+/* ---------- shared bits ---------- */
+
+.viz .w5a-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.8rem;
+}
+.w5a-lab {
+  font-size: 0.92rem;
+  color: var(--ink-2);
+  margin-right: 0.2rem;
+}
+.viz .w5a-chip {
+  min-height: 44px;
+  padding: 0.35rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font: 600 0.92rem var(--font-display);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.viz .w5a-chip:hover {
+  border-color: var(--signal);
+}
+.viz .w5a-chip[aria-pressed='true'] {
+  background: var(--signal);
+  border-color: var(--signal);
+  color: var(--on-signal);
+}
+.w5a-chip:focus-visible,
+.w5a-px:focus-visible,
+.w5a-iou input:focus-visible,
+.w5a-nms input:focus-visible,
+.w5a-ap input:focus-visible {
+  outline: 3px solid var(--signal);
+  outline-offset: 2px;
+}
+.w5a-note {
+  margin: 0 0 0.8rem;
+  font-size: 0.95rem;
+  color: var(--ink-2);
+}
+.w5a-sub {
+  margin: 1rem 0 0.35rem;
+  font-weight: 650;
+  font-size: 0.95rem;
+}
+.w5a-result {
+  margin: 0.8rem 0;
+  font-size: 1rem;
+}
+.w5a-svg-t {
+  font: 600 12px var(--font-display);
+  fill: var(--ink-2);
+}
+.w5a-sliders {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.2rem 1.4rem;
+  margin: 0.8rem 0;
+}
+.w5a-tablewrap {
+  overflow-x: auto;
+  margin: 0.6rem 0;
+}
+.w5a-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+.w5a-table th,
+.w5a-table td {
+  padding: 0.3rem 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid var(--line-soft);
+}
+.w5a-ap-table th,
+.w5a-ap-table td {
+  white-space: nowrap;
+}
+.w5a-table thead th {
+  color: var(--ink-3);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+.w5a-table tr.is-kept td:last-child,
+.w5a-table tr.is-kept td:nth-child(4) {
+  color: var(--ok);
+  font-weight: 650;
+}
+.w5a-table tr.is-gone {
+  color: var(--ink-3);
+}
+.w5a-sum p {
+  margin: 0.25rem 0;
+}
+.w5a-big {
+  font-size: 1.1rem;
+}
+.w5a-yes {
+  color: var(--ok);
+  font-weight: 600;
+}
+.w5a-no {
+  color: var(--warn);
+  font-weight: 600;
+}
+.w5a-steps {
+  margin: 0.3rem 0 0.6rem;
+  padding-left: 1.2rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- pixel detective ---------- */
+
+.w5a-pd {
+  --w5a-across: var(--signal);
+  --w5a-down: var(--cost);
+  --w5a-slash: var(--ok);
+  --w5a-backslash: var(--warn);
+}
+.w5a-pd-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 330px) minmax(0, 1fr);
+  gap: 1.2rem 2rem;
+  align-items: start;
+}
+@media (max-width: 720px) {
+  .w5a-pd-stage {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.w5a-pd-board {
+  position: relative;
+  width: 100%;
+  max-width: 330px;
+}
+.w5a-pd-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  padding: 2px;
+  background: var(--line);
+  border-radius: 6px;
+}
+.viz .w5a-px {
+  aspect-ratio: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: var(--surface);
+  color: var(--ink-3);
+  font: 600 0.9rem var(--font-display);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.viz .w5a-px.is-on {
+  background: var(--ink);
+  color: var(--surface);
+}
+.w5a-pd-over {
+  position: absolute;
+  inset: 2px;
+  width: calc(100% - 4px);
+  height: calc(100% - 4px);
+  pointer-events: none;
+  overflow: visible;
+}
+.w5a-halo {
+  stroke: var(--surface);
+  stroke-width: 0.26;
+  stroke-linecap: round;
+}
+.w5a-stroke {
+  stroke-width: 0.14;
+  stroke-linecap: round;
+}
+.w5a-d-across .w5a-stroke {
+  stroke: var(--w5a-across);
+}
+.w5a-d-down .w5a-stroke {
+  stroke: var(--w5a-down);
+}
+.w5a-d-slash .w5a-stroke {
+  stroke: var(--w5a-slash);
+}
+.w5a-d-backslash .w5a-stroke {
+  stroke: var(--w5a-backslash);
+}
+.w5a-found {
+  fill: none;
+  stroke-width: 0.1;
+  stroke-dasharray: 0.28 0.2;
+}
+.w5a-found-sure {
+  stroke: var(--ok);
+}
+.w5a-found-maybe,
+.w5a-found-torn {
+  stroke: var(--cost);
+}
+.w5a-pd-head {
+  margin: 0 0 0.3rem;
+  font-weight: 650;
+  font-size: 1.05rem;
+}
+.w5a-pd-detail {
+  margin: 0;
+  color: var(--ink-2);
+}
+.w5a-counts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem 0.8rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.92rem;
+}
+.w5a-counts li {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.w5a-swatch {
+  flex: none;
+  width: 1rem;
+  height: 0.3rem;
+  border-radius: 2px;
+}
+.w5a-counts .w5a-d-across .w5a-swatch {
+  background: var(--w5a-across);
+}
+.w5a-counts .w5a-d-down .w5a-swatch {
+  background: var(--w5a-down);
+}
+.w5a-counts .w5a-d-slash .w5a-swatch {
+  background: var(--w5a-slash);
+}
+.w5a-counts .w5a-d-backslash .w5a-swatch {
+  background: var(--w5a-backslash);
+}
+.w5a-bars {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.w5a-bars li {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr) 3rem;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.92rem;
+}
+.w5a-bar-track {
+  display: block;
+  height: 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--surface);
+}
+.w5a-bar-fill {
+  display: block;
+  height: 100%;
+  background: var(--ink-3);
+  transition: width 0.3s var(--ease);
+}
+.w5a-bars li.is-top .w5a-bar-fill {
+  background: var(--ok);
+}
+.w5a-bars li.is-top .w5a-bar-name {
+  font-weight: 650;
+}
+.w5a-bar-pct {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- IoU lab and NMS lab ---------- */
+
+.w5a-iou-svg,
+.w5a-nms-svg,
+.w5a-ap-svg,
+.w5a-unet-svg {
+  display: block;
+  width: 100%;
+  max-width: 560px;
+  height: auto;
+  margin: 0 auto 0.6rem;
+}
+.w5a-iou-bg {
+  fill: var(--surface);
+  stroke: var(--line);
+}
+.w5a-truth {
+  fill: color-mix(in srgb, var(--ok) 14%, transparent);
+  stroke: var(--ok);
+  stroke-width: 3;
+}
+.w5a-guess {
+  fill: color-mix(in srgb, var(--signal) 12%, transparent);
+  stroke: var(--signal);
+  stroke-width: 3;
+  stroke-dasharray: 8 5;
+  cursor: grab;
+  touch-action: none;
+}
+.w5a-inter {
+  fill: color-mix(in srgb, var(--cost) 40%, transparent);
+}
+.w5a-person circle,
+.w5a-person rect {
+  fill: var(--ink-3);
+  opacity: 0.35;
+}
+.w5a-box-kept rect {
+  fill: color-mix(in srgb, var(--signal) 10%, transparent);
+  stroke: var(--signal);
+  stroke-width: 2.5;
+}
+.w5a-box-gone rect {
+  fill: none;
+  stroke: var(--ink-3);
+  stroke-width: 1.2;
+  stroke-dasharray: 4 4;
+  opacity: 0.55;
+}
+.w5a-box-id {
+  font: 700 12px var(--font-display);
+  fill: var(--signal-ink);
+}
+html[data-theme='dark'] .w5a-box-id {
+  fill: var(--ink);
+}
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme='light']) .w5a-box-id {
+    fill: var(--ink);
+  }
+}
+
+/* ---------- AP walk ---------- */
+
+.w5a-axis {
+  stroke: var(--ink-3);
+  stroke-width: 1.2;
+}
+.w5a-ap-line {
+  stroke: var(--signal);
+  stroke-width: 2.5;
+}
+.w5a-ap-area {
+  fill: color-mix(in srgb, var(--signal) 18%, transparent);
+}
+.w5a-pt-hit {
+  fill: var(--ok);
+  stroke: var(--ok);
+  stroke-width: 2;
+}
+.w5a-pt-miss {
+  fill: var(--surface);
+  stroke: var(--warn);
+  stroke-width: 2.5;
+}
+
+/* ---------- segmentation kinds ---------- */
+
+.w5a-seg-grid {
+  display: grid;
+  grid-template-columns: repeat(14, 1fr);
+  gap: 1px;
+  max-width: 560px;
+  margin: 0 auto 0.6rem;
+  padding: 1px;
+  background: var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.w5a-sc {
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  font: 700 12px var(--font-display);
+  color: #fff;
+  transition: background 0.3s var(--ease);
+}
+.w5a-sc-sky {
+  background: var(--tint-sky);
+}
+.w5a-sc-road {
+  background: var(--tint-sun);
+}
+.w5a-sc-person {
+  background: var(--signal);
+}
+.w5a-sc-person1 {
+  background: var(--signal);
+}
+.w5a-sc-person2 {
+  background: #c2185b;
+}
+.w5a-sc-car,
+.w5a-sc-car1 {
+  background: #08775a;
+}
+.w5a-sc-none {
+  background: var(--surface);
+}
+html[data-theme='dark'] .w5a-sc-person2 {
+  background: #e0568c;
+  color: #0e0c2e;
+}
+html[data-theme='dark'] .w5a-sc-car,
+html[data-theme='dark'] .w5a-sc-car1 {
+  background: #3fd1a5;
+  color: #0e0c2e;
+}
+html[data-theme='dark'] .w5a-sc-person,
+html[data-theme='dark'] .w5a-sc-person1 {
+  color: #0e0c2e;
+  background: #a99bff;
+}
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme='light']) .w5a-sc-person2 {
+    background: #e0568c;
+    color: #0e0c2e;
+  }
+  html:not([data-theme='light']) .w5a-sc-car,
+  html:not([data-theme='light']) .w5a-sc-car1 {
+    background: #3fd1a5;
+    color: #0e0c2e;
+  }
+  html:not([data-theme='light']) .w5a-sc-person,
+  html:not([data-theme='light']) .w5a-sc-person1 {
+    color: #0e0c2e;
+    background: #a99bff;
+  }
+}
+.w5a-sc-sky,
+.w5a-sc-road {
+  color: var(--ink);
+}
+
+/* ---------- U-Net ---------- */
+
+.w5a-blk {
+  fill: var(--surface);
+  stroke: var(--ink-3);
+  stroke-width: 2;
+  opacity: 0.4;
+  transition: opacity 0.3s var(--ease), fill 0.3s var(--ease);
+}
+.w5a-blk.is-on {
+  opacity: 1;
+}
+.w5a-blk-down.is-on {
+  fill: color-mix(in srgb, var(--signal) 22%, var(--surface));
+  stroke: var(--signal);
+}
+.w5a-blk-bottom.is-on {
+  fill: color-mix(in srgb, var(--cost) 28%, var(--surface));
+  stroke: var(--cost);
+}
+.w5a-blk-up.is-on {
+  fill: color-mix(in srgb, var(--ok) 24%, var(--surface));
+  stroke: var(--ok);
+}
+.w5a-skip {
+  stroke: var(--ink-3);
+  stroke-width: 1.8;
+  stroke-dasharray: 5 4;
+  opacity: 0.45;
+}
+.w5a-skip.is-hot {
+  stroke: var(--cost);
+  stroke-width: 2.6;
+  opacity: 1;
+}
+
+.w5a-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1rem;
+  margin: 0.4rem 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.92rem;
+}
+.w5a-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.w5a-legend i {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 3px;
+  border: 1px solid var(--line);
+}
+
+.w5a-ap-table {
+  font-size: 0.88rem;
+}
+.w5a-ap-table th,
+.w5a-ap-table td {
+  padding: 0.3rem 0.3rem;
+}
+
+/* the lesson-wide rule for tables with four or more columns forces wide cells; these small tables fit on a phone */
+.lesson-body .prose .w5a-ap-table:has(tr > :nth-child(4)) :is(th, td),
+.lesson-body .prose .w5a-ap-table:has(tr > :nth-child(4)) :is(th, td):first-child {
+  min-width: 0;
+}
+.lesson-body .prose .w5a-ap-table:has(tr > :nth-child(4)) {
+  background: none;
+}

@@ -1,0 +1,481 @@
+/* Styles for the wave 5 "review" work (daily review page and the home card). Every class uses the rv- prefix.
+   Colours come from the site tokens, which already switch for html[data-theme=dark]. */
+
+.rv {
+  display: grid;
+  gap: 1.6rem;
+  padding-block: 1.8rem 3rem;
+  font-family: var(--font-display);
+  min-width: 0;
+}
+.rv h2 {
+  margin: 0 0 0.7rem;
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+.rv-sub {
+  margin: 1rem 0 0.4rem;
+  font-size: 1rem;
+}
+.rv-note {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.rv-lead {
+  margin: 0 0 0.8rem;
+  font-size: 1.1rem;
+  line-height: 1.5;
+}
+.rv-lead .rv-note {
+  display: inline;
+}
+
+/* ---------- cards ---------- */
+
+.rv-card {
+  min-width: 0;
+  padding: 1.2rem 1.2rem 1.3rem;
+  background: var(--surface);
+  border: 2px solid var(--ink);
+  border-radius: var(--r-md);
+  box-shadow: var(--hard);
+}
+.rv-card p:last-child {
+  margin-bottom: 0;
+}
+.rv-section {
+  min-width: 0;
+}
+.rv-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem 1rem;
+  margin-top: 1rem;
+}
+.rv .btn,
+.rv-daily .btn {
+  min-height: 44px;
+  justify-content: center;
+}
+.rv-go {
+  border-radius: 999px;
+  padding-inline: 1.5rem;
+}
+
+/* ---------- today's counts ---------- */
+
+.rv-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+.rv-stats li {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.7rem 0.8rem;
+  background: var(--tint-lilac);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-sm);
+}
+.rv-stats li:nth-child(2) {
+  background: var(--tint-sun);
+}
+.rv-stats li:nth-child(3) {
+  background: var(--tint-mint);
+}
+.rv-stats b {
+  font-size: 1.9rem;
+  line-height: 1.1;
+  font-weight: 800;
+}
+.rv-stats span {
+  font-size: 0.9rem;
+  color: var(--ink-2);
+}
+
+/* ---------- box ladder ---------- */
+
+.rv-boxes {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.4rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.rv-boxes li {
+  display: grid;
+  justify-items: center;
+  gap: 0.25rem;
+  text-align: center;
+}
+.rv-box-bar {
+  display: flex;
+  align-items: flex-end;
+  width: 100%;
+  height: 54px;
+  background: var(--signal-wash);
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.rv-box-bar > span {
+  display: block;
+  width: 100%;
+  background: var(--signal);
+  min-height: 0;
+}
+.rv-boxes b {
+  font-size: 1rem;
+}
+.rv-box-label {
+  font-size: 0.78rem;
+  line-height: 1.25;
+  color: var(--ink-2);
+}
+.rv-box-label small {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--ink-3);
+}
+
+/* ---------- a session ---------- */
+
+.rv-run-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem 1rem;
+  margin-bottom: 0.6rem;
+}
+.rv-run-head h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--ink-2);
+}
+.rv-steps {
+  display: flex;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rv-steps li {
+  width: 26px;
+  height: 8px;
+  border-radius: 999px;
+  border: 1.5px solid var(--ink-3);
+}
+.rv-steps li.is-done {
+  background: var(--signal);
+  border-color: var(--signal);
+}
+.rv-steps li.is-now {
+  border-color: var(--ink);
+  border-width: 2px;
+}
+
+.rv-prompt {
+  margin: 0 0 0.8rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.rv-opts {
+  display: grid;
+  gap: 0.5rem;
+}
+.rv-opt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2rem 0.7rem;
+  width: 100%;
+  min-height: 48px;
+  padding: 0.65rem 0.9rem;
+  background: var(--paper);
+  border: 2px solid var(--line);
+  border-radius: var(--r-sm);
+  color: var(--ink);
+  font: inherit;
+  font-size: 1.02rem;
+  line-height: 1.35;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.rv-opt:hover:not(:disabled) {
+  border-color: var(--signal);
+  background: var(--signal-wash);
+}
+.rv-opt:disabled {
+  cursor: default;
+}
+.rv-opt-mark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--ink-3);
+  border-radius: 50%;
+  font-size: 0.8rem;
+  font-weight: 800;
+  line-height: 1;
+}
+.rv-opt-text {
+  flex: 1 1 12ch;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.rv-opt-tag {
+  flex: none;
+  padding: 0.05rem 0.5rem;
+  border: 1.5px solid currentColor;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.rv-opt:disabled:not(.is-right):not(.is-wrong) {
+  opacity: 0.75;
+}
+.rv-opt.is-right {
+  border-color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 12%, var(--paper));
+}
+.rv-opt.is-right .rv-opt-mark,
+.rv-opt.is-right .rv-opt-tag {
+  color: var(--ok);
+  border-color: var(--ok);
+}
+.rv-opt.is-wrong {
+  border-color: var(--warn);
+  background: color-mix(in srgb, var(--warn) 10%, var(--paper));
+}
+.rv-opt.is-wrong .rv-opt-mark,
+.rv-opt.is-wrong .rv-opt-tag {
+  color: var(--warn);
+  border-color: var(--warn);
+}
+
+.rv-feedback {
+  min-height: 0;
+}
+.rv-verdict {
+  margin: 0.9rem 0 0;
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  line-height: 1.55;
+}
+.rv-verdict b {
+  font-family: var(--font-display);
+}
+.rv-from {
+  margin: 0.5rem 0 0;
+  font-size: 0.95rem;
+}
+.rv-from a {
+  display: inline-block;
+  padding-block: 0.4rem;
+}
+
+.rv-missed {
+  margin: 0;
+  padding-left: 1.2rem;
+  line-height: 1.7;
+}
+.rv-missed a {
+  display: inline-block;
+  padding-block: 0.2rem;
+}
+
+/* ---------- streak ---------- */
+
+.rv-streak-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem 1rem;
+}
+.rv-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 44px;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.rv-switch input {
+  position: absolute;
+  opacity: 0;
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  cursor: pointer;
+}
+.rv-switch-track {
+  position: relative;
+  flex: none;
+  width: 44px;
+  height: 26px;
+  border: 2px solid var(--ink-3);
+  border-radius: 999px;
+  background: var(--paper);
+  transition: background 0.2s, border-color 0.2s;
+}
+.rv-switch-track::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--ink-3);
+  transition: transform 0.2s var(--ease), background 0.2s;
+}
+.rv-switch input:checked + .rv-switch-track {
+  background: var(--signal-wash);
+  border-color: var(--signal);
+}
+.rv-switch input:checked + .rv-switch-track::after {
+  transform: translateX(18px);
+  background: var(--signal);
+}
+.rv-switch input:focus-visible + .rv-switch-track {
+  outline: 3px solid var(--signal);
+  outline-offset: 3px;
+}
+
+.rv-dots {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  gap: 0.15rem;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.rv-dot {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  list-style: none;
+}
+.rv-dot-mark {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--ink-3);
+  border-radius: 50%;
+}
+.rv-dot.is-on .rv-dot-mark {
+  background: var(--signal);
+  border-color: var(--signal);
+}
+.rv-dot.is-today .rv-dot-mark {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+.rv-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2rem 0.5rem;
+  margin: 0.4rem 0 0;
+  font-size: 0.8rem;
+  color: var(--ink-3);
+}
+.rv-legend .rv-dot {
+  width: 18px;
+  height: 18px;
+}
+.rv-legend .rv-dot-mark {
+  width: 12px;
+  height: 12px;
+}
+.rv-legend-end {
+  margin-left: auto;
+}
+
+/* ---------- home card ---------- */
+
+.rv-daily {
+  padding-top: clamp(2rem, 5vw, 3rem);
+  font-family: var(--font-display);
+}
+.rv-daily-card {
+  min-width: 0;
+  padding: 1.1rem 1.2rem 1.2rem;
+  background: var(--tint-sun);
+  border: 2px solid var(--ink);
+  border-radius: var(--r-md);
+  box-shadow: var(--hard);
+}
+.rv-daily-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.2rem 1rem;
+  margin-bottom: 0.7rem;
+}
+.rv-daily-head h2 {
+  margin: 0;
+  font-size: clamp(1.4rem, 3vw, 1.8rem);
+  font-weight: 800;
+}
+.rv-daily-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.9rem;
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--ink-2);
+}
+.rv-daily .rv-opt {
+  background: var(--surface);
+}
+.rv-daily .rv-opt.is-right {
+  background: color-mix(in srgb, var(--ok) 12%, var(--surface));
+}
+.rv-daily .rv-opt.is-wrong {
+  background: color-mix(in srgb, var(--warn) 10%, var(--surface));
+}
+.rv-daily .rv-lead {
+  margin: 0;
+}
+.rv-daily a {
+  color: var(--signal-ink);
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 480px) {
+  .rv-card,
+  .rv-daily-card {
+    padding: 1rem;
+  }
+  .rv-stats b {
+    font-size: 1.5rem;
+  }
+  .rv-box-label small {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rv-opt,
+  .rv-switch-track,
+  .rv-switch-track::after {
+    transition: none;
+  }
+}

@@ -1,0 +1,48 @@
+---
+import Base from '../layouts/Base.astro';
+import { withBase } from '../lib/url';
+
+const sections = [
+  { href: '/', label: 'Home', note: 'Where to start and what is new.' },
+  { href: '/start/', label: 'Start here', note: 'Pick a path and see where to begin.' },
+  { href: '/learn/', label: 'All lessons', note: 'The full curriculum, track by track.' },
+  { href: '/progress/', label: 'Your progress', note: 'What you have finished, read from this browser.' },
+];
+---
+
+<Base title="You are offline" description="This page was not saved for offline use. Here is what is available on this device." noindex>
+  <div class="wrap pw-offline" id="pw-offline" data-base={withBase('/')}>
+    <h1>You are offline</h1>
+    <p class="pw-lead">The page you asked for has not been opened on this device before, so it was not saved. Pages you have opened already still work, and so do these sections.</p>
+
+    <ul class="pw-sections" aria-label="Sections saved for offline use">
+      {
+        sections.map((s) => (
+          <li>
+            <a href={withBase(s.href)}>{s.label}</a>
+            <span>{s.note}</span>
+          </li>
+        ))
+      }
+    </ul>
+
+    <p class="pw-note">Lessons you open, quizzes, games and the interactive demos work without a connection once you have visited the page. Python labs also need to download their runtime the first time, so they need a connection until they have run once on this device.</p>
+
+    <h2>Saved on this device</h2>
+    <p data-pw-count aria-live="polite">Looking…</p>
+    <ul class="pw-saved" data-pw-list></ul>
+
+    <div class="pw-row">
+      <button type="button" class="btn" data-pw-retry>Try again</button>
+      <button type="button" class="btn quiet" data-pw-clear hidden>Remove saved pages</button>
+    </div>
+    <p class="pw-note" data-pw-status role="status"></p>
+    <p class="pw-note">Saved pages stay in this browser only, and nothing about them is sent anywhere. To keep Layerwise on your home screen, use your browser’s menu: Install, or Add to Home Screen.</p>
+  </div>
+</Base>
+
+<script>
+  import { initOfflinePage } from '../lib/pwa-client';
+  const root = document.getElementById('pw-offline');
+  if (root) initOfflinePage(root, { base: root.dataset.base ?? '/' });
+</script>

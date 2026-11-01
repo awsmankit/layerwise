@@ -24,7 +24,9 @@ export const footerGroups = [
     title: 'Learn',
     links: [
       { href: '/start/', label: 'Start here' },
+      { href: '/next/', label: 'What to learn next' },
       { href: '/learn/', label: 'All lessons' },
+      { href: '/review/', label: 'Daily review' },
       { href: '/glossary/', label: 'Glossary' },
       { href: '/teach/', label: 'For teachers' },
       { href: '/teach/parents/', label: 'For parents' },

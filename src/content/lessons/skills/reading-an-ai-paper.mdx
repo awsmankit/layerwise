@@ -1,0 +1,149 @@
+---
+title: "Reading an AI paper without drowning"
+track: skills
+level: basic
+order: 5
+summary: "A three-pass method for reading machine-learning papers, what to look for in a results table, common red flags, how to find and check the code, and how to take notes. Practise on real quotes from the abstract of Attention Is All You Need, then on a made-up results table."
+updated: 2026-11-01
+sources:
+  - label: "Keshav, How to Read a Paper (ACM SIGCOMM Computer Communication Review, 2007; Stanford course copy)"
+    url: https://web.stanford.edu/class/ee384m/Handouts/HowtoReadPaper.pdf
+  - label: "Vaswani and others (2017), Attention Is All You Need (arXiv version 7, read in full)"
+    url: https://arxiv.org/abs/1706.03762
+  - label: "Lipton and Steinhardt (2018), Troubling Trends in Machine Learning Scholarship"
+    url: https://arxiv.org/abs/1807.03341
+  - label: "Henderson and others (2017), Deep Reinforcement Learning that Matters"
+    url: https://arxiv.org/abs/1709.06560
+  - label: "Dacrema, Cremonesi and Jannach (2019), Are We Really Making Much Progress? A Worrying Analysis of Recent Neural Recommendation Approaches"
+    url: https://arxiv.org/abs/1907.06902
+  - label: "Pineau and others (2020), Improving Reproducibility in Machine Learning Research (A Report from the NeurIPS 2019 Reproducibility Program)"
+    url: https://arxiv.org/abs/2003.12206
+  - label: "arXiv: About (states that material is moderated, not peer reviewed)"
+    url: https://info.arxiv.org/about/index.html
+  - label: "tensor2tensor on GitHub (the code repository named in the Transformer paper; marked archived when checked on 1 November 2026)"
+    url: https://github.com/tensorflow/tensor2tensor
+  - label: "OpenReview"
+    url: https://openreview.net
+  - label: "Semantic Scholar"
+    url: https://www.semanticscholar.org
+  - label: "Hugging Face Papers (a daily feed of trending papers; paperswithcode.com forwarded here when checked on 1 November 2026)"
+    url: https://huggingface.co/papers
+---
+
+import Deep from '../../../components/ui/Deep.astro';
+import Callout from '../../../components/ui/Callout.astro';
+import AbstractAnnotator from '../../../components/viz/AbstractAnnotator.tsx';
+import ResultsDrill from '../../../components/viz/ResultsDrill.tsx';
+
+A research paper is a report written by researchers for other researchers. It is not a story, so you should not read it from the first line to the last. Most people who read papers for a living read them in passes. This lesson shows you how, and lets you practise on a real abstract.
+
+You only need to know the basic idea from [How a computer learns from examples](../../start/how-computers-learn/): a model is trained on examples and tested on new ones.
+
+## Three passes
+
+The method comes from S. Keshav's short article "How to Read a Paper" (2007), written for computer-science students. The idea is to read in up to three passes, each with its own goal, instead of starting at the top and ploughing on.
+
+**Pass one: a quick look (5 to 10 minutes).** Read the title, abstract and introduction. Read the headings and ignore everything else. Read the conclusions. Keshav's five questions to answer at the end:
+
+1. **Category:** what kind of paper is it? A new method? A measurement? A survey?
+2. **Context:** which other work is it related to?
+3. **Correctness:** do the assumptions look reasonable?
+4. **Contributions:** what are the main new things?
+5. **Clarity:** is it well written?
+
+You may stop here. For most papers, that is the right choice.
+
+**Pass two: the content (up to an hour).** Read with more care, but skip proofs and fine detail. Look hard at figures and tables. Keshav asks: are the axes labelled, and are results shown with error bars? Jot notes in the margin. After this pass you should be able to explain the paper's main point, with its evidence, to someone else.
+
+**Pass three: re-create it.** Make the same assumptions as the authors and work out how you would do it yourself. Compare that with the paper to find its hidden assumptions. Keshav says this takes about four or five hours for a beginner, and about an hour for an experienced reader. You need it only when you want to build on the paper or review it.
+
+If a paper still makes no sense after pass two, setting it aside is allowed. Keshav lists that as a normal choice: you may need to read some background first.
+
+## Read an abstract line by line
+
+An abstract is a summary, not the evidence. It tells you what the authors want you to believe. Your job is to separate the pieces: what they claim, what they built, what they tested on, and what they measured.
+
+Below are seven short quotes from the abstract of "Attention Is All You Need" by Vaswani and others (2017), the paper that introduced the Transformer. Tag each one. Then see what the abstract leaves out.
+
+<AbstractAnnotator client:visible />
+
+The pattern to remember: an abstract is full of claims and headline numbers, and almost never has doubts. The doubts live in the tables, the ablations and the conclusion, so go and look for them.
+
+<Callout title="Where the paper came from" kind="note">
+Most papers you find first are on arXiv. arXiv says its submissions are moderated but "not peer-reviewed by arXiv", so a paper there may or may not have been through review. Check whether it was later published at a conference or journal, and look for reviewer comments on OpenReview, where some venues publish them.
+</Callout>
+
+## Reading a results table
+
+Results tables carry most of the evidence. Ask these questions in order.
+
+- **What is compared with what?** The new method needs a baseline: an older or simpler method scored the same way. No baseline, no evidence of improvement.
+- **Is the comparison fair?** Same data, same metric and a similar budget. If the new model was tuned with a lot of effort and the baseline used default settings, part of the gain may come from the tuning.
+- **How big is the gap compared with the noise?** Training has some randomness. A trustworthy table shows an average over several runs with a spread (the ± value). A gap smaller than the spread may be luck.
+- **Which data was it tested on?** The test set should be used once, at the end. Choosing settings by looking at it makes the scores look better than they would be on new data.
+- **Is there an ablation?** An ablation removes one part and measures what drops. It shows which parts actually matter.
+- **What did it cost?** Parameters, training time and compute. A better score from a model a hundred times bigger is a different claim.
+
+A real example from the Transformer paper, which I read in full. The abstract reports 41.8 BLEU for English-to-French translation. The results text in the same paper says 41.0, and Table 2 says 41.8. Table 2 gives one score per model, with no error bars. Its training costs are the authors' own estimates. Table 3, the ablation, shows single-head attention scoring 24.9 BLEU against 25.8 for the base model on the development set. On the good side, it chose its settings on a development set (newstest2013) and reports its main table on a different test set (newstest2014). None of this makes the paper bad. It shows you what careful reading finds: details the abstract does not mention.
+
+Now try a made-up table with traps in it.
+
+<ResultsDrill client:visible />
+
+## Red flags, fairly
+
+Treat these as reasons to look harder, not as proof of a bad paper.
+
+- **Gains smaller than the noise,** or a single run with no spread.
+- **A weak or untuned baseline.** Dacrema and colleagues re-ran recently published recommender-system methods. Only 7 of 18 could be reproduced with reasonable effort, and for six of those seven a comparatively simple method could often do better.
+- **Unclear source of the gain.** Lipton and Steinhardt describe papers that credit a new architecture when the gain really came from tuning, mix up explanation with speculation, or use maths that impresses rather than explains.
+- **Claims bigger than the evidence.** "Works well on other tasks" supported by one extra task.
+- **Results that depend on luck.** Henderson and others showed that in deep reinforcement learning, randomness and small differences in setup can make reported results hard to interpret.
+- **Numbers that disagree,** or missing details about data and settings.
+- **No code, no data, no way to check.**
+
+Conferences have started to ask for more. The NeurIPS 2019 reproducibility programme combined a code-submission policy, a reproducibility challenge and a checklist that authors fill in with their paper. A checklist is a useful list of things to look for in anything you read.
+
+## Find the code and check it
+
+The paper's first page, its last page or its arXiv listing often name a code repository. The Transformer paper names tensor2tensor on GitHub. When I checked on 1 November 2026, that repository was marked archived, meaning read-only, with its last update in June 2023. So the code exists, but nobody is maintaining it.
+
+When you find code, check: is there a README that says how to run it, a licence that lets you use it, a recent update, open issues that mention problems, and a script that reproduces the main table? Running a small version is the best test. Papers with Code, which used to list code for papers, now forwards to Hugging Face's [Papers](https://huggingface.co/papers) page. [Semantic Scholar](https://www.semanticscholar.org) shows who cites a paper, which is a good way to find follow-ups and criticism.
+
+## Take notes
+
+Notes make a paper usable a month later. Five lines are enough.
+
+1. **Claim:** what do they say is better, and by how much?
+2. **Evidence:** which tables and figures support it?
+3. **Doubts:** what would change my mind? What was not tested?
+4. **Context:** which two or three papers is it related to?
+5. **Try:** what could I run or check myself?
+
+Add the link and the date you read it.
+
+<Deep title="For grown-ups: why the spread matters, and a warning about the rule of thumb">
+
+The drill's rule (a gap bigger than the two spreads added together) is a rough guide, not a statistical test. A proper comparison would use a significance test or a confidence interval for the difference, ideally with many runs and paired comparisons on the same data splits. With only five runs the spread itself is poorly estimated.
+
+Reporting practices vary by sub-field. Henderson and colleagues argue for significance metrics and tighter standardisation of reporting in deep reinforcement learning, because variance between random seeds can swamp the differences being claimed. Large language model papers often report one run because training is expensive. In those cases, look for other signs: several benchmarks, evaluation by other groups, and ablations on smaller models.
+
+</Deep>
+
+<Deep title="For grown-ups: what a peer-reviewed paper does and does not tell you">
+
+Peer review means other researchers judged the work before publication. It improves papers, but it is not a guarantee. Reviewers read quickly, usually do not re-run the code, and may see only the claims the authors choose to show. Preprints on arXiv have not been through arXiv peer review at all, though many are later reviewed elsewhere.
+
+Treat a paper as evidence with a quality you must judge, not as a verdict. A result becomes trustworthy when different groups reproduce it, which is why reproducibility programmes and open code matter.
+
+</Deep>
+
+## What to remember
+
+- Read in passes: look first, then read the figures and tables, and re-create the work only if you must.
+- An abstract is a list of claims. The evidence and the doubts are in the tables, the ablations and the conclusion.
+- In a results table, check the baseline, fairness, spread, test data, ablations and cost.
+- Red flags are reasons to look harder. Reproduction, code and other people's follow-ups settle most questions.
+- Keep five-line notes with a link and a date.
+
+Next: [Getting data ready](../../ml/getting-data-ready/), where you start working with real data.

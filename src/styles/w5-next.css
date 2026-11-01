@@ -1,0 +1,486 @@
+/* Styles for the wave 5 "next" work (/next/). Keep every class under this batch's own prefix: nx- */
+
+.nx {
+  display: grid;
+  gap: 2rem;
+  padding: 1.5rem 0 3rem;
+  font-family: var(--font-display);
+  min-width: 0;
+}
+.nx > * {
+  min-width: 0;
+}
+.nx h2 {
+  margin: 0;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 800;
+  line-height: 1.1;
+}
+.nx h3 {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 760;
+  line-height: 1.2;
+}
+.nx-loading,
+.nx-hint,
+.nx-small,
+.nx-note {
+  margin: 0;
+  color: var(--ink-2);
+  line-height: 1.5;
+}
+.nx-hint {
+  margin-top: 0.4rem;
+  font-size: 1rem;
+  max-width: 60ch;
+}
+.nx-small {
+  font-size: 0.9rem;
+}
+.nx-note {
+  font-size: 0.98rem;
+  max-width: 62ch;
+}
+.nx a {
+  color: var(--signal-ink);
+  text-underline-offset: 0.18em;
+}
+.nx a.btn {
+  color: var(--on-signal);
+  text-decoration: none;
+}
+.nx a.btn.quiet {
+  color: var(--ink);
+}
+.nx .btn {
+  min-height: 44px;
+  justify-content: center;
+  text-align: center;
+  white-space: normal;
+}
+.nx-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- goal picker ---------- */
+
+.nx-opts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+  gap: 0.7rem;
+  margin-top: 1rem;
+}
+.nx-opt {
+  position: relative;
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.8rem;
+  min-height: 3.6rem;
+  padding: 0.65rem 0.9rem;
+  background: var(--surface);
+  border: 2px solid var(--line);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: transform 0.2s var(--pop), border-color 0.2s, box-shadow 0.2s;
+}
+.nx-opt input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.nx-opt:hover {
+  border-color: var(--ink);
+  transform: translateY(-2px);
+}
+.nx-opt.is-on {
+  border-color: var(--ink);
+  box-shadow: 3px 3px 0 var(--c, var(--signal));
+}
+.nx-opt:has(input:focus-visible) {
+  outline: 3px solid var(--signal);
+  outline-offset: 3px;
+}
+.nx-opt-dot {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--c, var(--surface));
+  color: var(--on, var(--ink));
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+.nx-opt-unsure .nx-opt-dot {
+  background: var(--surface);
+  color: var(--ink);
+}
+.nx-opt-unsure {
+  border-style: dashed;
+}
+.nx-opt-text {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+.nx-opt-text b {
+  font-size: 1.02rem;
+  font-weight: 700;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.nx-opt-text small {
+  font-size: 0.88rem;
+  color: var(--ink-2);
+  line-height: 1.3;
+}
+.nx-tag {
+  padding: 0.1rem 0.55rem;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--tint-sun);
+  font-style: normal;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.nx-now {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.9rem;
+  margin-top: 0.9rem;
+  padding: 0.8rem 1rem;
+  background: var(--surface);
+  border: 2px solid var(--ink);
+  border-radius: var(--r-md);
+}
+
+/* ---------- not sure ---------- */
+
+.nx-unsure {
+  display: grid;
+  gap: 0.8rem;
+  justify-items: start;
+  padding: 1.3rem 1.4rem;
+  background: var(--tint-sky);
+  border: 2px solid var(--ink);
+  border-radius: var(--r-md);
+}
+.nx-unsure p {
+  margin: 0;
+  max-width: 58ch;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.nx-textbtn {
+  min-height: 44px;
+  padding: 0 0.2rem;
+  font: inherit;
+  font-weight: 650;
+  color: var(--signal-ink);
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  cursor: pointer;
+}
+
+/* ---------- result ---------- */
+
+.nx-result {
+  display: grid;
+  gap: 1.5rem;
+  outline: none;
+  scroll-margin-top: 5rem;
+}
+.nx-result:focus-visible {
+  outline: 3px solid var(--signal);
+  outline-offset: 6px;
+  border-radius: var(--r-sm);
+}
+.nx-progress {
+  display: grid;
+  gap: 0.5rem;
+}
+.nx-progress-text {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 1rem;
+}
+.nx-progress-text b {
+  color: var(--ink);
+  font-weight: 750;
+}
+.nx-bar {
+  height: 16px;
+  background: var(--surface);
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.nx-bar-fill {
+  display: block;
+  height: 100%;
+  min-width: 0;
+  background: var(--c);
+  border-right: 2px solid var(--ink);
+  transition: width 0.6s var(--ease);
+}
+.nx-bar-fill[style*='width: 0%'] {
+  border-right: 0;
+}
+
+/* the next lesson */
+
+.nx-card {
+  background: var(--surface);
+  border: 2px solid var(--ink);
+  border-radius: var(--r-md);
+  box-shadow: var(--hard);
+  overflow: hidden;
+}
+.nx-card-band {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.2rem 1rem;
+  padding: 0.6rem 1.1rem;
+  background: var(--c);
+  color: var(--on);
+  border-bottom: 2px solid var(--ink);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+.nx-card-body {
+  display: grid;
+  gap: 0.8rem;
+  justify-items: start;
+  padding: 1.2rem 1.2rem 1.3rem;
+}
+.nx-card-body > p,
+.nx-card-body > h3 {
+  margin: 0;
+}
+.nx-card-body h3 {
+  font-size: clamp(1.6rem, 4.4vw, 2.2rem);
+  font-weight: 800;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+.nx-kicker {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.nx-why,
+.nx-prereq {
+  font-size: 1.02rem;
+  line-height: 1.5;
+  color: var(--ink);
+  max-width: 62ch;
+}
+.nx-prereq {
+  color: var(--ink-2);
+}
+.nx-prereq b,
+.nx-why b {
+  color: var(--ink);
+  font-weight: 750;
+}
+.nx-prereq-warn {
+  padding: 0.6rem 0.8rem;
+  background: var(--cost-wash);
+  border-left: 4px solid var(--cost);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  color: var(--ink);
+}
+.nx-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-top: 0.2rem;
+}
+.nx-done .nx-card-body {
+  background: var(--tint-mint);
+}
+
+/* alternatives */
+
+.nx-alts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+  gap: 1rem;
+}
+.nx-alt {
+  position: relative;
+  display: grid;
+  gap: 0.5rem;
+  align-content: start;
+  padding: 1rem 1.1rem 1.1rem;
+  background: var(--surface);
+  border: 2px solid var(--ink);
+  border-left: 8px solid var(--c);
+  border-radius: var(--r-sm);
+}
+.nx-alt > * {
+  margin: 0;
+}
+.nx-alt h3 {
+  font-size: 1.2rem;
+  overflow-wrap: anywhere;
+}
+.nx-alt h3 a {
+  color: var(--ink);
+  text-decoration-thickness: 2px;
+}
+.nx-alt h3 a::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+.nx-alt:has(a:focus-visible) {
+  outline: 3px solid var(--signal);
+  outline-offset: 3px;
+}
+.nx-alt h3 a:focus-visible {
+  outline: none;
+}
+.nx-alt:hover {
+  box-shadow: 4px 4px 0 var(--c);
+}
+.nx-alt-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.9rem;
+  color: var(--ink-2);
+}
+.nx-badge {
+  padding: 0.1rem 0.6rem;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--tint-pink);
+  color: var(--ink);
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+/* just finished, gaps */
+
+.nx-sec {
+  display: grid;
+  gap: 0.2rem;
+}
+.nx-sec .nx-hint {
+  margin: 0 0 0.4rem;
+}
+.nx-recent,
+.nx-gaps {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.nx-recent li,
+.nx-gaps li {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-height: 2.8rem;
+  padding: 0.5rem 0.9rem;
+  background: var(--surface);
+  border: 2px solid var(--line);
+  border-radius: var(--r-sm);
+}
+.nx-recent a,
+.nx-gaps a {
+  font-weight: 650;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.nx-tick {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 1.6rem;
+  height: 1.6rem;
+  background: var(--ok);
+  border-radius: 50%;
+  color: var(--paper);
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+.nx-gap-dot {
+  flex: none;
+  width: 0.9rem;
+  height: 0.9rem;
+  background: var(--c);
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+}
+.nx-gaps li > span:last-child {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+.nx-gaps small {
+  font-size: 0.88rem;
+  color: var(--ink-2);
+  line-height: 1.35;
+}
+.nx-empty {
+  padding: 1rem 1.1rem;
+  background: var(--tint-lilac);
+  border: 2px dashed var(--ink-3);
+  border-radius: var(--r-sm);
+  color: var(--ink);
+}
+
+@media (max-width: 480px) {
+  .nx-opt {
+    grid-template-columns: 2rem minmax(0, 1fr);
+  }
+  .nx-tag {
+    grid-column: 2;
+    justify-self: start;
+  }
+  .nx-now {
+    grid-template-columns: 2rem minmax(0, 1fr);
+  }
+  .nx-now .btn {
+    grid-column: 1 / -1;
+  }
+  .nx-actions .btn {
+    flex: 1 1 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nx-opt,
+  .nx-bar-fill {
+    transition: none;
+  }
+  .nx-opt:hover {
+    transform: none;
+  }
+}

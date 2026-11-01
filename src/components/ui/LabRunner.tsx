@@ -30,6 +30,7 @@ export default function LabRunner({ lab, next }: { lab: RunnerLab; next: Next })
   const [burst, setBurst] = useState(0);
   const [done, setDone] = useStore<string[]>(KEYS.labs, []);
   const [trapTab, setTrapTab] = useState(true);
+  const [offline, setOffline] = useState(false);
 
   const worker = useRef<Worker | null>(null);
   const seq = useRef(0);
@@ -49,6 +50,18 @@ export default function LabRunner({ lab, next }: { lab: RunnerLab; next: Next })
       if (timer.current) window.clearTimeout(timer.current);
     };
   }, [lab.id]);
+
+  // the Python runtime comes from a CDN and is never stored by the offline worker, so say so plainly
+  useEffect(() => {
+    const sync = () => setOffline(navigator.onLine === false);
+    sync();
+    window.addEventListener('online', sync);
+    window.addEventListener('offline', sync);
+    return () => {
+      window.removeEventListener('online', sync);
+      window.removeEventListener('offline', sync);
+    };
+  }, []);
 
   const edit = (value: string) => {
     setCode(value);
@@ -204,6 +217,11 @@ export default function LabRunner({ lab, next }: { lab: RunnerLab; next: Next })
             Reset code
           </button>
         </div>
+        {offline && phase === 'idle' && (
+          <p className="gm-note" style={{ margin: 0 }}>
+            You are offline. Python is a download of about 10 MB the first time, so Run checks works without a connection only if Python has already run in this browser. You can still read, edit and save your code.
+          </p>
+        )}
         {phase === 'loading' && <p className="gm-note" style={{ margin: 0 }}>Python loads the first time only: a one-off download of about 10 MB, then it is kept by your browser.</p>}
 
         {hints > 0 && (

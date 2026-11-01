@@ -1,0 +1,32 @@
+---
+import Base from '../layouts/Base.astro';
+import NextPage from '../components/ui/NextPage.tsx';
+import { tracks } from '../data/tracks';
+import { extras } from '../data/lesson-extras';
+import { labs } from '../data/labs';
+import { games } from '../data/games';
+import { withBase } from '../lib/url';
+import { getLessons, lessonPath, slugOf, readingMinutes } from '../lib/content';
+
+const lessons = await getLessons();
+const catalogue = Object.fromEntries(
+  lessons.map((l) => {
+    const key = `${l.data.track}/${slugOf(l)}`;
+    return [key, { title: l.data.title, href: lessonPath(l), track: l.data.track, level: l.data.level, minutes: readingMinutes(l.body), prereq: extras[key]?.prereq ?? [] }];
+  }),
+);
+const trackInfo = Object.fromEntries(tracks.map((t) => [t.id, { title: t.title, color: t.color, on: t.on }]));
+const labInfo = labs.map((l) => ({ id: l.id, title: l.title, minutes: l.minutes, lesson: l.lesson }));
+const gamePrefix = Object.fromEntries(games.map((g) => [g.href, g.prefix]));
+---
+
+<Base title="What should I learn next?" description="Choose a learning goal and see the one lesson to do next, with a lighter and a more hands-on alternative, your progress on the path, and any earlier lessons worth catching up on.">
+  <div class="wrap">
+    <header class="page-head">
+      <h1>What should I <span class="squig" style="--squig:#FFC233">learn next?</span></h1>
+      <p>Choose what you want to be able to do. Using the lessons you have marked as done, this page picks one lesson to do next and says why. Nothing leaves this browser.</p>
+    </header>
+    <NextPage client:load catalogue={catalogue} tracks={trackInfo} labs={labInfo} gamePrefix={gamePrefix} />
+    <noscript><p class="gm-note">This page works out your next lesson in your browser from the progress saved there, so it needs JavaScript. You can also <a href={withBase('/start/')}>choose a path</a> and follow its steps in order.</p></noscript>
+  </div>
+</Base>

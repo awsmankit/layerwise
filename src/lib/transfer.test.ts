@@ -23,6 +23,24 @@ describe('moving progress between browsers', () => {
     expect(mergeSnapshots({ site: 'Layerwise' }, { site: 'Layerwise', 'layerwise:labs': ['x'] })['layerwise:labs']).toEqual(['x']);
   });
 
+  it('merges review cards, keeping the later answer and the higher box on a tie', () => {
+    const card = (box: number, lastSeen: string) => ({ box, due: '2026-04-01', lastSeen });
+    const local = { site: 'Layerwise', 'layerwise:review': { items: { 'a/1#0': card(2, '2026-03-02'), 'a/1#1': card(3, '2026-03-05') }, days: ['2026-03-02'], hideStreak: true } };
+    const incoming = { site: 'Layerwise', 'layerwise:review': { items: { 'a/1#0': card(5, '2026-03-04'), 'a/1#1': card(4, '2026-03-05'), 'b/2#0': card(1, '2026-03-01') }, days: ['2026-03-04'] } };
+    const m = mergeSnapshots(local, incoming)['layerwise:review'] as { items: Record<string, { box: number }>; days: string[]; hideStreak?: boolean };
+    expect(m.items['a/1#0'].box).toBe(5);
+    expect(m.items['a/1#1'].box).toBe(4);
+    expect(m.items['b/2#0'].box).toBe(1);
+    expect(m.days).toEqual(['2026-03-02', '2026-03-04']);
+    expect(m.hideStreak).toBe(true);
+    expect(mergeSnapshots({ site: 'Layerwise' }, incoming)['layerwise:review']).toEqual(incoming['layerwise:review']);
+  });
+
+  it('round-trips review cards through a link code', async () => {
+    const withReview = { ...snap, 'layerwise:review': { items: { 'a/1#0': { box: 2, due: '2026-04-01', lastSeen: '2026-03-02' } }, days: ['2026-03-02'] } };
+    expect(await decodeSnapshot(await encodeSnapshot(withReview))).toEqual(withReview);
+  });
+
   it('refuses a code that is not a Layerwise snapshot', async () => {
     await expect(decodeSnapshot('x.abc')).rejects.toThrow();
     await expect(decodeSnapshot('p.' + btoa('{"site":"other"}'))).rejects.toThrow();

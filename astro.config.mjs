@@ -15,7 +15,7 @@ export default defineConfig({
   site,
   base,
   // the sitemap writes sitemap-index.xml and sitemap-0.xml, with URLs built from `site` plus `base`
-  integrations: [react(), mdx(), sitemap({ filter: (page) => !page.includes('/certificate/') })],
+  integrations: [react(), mdx(), sitemap({ filter: (page) => !page.includes('/certificate/') && !page.includes('/offline/') })],
   markdown: {
     shikiConfig: {
       themes: { light: 'github-light', dark: 'github-dark' },

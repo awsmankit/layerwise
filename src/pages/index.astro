@@ -3,6 +3,7 @@ import Base from '../layouts/Base.astro';
 import StackExplorer from '../components/viz/StackExplorer.tsx';
 import HeroFlow from '../components/viz/HeroFlow.tsx';
 import ContinueCard from '../components/ui/ContinueCard.tsx';
+import DailyCard from '../components/ui/DailyCard.tsx';
 import GameBadge from '../components/games/GameBadge.tsx';
 import TrackIcon from '../components/ui/TrackIcon.astro';
 import { site } from '../site';
@@ -69,6 +70,8 @@ const tools = [
       <HeroFlow client:load />
     </div>
   </section>
+
+  <DailyCard client:load />
 
   <section class="lp-section wrap" aria-labelledby="path-h">
     <div class="lp-head">

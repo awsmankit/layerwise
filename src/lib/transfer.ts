@@ -4,6 +4,8 @@
  * sends to a server), and opening that link elsewhere offers to merge it in.
  */
 
+import { mergeReview } from './review';
+
 export type Snapshot = Record<string, unknown>;
 
 type QuizBest = Record<string, { score: number; total: number }>;
@@ -43,7 +45,7 @@ const ratio = (q?: { score: number; total: number }) => (q && q.total ? q.score 
 
 /**
  * Combine what another browser knows with what this one knows, never losing either:
- * lessons done and labs done are joined, the better quiz score and the higher game score win, and
+ * lessons done and labs done are joined, review cards keep the later answer (and the higher box on a tie), the better quiz score and the higher game score win, and
  * a single setting (path, last lesson, theme) is taken from here unless it is unset.
  */
 export function mergeSnapshots(local: Snapshot, incoming: Snapshot): Snapshot {
@@ -59,6 +61,8 @@ export function mergeSnapshots(local: Snapshot, incoming: Snapshot): Snapshot {
       const merged: QuizBest = { ...(a as QuizBest) };
       for (const [id, q] of Object.entries(b as QuizBest)) if (ratio(q) > ratio(merged[id])) merged[id] = q;
       out[k] = merged;
+    } else if (k === 'layerwise:review') {
+      out[k] = mergeReview(a, b);
     } else if (k === 'layerwise:games') {
       const merged: Record<string, GameRecord> = { ...(a as Record<string, GameRecord>) };
       for (const [id, g] of Object.entries(b as Record<string, GameRecord>)) {

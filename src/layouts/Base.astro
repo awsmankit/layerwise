@@ -57,10 +57,18 @@ import '../styles/w4-build-c.css';
 import '../styles/w4-build-d.css';
 import '../styles/w4-build-e.css';
 import '../styles/w4-misc.css';
+import '../styles/w5-review.css';
+import '../styles/w5-comfort.css';
+import '../styles/w5-pwa.css';
+import '../styles/w5-next.css';
+import '../styles/w5-lessons-a.css';
+import '../styles/w5-lessons-b.css';
 import '../styles/w1-teach.css';
 import SearchPalette from '../components/ui/SearchPalette.tsx';
 import { site, nav, footerGroups } from '../site';
 import { latestRelease } from '../data/releases';
+import ComfortMenu from '../components/ui/ComfortMenu.astro';
+import PwaRegister from '../components/ui/PwaRegister.astro';
 import { swatch, trackSwatch } from '../lib/palette';
 import { withBase } from '../lib/url';
 
@@ -105,6 +113,8 @@ const trackStyle = track ? `--track:${track.color};--on-track:${track.on}` : und
     {ogImage && <meta property="og:image" content={ogImage} />}
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg')} />
+    <link rel="manifest" href={withBase('/manifest.webmanifest')} />
+    <link rel="apple-touch-icon" href={withBase('/icons/apple-touch-icon.png')} />
     <link rel="alternate" type="application/rss+xml" title={`${site.name}: news and lessons`} href={withBase('/rss.xml')} />
     <meta name="generator" content={Astro.generator} />
     <script is:inline>
@@ -125,6 +135,23 @@ const trackStyle = track ? `--track:${track.color};--on-track:${track.on}` : und
         var depth = get('layerwise:depth');
         if (depth !== 'essentials' && depth !== 'full') depth = get('layerwise:path') === 'newcomer' ? 'essentials' : 'full';
         d.setAttribute('data-depth', depth);
+        /* comfort settings (src/lib/comfort.ts keeps these names in step) */
+        var c = get('layerwise:comfort');
+        if (c && typeof c === 'object') {
+          if (c.text === 115 || c.text === 130) d.setAttribute('data-cm-text', c.text);
+          if (c.space === 'roomy') d.setAttribute('data-cm-space', 'roomy');
+          if (c.width === 'narrow') d.setAttribute('data-cm-width', 'narrow');
+          if (c.calm === true) d.setAttribute('data-cm-calm', '1');
+        }
+        /* calm mode also speaks to scripts that ask for reduced motion (the motion library, demos) */
+        var mm = window.matchMedia;
+        if (mm) window.matchMedia = function (q) {
+          var r = mm.call(window, q);
+          if (d.hasAttribute('data-cm-calm') && /prefers-reduced-motion/.test(q)) {
+            try { Object.defineProperty(r, 'matches', { value: !/no-preference/.test(q) }); } catch (e) {}
+          }
+          return r;
+        };
       })();
     </script>
   </head>
@@ -150,6 +177,7 @@ const trackStyle = track ? `--track:${track.color};--on-track:${track.on}` : und
           }
         </nav>
         <div class="header-tools">
+          <ComfortMenu />
           <button type="button" class="icon-btn" id="search-open" aria-label="Search (Ctrl or Command plus K)" title="Search">
             <svg viewBox="0 0 20 20" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="8.5" cy="8.5" r="6"></circle><path d="M13 13l5 5"></path></svg>
           </button>
@@ -207,6 +235,7 @@ const trackStyle = track ? `--track:${track.color};--on-track:${track.on}` : und
 
     <input id="search-proxy" type="search" tabindex="-1" aria-hidden="true" autocomplete="off" style="position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;font-size:16px;border:0;padding:0;pointer-events:none" />
     <SearchPalette client:idle />
+    <PwaRegister />
 
     <script>
       /* links to other websites, including those in islands, MDX and later renders, open in a new tab */

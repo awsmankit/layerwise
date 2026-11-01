@@ -1,0 +1,117 @@
+---
+title: How AI finds things in a picture
+track: start
+level: basic
+order: 6.5
+summary: A computer cannot just look at a photo of a cat. See how it turns the picture into numbers, hunts for tiny patterns, adds them up into a shape, and draws a box around what it found. Then see how it gets fooled.
+updated: 2026-11-01
+sources:
+  - label: "Stanford CS231n: Convolutional Neural Networks (patterns that slide over a picture)"
+    url: https://cs231n.github.io/convolutional-networks/
+  - label: "Visualizing and Understanding Convolutional Networks (Zeiler and Fergus, 2013)"
+    url: https://arxiv.org/abs/1311.2901
+  - label: "Intriguing properties of neural networks (Szegedy et al., 2013)"
+    url: https://arxiv.org/abs/1312.6199
+  - label: "Robust Physical-World Attacks on Deep Learning Models (Eykholt et al., 2017)"
+    url: https://arxiv.org/abs/1707.08945
+  - label: "Google ML Kit: face detection (detects faces, does not recognise people)"
+    url: https://developers.google.com/ml-kit/vision/face-detection
+  - label: "Google ML Kit: image labeling"
+    url: https://developers.google.com/ml-kit/vision/image-labeling
+  - label: "EuroShop magazine: AI product recognition in self-checkout (27 May 2026)"
+    url: https://www.euroshop-tradefair.com/en/media-news/euroshopmag/retail-technology/ai-product-recognition-in-self-checkout
+---
+
+import PixelDetective from '../../../components/viz/PixelDetective.tsx';
+import PipelineFlow from '../../../components/viz/PipelineFlow.tsx';
+import Deep from '../../../components/ui/Deep.astro';
+
+You see a cat in a photo in a blink. For a computer, the same job is hard.
+
+In this lesson you will see how it can be done. Then you will play detective yourself.
+
+## A photo is a grid of numbers
+
+A photo is made of tiny dots called **pixels**. Each pixel has a number for how bright it is. Black is a small number and white is a big one.
+
+So the computer does not see a cat. It sees a huge grid of numbers.
+
+## It hunts for small patterns first
+
+The computer does not start by looking for "cat". That is too big a jump. It starts with tiny patterns, like a line where dark meets light. That line is called an **edge**.
+
+It slides a small pattern-spotter across the whole picture. It marks every place where the pattern fits. One spotter hunts for up-and-down edges. Another hunts for sideways ones.
+
+## Then it adds the patterns up
+
+Small patterns join up into bigger ones. Edges make corners and curves. Curves and corners make an ear, an eye or a whisker. Ears, eyes and whiskers together make a cat's face.
+
+Nobody types in these patterns. A computer finds the useful ones by itself, by training on lots of examples, just like the fruit game in [How a computer learns](../how-computers-learn/).
+
+<PipelineFlow
+  client:visible
+  title="From pixels to a cat"
+  stages={[
+    { title: 'Pixels', detail: 'A grid of numbers for brightness and colour.' },
+    { title: 'Edges', detail: 'Tiny patterns such as lines where dark meets light.' },
+    { title: 'Parts', detail: 'Edges join into curves and corners, then into shapes like ears and eyes.' },
+    { title: 'Whole thing', detail: 'Parts that fit together make a cat face, so the computer gives a score for "cat".' },
+    { title: 'A box', detail: 'It draws a box around the place where it found the cat.' },
+  ]}
+  caption="Real systems use many more steps. The idea is the same: small patterns first, bigger things later."
+/>
+
+## Try it: the pixel detective
+
+This detective is much simpler than a real one. It knows only four shapes: a plus, a cross, a square and a letter L. Tap squares to shade them, or pick a picture to start from.
+
+First it looks for **small patterns**: three shaded squares in a row. Then it checks which shape those lines add up to. It also says how sure it is.
+
+<PixelDetective client:visible />
+
+Things to try:
+
+- Start with "A plus". Then move it to a different place. The detective still finds it.
+- Pick "A plus with one square missing". Its sureness drops a little.
+- Pick "A plus with a gap in the middle". A person still sees a plus. The detective finds nothing. Why?
+- Pick "A plus and a cross on top of each other". Watch it get confused.
+
+## Drawing a box and saying how sure
+
+When the detective finds a shape, it draws a dashed **box** around it. Real detectors do the same, and they give each box a **confidence** score. It is a number for how sure the computer is, such as 90 out of 100.
+
+A high score is not a promise. A confident computer can still be wrong.
+
+## Why it gets fooled
+
+The detective gave up when you left a gap. Real systems are far better than that. But they still have blind spots. A shadow, a strange angle or a half-hidden object can confuse them.
+
+Researchers have found that tiny changes can fool a computer. People would not even notice them.
+
+In one experiment, black and white stickers were put on a real stop sign. A road-sign program the researchers had built then read it as a different sign. People still saw a stop sign.
+
+That is why people check results that matter, especially for safety.
+
+## Where you meet it
+
+- **Phone cameras.** Face boxes that pop up when you take a photo are made by face detection. It finds faces. It does not know who they are.
+- **Photo search.** Tools can label what is in your photos, such as "dog" or "beach", so you can search for them.
+- **Self-checkouts.** Some shops are trying cameras that spot loose fruit and vegetables and suggest them on the screen.
+
+<Deep title="For grown-ups: how this toy relates to real detectors">
+
+The detective uses hand-written rules: runs of three shaded squares as "parts", and a fixed list of parts for each shape. Real systems learn their patterns. A convolutional neural network slides small learned filters over the image, which is what the "small pattern-spotters" are. Early layers tend to respond to edges and colour patches, and later layers to larger structures, as shown in the Zeiler and Fergus visualisations. The deeper lesson on this is [How computers see](../../deep-learning/how-computers-see/).
+
+The detective's sliding of a shape over every position is a simplified version of how detectors search a picture, and its box is a bounding box. Real detectors also choose between many overlapping boxes and measure how well a box fits the true object. That is covered in [Detection and segmentation](../../deep-learning/detection-and-segmentation/).
+
+The confidence here is just found parts divided by parts needed plus extras. In real models the score comes from the network, and it is not automatically a calibrated probability, so 90 per cent does not always mean right nine times in ten.
+
+The sticker result is from Eykholt et al. (2017), tested on their own road-sign classifiers. Szegedy et al. (2013) first reported that tiny, deliberately chosen changes to an image can change a network's answer. Today's systems are trained to resist some of this, but it has not gone away. The self-checkout line is based on a trade article dated 27 May 2026, which describes the idea and its challenges rather than proving any particular shop's results.
+
+</Deep>
+
+## Want to go further?
+
+[How computers see](../../deep-learning/how-computers-see/) shows the sliding pattern-spotters with real numbers. It is written for older learners.
+
+Next: [Computers that decide and plan](../computers-that-decide-and-plan/), where a computer makes choices with rules, questions and looking ahead.

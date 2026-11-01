@@ -8,6 +8,20 @@ Versions follow [semantic versioning](https://semver.org/), read for a learning 
 - **Minor**: new lessons, labs, tools or features.
 - **Patch**: fixes and small corrections (wording, links, layout, accessibility).
 
+## [2.3.0] - 2026-11-01: Daily review, comfort, offline and interview questions
+
+Four new ways to use the site, five more lessons, and 60 new interview questions.
+
+- Daily review: a “Daily 5” built from the quizzes of lessons you have finished, with spaced repetition, a forgiving private streak and a “Today’s question” card on the homepage. It is saved only in your browser and travels with your progress export.
+- What should I learn next?: a page that picks one clear next lesson from your goal and what you have finished, with two lighter or more hands-on alternatives and any prerequisites you skipped.
+- Comfort menu: text size, line spacing, reading width and a calm mode that turns off decorative motion, plus a Listen button that reads a lesson aloud using your device’s own voice.
+- Offline mode: install Layerwise to your home screen, and lessons you have visited keep working without a connection, demos included. Caches are versioned by release so they are cleaned up when the site updates.
+- 60 new interview questions with worked answers, covering classical ML, deep learning, audio and speech, on-device AI, building with LLMs, MLOps and ML system design, and responsible AI.
+- Five lessons: how AI finds things in a picture (a pixel-detective game), detection and segmentation, AI and careers, AI and work, and how to read an AI paper.
+- A wording fix in the anomaly-detection lesson, which now says which standard deviation its z-scores use.
+
+**At this release:** 163 lessons in 17 topics, 24 practice labs, 871 glossary terms.
+
 ## [2.2.0] - 2026-11-01: Devices and sound, MLOps, and the long tail
 
 52 new lessons, a Responsible AI path and a devices-and-sound path, and the version history you are reading.
@@ -146,6 +160,7 @@ Animated AI engineering lessons, games and tools, covering AWS, Azure and Google
 
 **At this release:** 44 lessons in 12 topics, 0 practice labs, 79 glossary terms.
 
+[2.3.0]: https://github.com/awsmankit/layerwise/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/awsmankit/layerwise/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/awsmankit/layerwise/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/awsmankit/layerwise/compare/v1.2.0...v2.0.0

@@ -1,0 +1,204 @@
+/* Offline mode (wave 5): the small notes at the foot of the page, and the offline page.
+   Every class here starts with pw-. Colours come from the theme tokens, so light and dark both work. */
+
+.pw-root {
+  display: contents;
+}
+.pw-stack {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0 var(--gutter) calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  pointer-events: none;
+}
+.pw-stack:empty {
+  display: none;
+}
+.pw-card {
+  position: relative;
+  pointer-events: auto;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 0.7rem;
+  row-gap: 0.5rem;
+  align-items: start;
+  width: min(100%, 26rem);
+  box-sizing: border-box;
+  padding: 0.75rem 0.85rem;
+  background: var(--surface);
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  border-radius: var(--r-sm);
+  box-shadow: var(--hard);
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+.pw-card-saved,
+.pw-card-install {
+  padding-right: 3.1rem;
+}
+.pw-glyph {
+  margin-top: 0.1rem;
+  color: var(--signal-ink);
+  flex: none;
+}
+.pw-text {
+  margin: 0;
+  min-width: 0;
+}
+.pw-text a {
+  font-weight: 600;
+  color: var(--signal-ink);
+  white-space: nowrap;
+}
+.pw-actions {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.pw-btn {
+  min-height: 40px;
+  padding: 0.4rem 1rem;
+  font: 600 0.95rem/1.2 var(--font-display);
+  color: var(--paper);
+  background: var(--ink);
+  border: 2px solid var(--ink);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+.pw-btn:hover {
+  background: var(--signal);
+  border-color: var(--signal);
+  color: #fff;
+}
+.pw-btn-quiet {
+  color: var(--ink);
+  background: transparent;
+  border-color: var(--line);
+}
+.pw-btn-quiet:hover {
+  color: var(--signal-ink);
+  background: var(--signal-wash);
+  border-color: var(--signal);
+}
+.pw-close {
+  position: absolute;
+  top: 0.2rem;
+  right: 0.2rem;
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  color: var(--ink);
+  background: none;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.pw-close:hover {
+  background: var(--signal-wash);
+}
+
+@media (max-width: 480px) {
+  .pw-card {
+    width: 100%;
+  }
+}
+@media print {
+  .pw-stack {
+    display: none;
+  }
+}
+
+/* ---------- the offline page ---------- */
+
+.pw-offline {
+  padding-block: clamp(2rem, 6vw, 4rem);
+  max-width: 46rem;
+}
+.pw-offline h1 {
+  margin-top: 0;
+}
+.pw-offline h2 {
+  margin: 2rem 0 0.5rem;
+  font-size: 1.25rem;
+}
+.pw-lead {
+  font-size: 1.15rem;
+  color: var(--ink-2);
+}
+.pw-sections,
+.pw-saved {
+  margin: 1.25rem 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.6rem;
+}
+.pw-sections li {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.7rem 0.9rem;
+  background: var(--surface);
+  border: 2px solid var(--line);
+  border-radius: var(--r-sm);
+}
+.pw-sections a {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.05rem;
+  display: inline-block;
+  min-height: 24px;
+}
+.pw-sections span {
+  color: var(--ink-2);
+  font-size: 0.95rem;
+}
+.pw-saved li {
+  border-bottom: 1px solid var(--line-soft);
+}
+.pw-saved a {
+  display: block;
+  padding: 0.6rem 0.1rem;
+  min-height: 40px;
+  box-sizing: border-box;
+}
+.pw-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 1.25rem 0 0.5rem;
+}
+.pw-note {
+  color: var(--ink-2);
+  font-size: 0.95rem;
+  max-width: 60ch;
+}
+.pw-note:empty {
+  display: none;
+}
+
+/* the whole card is the tap target */
+.pw-sections li {
+  position: relative;
+}
+.pw-sections a::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+.pw-sections li:focus-within {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.pw-sections a:focus-visible {
+  outline: none;
+}

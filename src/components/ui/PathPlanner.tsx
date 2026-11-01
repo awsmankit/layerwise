@@ -176,7 +176,7 @@ export default function PathPlanner({ lessons }: { lessons: LessonInfo }) {
 
         <section ref={checkRef} id="check" className="pp-check" aria-labelledby="check-h">
           <h2 id="check-h">Not sure where you fit? Take the check.</h2>
-          <p className="pp-check-lede">Six questions, no pressure, nothing is stored except your path. “I don’t know yet” is a perfectly good answer and helps us point you at the right place.</p>
+          <p className="pp-check-lede">Six questions, no pressure, nothing is stored except your path. “I don’t know yet” is a perfectly good answer and helps us point you at the right place. Already started? <a href={withBase('/next/')}>See what to learn next.</a></p>
 
           <div className="viz pp-quiz">
             <AnimatePresence mode="wait">

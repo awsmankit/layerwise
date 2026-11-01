@@ -43,6 +43,8 @@ import { videosW4BuildC } from './w4-build-c';
 import { videosW4BuildD } from './w4-build-d';
 import { videosW4BuildE } from './w4-build-e';
 import { videosW4Misc } from './w4-misc';
+import { videosW5LessonsA } from './w5-lessons-a';
+import { videosW5LessonsB } from './w5-lessons-b';
 import type { LessonVideo, LessonVideos } from './types';
 
 export type { LessonVideo } from './types';
@@ -96,6 +98,8 @@ export const videoFiles: Record<string, LessonVideos> = {
   'w4-build-d': videosW4BuildD,
   'w4-build-e': videosW4BuildE,
   'w4-misc': videosW4Misc,
+  'w5-lessons-a': videosW5LessonsA,
+  'w5-lessons-b': videosW5LessonsB,
 };
 
 const all: LessonVideos = Object.assign({}, ...Object.values(videoFiles));

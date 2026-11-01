@@ -63,6 +63,8 @@ import { extrasW4BuildC } from './extras/w4-build-c';
 import { extrasW4BuildD } from './extras/w4-build-d';
 import { extrasW4BuildE } from './extras/w4-build-e';
 import { extrasW4Misc } from './extras/w4-misc';
+import { extrasW5LessonsA } from './extras/w5-lessons-a';
+import { extrasW5LessonsB } from './extras/w5-lessons-b';
 
 export type QuizItem = {
   q: string;
@@ -519,4 +521,4 @@ const baseExtras: Record<string, Extra> = {
 };
 
 /** Core lessons plus the per-track files in ./extras. */
-export const extras: Record<string, Extra> = { ...baseExtras, ...extrasCloud, ...extrasInfra, ...extrasLocal, ...extrasCore, ...extrasModels, ...extrasEcosystem, ...extras_frameworks, ...extras_mcp, ...extras_promptpatterns, ...extras_libraries, ...extras_reasoning, ...extras_agenteval, ...extras_euai, ...extrasOps, ...extrasRetrievalServing, ...extrasStart, ...extrasW1StartA, ...extrasW1RespA, ...extrasW1RespB, ...extrasW1Skills, ...extrasW1DlA, ...extrasW1DlB, ...extrasW1MlA, ...extrasW1MlB, ...extrasW1Audio, ...extrasW2AgentsA, ...extrasW2AgentsB, ...extrasW2Product, ...extrasW2Evals, ...extrasW2Docs, ...extrasW2DlA, ...extrasW2DlB, ...extrasW2Resp, ...extrasW3EdgeA, ...extrasW3EdgeB, ...extrasW3EdgeC, ...extrasW3AudioA, ...extrasW3AudioB, ...extrasW3MlopsA, ...extrasW3MlopsB, ...extrasW3MlopsC, ...extrasW3AppliedA, ...extrasW3AppliedB, ...extrasW4DlA, ...extrasW4DlB, ...extrasW4DlC, ...extrasW4Skills, ...extrasW4StartA, ...extrasW4StartB, ...extrasW4RespA, ...extrasW4RespB, ...extrasW4RespC, ...extrasW4RespD, ...extrasW4BuildA, ...extrasW4BuildB, ...extrasW4BuildC, ...extrasW4BuildD, ...extrasW4BuildE, ...extrasW4Misc };
+export const extras: Record<string, Extra> = { ...baseExtras, ...extrasCloud, ...extrasInfra, ...extrasLocal, ...extrasCore, ...extrasModels, ...extrasEcosystem, ...extras_frameworks, ...extras_mcp, ...extras_promptpatterns, ...extras_libraries, ...extras_reasoning, ...extras_agenteval, ...extras_euai, ...extrasOps, ...extrasRetrievalServing, ...extrasStart, ...extrasW1StartA, ...extrasW1RespA, ...extrasW1RespB, ...extrasW1Skills, ...extrasW1DlA, ...extrasW1DlB, ...extrasW1MlA, ...extrasW1MlB, ...extrasW1Audio, ...extrasW2AgentsA, ...extrasW2AgentsB, ...extrasW2Product, ...extrasW2Evals, ...extrasW2Docs, ...extrasW2DlA, ...extrasW2DlB, ...extrasW2Resp, ...extrasW3EdgeA, ...extrasW3EdgeB, ...extrasW3EdgeC, ...extrasW3AudioA, ...extrasW3AudioB, ...extrasW3MlopsA, ...extrasW3MlopsB, ...extrasW3MlopsC, ...extrasW3AppliedA, ...extrasW3AppliedB, ...extrasW4DlA, ...extrasW4DlB, ...extrasW4DlC, ...extrasW4Skills, ...extrasW4StartA, ...extrasW4StartB, ...extrasW4RespA, ...extrasW4RespB, ...extrasW4RespC, ...extrasW4RespD, ...extrasW4BuildA, ...extrasW4BuildB, ...extrasW4BuildC, ...extrasW4BuildD, ...extrasW4BuildE, ...extrasW4Misc, ...extrasW5LessonsA, ...extrasW5LessonsB };
