@@ -41,7 +41,7 @@ export default function PathPlanner({ lessons }: { lessons: LessonInfo }) {
       if ((pathIds as string[]).includes(h)) {
         fromHash.current = true;
         setSel(h as PathId);
-        scrollToPath(stepsRef.current, 300);
+        scrollToPath(stepsRef.current);
       } else if (h === 'check') requestAnimationFrame(() => checkRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
     };
     open();
@@ -153,8 +153,9 @@ export default function PathPlanner({ lessons }: { lessons: LessonInfo }) {
             </p>
           )}
 
-          <AnimatePresence mode="wait">
-            <motion.ol key={sel} className="pp-steps" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.3, ease: EASE }}>
+          {/* no exit fade: waiting for the old list to fade out left a blank gap and a height jump in the middle of the scroll */}
+          <>
+            <motion.ol key={sel} className="pp-steps" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: EASE }}>
               {path.steps.map((s, n) => {
                 if (s.kind === 'game') {
                   return (
@@ -181,7 +182,7 @@ export default function PathPlanner({ lessons }: { lessons: LessonInfo }) {
                 );
               })}
             </motion.ol>
-          </AnimatePresence>
+          </>
 
           <div className="pp-actions">
             <button type="button" className="btn" onClick={() => setSaved(sel)} disabled={saved === sel}>
