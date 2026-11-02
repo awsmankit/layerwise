@@ -10,6 +10,16 @@ export type LessonInfo = Record<string, { title: string; href: string; level: st
 
 const levelLabel = (l: string) => l.charAt(0).toUpperCase() + l.slice(1);
 
+// bring the chosen path's steps into view; on a phone the tabs fill the screen and the steps sit far below them
+function scrollToPath(el: HTMLElement | null, delay = 0) {
+  const go = () => {
+    const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    el?.scrollIntoView({ behavior: calm ? 'auto' : 'smooth', block: 'start' });
+  };
+  if (delay) setTimeout(go, delay);
+  else requestAnimationFrame(go);
+}
+
 export default function PathPlanner({ lessons }: { lessons: LessonInfo }) {
   const [saved, setSaved] = useStore<PathId | null>(KEYS.path, null);
   const [sel, setSel] = useState<PathId>('newcomer');
@@ -23,14 +33,25 @@ export default function PathPlanner({ lessons }: { lessons: LessonInfo }) {
   const [picked, setPicked] = useState<number | null>(null);
   const [finished, setFinished] = useState(false);
 
+  // arriving from a path card (/start/#coder) opens that path and brings its steps into view
+  const fromHash = useRef(false);
   useEffect(() => {
-    const h = window.location.hash.replace('#', '');
-    if ((pathIds as string[]).includes(h)) setSel(h as PathId);
-    else if (h === 'check') requestAnimationFrame(() => checkRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    const open = () => {
+      const h = window.location.hash.replace('#', '');
+      if ((pathIds as string[]).includes(h)) {
+        fromHash.current = true;
+        setSel(h as PathId);
+        scrollToPath(stepsRef.current, 300);
+      } else if (h === 'check') requestAnimationFrame(() => checkRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    };
+    open();
+    window.addEventListener('hashchange', open);
+    return () => window.removeEventListener('hashchange', open);
   }, []);
 
+  // otherwise show the path they saved, unless a card or link just chose another one
   useEffect(() => {
-    if (saved) setSel(saved);
+    if (saved && !fromHash.current) setSel(saved);
   }, [saved]);
 
   const path = paths[sel];
@@ -59,20 +80,14 @@ export default function PathPlanner({ lessons }: { lessons: LessonInfo }) {
     setFinished(false);
     setAnswers(placement.map(() => null));
   };
-  // bring the chosen path's steps into view; on a phone the tabs fill the screen and the steps sit far below them
-  const scrollToPath = () =>
-    requestAnimationFrame(() => {
-      const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      stepsRef.current?.scrollIntoView({ behavior: calm ? 'auto' : 'smooth', block: 'start' });
-    });
   const openPath = (id: PathId) => {
     setSel(id);
-    scrollToPath();
+    scrollToPath(stepsRef.current);
   };
   const showPath = (id: PathId) => {
     setSel(id);
     setSaved(id);
-    scrollToPath();
+    scrollToPath(stepsRef.current);
   };
 
   const q = placement[i];
