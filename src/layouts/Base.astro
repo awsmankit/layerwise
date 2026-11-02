@@ -117,6 +117,21 @@ const trackStyle = track ? `--track:${track.color};--on-track:${track.on}` : und
     <link rel="apple-touch-icon" href={withBase('/icons/apple-touch-icon.png')} />
     <link rel="alternate" type="application/rss+xml" title={`${site.name}: news and lessons`} href={withBase('/rss.xml')} />
     <meta name="generator" content={Astro.generator} />
+    {
+      site.goatcounter && import.meta.env.PROD && (
+        <script is:inline define:vars={{ code: site.goatcounter }}>
+          /* Anonymous visit counting (GoatCounter: no cookies, no personal data). Skipped when the browser says do not track. */
+          (function () {
+            if (navigator.doNotTrack === '1' || window.doNotTrack === '1' || navigator.globalPrivacyControl) return;
+            var s = document.createElement('script');
+            s.async = true;
+            s.src = 'https://gc.zgo.at/count.js';
+            s.setAttribute('data-goatcounter', 'https://' + code + '.goatcounter.com/count');
+            document.head.appendChild(s);
+          })();
+        </script>
+      )
+    }
     <script is:inline>
       /* Runs before first paint: no flash of the wrong theme or depth. */
       (function () {
@@ -211,7 +226,13 @@ const trackStyle = track ? `--track:${track.color};--on-track:${track.on}` : und
             {site.name}
           </a>
           <p class="foot-tag">{site.tagline}.</p>
-          <p class="foot-privacy">No accounts and no analytics. What you do here is saved only in your own browser.</p>
+          <p class="foot-privacy">
+            {
+              site.goatcounter
+                ? 'No accounts, no ads and no cookies. Visits are counted anonymously, and not at all if your browser says do not track. What you do here is saved only in your own browser.'
+                : 'No accounts and no analytics. What you do here is saved only in your own browser.'
+            }
+          </p>
         </div>
         {
           footerGroups.map((g) => (

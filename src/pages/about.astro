@@ -24,6 +24,15 @@ import { withBase } from '../lib/url';
         <li>Draft summaries produced with a language model are reviewed and edited by a person before they are published.</li>
       </ul>
 
+      <h2>Privacy</h2>
+      {
+        site.goatcounter ? (
+          <p>There are no accounts, no ads and no cookies. Your progress, answers and settings are saved only in your own browser. The site counts visits anonymously with <a href="https://www.goatcounter.com" rel="noopener">GoatCounter</a>: it records which page was opened, roughly which country and what kind of browser, and where the visitor came from, never who you are. It is skipped when your browser sends “do not track”, and the totals are not shared with advertisers. The code for the site, including this counter, is public on <a href={site.repo} rel="noopener">GitHub</a>.</p>
+        ) : (
+          <p>There are no accounts, no ads, no cookies and no analytics. Your progress, answers and settings are saved only in your own browser.</p>
+        )
+      }
+
       <h2>Reusing this material</h2>
       <p>The lessons, quizzes, interview questions, glossary, course plans and game scenarios are licensed under <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener">Creative Commons Attribution 4.0 (CC BY 4.0)</a>. You can copy, adapt and share them for any purpose, including teaching and commercial training, as long as you give credit, link to the licence and say if you changed anything. A suitable credit: “Based on Layerwise by awsmankit, licensed under CC BY 4.0.”</p>
       <p>The source code is under the <a href="https://github.com/awsmankit/layerwise/blob/main/LICENSE" rel="noopener">MIT licence</a>. Linked papers, documentation and product names belong to their owners.</p>

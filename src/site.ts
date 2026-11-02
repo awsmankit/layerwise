@@ -5,6 +5,11 @@ export const site = {
     'Animated lessons, system design games and cost tools for AI engineers, from machine learning basics to agents and edge deployment.',
   repo: 'https://github.com/awsmankit/layerwise',
   contentLicence: { label: 'CC BY 4.0', url: 'https://creativecommons.org/licenses/by/4.0/' },
+  /**
+   * GoatCounter site code (the part before .goatcounter.com). Empty means no visit counting at all.
+   * GoatCounter sets no cookies, stores no personal data and counts page views only.
+   */
+  goatcounter: '',
 };
 
 /** The header holds five places; games, calculators and the glossary sit under Practice and in the footer. */
