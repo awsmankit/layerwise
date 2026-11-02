@@ -1,0 +1,60 @@
+name: Request a site feature
+description: A new way to use Layerwise: a tool, a game, a learning aid, an accessibility option.
+title: "Feature: "
+labels: ["feature-request"]
+body:
+  - type: input
+    id: summary
+    attributes:
+      label: What would you like to be able to do?
+      placeholder: "e.g. Print a one-page revision sheet for each learning path"
+    validations:
+      required: true
+  - type: dropdown
+    id: audience
+    attributes:
+      label: Who needs it most?
+      options:
+        - Kids (about 10 to 13) and their parents or teachers
+        - Teens and students
+        - Complete beginners
+        - Career-switchers
+        - Engineers building with AI
+        - Experts and interview candidates
+        - Everyone
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of thing is it?
+      options:
+        - A game or interactive simulation
+        - A coding lab
+        - A calculator or tool
+        - Revision and progress (review, streaks, paths, certificates)
+        - Accessibility and reading comfort
+        - Teaching material (plans, worksheets, activities)
+        - Interview preparation
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem it solves
+      description: What is hard or missing today?
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: How you imagine it working (optional)
+      description: A rough sketch in words is plenty. Layerwise keeps everything in your browser: no accounts, no tracking.
+  - type: checkboxes
+    id: help
+    attributes:
+      label: Can you help?
+      options:
+        - label: I would like to build it (I will follow CONTRIBUTING.md)
+        - label: I can test it on a phone and with a screen reader

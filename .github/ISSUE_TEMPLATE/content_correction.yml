@@ -1,0 +1,34 @@
+name: Report a mistake in a lesson
+description: A wrong fact, an outdated product name, a broken link, a confusing explanation.
+title: "Correction: "
+labels: ["content"]
+body:
+  - type: input
+    id: url
+    attributes:
+      label: Page or lesson
+      placeholder: "https://awsmankit.github.io/layerwise/learn/..."
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What is wrong or unclear?
+      description: Quote the sentence if you can.
+    validations:
+      required: true
+  - type: textarea
+    id: source
+    attributes:
+      label: What is right, and how do you know?
+      description: A link to an official page or paper is ideal. Product names and prices change, so please say the date you checked.
+  - type: dropdown
+    id: level
+    attributes:
+      label: Which reader were you?
+      options:
+        - Kid or teen
+        - Beginner
+        - Student
+        - Engineer
+        - Expert

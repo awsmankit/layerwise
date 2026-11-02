@@ -1,0 +1,73 @@
+name: Request a lesson or topic
+description: Something you want to learn (or teach) that Layerwise does not cover yet.
+title: "Lesson request: "
+labels: ["lesson-request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you. Layerwise is written for people from school students to professional engineers, so the most useful thing you can tell us is **who the lesson is for**.
+  - type: input
+    id: topic
+    attributes:
+      label: Topic
+      description: What should the lesson explain?
+      placeholder: "e.g. How recommendation systems decide what you see"
+    validations:
+      required: true
+  - type: dropdown
+    id: from
+    attributes:
+      label: Who is it for? Starting point
+      description: Where does the learner start?
+      options:
+        - Kids (about 10 to 13), no background
+        - Teens (14 to 17)
+        - Complete beginner (adult, any background)
+        - Career-switcher or curious professional
+        - University student of ML or computer science
+        - Software engineer new to AI
+        - AI / ML engineer
+        - Specialist or expert
+    validations:
+      required: true
+  - type: dropdown
+    id: to
+    attributes:
+      label: Where should they be able to get to?
+      description: What should they be able to do or explain afterwards?
+      options:
+        - Explain it in plain words
+        - Use it safely and sensibly
+        - Build a small working example
+        - Design it into a real system
+        - Run and debug it in production
+        - Pass an interview on it
+        - Teach it to others
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why does it matter?
+      description: What goes wrong for people who do not understand it? What did you struggle with?
+    validations:
+      required: true
+  - type: textarea
+    id: interactive
+    attributes:
+      label: An idea to make it interactive (optional)
+      description: A game, a slider, a simulation, a lab, a diagram you would like to poke at.
+  - type: textarea
+    id: sources
+    attributes:
+      label: Good sources (optional)
+      description: Papers, official docs, or explanations you trust. Links please.
+  - type: checkboxes
+    id: help
+    attributes:
+      label: Can you help?
+      options:
+        - label: I would like to write it (I will follow CONTRIBUTING.md)
+        - label: I can review a draft for accuracy
+        - label: I can test it with learners at the level above

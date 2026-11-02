@@ -1,6 +1,37 @@
 # Layerwise
 
-Animated lessons, system designs and cost tools for AI engineers, from machine learning basics to agents and edge deployment. Built with Astro, React islands, MDX and `motion`. Deploys to GitHub Pages.
+**Learn how AI works, one layer at a time.** Free, interactive lessons, games, coding labs and revision tools for everyone from school students to professional engineers. No accounts, no tracking, and it works offline.
+
+**Live site: [awsmankit.github.io/layerwise](https://awsmankit.github.io/layerwise/)** · [What's new](https://awsmankit.github.io/layerwise/changelog/) · [Releases](https://github.com/awsmankit/layerwise/releases)
+
+## Who it is for
+
+| If you are | Start with |
+|---|---|
+| A child of about 11, a parent or a teacher | The *I'm new to AI* path (short lessons, games, no code) and the teacher kit with unplugged activities |
+| A student or career-switcher | *I want to build my first model*, then *From machine learning to modern AI* |
+| An engineer building with LLMs | *I build with LLMs*: prompts, RAG, agents, evals, system design |
+| Running AI in production | *I run AI in production*, *I run GPUs and the platform*, *I build AI for devices and sound* |
+| Someone who needs to use AI responsibly | *I want to use and build AI responsibly*: bias, privacy, safety, rules |
+| Preparing for or running an interview | The interview section: candidate practice and an interviewer's scorecard |
+
+## What is inside
+
+Around 160 lessons in 17 topics (see the [changelog](CHANGELOG.md) for the exact count in each release), with a live demo in nearly every one:
+
+- **Interactive demos:** train a neural network in your browser, teach a computer to tell apples from bananas, watch a spectrogram of a sound, watch attention and the KV cache at work, and many more.
+- **Games** that teach system design and trade-offs: Blueprint, Cost Crunch, Fit the Model, Rack and Stack, Incident Room.
+- **Coding labs** that run real Python in the browser and check your code.
+- **Calculators** for cost, model memory, GPUs, latency and break-even.
+- **Revision:** a quiz on every lesson, a Daily 5 with spaced repetition, learning paths with progress, completion certificates, and a "what should I learn next?" page.
+- **Interview prep** for candidates and interviewers, a glossary, and engineering case studies.
+- **Comfort and access:** text size and reading comfort settings, read-aloud, offline mode, and a design that works on a phone.
+
+Lessons carry their sources, product facts are dated, and example numbers are labelled as examples.
+
+## Collaborate
+
+This is open source and meant to be shared. You can **ask for a lesson or feature** (say who it is for, from kids to pros), **report a mistake**, or **raise a pull request**. Start with [CONTRIBUTING.md](CONTRIBUTING.md); there are [issue templates](../../issues/new/choose) for each kind of request.
 
 ## Run it locally
 
@@ -95,8 +126,6 @@ The footer's source link comes from `repo` in `src/site.ts`; change it if you fo
 - Isometric line figures: [`@lucasmarkes/hairline`](https://github.com/lucasmarkes/hairline) by Lucas Marques, MIT licence.
 - Fonts: Bricolage Grotesque, Source Serif 4 and JetBrains Mono through Fontsource (SIL Open Font Licence).
 
-## Roadmap
+## Ideas welcome
 
-- Automated Pulse ingestion: scheduled job collects release notes and papers, drafts summaries, opens a pull request for review.
-- Dated pricing data as versioned JSON, shown with a "last verified" date in the calculators.
-- Search (Pagefind), newsletter, and exported video clips from the same components (Remotion).
+Open for help (add yours as an [issue](../../issues/new/choose)): more languages (translations need reviewers and a font that covers the script), a project showcase, assessment tools for teachers, more in-browser labs, and more interactive demos for the topics that are still mostly text.

@@ -1,0 +1,34 @@
+name: Report a bug
+description: Something on the site is broken: a demo, a layout, a button, offline mode.
+title: "Bug: "
+labels: ["bug"]
+body:
+  - type: input
+    id: url
+    attributes:
+      label: Page
+      placeholder: "https://awsmankit.github.io/layerwise/..."
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+  - type: input
+    id: device
+    attributes:
+      label: Device and browser
+      placeholder: "e.g. iPhone 14, Safari / Pixel 8, Chrome / Windows laptop, Firefox"
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Site version (shown in the footer)
+      placeholder: "e.g. v2.3.0"
