@@ -59,10 +59,20 @@ export default function PathPlanner({ lessons }: { lessons: LessonInfo }) {
     setFinished(false);
     setAnswers(placement.map(() => null));
   };
+  // bring the chosen path's steps into view; on a phone the tabs fill the screen and the steps sit far below them
+  const scrollToPath = () =>
+    requestAnimationFrame(() => {
+      const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      stepsRef.current?.scrollIntoView({ behavior: calm ? 'auto' : 'smooth', block: 'start' });
+    });
+  const openPath = (id: PathId) => {
+    setSel(id);
+    scrollToPath();
+  };
   const showPath = (id: PathId) => {
     setSel(id);
     setSaved(id);
-    requestAnimationFrame(() => stepsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    scrollToPath();
   };
 
   const q = placement[i];
@@ -83,7 +93,7 @@ export default function PathPlanner({ lessons }: { lessons: LessonInfo }) {
                 aria-selected={on}
                 className={`pp-tab${on ? ' is-on' : ''}`}
                 style={{ '--c': p.color, '--on': p.on } as React.CSSProperties}
-                onClick={() => setSel(id)}
+                onClick={() => openPath(id)}
               >
                 <b>{p.title}</b>
                 <span>{p.who}</span>
@@ -113,7 +123,7 @@ export default function PathPlanner({ lessons }: { lessons: LessonInfo }) {
             <p className="pp-assumes">
               <b>This path assumes you know:</b>{' '}
               {path.after && (
-                <a href={`#${path.after}`} onClick={() => setSel(path.after!)}>
+                <a href={`#${path.after}`} onClick={() => openPath(path.after!)}>
                   the “{paths[path.after].title}” path
                 </a>
               )}
