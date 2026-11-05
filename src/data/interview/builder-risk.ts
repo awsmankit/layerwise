@@ -10,7 +10,7 @@ export const questionsBuilderRisk: Question[] = [
     id: 'agent-tools-not-endpoint-wrappers',
     prompt:
       'You are giving an internal assistant access to your CRM through an API with 45 endpoints (list_customers, get_customer, list_orders, list_notes, update_contact and so on). The first prototype wraps every endpoint as a tool. It picks the wrong tool about one time in five, and list_customers returns whole records and floods the context. How do you redesign the tools, and how do you know the redesign worked?',
-    roles: ['ai-eng'],
+    roles: ['ai-eng', 'agentic-eng', 'sw-ai-tools', 'ai-security'],
     level: 'mid',
     kind: 'design',
     topics: ['agents', 'tool use', 'tool design', 'evals'],
@@ -51,7 +51,7 @@ export const questionsBuilderRisk: Question[] = [
     id: 'agent-context-compaction-long-run',
     prompt:
       'A coding agent works for an hour on a large refactor. Tool output, file contents and its own reasoning have filled the context window twice, and after the last compaction it forgot a rule the user gave at the start (never edit the vendor directory) and edited it. Design how the agent should manage context and memory over a long run, and how you would test it.',
-    roles: ['ai-eng'],
+    roles: ['ai-eng', 'agentic-eng', 'ai-security'],
     level: 'senior',
     kind: 'design',
     topics: ['agents', 'memory', 'context engineering', 'compaction'],
@@ -91,7 +91,7 @@ export const questionsBuilderRisk: Question[] = [
     id: 'multi-agent-or-single-agent-cost',
     prompt:
       'A product manager proposes replacing a single-agent research assistant with a team of cooperating agents. Assume one chat-style answer uses 8,000 tokens, a blended price of $5 per million tokens, and 6,000 tasks a day. A vendor engineering write-up reports agents using about 4 times the tokens of a chat and multi-agent systems about 15 times. Estimate the daily cost of each design, then say what else you would want to know before agreeing.',
-    roles: ['ai-eng'],
+    roles: ['ai-eng', 'agentic-eng', 'ai-lead'],
     level: 'mid',
     kind: 'estimation',
     topics: ['multi-agent', 'cost', 'reliability', 'agents'],
@@ -211,7 +211,7 @@ export const questionsBuilderRisk: Question[] = [
     id: 'long-context-vs-rag-break-even',
     prompt:
       'A 120,000-token policy handbook is queried about 800 times a day. Do you put it all in every prompt, cache it, or use retrieval? Assume: question 250 tokens, answer 500 tokens, retrieval slice 4,000 tokens, input $3 per million tokens, output $15 per million, cache reads cost 0.1× the input price and writes 1.25×, 85% of questions find the cache warm, and retrieval infrastructure costs $6 a day. Work out the daily cost of each design, then say what else decides it.',
-    roles: ['ai-eng', 'ml-platform'],
+    roles: ['ai-eng', 'ml-platform', 'solutions-architect'],
     level: 'mid',
     kind: 'estimation',
     topics: ['long context', 'rag', 'caching', 'cost'],
@@ -251,7 +251,7 @@ export const questionsBuilderRisk: Question[] = [
     id: 'text-to-sql-assistant-safety',
     prompt:
       'A finance team wants to ask questions of the sales warehouse in plain English, and an LLM will write the SQL. The first demo looked great. How do you make it safe, and trustworthy enough that people will quote the numbers it gives?',
-    roles: ['ai-eng'],
+    roles: ['ai-eng', 'agentic-eng', 'sw-ai-tools', 'solutions-architect', 'ai-security'],
     level: 'senior',
     kind: 'design',
     topics: ['text-to-sql', 'agents', 'security', 'evals'],
@@ -291,7 +291,7 @@ export const questionsBuilderRisk: Question[] = [
     id: 'browser-agent-for-legacy-portal',
     prompt:
       'A team wants an AI agent to fill expense forms in a legacy web portal that has no API. It would click through about 25 steps per form, reading pages that include text written by suppliers. Would you build it, and if so how?',
-    roles: ['ai-eng'],
+    roles: ['ai-eng', 'agentic-eng', 'sw-ai-tools', 'fde', 'ai-security'],
     level: 'senior',
     kind: 'design',
     topics: ['agents', 'computer use', 'security', 'prompt injection'],
@@ -331,7 +331,7 @@ export const questionsBuilderRisk: Question[] = [
     id: 'ux-for-an-ai-summary-feature',
     prompt:
       'You are adding an AI summary of long support tickets to an agent’s workspace. The model takes about 1.8 seconds to the first token and writes about 40 tokens a second, and summaries run about 160 tokens. Agents will rely on them. Design the interface: waiting, trust, correction and feedback, and say how you would know it works.',
-    roles: ['ai-eng'],
+    roles: ['ai-eng', 'ai-pm', 'fde', 'responsible-ai'],
     level: 'mid',
     kind: 'design',
     topics: ['ux', 'streaming', 'citations', 'human-in-the-loop'],
@@ -371,7 +371,7 @@ export const questionsBuilderRisk: Question[] = [
     id: 'guardrail-base-rate-and-threshold',
     prompt:
       'A chat product handles 200,000 requests a day, and suppose 0.5% are genuinely abusive. Your moderation classifier catches 92% of abusive requests and wrongly blocks 1.5% of normal ones. (a) How many requests does it block a day, and what share of those blocks are correct? (b) Your PM says “it is right 98.5% of the time on normal requests, ship it.” Respond. (c) What would you change?',
-    roles: ['ai-eng'],
+    roles: ['ai-eng', 'ai-pm', 'data-scientist', 'ai-test', 'ai-security'],
     level: 'junior',
     kind: 'estimation',
     topics: ['guardrails', 'base rate', 'classification', 'safety'],
@@ -411,7 +411,7 @@ export const questionsBuilderRisk: Question[] = [
     id: 'trace-slow-and-wrong-answer',
     prompt:
       'A user complains: “the assistant was slow and then gave a wrong answer.” All you have is a request log with one line per request and its total latency. Describe what you need to see inside a single run, what you record, what you do not record by default, and how you keep enough traces without storing everything. The app serves 100,000 runs a day and 2% of them fail.',
-    roles: ['ai-eng', 'ml-platform'],
+    roles: ['ai-eng', 'ml-platform', 'agentic-eng', 'ai-security'],
     level: 'mid',
     kind: 'debugging',
     topics: ['observability', 'tracing', 'sampling', 'privacy'],
@@ -451,7 +451,7 @@ export const questionsBuilderRisk: Question[] = [
     id: 'semantic-cache-and-batch-savings',
     prompt:
       'You run a support assistant with 250,000 questions a day and an average model call costs $0.008. Someone proposes a semantic cache that returns a stored answer when a new question is similar enough to an old one. A lookup costs $0.0001 and every question is looked up. In a pilot 35% of questions hit the cache, and a review of sampled hits found 6% of served answers were wrong; assume a wrong answer costs about $0.30 in refunds and rework. Should you ship it? Separately, there is a nightly job of 250,000 offline requests of 1,500 input and 200 output tokens each at $3 and $15 per million tokens: what does a batch API do for it?',
-    roles: ['ai-eng', 'ml-platform'],
+    roles: ['ai-eng', 'ml-platform', 'solutions-architect'],
     level: 'senior',
     kind: 'estimation',
     topics: ['semantic caching', 'batch api', 'cost', 'rate limits'],
@@ -492,7 +492,7 @@ export const questionsBuilderRisk: Question[] = [
     id: 'eval-labeller-agreement-and-kappa',
     prompt:
       'Two reviewers labelled the same 200 model answers as pass or fail for your eval set. Both passed 170, A passed and B failed 12, A failed and B passed 8, and both failed 10, so they agree on 180 (90%). Your manager says 90% agreement means the labels are fine. Respond with numbers, and say what you do next.',
-    roles: ['ai-eng', 'ml-eng'],
+    roles: ['ai-eng', 'ml-eng', 'data-eng', 'data-scientist', 'ai-test', 'research', 'ai-lead'],
     level: 'junior',
     kind: 'concept',
     topics: ['evals', 'labelling', 'cohen kappa', 'datasets'],
@@ -532,7 +532,7 @@ export const questionsBuilderRisk: Question[] = [
     id: 'offline-auc-great-online-poor',
     prompt:
       'A churn model scored AUC 0.91 on a held-out set. Two weeks after launch the business team says the customers it flags behave like random ones. Nothing crashed. Walk me through your investigation, in order, and what you build so it is caught next time.',
-    roles: ['ml-eng', 'ml-platform'],
+    roles: ['ml-eng', 'ml-platform', 'data-eng', 'data-scientist'],
     level: 'mid',
     kind: 'debugging',
     topics: ['training-serving skew', 'leakage', 'feature stores', 'monitoring'],
@@ -572,7 +572,7 @@ export const questionsBuilderRisk: Question[] = [
     id: 'code-as-of-join-with-ttl',
     prompt:
       'Write a function as_of_join(events, features, ttl) for building a training set. events are (entity_id, timestamp, label) tuples. features are (entity_id, timestamp, value) tuples meaning the feature took that value from that timestamp onward. For each event, return the latest feature value known at or before the event’s timestamp, but only if it is no older than ttl; otherwise None. Timestamps are integers (days). Walk me through the edge cases and what you would change for production-sized data.',
-    roles: ['ml-eng'],
+    roles: ['ml-eng', 'data-eng'],
     level: 'mid',
     kind: 'coding',
     topics: ['point-in-time join', 'leakage', 'python', 'feature stores'],
@@ -612,7 +612,7 @@ export const questionsBuilderRisk: Question[] = [
     id: 'batch-or-online-break-even',
     prompt:
       'A shop has 20 million customers. Scoring one customer takes 30 ms of one CPU core, a core costs $0.05 an hour (an example price), and each active customer opens the app twice a day. Online servers are sized for a peak 4 times the daily average and run at no more than 60% utilisation at peak. Compare nightly batch scoring of every customer with online scoring when 5% and when 15% of customers are active on a day. Where do they break even, and what is missing from the comparison?',
-    roles: ['ml-platform'],
+    roles: ['ml-platform', 'data-eng'],
     level: 'junior',
     kind: 'estimation',
     topics: ['batch inference', 'online inference', 'capacity planning', 'cost'],
@@ -652,7 +652,7 @@ export const questionsBuilderRisk: Question[] = [
     id: 'drift-alerts-every-morning',
     prompt:
       'Your drift monitor runs a KS test on each of 25 input features every morning and pages the on-call when any p-value is below 0.05. It fires most days and nobody trusts it. Last week the device-type feature moved from 60/25/10/5 per cent (phone, laptop, tablet, other) to 45/25/15/15 and nobody noticed because it looked like the usual noise. Redesign the monitor.',
-    roles: ['ml-platform', 'ml-eng'],
+    roles: ['ml-platform', 'ml-eng', 'data-eng', 'edge-ml', 'ai-lead'],
     level: 'mid',
     kind: 'debugging',
     topics: ['drift', 'monitoring', 'psi', 'alerting'],
@@ -692,7 +692,7 @@ export const questionsBuilderRisk: Question[] = [
     id: 'canary-sample-size-for-bad-rate',
     prompt:
       'A new model goes to a canary. The current bad-outcome rate (say, genuine customers wrongly declined who then contact support) is 4%. Your canary gets 5% of 3,000 requests an hour. You want to catch a rise to 5%, or to 8%, with a 5% false-alarm level and an 80% chance of detecting it. How many cases and how many hours do you need, and what does that tell you about the rollout?',
-    roles: ['ml-platform', 'ml-eng'],
+    roles: ['ml-platform', 'ml-eng', 'ai-test', 'edge-ml'],
     level: 'senior',
     kind: 'estimation',
     topics: ['canary', 'a/b testing', 'sample size', 'deployment'],
@@ -732,7 +732,7 @@ export const questionsBuilderRisk: Question[] = [
     id: 'reproduce-and-roll-back-a-model',
     prompt:
       'Support asks: “Which data and code produced the model that was live in March, can you rebuild it, and can you roll back to it?” Today you have a file called final_v3.pkl in a bucket. Describe what you would record for every training run, what a model registry adds, what “reproduced” should mean in practice, and how rollback should work.',
-    roles: ['ml-platform', 'ml-eng'],
+    roles: ['ml-platform', 'ml-eng', 'data-eng', 'ai-lead'],
     level: 'mid',
     kind: 'concept',
     topics: ['reproducibility', 'model registry', 'mlops', 'rollback'],
@@ -852,7 +852,7 @@ export const questionsBuilderRisk: Question[] = [
     id: 'fairness-metrics-from-confusion-tables',
     prompt:
       'A lending-style model approves applicants. Here are confusion tables on 2,500 applicants from each of two groups; positive means the person would repay, and the model approves predicted positives. Group A: TP 700, FN 300, FP 300, TN 1,200. Group B: TP 350, FN 150, FP 150, TN 1,850. Compute the standard group metrics, say which fairness criteria hold, and explain whether a team could satisfy all of them. What would you do?',
-    roles: ['ml-eng'],
+    roles: ['ml-eng', 'data-scientist', 'responsible-ai'],
     level: 'senior',
     kind: 'estimation',
     topics: ['fairness', 'metrics', 'thresholds', 'responsible ai'],
@@ -892,7 +892,7 @@ export const questionsBuilderRisk: Question[] = [
     id: 'differential-privacy-epsilon-intuition',
     prompt:
       'A product manager says “we use differential privacy with epsilon equal to 1” and asks whether that makes the data safe. Explain in plain words, with a worked example of a noisy count, what epsilon does and what the privacy budget is, and say what you would still check.',
-    roles: ['ml-eng', 'ml-platform'],
+    roles: ['ml-eng', 'ml-platform', 'edge-ml', 'responsible-ai'],
     level: 'senior',
     kind: 'concept',
     topics: ['differential privacy', 'privacy', 'epsilon', 'noise'],
@@ -932,7 +932,7 @@ export const questionsBuilderRisk: Question[] = [
     id: 'pii-and-memorisation-in-an-llm-app',
     prompt:
       'You are adding an LLM feature that reads customer support tickets. A reviewer asks: “Could this leak customers’ personal data?” List the ways it could, what you build to reduce each, and what you do when a customer asks you to delete their data.',
-    roles: ['ai-eng'],
+    roles: ['ai-eng', 'data-eng', 'fde', 'solutions-architect', 'ai-security', 'responsible-ai'],
     level: 'junior',
     kind: 'concept',
     topics: ['privacy', 'pii', 'memorisation', 'retention'],
@@ -972,7 +972,7 @@ export const questionsBuilderRisk: Question[] = [
     id: 'reward-hacking-and-sycophancy',
     prompt:
       'You are tuning an assistant with preference data and a reward model. After a few rounds the reward goes up and answers read more confidently, yet users report more flattery and some wrong answers stated firmly. Explain what may be happening, what evidence shows this is a general problem, and what you change in training, evaluation and the product.',
-    roles: ['ai-eng', 'ml-eng'],
+    roles: ['ai-eng', 'ml-eng', 'research', 'responsible-ai'],
     level: 'senior',
     kind: 'concept',
     topics: ['alignment', 'reward hacking', 'sycophancy', 'rlhf'],
@@ -1012,7 +1012,7 @@ export const questionsBuilderRisk: Question[] = [
     id: 'explaining-a-decision-shapley-and-limits',
     prompt:
       'A credit model scores Asha 53 and the cut-off is 55. She asks why, a regulator asks how the model decides, and a colleague suggests showing attention maps or asking the model to explain itself. Which explanation would you give each, and where does each method fall short? Work a Shapley value on a two-feature toy: the model scores 50 with neither feature known, 62 with only income known, 44 with only debt known, and 60 with both.',
-    roles: ['ml-eng'],
+    roles: ['ml-eng', 'data-scientist', 'responsible-ai'],
     level: 'mid',
     kind: 'concept',
     topics: ['explainability', 'shapley', 'interpretability', 'regulation'],
@@ -1052,7 +1052,7 @@ export const questionsBuilderRisk: Question[] = [
     id: 'oversight-queue-design-and-sizing',
     prompt:
       'Your agent drafts customer replies and proposes refunds. Management says “a human will approve everything.” Volume is 6,000 drafts a day and about 8% are wrong. Each review takes 2.5 minutes, and you have 4 reviewers with 7 productive hours each. Evaluate the plan with numbers, then design human oversight that actually works.',
-    roles: ['ai-eng'],
+    roles: ['ai-eng', 'ai-pm', 'agentic-eng', 'fde', 'responsible-ai'],
     level: 'senior',
     kind: 'design',
     topics: ['human oversight', 'human-in-the-loop', 'automation bias', 'capacity planning'],
@@ -1093,7 +1093,7 @@ export const questionsBuilderRisk: Question[] = [
     id: 'governance-for-forty-ai-features',
     prompt:
       'Your company has about forty AI features built by different teams on three vendors’ models. A director asks, “Which of these touch personal data, who approved them, and what happens if one goes wrong?” Nobody can answer. You are asked to set up the minimum governance in a quarter. How do you start, how do you get engineering teams to cooperate, and what do you say when a team calls it bureaucracy?',
-    roles: ['ai-eng', 'ml-platform'],
+    roles: ['ai-eng', 'ml-platform', 'ai-pm', 'ai-lead', 'responsible-ai'],
     level: 'mid',
     kind: 'behavioural',
     topics: ['governance', 'model cards', 'risk management', 'incident response'],
@@ -1133,7 +1133,7 @@ export const questionsBuilderRisk: Question[] = [
     id: 'scraped-data-licence-and-copyright-check',
     prompt:
       'A teammate has scraped two million web pages and a set of books from a shadow library, and wants to fine-tune an open-weights model on them for a commercial product next month. The manager wants to ship. What do you say and do?',
-    roles: ['ml-eng', 'ai-eng'],
+    roles: ['ml-eng', 'ai-eng', 'ai-pm', 'data-eng', 'sw-ai-tools', 'responsible-ai'],
     level: 'mid',
     kind: 'behavioural',
     topics: ['copyright', 'licensing', 'data provenance', 'behavioural'],
@@ -1173,7 +1173,7 @@ export const questionsBuilderRisk: Question[] = [
     id: 'energy-estimate-for-an-ai-feature',
     prompt:
       'Your product team asks how much electricity and carbon an AI feature uses. The service runs on 16 GPUs, each averaging 550 W while serving around the clock, in a facility with a power usage effectiveness (PUE) of 1.2, and handles 3 million requests a day. Estimate the energy per request and the daily carbon on a grid of 400 g CO2e per kWh (an example figure), say what the number leaves out, and name three levers to reduce it.',
-    roles: ['ml-platform', 'ai-eng'],
+    roles: ['ml-platform', 'ai-eng', 'edge-ml', 'responsible-ai'],
     level: 'junior',
     kind: 'estimation',
     topics: ['energy', 'carbon', 'sustainability', 'capacity planning'],

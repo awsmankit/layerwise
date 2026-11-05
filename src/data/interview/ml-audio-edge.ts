@@ -13,7 +13,7 @@ export const questionsMlAudioEdge: Question[] = [
     id: 'forecast-backtest-and-leakage',
     prompt:
       "A retailer's weekly demand forecaster, a gradient-boosted model on lag features, scored a 6% MAPE on a random 80/20 split of weeks. In its first month live, the error is more than double. One feature is a 4-week rolling average of sales, and nobody compared it with a seasonal-naive forecast. What do you suspect, how would you re-evaluate it, and what would you report?",
-    roles: ['ml-eng'],
+    roles: ['ml-eng', 'data-scientist'],
     level: 'mid',
     kind: 'debugging',
     topics: ['time series', 'forecasting', 'leakage', 'evals'],
@@ -55,7 +55,7 @@ export const questionsMlAudioEdge: Question[] = [
     id: 'code-gradient-boosting-two-rounds',
     prompt:
       "Write gradient boosting for squared error with depth-1 trees (stumps) and a learning rate, without a library. Then run it by hand on x = 1, 2, 3, 4, 5 and y = 3, 5, 4, 9, 11 with a learning rate of 0.5, and give the training error after each of two rounds. Finally, tell me how you would choose the number of rounds on real data and how boosting differs from a random forest.",
-    roles: ['ml-eng'],
+    roles: ['ml-eng', 'data-scientist'],
     level: 'mid',
     kind: 'coding',
     topics: ['classical ml', 'gradient boosting', 'trees', 'coding'],
@@ -99,7 +99,7 @@ export const questionsMlAudioEdge: Question[] = [
     id: 'ab-test-sample-size-and-peeking',
     prompt:
       "We changed a ranking model and want to A/B test it. Baseline conversion is 4.0% and we care about an absolute lift of 0.2 percentage points (4.0% to 4.2%). Two-sided 5% significance, 80% power, equal split, normal approximation. Roughly how many users per arm do we need, how long does that take at 20,000 users per arm per day, and how do we avoid fooling ourselves with the result?",
-    roles: ['ml-eng', 'ai-eng'],
+    roles: ['ml-eng', 'ai-eng', 'data-scientist', 'ai-test', 'research'],
     level: 'mid',
     kind: 'estimation',
     topics: ['a/b testing', 'statistics', 'evals', 'sample size'],
@@ -142,7 +142,7 @@ export const questionsMlAudioEdge: Question[] = [
     id: 'anomaly-detector-alert-budget',
     prompt:
       "A detector will watch 100,000 events a day; about 1 in 10,000 is a genuine anomaly (10 a day). In testing it catches 90% of real anomalies and wrongly flags 0.1% of ordinary events. The on-call team can review about 20 alerts a day. Is this detector usable? What false-alarm rate would you need, and what would you do about it?",
-    roles: ['ml-eng', 'ml-platform'],
+    roles: ['ml-eng', 'ml-platform', 'data-scientist', 'edge-ml'],
     level: 'senior',
     kind: 'estimation',
     topics: ['anomaly detection', 'base rate', 'thresholds', 'monitoring'],
@@ -184,7 +184,7 @@ export const questionsMlAudioEdge: Question[] = [
     id: 'clustering-tsne-segments-claim',
     prompt:
       "An analyst took 10-dimensional customer features (age, income in pounds, visits per month and so on), ran t-SNE to get a 2D picture with three clear islands, then ran k-means with k = 3 on the 2D coordinates. The slide says: 'three customer segments, and island C is far from the others so it is a very different group'. What is wrong with this, and how would you do the analysis properly?",
-    roles: ['ml-eng'],
+    roles: ['ml-eng', 'data-scientist'],
     level: 'mid',
     kind: 'debugging',
     topics: ['clustering', 'dimensionality reduction', 't-sne', 'k-means'],
@@ -311,7 +311,7 @@ export const questionsMlAudioEdge: Question[] = [
     id: 'behavioural-simple-baseline-beat-complex-model',
     prompt:
       "Tell me about a time you compared a simple baseline with a more complicated model. What did you try first, what did the comparison show, and what did you ship?",
-    roles: ['ml-eng', 'ai-eng'],
+    roles: ['ml-eng', 'ai-eng', 'data-scientist', 'research', 'fde', 'ai-lead'],
     level: 'junior',
     kind: 'behavioural',
     topics: ['behavioural', 'baselines', 'classical ml', 'evals'],
@@ -348,7 +348,7 @@ export const questionsMlAudioEdge: Question[] = [
     id: 'vanishing-gradients-init-and-normalisation',
     prompt:
       "A 40-layer ReLU network trains fine in a toy test, but on your real model the loss does not move. Explain why depth makes training fragile, what initialisation and normalisation are for, and what you would check first.",
-    roles: ['ml-eng'],
+    roles: ['ml-eng', 'research'],
     level: 'junior',
     kind: 'concept',
     topics: ['deep learning', 'initialisation', 'normalisation', 'training'],
@@ -390,7 +390,7 @@ export const questionsMlAudioEdge: Question[] = [
     id: 'training-run-nan-and-loss-spikes',
     prompt:
       "A transformer pretraining run shows loss spikes every few hundred steps from step 12,000, and at step 31,000 the loss becomes NaN. The run uses AdamW and mixed-precision numbers, peak learning rate 3e-4, no warm-up (it was turned off to save time), and the batch size was doubled last week. Walk me through your triage and what you would change, including what a learning-rate schedule looks like with example values.",
-    roles: ['ml-eng', 'ml-platform'],
+    roles: ['ml-eng', 'ml-platform', 'research'],
     level: 'mid',
     kind: 'debugging',
     topics: ['training', 'optimisers', 'learning rate', 'debugging'],
@@ -433,7 +433,7 @@ export const questionsMlAudioEdge: Question[] = [
     id: 'code-backprop-tiny-graph-gradient-check',
     prompt:
       "Write a tiny scalar autograd engine in Python (a Value class with add, multiply and tanh, plus a backward method) and use it to compute the gradients of r = tanh(a * b + a) at a = 0.5, b = -1.5. Explain why gradients are accumulated, and how you would test the implementation without doing calculus.",
-    roles: ['ml-eng'],
+    roles: ['ml-eng', 'research'],
     level: 'junior',
     kind: 'coding',
     topics: ['backpropagation', 'autograd', 'coding', 'gradients'],
@@ -517,7 +517,7 @@ export const questionsMlAudioEdge: Question[] = [
     id: 'diffusion-sampling-cost-and-guidance',
     prompt:
       "Your product generates an image from a text prompt. One forward pass of the denoising network at your resolution takes about 50 ms on your GPU (an assumed figure). With 30 sampler steps and classifier-free guidance, estimate the generation time. Product wants under one second: what are your levers and what does each cost in quality? Also explain what guidance does and why generators work in a latent space.",
-    roles: ['ai-eng', 'ml-eng'],
+    roles: ['ai-eng', 'ml-eng', 'research'],
     level: 'mid',
     kind: 'estimation',
     topics: ['diffusion', 'image generation', 'latency', 'guidance'],
@@ -558,7 +558,7 @@ export const questionsMlAudioEdge: Question[] = [
     id: 'compute-optimal-training-budget-6nd',
     prompt:
       "You have 2,048 H100-class GPUs for 30 days. Assume a dense BF16 peak of 989 TFLOPS per GPU and 40% model FLOPs utilisation. Estimate the compute budget, then the compute-optimal model size and token count using the rule of thumb of about 20 tokens per parameter. Then tell me why a team might train a smaller model on far more tokens, and how wrong your estimate could be.",
-    roles: ['ml-platform', 'ml-eng'],
+    roles: ['ml-platform', 'ml-eng', 'research'],
     level: 'senior',
     kind: 'estimation',
     topics: ['scaling laws', 'compute', 'training', 'capacity planning'],
@@ -601,7 +601,7 @@ export const questionsMlAudioEdge: Question[] = [
     id: 'verifiable-rewards-grpo-and-reward-hacking',
     prompt:
       "We want to improve a model's maths and coding by reinforcement learning rather than collecting more written answers. Explain how a verifiable-reward setup with GRPO works, compute the advantages for a group of eight sampled answers of which two are correct, and tell me how you would detect and limit reward hacking.",
-    roles: ['ml-eng', 'ai-eng'],
+    roles: ['ml-eng', 'ai-eng', 'research'],
     level: 'senior',
     kind: 'concept',
     topics: ['reinforcement learning', 'grpo', 'reward hacking', 'post-training'],
@@ -685,7 +685,7 @@ export const questionsMlAudioEdge: Question[] = [
     id: 'state-space-vs-attention-long-context-costs',
     prompt:
       "A decoder has 32 layers, 8 key-value heads of dimension 128, and stores values in 2 bytes. (a) How big is the KV cache for one sequence at 128K tokens (131,072) and 256K tokens? (b) A hybrid replaces 28 of the 32 layers with state-space layers whose fixed state is 2 x 4,096 x 16 numbers per layer, also at 2 bytes, and keeps 4 attention layers. What are the memory figures now? (c) What do you give up, and when does the saving not matter?",
-    roles: ['ml-platform', 'ml-eng'],
+    roles: ['ml-platform', 'ml-eng', 'research'],
     level: 'senior',
     kind: 'estimation',
     topics: ['state space models', 'attention', 'kv cache', 'long context'],
@@ -730,7 +730,7 @@ export const questionsMlAudioEdge: Question[] = [
     id: 'sampling-aliasing-and-audio-data-sizes',
     prompt:
       "A 900 Hz tone is recorded with a sampling rate of 1,000 Hz. What does the recording contain? Why do speech models usually take 16 kHz audio, what happens if you feed one a 48 kHz recording, and how much storage is one minute of 16 kHz, 16-bit mono speech, and three minutes of CD-quality stereo (44,100 Hz, 16-bit)?",
-    roles: ['ml-eng'],
+    roles: ['ml-eng', 'edge-ml'],
     level: 'junior',
     kind: 'estimation',
     topics: ['audio', 'sampling', 'aliasing', 'data sizes'],
@@ -770,7 +770,7 @@ export const questionsMlAudioEdge: Question[] = [
     id: 'spectrogram-window-hop-and-mel-choices',
     prompt:
       "You are building a speech model front end at 16 kHz. Choose a window length, hop and number of mel bands, explain the trade-offs, and give the input shape for 30 seconds of audio. What changes if the product is a hearing device with a few-millisecond delay budget?",
-    roles: ['ml-eng'],
+    roles: ['ml-eng', 'edge-ml'],
     level: 'mid',
     kind: 'concept',
     topics: ['audio', 'spectrogram', 'mel scale', 'features'],
@@ -850,7 +850,7 @@ export const questionsMlAudioEdge: Question[] = [
     id: 'streaming-asr-live-captions-design',
     prompt:
       "Design speech recognition for live captions in video calls: words should appear within roughly half a second of being spoken, in noisy rooms, for people with strong accents and long pauses. Which model family would you use and why, how do you handle silence, how do you evaluate it, and what do you do about wrong-but-fluent text?",
-    roles: ['ai-eng', 'ml-eng'],
+    roles: ['ai-eng', 'ml-eng', 'edge-ml'],
     level: 'senior',
     kind: 'design',
     topics: ['speech recognition', 'streaming', 'latency', 'system design'],
@@ -891,7 +891,7 @@ export const questionsMlAudioEdge: Question[] = [
     id: 'wer-looks-fine-users-complain',
     prompt:
       "Vendor A reports 8% word error rate on your internal test set and vendor B 9%, so the team wants A. In a pilot, support staff say B's transcripts are more usable, and a clinic complains that A writes 'fifteen milligrams' as 'fifty milligrams'. How do you work out what is going on, and what do you measure instead?",
-    roles: ['ai-eng', 'ml-eng'],
+    roles: ['ai-eng', 'ml-eng', 'edge-ml', 'responsible-ai'],
     level: 'mid',
     kind: 'debugging',
     topics: ['speech recognition', 'wer', 'evals', 'metrics'],
@@ -932,7 +932,7 @@ export const questionsMlAudioEdge: Question[] = [
     id: 'hearing-aid-noise-suppression-latency-design',
     prompt:
       "Design the noise-suppression stage for a hearing aid or earbud: speech in a noisy restaurant, a model that runs on a small battery, and a wearer who also hears the real sound directly. What approaches combine, what is the latency budget and how does it constrain the model, and how do you decide it is good enough?",
-    roles: ['ml-eng'],
+    roles: ['ml-eng', 'edge-ml'],
     level: 'senior',
     kind: 'design',
     topics: ['noise suppression', 'hearing devices', 'latency', 'audio'],
@@ -975,7 +975,7 @@ export const questionsMlAudioEdge: Question[] = [
     id: 'wake-word-false-accepts-and-power-cascade',
     prompt:
       "A wake-word detector for earbuds should false-accept at most about once a week per user and miss no more than 5% of real attempts. Explain the trade-off, how many hours of negative audio you need to show the false-accept target, and what a two-stage design does to the power budget. Example numbers: stage one draws 1 mW; stage two draws 300 mW, runs 0.3 s each time it is woken, and is woken 6 times an hour.",
-    roles: ['ml-eng', 'ml-platform'],
+    roles: ['ml-eng', 'ml-platform', 'edge-ml'],
     level: 'mid',
     kind: 'estimation',
     topics: ['wake word', 'keyword spotting', 'false accepts', 'power'],
@@ -1018,7 +1018,7 @@ export const questionsMlAudioEdge: Question[] = [
     id: 'microcontroller-memory-budget-keyword-spotter',
     prompt:
       "Will this keyword-spotting network fit? It has 22,604 weights and biases, and the largest pair of consecutive activation tensors is 8,000 + 8,000 values. The target is a Cortex-M4-class microcontroller with 1 MB of flash and 256 KB of SRAM. Work out the memory in int8 and float32, say which memory each number lands in, and tell me what changes for a 224 x 224 image classifier like MobileNetV1.",
-    roles: ['ml-eng', 'ml-platform'],
+    roles: ['ml-eng', 'ml-platform', 'edge-ml'],
     level: 'junior',
     kind: 'estimation',
     topics: ['microcontrollers', 'memory', 'tinyml', 'edge'],
@@ -1059,7 +1059,7 @@ export const questionsMlAudioEdge: Question[] = [
     id: 'int8-accuracy-drop-in-noise',
     prompt:
       "After post-training int8 quantisation, a wake-word model lost 0.4 accuracy points on the test set, which the team accepts. In field tests, though, false rejects doubled in noisy rooms, and results differ slightly between two board revisions. What is going on, and what do you do?",
-    roles: ['ml-eng'],
+    roles: ['ml-eng', 'edge-ml'],
     level: 'mid',
     kind: 'debugging',
     topics: ['quantisation', 'tinyml', 'validation', 'edge'],
@@ -1100,7 +1100,7 @@ export const questionsMlAudioEdge: Question[] = [
     id: 'npu-speedup-lower-than-promised-operator-fallback',
     prompt:
       "We moved a small transformer-block model from the CPU to a chip with an NPU that is about 10 times faster than the CPU on the operators it supports. The model takes 30 ms on the CPU and 9.7 ms on the NPU build, not 3 ms. Example numbers: 90% of the CPU time is in NPU-supported operators; layer norm, softmax and GELU are unsupported and run on the CPU; the model splits into 4 NPU partitions; each partition costs one transfer in and one out at 0.5 ms each. Where do you look, and what can you change?",
-    roles: ['ml-eng', 'ml-platform'],
+    roles: ['ml-eng', 'ml-platform', 'edge-ml'],
     level: 'mid',
     kind: 'debugging',
     topics: ['edge', 'npu', 'operators', 'runtimes'],
@@ -1142,7 +1142,7 @@ export const questionsMlAudioEdge: Question[] = [
     id: 'real-time-audio-block-deadline-delay-power',
     prompt:
       "An audio effect runs a neural model on a 16 kHz stream. (a) With blocks of 160 samples and a 400-sample analysis window, what is the deadline per block and the worst-case delay in a simple double-buffered model? (b) The model takes 1.5 ms per inference: what fraction of the processor does it use at 160-sample and at 32-sample blocks? (c) Each inference costs 50 microjoules: what is the average power and the battery life on a 100 mWh battery at 100 and at 500 inferences a second? (d) Why is the average inference time the wrong number to look at?",
-    roles: ['ml-eng'],
+    roles: ['ml-eng', 'edge-ml'],
     level: 'mid',
     kind: 'estimation',
     topics: ['real-time', 'latency', 'audio', 'edge'],
@@ -1183,7 +1183,7 @@ export const questionsMlAudioEdge: Question[] = [
     id: 'on-device-llm-memory-and-speed-budget',
     prompt:
       "We want a 'summarise this message' feature running fully on a phone. Candidate A: a 3.8-billion-parameter model at 4 bits per weight, 32 layers, 32 KV heads, head dimension 96, 4,096-token context, 16-bit KV cache. Candidate B: a 3.09-billion-parameter model at 4.5 bits per weight, 36 layers, 2 KV heads, head dimension 128, 8,192-token context. Estimate the memory of each and the best-case decode speed if usable memory bandwidth is 100 GB/s (an assumed figure), and say when you would fall back to the cloud.",
-    roles: ['ai-eng', 'ml-eng'],
+    roles: ['ai-eng', 'ml-eng', 'edge-ml'],
     level: 'mid',
     kind: 'estimation',
     topics: ['on-device llm', 'kv cache', 'memory', 'edge'],
@@ -1227,7 +1227,7 @@ export const questionsMlAudioEdge: Question[] = [
     id: 'fleet-model-rollout-signing-canary-rollback',
     prompt:
       "Design how we ship a new on-device model to 100,000 devices. Devices go offline for weeks, there are several hardware classes (one older, low-memory class makes up about 5% of the fleet), and we cannot see raw user audio. How do you package, sign, roll out, monitor and roll back? Size the first canary stage if a regression would make 2% of devices in that older class fail.",
-    roles: ['ml-platform'],
+    roles: ['ml-platform', 'edge-ml', 'ai-security'],
     level: 'senior',
     kind: 'design',
     topics: ['edge', 'ota updates', 'rollout', 'monitoring'],

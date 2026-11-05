@@ -81,7 +81,7 @@ export const questionsApplied: Question[] = [
     id: 'rag-end-to-end',
     prompt:
       'Walk me through what happens, end to end, when an employee asks a question to a RAG assistant built over company documents. Include the work that happens before any user shows up.',
-    roles: ['ai-eng'],
+    roles: ['ai-eng', 'data-eng', 'fde', 'solutions-architect'],
     level: 'junior',
     kind: 'concept',
     topics: ['rag'],
@@ -117,7 +117,7 @@ export const questionsApplied: Question[] = [
     id: 'chunking-hybrid-search-reranking',
     prompt:
       'Users say your RAG assistant misses answers that are clearly in the docs, especially questions about product codes and answers that sit under a heading. Explain how chunking can cause this, why teams add keyword search and a reranker, and what an approximate vector index trades away.',
-    roles: ['ai-eng'],
+    roles: ['ai-eng', 'data-eng'],
     level: 'mid',
     kind: 'concept',
     topics: ['rag', 'retrieval', 'vector search'],
@@ -158,7 +158,7 @@ export const questionsApplied: Question[] = [
     id: 'rag-retrieval-or-generation',
     prompt:
       'Your RAG assistant gives wrong answers on about 15% of a sample of real questions. The team wants to switch to a bigger model. How do you find out whether retrieval or generation is at fault, and how do you measure each?',
-    roles: ['ai-eng'],
+    roles: ['ai-eng', 'data-eng', 'ai-test'],
     level: 'mid',
     kind: 'debugging',
     topics: ['rag', 'evals', 'debugging'],
@@ -198,7 +198,7 @@ export const questionsApplied: Question[] = [
     id: 'hallucination-mitigation',
     prompt:
       'A product manager asks you to "stop the model hallucinating" in a customer-facing assistant. What can you actually do, how would you measure progress, and what can you not promise?',
-    roles: ['ai-eng'],
+    roles: ['ai-eng', 'ai-test', 'sw-ai-tools', 'fde', 'solutions-architect'],
     level: 'mid',
     kind: 'concept',
     topics: ['hallucination', 'rag', 'evals'],
@@ -233,7 +233,7 @@ export const questionsApplied: Question[] = [
     id: 'runaway-agent-loop',
     prompt:
       'An order-support agent ran for twenty minutes and spent $14 of tokens on one task before someone killed it. The trace shows 41 calls to search_orders with small variations of the customer’s email, each returning an empty string. The order exists. How do you investigate, and what do you change?',
-    roles: ['ai-eng'],
+    roles: ['ai-eng', 'agentic-eng', 'sw-ai-tools', 'ai-lead', 'ai-security'],
     level: 'mid',
     kind: 'debugging',
     topics: ['agents', 'tool use', 'debugging', 'cost'],
@@ -274,7 +274,7 @@ export const questionsApplied: Question[] = [
     id: 'first-eval-set',
     prompt:
       'You have shipped the first version of an LLM feature that summarises support tickets, and there are no evals. How would you build a first eval set this week, and how would you use it to stop regressions when someone changes the prompt or the model?',
-    roles: ['ai-eng', 'ml-eng'],
+    roles: ['ai-eng', 'ml-eng', 'ai-pm', 'ai-test', 'sw-ai-tools', 'fde', 'ai-lead'],
     level: 'junior',
     kind: 'concept',
     topics: ['evals', 'llmops'],
@@ -309,7 +309,7 @@ export const questionsApplied: Question[] = [
     id: 'judge-disagrees-with-humans',
     prompt:
       'Your LLM judge says a new prompt B beats the old prompt A, preferred in 62% of pairwise comparisons. The support agents who read real conversations say B is worse. How do you work out who is right, and what do you change?',
-    roles: ['ai-eng', 'ml-eng'],
+    roles: ['ai-eng', 'ml-eng', 'ai-test', 'research', 'ai-lead'],
     level: 'mid',
     kind: 'debugging',
     topics: ['evals', 'llm-as-judge', 'debugging'],
@@ -349,7 +349,7 @@ export const questionsApplied: Question[] = [
     id: 'email-agent-prompt-injection',
     prompt:
       'Design an assistant that reads a user’s inbox, summarises emails, drafts replies, and can send email and create calendar invites on their behalf. Anyone on the internet can send this user an email. How do you stop prompt injection from turning it into a data-exfiltration tool, and what else could go wrong with its output?',
-    roles: ['ai-eng'],
+    roles: ['ai-eng', 'agentic-eng', 'ai-test', 'sw-ai-tools', 'fde', 'ai-security'],
     level: 'senior',
     kind: 'design',
     topics: ['security', 'agents', 'prompt injection'],
@@ -390,7 +390,7 @@ export const questionsApplied: Question[] = [
     id: 'policy-assistant-per-role-access',
     prompt:
       'Design an internal assistant that answers employee questions about company policy with citations. Documents live in several systems, and access varies by role: managers see compensation guidelines, HR sees investigation procedures, everyone sees the handbook. About 5,000 employees and 30,000 documents. Walk me through the design.',
-    roles: ['ai-eng'],
+    roles: ['ai-eng', 'agentic-eng', 'fde', 'solutions-architect', 'ai-security'],
     level: 'senior',
     kind: 'design',
     topics: ['rag', 'security', 'system design'],
@@ -430,7 +430,7 @@ export const questionsApplied: Question[] = [
     id: 'support-copilot-at-scale',
     prompt:
       'Design a copilot for customer-support agents: when a ticket arrives it drafts a reply with citations from the help centre and the customer’s order history. Volume is 200,000 tickets a day, mostly within 10 business hours. Targets: p95 time to first token under 2 seconds and model spend under $1,000 a day. Assume an average request of 3,000 input tokens (1,000 of them a fixed system prompt and tool definitions, 1,500 retrieved passages, 500 ticket and history) and 300 output tokens, at an illustrative $2 per million input tokens and $8 per million output tokens.',
-    roles: ['ai-eng', 'ml-platform'],
+    roles: ['ai-eng', 'ml-platform', 'ai-pm', 'fde', 'solutions-architect', 'ai-security'],
     level: 'senior',
     kind: 'design',
     topics: ['system design', 'cost', 'rag', 'latency'],
@@ -472,7 +472,7 @@ export const questionsApplied: Question[] = [
     id: 'model-change-rolled-back',
     prompt:
       'Tell me about a time you shipped a change to a model, prompt or retrieval setup that you later had to roll back. What happened, how did you find out, and what did you change afterwards?',
-    roles: ['ai-eng', 'ml-eng'],
+    roles: ['ai-eng', 'ml-eng', 'ai-pm', 'ai-test', 'fde', 'ai-lead'],
     level: 'mid',
     kind: 'behavioural',
     topics: ['behavioural', 'llmops', 'evals'],
@@ -506,7 +506,7 @@ export const questionsApplied: Question[] = [
     id: 'pushing-back-on-weak-evals',
     prompt:
       'Tell me about a time you disagreed with a product lead or senior stakeholder about launching an AI feature because you thought the evaluation evidence was too weak. How did you handle it, and what was the outcome?',
-    roles: ['ai-eng', 'ml-eng'],
+    roles: ['ai-eng', 'ml-eng', 'ai-pm', 'ai-test', 'sw-ai-tools', 'fde', 'ai-lead', 'responsible-ai'],
     level: 'senior',
     kind: 'behavioural',
     topics: ['behavioural', 'evals'],
@@ -541,7 +541,7 @@ export const questionsApplied: Question[] = [
     id: 'langgraph-approval-and-checkpoints',
     prompt:
       'You are building a support bot that can issue refunds, and a person must approve each one. The approval can take minutes or days, and your service restarts during deploys. Using a graph-based agent framework such as LangGraph, how do you design the state, the pause and the resume? What breaks if you get it wrong?',
-    roles: ['ai-eng'],
+    roles: ['ai-eng', 'agentic-eng', 'sw-ai-tools'],
     level: 'senior',
     kind: 'design',
     topics: ['agents', 'langgraph', 'human-in-the-loop', 'state'],
@@ -582,7 +582,7 @@ export const questionsApplied: Question[] = [
     id: 'workflow-or-agent-five-patterns',
     prompt:
       'A product manager wants "an AI agent" that turns inbound support emails into tickets, drafts a reply and, for billing issues, looks up the order. Would you build a workflow or an agent? Name the workflow patterns you know and say when you would use each.',
-    roles: ['ai-eng'],
+    roles: ['ai-eng', 'agentic-eng'],
     level: 'mid',
     kind: 'concept',
     topics: ['agents', 'workflows', 'prompting', 'patterns'],
@@ -618,7 +618,7 @@ export const questionsApplied: Question[] = [
     id: 'code-validate-and-retry-structured-output',
     prompt:
       'Write a function get_ticket(model, email) that asks an LLM for a JSON ticket with a category (billing, bug or question) and an urgency from 1 to 5. The model sometimes returns text that is not JSON, or values that are out of range. Validate the result and retry, at most three attempts, then fail clearly. Talk me through the design and the tests.',
-    roles: ['ai-eng'],
+    roles: ['ai-eng', 'ai-test'],
     level: 'mid',
     kind: 'coding',
     topics: ['structured output', 'validation', 'retries', 'python'],
@@ -659,7 +659,7 @@ export const questionsApplied: Question[] = [
     id: 'evaluating-an-agent-outcome-and-pass-hat-k',
     prompt:
       'You built a support agent that looks up an order and issues a refund when the policy allows. Your first eval ran 10 tasks once each and 9 passed. How would you evaluate it properly: what do you grade, how many times do you run each task, and how do pass@k and pass^k differ? If a task passes 80% of the time, what are pass@3 and pass^3, and which one matters for a refund agent?',
-    roles: ['ai-eng'],
+    roles: ['ai-eng', 'agentic-eng', 'ai-test'],
     level: 'mid',
     kind: 'concept',
     topics: ['agents', 'evals', 'reliability', 'tool use'],
@@ -702,7 +702,7 @@ export const questionsApplied: Question[] = [
     id: 'refund-agent-permissions-and-evals',
     prompt:
       'Design a support agent that can issue refunds, where a person must approve every refund. Walk me through the state it keeps, how it pauses for approval, what the model is and is not allowed to do, and how you would evaluate and roll it out. A customer’s email may contain instructions.',
-    roles: ['ai-eng'],
+    roles: ['ai-eng', 'agentic-eng', 'ai-test', 'sw-ai-tools', 'fde', 'ai-security'],
     level: 'senior',
     kind: 'design',
     topics: ['agents', 'system design', 'guardrails', 'evals', 'human oversight'],

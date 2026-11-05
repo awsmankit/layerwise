@@ -1,3 +1,4 @@
+import RoleOptions from './RoleOptions';
 import { useMemo, useState } from 'react';
 import { Root } from '../viz/shared';
 import { useStore } from '../../lib/store';
@@ -33,12 +34,7 @@ export default function QuestionBank({ items }: { items: Item[] }) {
           <label className="field">
             <span>Role</span>
             <select value={role} onChange={(e) => setRole(e.target.value as Role | 'any')}>
-              <option value="any">Any role</option>
-              {Object.entries(roles).map(([k, v]) => (
-                <option key={k} value={k}>
-                  {v}
-                </option>
-              ))}
+              <RoleOptions />
             </select>
           </label>
           <label className="field">

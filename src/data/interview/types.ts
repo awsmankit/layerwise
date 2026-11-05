@@ -6,10 +6,31 @@
 
 export const roles = {
   'ai-eng': 'AI / LLM application engineer',
-  'ml-platform': 'ML platform / infrastructure engineer',
+  'agentic-eng': 'Agentic AI engineer',
   'ml-eng': 'ML engineer (models and data)',
+  research: 'Applied scientist / research engineer',
+  'data-scientist': 'Data scientist / analyst',
+  'ml-platform': 'ML platform / infrastructure engineer',
+  'data-eng': 'Data engineer for AI',
+  'edge-ml': 'Edge and embedded ML engineer',
+  'ai-test': 'AI test and evaluation engineer',
+  'ai-security': 'AI security engineer',
+  'responsible-ai': 'Responsible AI and governance lead',
+  fde: 'Forward deployed engineer',
+  'solutions-architect': 'AI solutions architect / pre-sales engineer',
+  'ai-pm': 'AI product manager',
+  'ai-lead': 'AI engineering lead / manager',
+  'sw-ai-tools': 'Software engineer using AI tools',
 } as const;
 export type Role = keyof typeof roles;
+
+/** The same roles in groups, so a long list stays easy to scan in a dropdown. */
+export const roleGroups: { label: string; roles: Role[] }[] = [
+  { label: 'Building models and apps', roles: ['ai-eng', 'agentic-eng', 'ml-eng', 'research', 'data-scientist'] },
+  { label: 'Data, platform and devices', roles: ['ml-platform', 'data-eng', 'edge-ml'] },
+  { label: 'Quality, safety and risk', roles: ['ai-test', 'ai-security', 'responsible-ai'] },
+  { label: 'Customers, product and teams', roles: ['fde', 'solutions-architect', 'ai-pm', 'ai-lead', 'sw-ai-tools'] },
+];
 
 export const ilevels = {
   junior: 'Junior',

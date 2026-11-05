@@ -7,7 +7,7 @@ export const questionsFoundations: Question[] = [
     id: 'fraud-model-accuracy-trap',
     prompt:
       "A colleague trained a fraud classifier on card transactions where 0.5% are fraudulent. They report 99.5% accuracy on the test set and want to ship it. What do you ask, and how would you evaluate this model properly?",
-    roles: ['ml-eng', 'ai-eng'],
+    roles: ['ml-eng', 'ai-eng', 'ai-pm', 'data-scientist'],
     level: 'junior',
     kind: 'concept',
     topics: ['classical ml', 'evals', 'imbalanced data'],
@@ -87,7 +87,7 @@ export const questionsFoundations: Question[] = [
     id: 'bias-variance-and-regularisation',
     prompt:
       "Your model has 2% error on the training set and 15% on the validation set. A second model has 14% on training and 15% on validation. What is going on in each case, and what would you try next?",
-    roles: ['ml-eng'],
+    roles: ['ml-eng', 'data-scientist', 'research'],
     level: 'junior',
     kind: 'concept',
     topics: ['classical ml', 'training'],
@@ -124,7 +124,7 @@ export const questionsFoundations: Question[] = [
     id: 'leakage-offline-great-production-poor',
     prompt:
       "A model that detects a user's listening environment from short audio clips scored 97% accuracy offline, but in a field trial it is closer to 75%. The data was split randomly at the clip level. Walk me through how you would find out why.",
-    roles: ['ml-eng'],
+    roles: ['ml-eng', 'data-eng', 'data-scientist', 'research', 'fde'],
     level: 'mid',
     kind: 'debugging',
     topics: ['classical ml', 'evals', 'data'],
@@ -162,7 +162,7 @@ export const questionsFoundations: Question[] = [
     id: 'how-a-neural-network-trains',
     prompt:
       "Explain how a neural network learns, from a batch of data to updated weights. Use a language model predicting the next token as your example.",
-    roles: ['ml-eng', 'ai-eng'],
+    roles: ['ml-eng', 'ai-eng', 'research'],
     level: 'junior',
     kind: 'concept',
     topics: ['training', 'deep learning'],
@@ -317,7 +317,7 @@ export const questionsFoundations: Question[] = [
     id: 'mixture-of-experts-tradeoffs',
     prompt:
       "Explain how a mixture-of-experts transformer works and what it changes for training and serving compared with a dense model. As a concrete case: a model has 2B shared parameters (attention, embeddings) and 8 experts per MoE layer that together hold 40B parameters, with top-2 routing.",
-    roles: ['ml-eng', 'ml-platform', 'ai-eng'],
+    roles: ['ml-eng', 'ml-platform', 'ai-eng', 'research'],
     level: 'senior',
     kind: 'concept',
     topics: ['transformers', 'moe', 'inference'],
@@ -397,7 +397,7 @@ export const questionsFoundations: Question[] = [
     id: 'lora-trainable-params-and-memory',
     prompt:
       "A decoder model has about 6.7B parameters, 32 layers and hidden size 4,096; each layer's attention projections q, k, v and o are 4,096 x 4,096. You apply LoRA with rank 16 to all four projections in every layer. How many trainable parameters is that, and roughly how much GPU memory do you need compared with full fine-tuning using Adam in mixed precision? Then explain QLoRA. State your assumptions.",
-    roles: ['ml-eng', 'ai-eng', 'ml-platform'],
+    roles: ['ml-eng', 'ai-eng', 'ml-platform', 'edge-ml', 'research'],
     level: 'mid',
     kind: 'estimation',
     topics: ['fine-tuning', 'lora', 'gpu'],
@@ -440,7 +440,7 @@ export const questionsFoundations: Question[] = [
     id: 'pretraining-sft-preference-rlhf-dpo',
     prompt:
       "Walk me through how a base model becomes a helpful assistant: pretraining, instruction tuning and preference tuning. Then compare RLHF with PPO against DPO, and tell me which you would use to adapt an open model for our product.",
-    roles: ['ml-eng', 'ai-eng'],
+    roles: ['ml-eng', 'ai-eng', 'research'],
     level: 'senior',
     kind: 'concept',
     topics: ['fine-tuning', 'alignment', 'training'],
@@ -516,7 +516,7 @@ export const questionsFoundations: Question[] = [
     id: 'behavioural-flawed-eval-or-dataset',
     prompt:
       "Tell me about a time you discovered that an evaluation, benchmark or dataset your team relied on was flawed. What did you notice, what did you do, and what changed afterwards?",
-    roles: ['ml-eng', 'ai-eng', 'ml-platform'],
+    roles: ['ml-eng', 'ai-eng', 'ml-platform', 'data-eng', 'data-scientist', 'ai-test', 'research', 'fde', 'ai-lead', 'responsible-ai'],
     level: 'senior',
     kind: 'behavioural',
     topics: ['behavioural', 'evals', 'data'],
@@ -594,7 +594,7 @@ export const questionsFoundations: Question[] = [
     id: 'why-long-contexts-cost-more',
     prompt:
       'One user asks a short question and gets a short answer, and it costs almost nothing. Another user has a long chat of about 8,000 tokens. Explain, with numbers for an 8-billion-parameter model, what the model keeps in memory and why the long chat costs more. How does it change if 32 users chat at once?',
-    roles: ['ai-eng', 'ml-platform'],
+    roles: ['ai-eng', 'ml-platform', 'solutions-architect'],
     level: 'mid',
     kind: 'estimation',
     topics: ['kv cache', 'context window', 'cost', 'memory'],
@@ -634,7 +634,7 @@ export const questionsFoundations: Question[] = [
     id: 'improve-a-prompt-without-overfitting',
     prompt:
       'You are improving a prompt that turns support emails into tickets. After a week of edits, your score on your 40 test emails rose from 70% to 95%, but users say it got worse. What probably happened, and how do you improve a prompt without fooling yourself? Say what you would do about few-shot examples.',
-    roles: ['ai-eng'],
+    roles: ['ai-eng', 'ai-test'],
     level: 'mid',
     kind: 'concept',
     topics: ['prompting', 'few-shot', 'evals', 'overfitting'],
@@ -675,7 +675,7 @@ export const questionsFoundations: Question[] = [
     id: 'reasoning-model-cost-vs-quality',
     prompt:
       'A support bot call has 400 input tokens and a 150-token answer, at $2 per million input tokens and $10 per million output tokens. Turning on a reasoning model’s thinking adds about 600 thinking tokens per call. On 10 test cases (example numbers), the bot solves 5 without thinking and 8 with it. Work out the cost per request and per solved task for each setting. Would you turn thinking on for every request, and how would you decide?',
-    roles: ['ai-eng', 'ml-platform'],
+    roles: ['ai-eng', 'ml-platform', 'ai-pm', 'solutions-architect'],
     level: 'mid',
     kind: 'estimation',
     topics: ['reasoning models', 'cost', 'evals', 'latency'],
@@ -717,7 +717,7 @@ export const questionsFoundations: Question[] = [
     id: 'eu-ai-act-chatbot-and-hiring-screen',
     prompt:
       'Your company is building two products on the same LLM: a customer-service chatbot and a tool that screens job applicants’ CVs. For an engineer, what does the EU AI Act mean for each? Cover how the tiers work, what you must tell users, and what you would build or document. Say what you would leave to a lawyer.',
-    roles: ['ai-eng', 'ml-eng'],
+    roles: ['ai-eng', 'ml-eng', 'ai-pm', 'fde', 'solutions-architect', 'ai-lead', 'responsible-ai'],
     level: 'mid',
     kind: 'concept',
     topics: ['regulation', 'eu ai act', 'transparency', 'logging'],

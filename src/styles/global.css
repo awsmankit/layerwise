@@ -498,6 +498,13 @@ select option {
 }
 .field {
   display: block;
+  min-width: 0;
+}
+/* a long option label (the interview roles) must not make the select wider than its column */
+.field select {
+  max-width: 100%;
+  min-width: 0;
+  text-overflow: ellipsis;
 }
 .field > span {
   display: flex;

@@ -1,3 +1,4 @@
+import RoleOptions from './RoleOptions';
 import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Root, EASE } from '../viz/shared';
@@ -83,12 +84,7 @@ export default function Practice({ lessons, initialId }: { lessons: LessonIndex;
             <label className="field">
               <span>Role</span>
               <select value={role} onChange={(e) => setRole(e.target.value as Role | 'any')}>
-                <option value="any">Any role</option>
-                {Object.entries(roles).map(([k, v]) => (
-                  <option key={k} value={k}>
-                    {v}
-                  </option>
-                ))}
+                <RoleOptions />
               </select>
             </label>
             <label className="field">

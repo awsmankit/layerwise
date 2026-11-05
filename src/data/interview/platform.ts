@@ -209,7 +209,7 @@ export const questionsPlatform: Question[] = [
     id: 'choose-l4-or-h100-for-8b-model',
     prompt:
       "An internal tool will run an 8B-parameter model (32 layers, 8 KV heads, head dimension 128). Peak load is 40 concurrent streams, each with about 2,000 prompt tokens and 500 output tokens, and product wants at least 20 output tokens per second per user. You can use L4-class cards (24 GB, about 300 GB/s, about 120 dense FP16 TFLOPS) or H100-class cards (80 GB, about 3.35 TB/s, about 990 dense BF16 TFLOPS). Which do you pick, how many, and what are you assuming?",
-    roles: ['ml-platform'],
+    roles: ['ml-platform', 'solutions-architect'],
     level: 'mid',
     kind: 'estimation',
     topics: ['gpu', 'inference', 'capacity planning', 'cost'],
@@ -290,7 +290,7 @@ export const questionsPlatform: Question[] = [
     id: 'design-serving-70b-for-2000-users',
     prompt:
       "Design the serving setup for an open-weight 70B-class model (80 layers, 8 KV heads, head dimension 128) behind an internal assistant. At peak 2,000 employees are active, and a pilot suggests about 10 percent have a request in flight at any moment. Prompts average 3,000 tokens including retrieved context, answers 400 tokens. Targets: p95 time to first token under 2 seconds and at least 20 output tokens per second per user. You have 8-GPU nodes of 80 GB cards (about 3.35 TB/s and about 990 dense BF16 TFLOPS each) with NVLink inside the node. Size it, and explain how it scales and what happens on cold start.",
-    roles: ['ml-platform'],
+    roles: ['ml-platform', 'solutions-architect'],
     level: 'senior',
     kind: 'design',
     topics: ['inference', 'capacity planning', 'gpu', 'autoscaling'],
@@ -372,7 +372,7 @@ export const questionsPlatform: Question[] = [
     id: 'debug-morning-429-storm',
     prompt:
       "Every weekday around 09:00 our LLM feature gets a storm of HTTP 429 responses from the model provider for about 20 minutes, then it recovers by itself. The billing page says we are well under our monthly budget. How do you investigate and fix it?",
-    roles: ['ml-platform', 'ai-eng'],
+    roles: ['ml-platform', 'ai-eng', 'solutions-architect'],
     level: 'mid',
     kind: 'debugging',
     topics: ['cloud', 'reliability', 'rate limiting'],
@@ -413,7 +413,7 @@ export const questionsPlatform: Question[] = [
     id: 'code-retry-backoff-full-jitter',
     prompt:
       "Write a function that calls an LLM API and retries failures with exponential backoff, full jitter and a cap. It takes the call to make, a base delay, a maximum delay and a maximum number of attempts. Talk me through which errors you retry and how you would test it.",
-    roles: ['ml-platform', 'ai-eng'],
+    roles: ['ml-platform', 'ai-eng', 'sw-ai-tools'],
     level: 'junior',
     kind: 'coding',
     topics: ['reliability', 'rate limiting'],
@@ -452,7 +452,7 @@ export const questionsPlatform: Question[] = [
     id: 'api-vs-self-hosting-break-even',
     prompt:
       "Our team spends a lot on a hosted model API and someone proposes self-hosting an open model of similar quality. Use these example numbers, not real prices: a GPU server costs 6 units per hour, sustains 2,500 tokens per second aggregate on our traffic mix, and we expect 30 percent average utilisation. The API's blended price is 2 units per million tokens. Work out the self-hosted cost per million tokens and the break-even, then tell me what you would recommend.",
-    roles: ['ml-platform', 'ai-eng'],
+    roles: ['ml-platform', 'ai-eng', 'ai-pm', 'solutions-architect', 'ai-lead'],
     level: 'mid',
     kind: 'estimation',
     topics: ['cost', 'gpu', 'inference'],
@@ -492,7 +492,7 @@ export const questionsPlatform: Question[] = [
     id: 'design-llm-release-pipeline-eval-gates',
     prompt:
       "Design the release process for an LLM feature in which the prompts, the retrieval configuration and the model all change over time, and the model comes from a vendor API. How do you version it, gate changes in CI, roll them out, and notice when the vendor changes the model behind the same name?",
-    roles: ['ml-platform', 'ai-eng'],
+    roles: ['ml-platform', 'ai-eng', 'ai-pm', 'ai-test', 'ai-lead'],
     level: 'senior',
     kind: 'design',
     topics: ['llmops', 'evals', 'reliability'],
@@ -532,7 +532,7 @@ export const questionsPlatform: Question[] = [
     id: 'behavioural-capacity-decision-under-uncertainty',
     prompt:
       "Tell me about a time you had to make a GPU capacity or serving decision under real uncertainty, for example committing to reserved capacity before demand was known, or leading the response when an LLM service fell over under load. What did you decide, and how did it turn out?",
-    roles: ['ml-platform'],
+    roles: ['ml-platform', 'ai-lead'],
     level: 'senior',
     kind: 'behavioural',
     topics: ['behavioural', 'capacity planning', 'gpu'],
@@ -567,7 +567,7 @@ export const questionsPlatform: Question[] = [
     id: 'mcp-servers-transports-and-trust',
     prompt:
       'Your company wants its assistant to use MCP servers for the issue tracker, for a notes folder on each employee’s laptop, and for a third-party search tool. Explain how the assistant talks to each, which transport you would use where, how sign-in works, and what could go wrong.',
-    roles: ['ai-eng', 'ml-platform'],
+    roles: ['ai-eng', 'ml-platform', 'agentic-eng', 'sw-ai-tools', 'solutions-architect', 'ai-security'],
     level: 'senior',
     kind: 'design',
     topics: ['mcp', 'security', 'agents', 'authentication'],
@@ -608,7 +608,7 @@ export const questionsPlatform: Question[] = [
     id: 'choose-vector-store-and-distance-metric',
     prompt:
       'You are adding semantic search over 5 million support articles, with per-customer access rules. Which vector store would you start with, which distance metric and index would you use, and how would you check that the search is good enough?',
-    roles: ['ai-eng', 'ml-platform'],
+    roles: ['ai-eng', 'ml-platform', 'data-eng', 'solutions-architect'],
     level: 'mid',
     kind: 'design',
     topics: ['vector search', 'embeddings', 'retrieval', 'rag'],
@@ -648,7 +648,7 @@ export const questionsPlatform: Question[] = [
     id: 'code-eval-harness-and-regression',
     prompt:
       'Write a small evaluation harness for a prompt that classifies support emails. It should run a list of cases, score each, report the mean and the failures, and tell me whether a new prompt version regressed against the old one. How would you decide whether to trust the result?',
-    roles: ['ai-eng', 'ml-eng'],
+    roles: ['ai-eng', 'ml-eng', 'ai-test', 'sw-ai-tools'],
     level: 'mid',
     kind: 'coding',
     topics: ['evals', 'regression testing', 'python', 'ci'],
@@ -689,7 +689,7 @@ export const questionsPlatform: Question[] = [
     id: 'choosing-an-ai-library-without-lock-in',
     prompt:
       'Your team wants to adopt an agent framework for a support assistant that makes three model calls and one tool call. How do you decide whether to use a framework at all, how do you compare candidates, and how do you avoid over-committing to one?',
-    roles: ['ai-eng', 'ml-platform'],
+    roles: ['ai-eng', 'ml-platform', 'sw-ai-tools', 'solutions-architect', 'ai-lead'],
     level: 'mid',
     kind: 'design',
     topics: ['frameworks', 'libraries', 'maintenance', 'licensing'],
@@ -731,7 +731,7 @@ export const questionsPlatform: Question[] = [
     id: 'provider-update-regression-communication',
     prompt:
       'Tell me about a time an AI feature got worse after a model or prompt change that you did not fully control or did not expect to matter, such as a provider moving a model alias to a new snapshot, or a colleague’s prompt edit. How did you prove what had changed, what did you tell people while you were still finding out, and what did you put in place afterwards?',
-    roles: ['ai-eng', 'ml-platform'],
+    roles: ['ai-eng', 'ml-platform', 'ai-pm', 'ai-test', 'sw-ai-tools', 'fde', 'ai-lead'],
     level: 'senior',
     kind: 'behavioural',
     topics: ['behavioural', 'llmops', 'incident response', 'communication'],
