@@ -34,6 +34,20 @@ export const repoUrl = 'https://github.com/awsmankit/layerwise';
 
 export const releases: Release[] = [
   {
+    version: '2.4.0',
+    date: '2026-11-06',
+    title: 'Interview prep for 16 roles, and how to choose an agent architecture',
+    summary: 'Interview questions grouped by job role, a lesson and tool for choosing between agent loops, workflows, graphs and harnesses, and a sourced look at layoff announcements.',
+    highlights: [
+      'Interview prep now covers 16 roles, from AI app, agentic and ML engineers to AI test, security, responsible AI, data, edge, forward deployed, solutions architect, product, lead and research roles, with 174 new questions and a grouped role picker.',
+      'New lesson, Choosing an agent architecture: a side-by-side comparison of a single call, workflow, agent loop, graph, multi-agent setup and agent harness, the same refund bot drawn in each style, and a six-question chooser.',
+      'AI and work now has a section on layoff announcements and "AI-washing", using Challenger, Gray and Christmas data from 5 November 2026 and saying what such counts cannot show.',
+      'Nine new glossary terms, including agent harness, durable execution and checkpoint.',
+      'Select menus no longer overflow narrow phone screens; choosing a path, or arriving from a path card, now scrolls straight to that path.',
+    ],
+    stats: { lessons: 164, topics: 17, labs: 24, glossary: 880 },
+  },
+  {
     version: '2.3.0',
     date: '2026-11-01',
     title: 'Daily review, comfort, offline and interview questions',

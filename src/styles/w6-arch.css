@@ -1,0 +1,331 @@
+/* Wave 6 "choosing an agent architecture" lesson: comparison cards, the same task in six styles, and the chooser.
+   Every class starts with as- . Nothing here may push the page wider than the screen. */
+
+.as-cmp,
+.as-flows,
+.as-chs {
+  min-width: 0;
+}
+.as-hint {
+  margin: 0 0 0.7rem;
+  font-size: 0.92rem;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+/* ---------- buttons shared by the three figures ---------- */
+.as-chips,
+.as-ctl,
+.as-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+.as-chip,
+.as-opt {
+  min-height: 44px;
+  padding: 0.4rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  line-height: 1.25;
+  text-align: left;
+  cursor: pointer;
+}
+.viz .as-chip[aria-pressed='true'],
+.viz .as-opt[aria-checked='true'] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+.as-chip:hover:not([aria-pressed='true']),
+.as-opt:hover:not([aria-checked='true']):not(:disabled) {
+  border-color: var(--signal);
+  background: var(--signal-wash);
+}
+.as-opt:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.as-chip:focus-visible,
+.as-opt:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+
+/* ---------- comparison cards ---------- */
+.as-question {
+  margin: 0.8rem 0 0.7rem;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.02rem;
+  color: var(--signal-ink);
+}
+.viz .as-cards,
+.viz .as-flowgrid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.viz .as-cards > li,
+.viz .as-flowgrid > li {
+  margin: 0;
+}
+.as-cards {
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16.5rem), 1fr));
+}
+.as-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+}
+.as-card-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.as-num {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  background: var(--signal-wash);
+  color: var(--signal-ink);
+  font: 700 0.85rem var(--font-display);
+}
+.viz .as-name {
+  margin: 0;
+  font-size: 1.05rem;
+  overflow-wrap: anywhere;
+}
+.as-what {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  color: var(--ink-3);
+  overflow-wrap: anywhere;
+}
+.as-answer {
+  margin: 0.2rem 0 0;
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--line);
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.as-answer-tag {
+  display: block;
+  margin-bottom: 0.15rem;
+  font: 600 0.75rem var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+}
+.as-meter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--ink-2);
+}
+.as-dots {
+  display: inline-flex;
+  gap: 0.25rem;
+}
+.as-dot {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  border: 1.5px solid var(--ink-3);
+}
+.as-dot.is-on {
+  background: var(--signal);
+  border-color: var(--signal);
+}
+
+/* ---------- flows ---------- */
+.as-step {
+  font-size: 0.88rem;
+  color: var(--ink-3);
+}
+.viz .as-flowgrid {
+  margin-top: 0.9rem;
+}
+.as-flowgrid {
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+}
+.as-flow {
+  min-width: 0;
+  padding: 0.7rem 0.8rem 0.8rem;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+}
+.viz .as-flow-title {
+  margin: 0 0 0.3rem;
+  font-size: 1rem;
+}
+.as-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.as-node rect {
+  fill: var(--surface);
+  stroke: var(--ink);
+  stroke-opacity: 0.7;
+  stroke-width: 1;
+  transition: fill 0.25s, stroke-width 0.25s;
+}
+.as-node text {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  fill: var(--ink);
+}
+.as-node.is-model rect {
+  stroke: var(--signal);
+  stroke-opacity: 1;
+}
+.as-node.is-person rect {
+  fill: var(--tint-sun);
+}
+.as-node.is-person text {
+  fill: var(--ink);
+}
+.as-node.is-lit rect {
+  stroke-width: 2;
+}
+.as-node.is-lit.is-model rect {
+  fill: var(--signal-wash);
+}
+.as-node.is-lit.is-code rect {
+  fill: var(--paper-2);
+}
+.as-meta {
+  margin: 0.4rem 0 0;
+  font-size: 0.84rem;
+  line-height: 1.4;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+/* ---------- chooser ---------- */
+.as-qs {
+  display: grid;
+  gap: 0.9rem;
+}
+.as-q {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.as-q-text {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1.3;
+}
+.as-q-num {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: var(--signal-wash);
+  color: var(--signal-ink);
+  font-size: 0.8rem;
+}
+.as-q-help {
+  margin: 0.15rem 0 0.4rem 2rem;
+  font-size: 0.85rem;
+  color: var(--ink-3);
+}
+.as-opts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-left: 2rem;
+}
+.as-opts .as-opt {
+  border-radius: var(--r-sm);
+}
+.as-result {
+  margin-top: 1.1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--signal);
+  border-left-width: 4px;
+  border-radius: var(--r-sm);
+  background: var(--signal-wash);
+  min-width: 0;
+}
+.as-result p {
+  margin: 0.35rem 0 0;
+  font-size: 0.97rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.as-result-empty,
+.as-result .as-result-empty {
+  color: var(--ink-3);
+}
+.as-result .as-result-tag {
+  margin: 0;
+  font: 600 0.78rem var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+}
+.viz .as-result-name {
+  margin: 0.1rem 0 0;
+  font-size: 1.4rem;
+  color: var(--signal-ink);
+}
+.as-result .as-caution {
+  padding: 0.45rem 0.6rem;
+  border-left: 3px solid var(--cost);
+  background: var(--cost-wash);
+}
+.as-result .as-result-link a {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--signal-ink);
+}
+.as-actions {
+  margin-top: 0.7rem;
+}
+
+@media (max-width: 420px) {
+  .as-q-help,
+  .as-opts {
+    margin-left: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .as-node rect {
+    transition: none;
+  }
+}

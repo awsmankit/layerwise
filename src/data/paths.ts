@@ -156,6 +156,7 @@ export const paths: Record<PathId, LearningPath> = {
       { kind: 'lesson', key: 'rag-agents/designing-tools-for-agents' },
       { kind: 'lesson', key: 'rag-agents/agent-memory-and-context-engineering' },
       { kind: 'lesson', key: 'rag-agents/multi-agent-systems' },
+      { kind: 'lesson', key: 'rag-agents/choosing-an-agent-architecture' },
       { kind: 'lesson', key: 'evals/evals-101' },
       { kind: 'lesson', key: 'evals/building-an-eval-dataset' },
       { kind: 'lesson', key: 'evals/why-models-make-things-up' },

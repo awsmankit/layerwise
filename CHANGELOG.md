@@ -8,6 +8,18 @@ Versions follow [semantic versioning](https://semver.org/), read for a learning 
 - **Minor**: new lessons, labs, tools or features.
 - **Patch**: fixes and small corrections (wording, links, layout, accessibility).
 
+## [2.4.0] - 2026-11-06: Interview prep for 16 roles, and how to choose an agent architecture
+
+Interview questions grouped by job role, a lesson and tool for choosing between agent loops, workflows, graphs and harnesses, and a sourced look at layoff announcements.
+
+- Interview prep now covers 16 roles, from AI app, agentic and ML engineers to AI test, security, responsible AI, data, edge, forward deployed, solutions architect, product, lead and research roles, with 174 new questions and a grouped role picker.
+- New lesson, Choosing an agent architecture: a side-by-side comparison of a single call, workflow, agent loop, graph, multi-agent setup and agent harness, the same refund bot drawn in each style, and a six-question chooser.
+- AI and work now has a section on layoff announcements and "AI-washing", using Challenger, Gray and Christmas data from 5 November 2026 and saying what such counts cannot show.
+- Nine new glossary terms, including agent harness, durable execution and checkpoint.
+- Select menus no longer overflow narrow phone screens; choosing a path, or arriving from a path card, now scrolls straight to that path.
+
+**At this release:** 164 lessons in 17 topics, 24 practice labs, 880 glossary terms.
+
 ## [2.3.0] - 2026-11-01: Daily review, comfort, offline and interview questions
 
 Four new ways to use the site, five more lessons, and 60 new interview questions.
@@ -160,6 +172,7 @@ Animated AI engineering lessons, games and tools, covering AWS, Azure and Google
 
 **At this release:** 44 lessons in 12 topics, 0 practice labs, 79 glossary terms.
 
+[2.4.0]: https://github.com/awsmankit/layerwise/compare/v2.3.0...v2.4.0
 [2.3.0]: https://github.com/awsmankit/layerwise/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/awsmankit/layerwise/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/awsmankit/layerwise/compare/v2.0.0...v2.1.0

@@ -1,0 +1,141 @@
+---
+title: "Choosing an agent architecture: call, workflow, loop, graph, multi-agent or harness"
+track: rag-agents
+level: intermediate
+order: 4.65
+summary: "Six ways to build with a model, compared on who picks the next step, where state lives, cost, pausing for a person and testing. What an agent harness is (and the other meaning of the word), when you need a framework, an example priced three ways, and a short chooser."
+updated: 2026-11-06
+sources:
+  - label: "Building effective agents (Anthropic, 19 December 2024)"
+    url: https://www.anthropic.com/research/building-effective-agents
+  - label: "Effective harnesses for long-running agents (Anthropic, 26 November 2025)"
+    url: https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents
+  - label: "Scaling Managed Agents: decoupling the brain from the hands (Anthropic, 8 April 2026)"
+    url: https://www.anthropic.com/engineering/managed-agents
+  - label: "How the agent loop works (Claude Agent SDK documentation)"
+    url: https://code.claude.com/docs/en/agent-sdk/agent-loop
+  - label: "LangGraph overview (LangChain documentation)"
+    url: https://docs.langchain.com/oss/python/langgraph/overview
+  - label: "Interrupts (LangGraph documentation)"
+    url: https://docs.langchain.com/oss/python/langgraph/interrupts
+  - label: "Runtimes, frameworks, and harnesses (LangChain documentation)"
+    url: https://docs.langchain.com/oss/javascript/concepts/products
+  - label: "Running agents (OpenAI Agents SDK documentation)"
+    url: https://openai.github.io/openai-agents-python/running_agents/
+---
+
+import ArchStyleCompare from '../../../components/viz/ArchStyleCompare.tsx';
+import ArchStyleFlows from '../../../components/viz/ArchStyleFlows.tsx';
+import ArchStyleChooser from '../../../components/viz/ArchStyleChooser.tsx';
+import Callout from '../../../components/ui/Callout.astro';
+
+You can build with a model in six ways, from one call to a full agent harness (a word this lesson defines below). The model does much the same job in all of them. What changes is **who controls the flow** (your code or the model), **where state lives** and **what you can test**. This lesson helps you pick, and says what each choice costs.
+
+## Start with the simplest style that works
+
+Anthropic's guide puts the rule plainly: "we recommend finding the simplest solution possible, and only increasing complexity when needed." It also warns that agents bring "higher costs, and the potential for compounding errors". So the rule for this lesson is: **add structure only when you can name the failure it fixes.** A failure you can name is something like "the approval gets lost when we deploy", not "it feels more robust".
+
+Two words recur, and [Agents and tool use](../agents-and-tool-use/) covers them in full. A **workflow** is a system where, in Anthropic's words, "LLMs and tools are orchestrated through predefined code paths". An **agent** is one where "LLMs dynamically direct their own processes and tool usage".
+
+## Six styles side by side
+
+Pick a question and read down the cards. Style 5 is only summarised here, because [Multi-agent systems](../multi-agent-systems/) already covers its patterns, costs and failures.
+
+<ArchStyleCompare client:visible />
+
+Two terms from the cards:
+
+- **Router.** A first step that labels the input and sends it down one of several branches. It belongs to the fixed workflow, because your code owns the branches.
+- **Prompt chaining.** One model call's output becomes the next call's input, in an order you fixed. Splitting a job into small steps often helps each step, at the price of more calls and more delay.
+
+## The same task in six styles
+
+Our task: a customer asks for a refund on one order. The bot looks the order up, and a person must approve the refund before it is issued. Press Play and watch which step is chosen by code, which by the model, and where state is kept.
+
+<ArchStyleFlows client:visible />
+
+Notice what stays the same: a model writes the words, and one step needs a person. What differs is who knows the order of steps, and what happens if the server restarts while the person is thinking about it.
+
+## A worked example, priced three ways
+
+Take three of those drawings (workflow, loop, graph) and give them example numbers. All of these are **example figures, not measurements**: $3 per million input tokens, $15 per million output tokens, and each call taking 0.4 s plus 1/80 s per output token.
+
+| | Model calls | Input tokens | Output tokens | Cost per request | Model time | 10,000 requests |
+| --- | --- | --- | --- | --- | --- | --- |
+| Fixed workflow | 2 | 1,900 | 200 | $0.0087 | 3.3 s | $87 |
+| Graph runtime | 3 | 3,000 | 280 | $0.0132 | 4.7 s | $132 |
+| Agent loop | 5 | 8,100 | 420 | $0.0306 | 7.3 s | $306 |
+
+Why the loop costs more: it makes five calls, and each call resends a longer history (900 input tokens on call one, 2,300 on call five), so its input is about 4.3 times the workflow's (8,100 against 1,900). The graph makes one more call than the workflow because it asks the model to decide the refund as its own step.
+
+Now the restart. The approval takes hours and the server redeploys during the wait. The bare loop kept its history in memory, so it starts again and repeats its first three turns: an extra 3,800 input and 220 output tokens, which is $0.0147, so $0.0453 in all (about 1.5 times the first cost). The graph saved its state at each step, so it resumes at the approval with no repeated model calls. The workflow could do the same, but only if you wrote the saving and the resuming yourself.
+
+The lesson of the numbers is not "graphs are cheaper". It is that **the loop's price was set by the model's choices, and the graph's by your drawing**. Check the docs for your version for what a resume repeats: LangGraph's interrupt documentation says that on resume "the runtime restarts the entire node from the beginning", so side effects before an interrupt should be safe to repeat (as of 6 November 2026).
+
+## What an agent harness is
+
+The word has two meanings, and people mix them up.
+
+1. **The runtime scaffold** (this lesson). Everything around the model that turns it into a working agent. Anthropic's Managed Agents post describes the harness as "the loop that calls Claude and routes Claude's tool calls to the relevant infrastructure". Its other pieces are the **session** ("the append-only log of everything that happened") and the **sandbox** ("an execution environment where Claude can run code and edit files").
+2. **An eval harness.** The code that runs a model or agent against test cases and scores it. That is a testing tool, not part of the product. See [Evals 101](../../evals/evals-101/) and [Evaluating agents](../../evals/evaluating-agents/).
+
+Sense 1 is also called a **scaffold**. A typical one, as seen in the Claude Agent SDK documentation (as of 6 November 2026), has these parts:
+
+- **The loop:** the model answers, your code runs the tools it asked for, the results go back, and it repeats until a reply has no tool calls. You can cap it with a turn limit or a spend limit; by default neither is set.
+- **Tools and permissions:** which tools exist, which run automatically and which need approval, with hooks that can block a call before it runs.
+- **Context management:** the history grows each turn, so older turns are summarised when the window fills (compaction), and a sub-agent can do a subtask so that only its final reply comes back.
+- **Memory and notes:** state outside the window. In Anthropic's long-running coding setup the agent leaves a progress file and git history, because "each new session begins with no memory of what came before".
+- **A sandbox:** a place to run code where a mistake does little harm.
+- **Approvals, tracing and limits:** who says yes, what gets logged, and when the run stops. See [Observability for LLM apps](../../evals/observability-for-llm-apps/).
+
+Anthropic's posts add two cautions. A harness bakes in guesses: "harnesses encode assumptions about what Claude can't do on its own", and "can go stale as models improve", so re-examine it when the model changes. And a harness does not make the agent good: in its long-running coding work Anthropic saw the agent declare "victory on the entire project too early", and added structure (a feature list, progress notes) to counter it.
+
+<Callout kind="note" title="Vendors use the word loosely">
+LangChain's documentation calls LangChain a framework, LangGraph a runtime and Deep Agents a harness, and lists the Claude Agent SDK as a harness and the OpenAI Agents SDK as a framework. Other vendors word it differently. Ask what a product actually provides, not what it is called.
+</Callout>
+
+## Do you need a framework?
+
+Three things get called by similar names:
+
+| | What it is | You get | You give up |
+| --- | --- | --- | --- |
+| **Plain code** | Your own functions plus a model API | Full control, nothing hidden, easy to read | You write loops, saving, retries and tracing yourself |
+| **Agent framework or SDK** | A library of parts: model connections, tool helpers, agent loop, hand-offs | Faster start, common patterns | Abstractions that can hide what is sent to the model |
+| **Agent harness** | A whole working scaffold you configure | Loop, tools, context handling and limits, ready to run | Control over details, and a design that may bake in old assumptions |
+
+A framework is a library of parts. A harness is a whole working scaffold, and a framework can help you build one. An **agent SDK** is a framework (or harness) shipped as a software development kit: the Claude Agent SDK documentation says it gives you "the same tools, agent loop, and context management that power Claude Code", and the OpenAI Agents SDK describes itself as having "very few abstractions".
+
+Anthropic's advice about frameworks is cautious: they "often create extra layers of abstraction that can obscure the underlying prompts", and it suggests that "developers start by using LLM APIs directly". The LangGraph documentation is similar in spirit about the other direction: "Use LangGraph when you need explicit control over state and control flow", and for a higher-level loop "use Deep Agents or LangChain agents" (as of 6 November 2026).
+
+**Orchestration** is the code that decides what runs when. A **durable execution** runtime keeps going through failures and pauses: LangChain's documentation calls it a runtime capability, where "agents persist through failures and can run for extended periods, resuming from where they left off". LangGraph's `interrupt()` is the example: the graph "waits indefinitely until you resume execution", and a durable checkpointer is recommended for production. The OpenAI Agents SDK documentation points to Temporal and Dapr for runs that "may span long waits, retries, or process restarts". A **checkpoint** is one saved copy of a run's state, and a **state machine** is a system that is always in one named state and moves along allowed transitions.
+
+## How each style fails
+
+| Style | Typical failure | First guard |
+| --- | --- | --- |
+| Single call | One wrong answer | An eval set and better context |
+| Workflow | An early step's mistake flows on | A check between steps, retries per step |
+| Agent loop | Wanders, repeats, stops early, spends too much | Turn and spend caps in code, read transcripts |
+| Graph runtime | Resume repeats a step, or checkpoints pile up | Safe-to-repeat steps, trim old checkpoints |
+| Multi-agent | Errors compound across workers | A verifier that sees the sources, budgets |
+| Harness | Declares success too early, stale assumptions | An outcome check, re-run evals after model changes |
+
+The OpenAI Agents SDK documentation shows the loop guard concretely: exceeding the turn limit raises an error (`MaxTurnsExceeded`), and you can turn the limit off. The Claude Agent SDK returns an error result when the turn or budget cap is hit. Either way a limit is only useful if your code decides what happens next. See [Human-in-the-loop design](../../systems/human-in-the-loop-design/) for the approval step.
+
+## Try it: which style fits your task?
+
+Answer the six questions. The chooser follows the rules in this lesson. It will often say "single call" or "workflow", and that is the point.
+
+<ArchStyleChooser client:visible />
+
+## What to remember
+
+- Start with the simplest style that works. Add structure only for a failure you can name.
+- The model does the same job in every style. What changes is who controls the flow, where state lives and what you can test.
+- If you can list the steps, write a workflow. If the run must pause for hours or survive a restart, use a graph runtime or another durable setup.
+- Use more than one agent for parallel breadth, separate contexts or different permissions, not for tidiness.
+- A harness is the scaffold around the model: loop, tools and permissions, context, notes, sandbox, approvals, tracing and limits. "Eval harness" is a different thing.
+- Prices in the example are made up to show the shape. Measure your own tasks.
+
+Next: [LangChain and LangGraph](../langchain-and-langgraph/) shows a graph runtime in code, and [Multi-agent systems](../multi-agent-systems/) prices the fifth style in detail.

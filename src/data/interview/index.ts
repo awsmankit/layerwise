@@ -9,11 +9,12 @@ import { questionsSecurityResponsible } from './roles-security-responsible';
 import { questionsCustomerLead } from './roles-customer-lead';
 import { questionsProductData } from './roles-product-data';
 import { questionsEdgeResearchTools } from './roles-edge-research-tools';
+import { questionsArch } from './w6-arch';
 
 export * from './types';
 
 /** Every question, in a stable order. */
-export const questions: Question[] = [...questionsFoundations, ...questionsApplied, ...questionsPlatform, ...questionsMlAudioEdge, ...questionsBuilderRisk, ...questionsAgenticTest, ...questionsSecurityResponsible, ...questionsCustomerLead, ...questionsProductData, ...questionsEdgeResearchTools];
+export const questions: Question[] = [...questionsFoundations, ...questionsApplied, ...questionsPlatform, ...questionsMlAudioEdge, ...questionsBuilderRisk, ...questionsAgenticTest, ...questionsSecurityResponsible, ...questionsCustomerLead, ...questionsProductData, ...questionsEdgeResearchTools, ...questionsArch];
 
 export const questionById = (id: string) => questions.find((q) => q.id === id);
 
