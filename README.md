@@ -20,11 +20,13 @@
 Around 160 lessons in 17 topics (see the [changelog](CHANGELOG.md) for the exact count in each release), with a live demo in nearly every one:
 
 - **Interactive demos:** train a neural network in your browser, teach a computer to tell apples from bananas, watch a spectrogram of a sound, watch attention and the KV cache at work, and many more.
+- **What if…? experiments:** switch off the KV cache, the embeddings, attention or an approval gate and watch what breaks, with the numbers worked out in code.
 - **Games** that teach system design and trade-offs: Blueprint, Cost Crunch, Fit the Model, Rack and Stack, Incident Room.
 - **Coding labs** that run real Python in the browser and check your code.
 - **Calculators** for cost, model memory, GPUs, latency and break-even.
 - **Revision:** a quiz on every lesson, a Daily 5 with spaced repetition, learning paths with progress, completion certificates, and a "what should I learn next?" page.
-- **Interview prep** for candidates and interviewers, a glossary, and engineering case studies.
+- **Model radar:** dated, sourced facts on current models, with a task-cost calculator and no quality rankings.
+- **Interview prep** for 16 roles, for candidates and interviewers, a glossary, and engineering case studies.
 - **Comfort and access:** text size and reading comfort settings, read-aloud, offline mode, and a design that works on a phone.
 
 Lessons carry their sources, product facts are dated, and example numbers are labelled as examples.
@@ -46,6 +48,7 @@ npm run headlines  # refresh the News headlines from official feeds (also runs d
 npm run check-sources    # do every lesson's source link still resolve?
 npm run check-links      # same for the case studies
 npm run check-libraries  # same for the libraries map, and archived repos
+npm run check-models     # model radar: rows not checked for 90 days, and new model names in the news feeds
 ```
 
 The deploy workflow also runs every morning to refresh the headlines, and a weekly workflow runs the three link checks and opens an issue if any link is broken. Practice labs are tested under real Python (`python3` must be on your path for `npm test`).

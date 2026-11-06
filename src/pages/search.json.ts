@@ -9,6 +9,7 @@ import { searchPages } from '../data/search-pages';
 import { labs } from '../data/labs';
 import { libraries, categoryLabels } from '../data/libraries';
 import { cases } from '../data/cases';
+import { whatifs } from '../data/whatif';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const u = (path: string) => `${base}${path}`;
@@ -24,6 +25,7 @@ export const GET: APIRoute = async () => {
     ...games.map((g) => ({ t: g.title, u: u(g.href), k: 'Game', s: `${g.tagline}. ${g.blurb}` })),
     ...searchPages.map((p) => ({ ...p, u: u(p.u) })),
     ...labs.map((l) => ({ t: l.title, u: u(`/practice/${l.id}/`), k: 'Lab', s: `${l.goal.split(/(?<=\.)\s/)[0]} ${l.minutes} minutes, ${l.level}.` })),
+    ...whatifs.map((w) => ({ t: w.title, u: u(`/whatif/${w.slug}/`), k: 'What if', s: w.blurb })),
     ...libraries.map((b) => ({ t: b.name, u: u('/libraries/'), k: 'Library', s: `${categoryLabels[b.category]}. ${b.what}` })),
     ...cases.map((c) => ({ t: c.title, u: u('/cases/'), k: 'Case study', s: `${c.company}. ${c.learn ?? 'Link only.'}` })),
     ...pulse.map((p) => ({ t: p.data.title, u: u(`/pulse/${p.id}/`), k: 'News', s: p.data.tags.join(', ') })),

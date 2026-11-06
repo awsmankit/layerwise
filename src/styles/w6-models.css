@@ -1,0 +1,486 @@
+/* Model radar page (/models/). Every class starts with mr- . Nothing here may push the page wider than the screen. */
+
+.mr-section {
+  margin-block: 2.6rem 0;
+  min-width: 0;
+}
+.mr-section h2 {
+  margin-bottom: 0.4rem;
+}
+.mr-intro {
+  margin: 0 0 0.3rem;
+  max-width: 66ch;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+.mr-fig {
+  min-width: 0;
+}
+
+/* ---------- vendor colours and markers ---------- */
+.mr-v0 { --mr-c: #d2601f; }
+.mr-v1 { --mr-c: #0f8a67; }
+.mr-v2 { --mr-c: #2f6fe0; }
+.mr-v3 { --mr-c: #c026a6; }
+.mr-v4 { --mr-c: #0d86a3; }
+.mr-v5 { --mr-c: #8b5cf6; }
+.mr-mark {
+  fill: var(--mr-c);
+  stroke: var(--surface);
+  stroke-width: 1.5;
+}
+.mr-mark.is-sel {
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+
+.mr-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 1.1rem;
+  margin: 0 0 0.6rem;
+  padding: 0;
+  list-style: none;
+  font-size: 0.9rem;
+  color: var(--ink-2);
+}
+.mr-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 24px;
+}
+
+/* ---------- svg figures ---------- */
+.mr-svg {
+  display: block;
+  max-width: 100%;
+  overflow: visible;
+}
+.mr-grid {
+  stroke: var(--line-soft);
+  stroke-width: 1;
+}
+.mr-row-line {
+  stroke: var(--line-soft);
+  stroke-width: 1;
+}
+.mr-today {
+  stroke: var(--cost);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+}
+.mr-axis-text,
+.mr-axis-title,
+.mr-row-title,
+.mr-dot-label {
+  font-family: var(--font-display);
+  font-size: 12px;
+  fill: var(--ink-2);
+}
+.mr-axis-title {
+  fill: var(--ink-3);
+}
+.mr-today-label {
+  fill: var(--cost);
+}
+.mr-row-title {
+  font-weight: 700;
+  font-size: 13px;
+  fill: var(--ink);
+}
+.mr-dot-label {
+  fill: var(--ink);
+  paint-order: stroke;
+  stroke: var(--paper);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+.mr-dot {
+  cursor: pointer;
+  outline: none;
+}
+.mr-hit {
+  fill: transparent;
+  stroke: transparent;
+}
+.mr-ring {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+.mr-dot:hover .mr-hit {
+  fill: var(--signal-wash);
+}
+.mr-dot:focus-visible .mr-hit {
+  fill: var(--signal-wash);
+  stroke: var(--signal);
+  stroke-width: 2;
+}
+
+/* ---------- readout under a figure ---------- */
+.mr-facts {
+  margin-top: 0.8rem;
+  padding: 0.7rem 0.9rem;
+  border-left: 4px solid var(--signal);
+  background: var(--signal-wash);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  min-height: 5.2rem;
+  overflow-wrap: anywhere;
+}
+.mr-facts p {
+  margin: 0;
+}
+.mr-facts-title span {
+  color: var(--ink-2);
+  margin-inline: 0.25rem;
+}
+.mr-facts-line {
+  margin-top: 0.25rem;
+  font-size: 0.95rem;
+  color: var(--ink-2);
+}
+
+.mr-step {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.7rem;
+}
+
+/* ---------- buttons, chips and fields ---------- */
+.mr-btn,
+.mr-chip {
+  min-height: 44px;
+  padding: 0.4rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  line-height: 1.2;
+  cursor: pointer;
+}
+.mr-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.viz .mr-chip[aria-pressed='true'],
+.viz .mr-chip[aria-checked='true'] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+.mr-chip:hover:not([aria-pressed='true']):not([aria-checked='true']),
+.mr-btn:hover:not(:disabled) {
+  border-color: var(--signal);
+  background: var(--signal-wash);
+}
+.mr-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.mr-btn:focus-visible,
+.mr-chip:focus-visible,
+.mr-field input:focus-visible,
+.mr-field select:focus-visible,
+.mr-card a:focus-visible,
+.mr-warn a:focus-visible {
+  outline: 3px solid var(--signal);
+  outline-offset: 2px;
+}
+.mr-ctl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 0.7rem;
+}
+.mr-hint {
+  margin: 0 0 0.8rem;
+  font-size: 0.92rem;
+  color: var(--ink-2);
+}
+.mr-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  gap: 0.5rem 1.4rem;
+  margin-bottom: 0.9rem;
+}
+.mr-field {
+  display: block;
+  min-width: 0;
+}
+.mr-field > span {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  font-size: 0.9rem;
+  color: var(--ink-2);
+}
+.mr-field > span b {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.mr-field input[type='number'],
+.mr-field input[type='search'],
+.mr-field select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 1rem;
+}
+.mr-field input[type='range'] {
+  width: 100%;
+  height: 44px;
+  min-height: 44px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: linear-gradient(var(--line), var(--line)) center / 100% 1px no-repeat;
+}
+
+/* ---------- cost bars ---------- */
+.mr-bars {
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.2rem;
+}
+.mr-bars li {
+  display: grid;
+  grid-template-columns: minmax(0, 11rem) minmax(0, 1fr) minmax(0, 11rem);
+  align-items: center;
+  gap: 0.3rem 0.8rem;
+  padding-block: 0.45rem;
+  border-bottom: 1px solid var(--line-soft);
+}
+.mr-bar-name {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-weight: 600;
+  line-height: 1.2;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.mr-bar-name small,
+.mr-bar-val small {
+  display: block;
+  font-weight: 400;
+  font-size: 0.8rem;
+  color: var(--ink-3);
+  line-height: 1.25;
+}
+.mr-bar-track {
+  display: block;
+  height: 16px;
+  border-radius: 8px;
+  background: var(--line-soft);
+  overflow: hidden;
+}
+.mr-bar-track > span {
+  display: block;
+  height: 100%;
+  background: var(--mr-c);
+  transform-origin: left center;
+  border-radius: 8px;
+}
+.mr-bar-val {
+  text-align: right;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+.mr-bars li.is-off {
+  opacity: 0.6;
+}
+.mr-warn {
+  margin-top: 1.2rem;
+  padding: 0.8rem 1rem;
+  border-left: 4px solid var(--cost);
+  background: var(--cost-wash);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+}
+.mr-warn p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.mr-warn p + p {
+  margin-top: 0.6rem;
+}
+.mr-warn a {
+  color: inherit;
+  font-weight: 650;
+}
+
+/* ---------- list of cards ---------- */
+.mr-count {
+  margin: 0 0 0.7rem;
+  font-size: 0.9rem;
+  color: var(--ink-3);
+}
+.mr-cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: 1rem;
+}
+.mr-card {
+  min-width: 0;
+  padding: 1rem 1.05rem 1.1rem;
+  border: 1px solid var(--line);
+  border-top: 5px solid var(--mr-c);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  overflow-wrap: anywhere;
+}
+.mr-card header {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+.mr-card h4 {
+  margin: 0;
+  font-size: 1.15rem;
+  line-height: 1.2;
+}
+.mr-card header p {
+  margin: 0.1rem 0 0;
+  font-size: 0.88rem;
+  color: var(--ink-3);
+}
+.mr-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.7rem 0 0.6rem;
+}
+.mr-status,
+.mr-fresh {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-style: normal;
+  line-height: 1.35;
+  color: var(--ink-2);
+}
+.mr-status-preview {
+  border-color: var(--cost);
+  color: var(--cost);
+}
+.mr-status-announced {
+  border-style: dashed;
+}
+.mr-status-deprecated {
+  border-color: var(--warn);
+  color: var(--warn);
+}
+.mr-fresh-fresh {
+  border-color: var(--ok);
+  color: var(--ok);
+}
+.mr-fresh-ageing {
+  border-color: var(--cost);
+  color: var(--cost);
+}
+.mr-fresh-stale {
+  border-color: var(--warn);
+  color: var(--warn);
+  font-weight: 700;
+}
+.mr-card dl {
+  margin: 0;
+  display: grid;
+  gap: 0.15rem;
+}
+.mr-card dl > div {
+  display: grid;
+  grid-template-columns: minmax(0, 8.5rem) minmax(0, 1fr);
+  gap: 0.6rem;
+  padding-block: 0.15rem;
+  border-bottom: 1px dotted var(--line-soft);
+}
+.mr-card dt {
+  font-size: 0.85rem;
+  color: var(--ink-3);
+}
+.mr-card dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.mr-note,
+.mr-change {
+  margin: 0.6rem 0 0;
+  font-size: 0.88rem;
+  color: var(--ink-2);
+  line-height: 1.4;
+}
+.mr-change {
+  color: var(--cost);
+  font-weight: 600;
+}
+.mr-src-title {
+  margin: 0.8rem 0 0.2rem;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.mr-src {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.1rem;
+}
+.mr-src a {
+  display: inline-block;
+  min-height: 44px;
+  padding-block: 0.6rem 0;
+  font-size: 0.9rem;
+  line-height: 1.3;
+  color: var(--signal-ink);
+}
+
+/* ---------- phones ---------- */
+@media (max-width: 640px) {
+  .mr-bars li {
+    grid-template-columns: minmax(0, 1fr) minmax(0, auto);
+  }
+  .mr-bar-track {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  .mr-bar-name {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .mr-bar-val {
+    grid-column: 2;
+    grid-row: 1;
+    max-width: 12rem;
+  }
+  .mr-card dl > div {
+    grid-template-columns: minmax(0, 7rem) minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mr-bar-track > span {
+    transition: none;
+  }
+}

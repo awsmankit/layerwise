@@ -1,0 +1,36 @@
+---
+import Base from '../../layouts/Base.astro';
+import { whatifsByArea, whatifs } from '../../data/whatif';
+import { withBase } from '../../lib/url';
+
+const groups = whatifsByArea();
+const level = { basic: 'Basic', intermediate: 'Intermediate', advanced: 'Advanced' };
+---
+
+<Base title="What if…?" description="Take one part out of an AI system, such as the KV cache, embeddings or attention, and watch what breaks. Interactive experiments with the numbers worked out.">
+  <div class="wrap">
+    <header class="page-head">
+      <h1>What if…?</h1>
+      <p>
+        The best way to see why a part exists is to take it away. Each experiment switches one piece off, such as the cache, the embeddings or the safety check, and shows what breaks, with the numbers worked out.
+        {whatifs.length} experiments so far.
+      </p>
+    </header>
+    {
+      groups.map((g) => (
+        <section class="wi-group" aria-labelledby={`wi-${g.area}`}>
+          <h2 id={`wi-${g.area}`}>{g.label}</h2>
+          <div class="wi-grid">
+            {g.items.map((w) => (
+              <a class="wi-card" href={withBase(`/whatif/${w.slug}/`)}>
+                <h3>{w.title}</h3>
+                <p>{w.blurb}</p>
+                <small>{level[w.level]} · {w.minutes} min</small>
+              </a>
+            ))}
+          </div>
+        </section>
+      ))
+    }
+  </div>
+</Base>

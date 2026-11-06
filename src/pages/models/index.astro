@@ -1,0 +1,58 @@
+---
+import '../../styles/w6-models.css';
+import ToolPage from '../../layouts/ToolPage.astro';
+import ModelTimeline from '../../components/models/ModelTimeline.tsx';
+import ModelScatter from '../../components/models/ModelScatter.tsx';
+import TaskCostCalculator from '../../components/models/TaskCostCalculator.tsx';
+import ModelCards from '../../components/models/ModelCards.tsx';
+import { models, modelsChecked } from '../../data/models';
+import { shortDay } from '../../lib/dates';
+import { withBase } from '../../lib/url';
+import { site } from '../../site';
+
+// "today" is fixed when the page is built, so the same page renders the same way on the server and in the browser.
+const today = new Date().toISOString().slice(0, 10);
+const checked = shortDay(modelsChecked);
+const lesson = withBase('/learn/llm/choosing-and-comparing-models/');
+---
+
+<ToolPage
+  title="Model radar"
+  lede={`Dates, context windows, list prices and input types for ${models.length} current models, each checked against the vendor's own page on ${checked}. Prices change often, so check the source before you rely on one. Nothing here ranks quality.`}
+>
+  <section class="mr-section" aria-labelledby="mr-h-time">
+    <h2 id="mr-h-time">When models were released</h2>
+    <p class="mr-intro">Releases come fast. This is the order the vendors themselves gave, newest to the right. Select a marker, or step through them, to read its facts.</p>
+    <ModelTimeline client:visible today={today} />
+  </section>
+
+  <section class="mr-section" aria-labelledby="mr-h-scatter">
+    <h2 id="mr-h-scatter">Price and context window</h2>
+    <p class="mr-intro">List price against how much text a model can hold at once. Many models now share a one-million-token window, so price is what separates them on this chart.</p>
+    <ModelScatter client:visible today={today} />
+  </section>
+
+  <section class="mr-section" aria-labelledby="mr-h-cost">
+    <h2 id="mr-h-cost">What one task costs</h2>
+    <p class="mr-intro">Pick a size of task, or type your own token counts, and see the list-price cost on every model that publishes one. Read the warning under the bars before you draw a conclusion from them.</p>
+    <TaskCostCalculator client:visible today={today} />
+  </section>
+
+  <section class="mr-section" aria-labelledby="mr-h-list">
+    <h2 id="mr-h-list">The full list</h2>
+    <p class="mr-intro">Every figure has a source link. A field the vendor does not state is shown as “not stated”, never filled in from elsewhere.</p>
+    <ModelCards client:visible today={today} />
+  </section>
+
+  <Fragment slot="notes">
+    <h2>What this page is, and is not</h2>
+    <p>It compares facts a vendor publishes: release date, context window, longest reply, list price, what the model takes in, whether it is available and whether the weights are open. It does not show benchmark scores or say that one model is better than another. How to judge quality on your own task is in <a href={lesson}>Choosing and comparing models</a>.</p>
+    <p>Models are listed because they are the current flagship and small models of the big API vendors, plus a few open-weight and fast-moving ones. A model is left off if it could not be confirmed on the vendor’s own site. Missing context windows or prices are left blank, not guessed.</p>
+
+    <h2>How this page stays current</h2>
+    <p>A weekly check runs on GitHub. It lists any row that was last checked more than 90 days ago, and scans the official news feeds this site already follows for names that look like new models and are not in the list. If it finds either, it opens one issue. A person then opens the vendor’s own page, confirms each fact and edits the data. Every row shows when it was checked, with a badge that turns from “recently” to “ageing” after 30 days and “stale” after 90, and links the pages its figures came from. Blog posts and press coverage are not accepted as a source for any number.</p>
+
+    <h2>How to add or correct a model</h2>
+    <p>The data is one file, <code>src/data/models.ts</code>, in the <a href={site.repo} target="_blank" rel="noopener noreferrer">Layerwise repository<span class="sr-only"> (opens in a new tab)</span></a>. Add or edit the entry from the vendor’s model and pricing pages, put those page addresses in <code>sources</code>, set <code>checkedOn</code> to the day you looked, and open a pull request. Tests check the addresses, the dates, the sort order and that no score has crept in. If something on this page is wrong, an issue with the vendor’s page address is the fastest fix.</p>
+  </Fragment>
+</ToolPage>

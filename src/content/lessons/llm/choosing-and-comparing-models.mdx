@@ -172,6 +172,8 @@ The same model family can often be reached through its maker's own API and throu
 
 Most families offer tiers: a small, fast, cheap model; a mid-range one; a large one for hard tasks. The price gap between tiers is often a large multiple, so your routing and cost design depends on how far down the tiers your task works ([Model routing and fallbacks](../../systems/model-routing-and-fallbacks/)). Test the smaller tier first on easy tasks, not last.
 
+For dated, sourced facts on current models (release dates, context windows, list prices, input types, open weights) and a calculator for what one task costs on each, see the [Model radar](../../../models/). It compares facts, not quality.
+
 Check **context length** as two numbers: how much you can send and how much the model can write back. A long window is not the same as using it well; see [Context windows and caching](../context-window-and-caching/). Check **modalities** per model and per endpoint: image, audio or document input, and image or audio output, are not uniform across a family.
 
 ## Deprecation and version pinning

@@ -19,6 +19,8 @@ import { watch } from '../data/watch';
 import { lessonVideos } from '../data/videos';
 import { labs, labById } from '../data/labs';
 import { libraries } from '../data/libraries';
+import { whatifs } from '../data/whatif';
+import { models } from '../data/models';
 import { getLessons, formatDate } from '../lib/content';
 import headlines from '../data/headlines.json';
 
@@ -266,6 +268,22 @@ const tools = [
           <p>Agents, RAG, vector stores, evals and more, with status and licence.</p>
         </span>
         <span class="lp-chip">{libraries.length} libraries</span>
+      </a>
+      <a class="lp-card" data-reveal href={withBase('/whatif/')} style={cardStyle(swatch.periwinkle)}>
+        <span class="lp-plate"><TrackIcon name="llm" size={44} /></span>
+        <span class="lp-body">
+          <h3>What if…?</h3>
+          <p>Switch off the cache, the embeddings or the safety check and watch what breaks.</p>
+        </span>
+        <span class="lp-chip">{whatifs.length} experiments</span>
+      </a>
+      <a class="lp-card" data-reveal href={withBase('/models/')} style={cardStyle(swatch.mint)}>
+        <span class="lp-plate"><TrackIcon name="cost" size={44} /></span>
+        <span class="lp-body">
+          <h3>Model radar</h3>
+          <p>Dated, sourced facts on current models. No rankings.</p>
+        </span>
+        <span class="lp-chip">{models.length} models</span>
       </a>
       <a class="lp-card" data-reveal href={withBase('/watch/')} style={cardStyle(swatch.tangerine)}>
         <span class="lp-plate"><TrackIcon name="llm" size={44} /></span>

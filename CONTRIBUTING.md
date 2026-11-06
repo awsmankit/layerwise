@@ -54,6 +54,10 @@ Then add the lesson to the learning paths it belongs to in `src/data/paths.ts` (
 | Builders and students | Worked examples with real numbers you computed, and the trade-offs, not just the happy path. |
 | Experts | Precise, sourced, and honest about what is uncertain or changes fast. Date-stamp product facts. |
 
+## Adding or correcting a model on the radar
+
+The [Model radar](https://awsmankit.github.io/layerwise/models/) lists current models with dated facts. Every number must come from the vendor's own page, never from a blog or a news story. To add or fix a row, edit `src/data/models.ts`, list the official source URLs, and set `checkedOn` to the day you read them. A weekly check opens an issue when a model name appears in the news feeds that the radar does not have, or a row has not been checked for 90 days. The radar compares facts. Please do not add benchmark scores or quality rankings.
+
 ## The quality bar
 
 - **Sources.** Every fact, number and product name comes from something you read. Link it, and say when you checked. Label made-up example numbers as examples. Do not state legal, medical or financial advice.

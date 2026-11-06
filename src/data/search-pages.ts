@@ -23,6 +23,8 @@ export const searchPages: SearchItem[] = [
   { t: 'How big companies build it', u: '/cases/', k: 'Page', s: 'Engineering write-ups from companies such as Anthropic, Uber, Shopify and Dropbox on RAG, agents, serving, evals and cost. Filter by topic and company.' },
   { t: 'What’s new (changelog)', u: '/changelog/', k: 'Page', s: 'Every version of Layerwise, newest first: what was added and changed, with links to the tagged releases on GitHub.' },
   { t: 'Learning videos', u: '/watch/', k: 'Page', s: 'YouTube videos and courses by well-known creators for every lesson, from AI basics to GPUs and cloud, plus longer courses on transformers, RAG, evals and MCP.' },
+  { t: 'What if…? experiments', u: '/whatif/', k: 'Page', s: 'Take one part out of an AI system, such as the KV cache, embeddings or attention, and watch what breaks.' },
+  { t: 'Model radar', u: '/models/', k: 'Page', s: 'Dated, sourced facts for current models from Anthropic, OpenAI, Google, Mistral, DeepSeek and Alibaba: release dates, context windows, list prices, input types and open weights, plus what one task costs. No quality rankings.' },
   { t: 'Interview prep', u: '/interview/', k: 'Page', s: 'Practise AI interviews or run them with a shared rubric.' },
   { t: 'Daily review', u: '/review/', k: 'Page', s: 'Five short questions a day from lessons you have finished, brought back at growing gaps so they stick, with a forgiving streak you can hide. Saved only in your browser.' },
   { t: 'Your progress', u: '/progress/', k: 'Page', s: 'Lessons done, quiz scores, revision and a mixed review. Copy a link or download a file to move it to another device.' },

@@ -1,0 +1,57 @@
+name: Model radar check weekly
+
+# Every Monday, look for model-radar rows that have gone stale (last checked more than 90 days ago) and for model names in the
+# official news feeds that src/data/models.ts does not have yet. If there are any, open an issue (or update the open one).
+# The check only informs. A person has to verify each candidate on the vendor's own page before it goes in the data.
+
+on:
+  schedule:
+    - cron: '10 7 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Fetch the latest headlines (nothing is committed)
+        run: node scripts/fetch-headlines.mjs || echo "Headline fetch failed; the check will use the headlines in the repository."
+
+      - name: Check the model radar
+        id: check
+        run: |
+          set +e
+          node scripts/check-models.mjs > report.md 2>&1
+          cat report.md
+          if grep -qE '^(CANDIDATE|STALE)' report.md; then echo "found=true" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Open or update an issue
+        if: steps.check.outputs.found == 'true'
+        run: |
+          gh label create model-radar --description "The weekly model radar check found something to verify" --color 5B3DFF 2>/dev/null || true
+          {
+            echo "A human must verify each candidate on the vendor's own page before adding it to src/data/models.ts. Do not add numbers from blogs."
+            echo
+            echo "STALE rows were last checked more than 90 days ago: re-check every field on the vendor's pages and update checkedOn. CANDIDATE lines are headlines from the official news feeds that name a model the radar does not list. The feeds have no Anthropic feed and only part of OpenAI's output, so also look at the vendors' own model pages."
+            echo
+            echo '```'
+            head -c 60000 report.md
+            echo '```'
+          } > body.md
+          existing=$(gh issue list --label model-radar --state open --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then
+            gh issue edit "$existing" --body-file body.md
+          else
+            gh issue create --title "Model radar: models to verify" --label model-radar --body-file body.md
+          fi

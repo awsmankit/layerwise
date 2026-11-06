@@ -1,7 +1,7 @@
 {
   "name": "ai-learning-site",
   "type": "module",
-  "version": "2.4.0",
+  "version": "2.5.0",
   "engines": {
     "node": ">=22.23.4"
   },
@@ -16,6 +16,7 @@
     "headlines": "node scripts/fetch-headlines.mjs",
     "check-sources": "node scripts/check-source-links.mjs",
     "check-libraries": "node scripts/check-libraries.mjs",
+    "check-models": "node scripts/check-models.mjs",
     "check-videos": "node scripts/check-videos.mjs",
     "changelog": "node scripts/changelog.mjs",
     "changelog:check": "node scripts/changelog.mjs --check"

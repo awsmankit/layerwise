@@ -1,0 +1,80 @@
+---
+import Base from '../../layouts/Base.astro';
+import WhatIfHost from '../../components/whatif/WhatIfHost.tsx';
+import { whatifs, areas, type WhatIf } from '../../data/whatif';
+import { getLessons, slugOf, lessonPath } from '../../lib/content';
+import { withBase } from '../../lib/url';
+
+export function getStaticPaths() {
+  return whatifs.map((item) => ({ params: { slug: item.slug }, props: { item } }));
+}
+
+const { item } = Astro.props as { item: WhatIf };
+const lessons = await getLessons();
+const related = item.lessons
+  .map((k) => lessons.find((l) => `${l.data.track}/${slugOf(l)}` === k))
+  .filter((l): l is NonNullable<typeof l> => Boolean(l));
+const others = whatifs.filter((w) => w.slug !== item.slug && w.area === item.area).slice(0, 3);
+const level = { basic: 'Basic', intermediate: 'Intermediate', advanced: 'Advanced' }[item.level];
+---
+
+<Base title={item.title} description={item.blurb}>
+  <div class="wrap">
+    <header class="page-head">
+      <h1>{item.title}</h1>
+      <p>{item.blurb}</p>
+    </header>
+    <ul class="wi-meta" aria-label="About this experiment">
+      <li>{areas[item.area]}</li>
+      <li>{level}</li>
+      <li>{item.minutes} minutes</li>
+    </ul>
+
+    <WhatIfHost client:visible slug={item.slug} />
+
+    <div class="prose wi-why" style="margin-top:2rem">
+      <h2>What is going on</h2>
+      {item.why.map((p) => <p>{p}</p>)}
+    </div>
+
+    <aside class="wi-take" aria-labelledby="wi-take-h">
+      <h2 id="wi-take-h">To remember</h2>
+      <ul>{item.takeaways.map((t) => <li>{t}</li>)}</ul>
+    </aside>
+
+    {
+      related.length > 0 && (
+        <div class="prose wi-why">
+          <h2>Learn it properly</h2>
+          <ul>
+            {related.map((l) => <li><a href={withBase(lessonPath(l))}>{l.data.title}</a></li>)}
+          </ul>
+        </div>
+      )
+    }
+
+    <div class="prose wi-why">
+      <h2>Sources</h2>
+      <ul>
+        {item.sources.map((s) => <li><a href={s.url} rel="noopener noreferrer" target="_blank">{s.label}</a></li>)}
+      </ul>
+      <p><small>Example figures checked {item.updated}. Where a number is an example, the page says so.</small></p>
+    </div>
+
+    {
+      others.length > 0 && (
+        <div class="wi-more">
+          <h2>More experiments</h2>
+          <div class="wi-grid">
+            {others.map((o) => (
+              <a class="wi-card" href={withBase(`/whatif/${o.slug}/`)}>
+                <h3>{o.title}</h3>
+                <p>{o.blurb}</p>
+              </a>
+            ))}
+          </div>
+        </div>
+      )
+    }
+  </div>
+</Base>

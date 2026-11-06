@@ -1,0 +1,28 @@
+/* "What if?" experiments, serving group. Classes in this file start with ws-. */
+
+/* shared text and blocks */
+.ws-idea { margin: 0 0 0.6rem; color: var(--ink-2); font-size: 0.95rem; line-height: 1.5; }
+.ws-svg-t { font-size: 13px; fill: var(--ink-2); font-family: var(--font-sans, inherit); }
+.ws-svg-b { font-size: 13.5px; fill: var(--ink); font-weight: 650; font-family: var(--font-sans, inherit); }
+.ws-svg-h { font-size: 14px; fill: var(--ink); font-weight: 700; font-family: var(--font-sans, inherit); }
+.ws-track { fill: color-mix(in srgb, var(--ink) 8%, transparent); }
+.ws-good { fill: #1f9d6b; }
+.ws-bad { fill: #d6453d; }
+.ws-warn { fill: #c98a12; }
+.ws-note { margin: 0.7rem 0 0; font-size: 0.88rem; color: var(--ink-2); line-height: 1.5; }
+.ws-btnrow { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.ws-btnrow .btn { min-height: 44px; }
+.ws-numbers { margin-top: 0.7rem; font-size: 0.88rem; color: var(--ink-2); }
+.ws-numbers summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 650; color: var(--ink); }
+.ws-numbers summary:focus-visible { outline: 3px solid var(--accent, #5b3df5); outline-offset: 2px; border-radius: 6px; }
+.ws-tablewrap { overflow-x: auto; max-width: 100%; }
+.ws-table { border-collapse: collapse; width: 100%; font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+.ws-table th, .ws-table td { padding: 0.25rem 0.4rem; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.ws-table th:first-child, .ws-table td:first-child { text-align: left; }
+.ws-table tr.is-now td { font-weight: 700; color: var(--ink); background: color-mix(in srgb, var(--ink) 6%, transparent); }
+.ws-pick { display: block; width: 100%; min-height: 44px; font: inherit; }
+.ws-svg { max-width: 560px; }
+.ws-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.5rem; margin-top: 0.6rem; }
+.ws-stats > div { padding: 0.45rem 0.65rem; border: 1px solid var(--line); border-radius: 10px; display: flex; flex-direction: column; }
+.ws-stats b { font-size: 1.25rem; font-variant-numeric: tabular-nums; color: var(--ink); }
+.ws-stats span { font-size: 0.82rem; color: var(--ink-2); }

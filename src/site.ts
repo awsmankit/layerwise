@@ -16,7 +16,7 @@ export const site = {
 export const nav: { href: string; label: string; also?: string[] }[] = [
   { href: '/start/', label: 'Start' },
   { href: '/learn/', label: 'Learn', also: ['/glossary/'] },
-  { href: '/practice/', label: 'Practice', also: ['/play/', '/tools/'] },
+  { href: '/practice/', label: 'Practice', also: ['/play/', '/tools/', '/whatif/'] },
   { href: '/interview/', label: 'Interviews' },
   { href: '/pulse/', label: 'News' },
 ];
@@ -42,6 +42,7 @@ export const footerGroups = [
     links: [
       { href: '/practice/', label: 'Practice labs' },
       { href: '/play/', label: 'Games' },
+      { href: '/whatif/', label: 'What if…?' },
       { href: '/tools/', label: 'Calculators' },
       { href: '/tools/sandbox/', label: 'Sandbox' },
       { href: '/interview/', label: 'Interview prep' },
@@ -53,6 +54,7 @@ export const footerGroups = [
       { href: '/pulse/', label: 'News' },
       { href: '/cases/', label: 'Case studies' },
       { href: '/libraries/', label: 'AI libraries map' },
+      { href: '/models/', label: 'Model radar' },
       { href: '/watch/', label: 'Learning videos' },
       { href: '/rss.xml', label: 'RSS feed' },
     ],
