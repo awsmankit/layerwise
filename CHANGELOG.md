@@ -8,6 +8,15 @@ Versions follow [semantic versioning](https://semver.org/), read for a learning 
 - **Minor**: new lessons, labs, tools or features.
 - **Patch**: fixes and small corrections (wording, links, layout, accessibility).
 
+## [2.9.0] - 2026-11-08: A different animated figure on the home page every day
+
+The animated figure at the top of the home page now changes every day, and the daily card carries real teaching points.
+
+- The home page figure rotates through 11 animated line drawings, one per day: how a chatbot answers, how it answers from your own documents, how an AI agent finishes a task, how a model learns, how it picks the next word, how it avoids repeating work, how a computer recognises a picture, what happens when you press send, how a hearing device cleans up sound, how email is sorted into spam, and how a safety check wraps an assistant. Every number in them is computed by tested code, and examples are labelled as examples.
+- The Daily card now teaches more: experiment, lesson and interview cards carry three real points, interview cards show the question that is actually asked, and captions carry the same points.
+
+**At this release:** 164 lessons in 17 topics, 24 practice labs, 880 glossary terms.
+
 ## [2.8.0] - 2026-11-08: Daily card and a new experiment on the home page every day
 
 A picture and caption for every day, ready to post, and a different live experiment on the landing page each day.
@@ -218,6 +227,7 @@ Animated AI engineering lessons, games and tools, covering AWS, Azure and Google
 
 **At this release:** 44 lessons in 12 topics, 0 practice labs, 79 glossary terms.
 
+[2.9.0]: https://github.com/awsmankit/layerwise/compare/v2.8.0...v2.9.0
 [2.8.0]: https://github.com/awsmankit/layerwise/compare/v2.7.0...v2.8.0
 [2.7.0]: https://github.com/awsmankit/layerwise/compare/v2.6.0...v2.7.0
 [2.6.0]: https://github.com/awsmankit/layerwise/compare/v2.5.0...v2.6.0

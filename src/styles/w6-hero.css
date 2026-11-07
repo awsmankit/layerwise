@@ -1,0 +1,116 @@
+/* The daily hero figure: extra classes for the stage kinds. The frame, head, arrows and caption reuse .lp-flow* from landing.css. */
+
+.hs-daily {
+  position: relative;
+}
+.hs-tag {
+  position: absolute;
+  z-index: 1;
+  top: -0.8rem;
+  right: 1.3rem;
+  margin: 0;
+  padding: 0.12rem 0.6rem;
+  font: 600 11px var(--font-mono);
+  letter-spacing: 0.01em;
+  color: var(--ink-3);
+  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--ink) 35%, transparent);
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.hs-label,
+.hs-note,
+.hs-sub,
+.hs-cell-t,
+.hs-center {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  fill: var(--ink-3);
+}
+.hs-label {
+  fill: var(--ink-2, var(--ink-3));
+}
+.hs-chip {
+  font: 600 11.5px var(--font-mono);
+  fill: var(--ink);
+}
+.hs-q {
+  font: 600 15px var(--font-display);
+  fill: var(--ink);
+}
+.hs-card-t {
+  font: 600 13px var(--font-display);
+  fill: var(--ink);
+}
+.hs-card-s {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  fill: var(--ink-3);
+}
+.hs-bar-label {
+  font: 600 11px var(--font-mono);
+  fill: var(--ink);
+}
+.hs-bar-text {
+  font: 600 11px var(--font-mono);
+  fill: var(--ink-3);
+}
+.hs-track {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.hs-bar {
+  fill: var(--signal);
+}
+.hs-bar.is-dim {
+  fill-opacity: 0.5;
+}
+.hs-bar.is-neg {
+  fill: var(--ink-3);
+}
+.hs-cell {
+  fill: var(--signal);
+  stroke: var(--ink);
+  stroke-width: 0.6;
+  stroke-opacity: 0.45;
+}
+.hs-cell.is-hot {
+  stroke: var(--signal);
+  stroke-width: 1.6;
+  stroke-opacity: 1;
+}
+.hs-cell-t {
+  font-weight: 600;
+  fill: var(--ink);
+}
+.hs-head-t {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--ink-3);
+}
+.hs-loop-line {
+  fill: none;
+  stroke: var(--ink);
+  stroke-opacity: 0.32;
+  stroke-width: 1.2;
+  stroke-dasharray: 4 5;
+}
+.hs-node-t {
+  font: 600 12px var(--font-display);
+  fill: var(--ink);
+}
+.hs-center {
+  fill: var(--ink-3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hs-loop-line {
+    stroke-dasharray: none;
+  }
+}
+html[data-cm-calm] .hs-loop-line {
+  stroke-dasharray: none;
+}

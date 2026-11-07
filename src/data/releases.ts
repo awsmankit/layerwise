@@ -34,6 +34,17 @@ export const repoUrl = 'https://github.com/awsmankit/layerwise';
 
 export const releases: Release[] = [
   {
+    version: '2.9.0',
+    date: '2026-11-08',
+    title: 'A different animated figure on the home page every day',
+    summary: 'The animated figure at the top of the home page now changes every day, and the daily card carries real teaching points.',
+    highlights: [
+      'The home page figure rotates through 11 animated line drawings, one per day: how a chatbot answers, how it answers from your own documents, how an AI agent finishes a task, how a model learns, how it picks the next word, how it avoids repeating work, how a computer recognises a picture, what happens when you press send, how a hearing device cleans up sound, how email is sorted into spam, and how a safety check wraps an assistant. Every number in them is computed by tested code, and examples are labelled as examples.',
+      'The Daily card now teaches more: experiment, lesson and interview cards carry three real points, interview cards show the question that is actually asked, and captions carry the same points.',
+    ],
+    stats: { lessons: 164, topics: 17, labs: 24, glossary: 880 },
+  },
+  {
     version: '2.8.0',
     date: '2026-11-08',
     title: 'Daily card and a new experiment on the home page every day',

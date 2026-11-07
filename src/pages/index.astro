@@ -1,7 +1,8 @@
 ---
 import Base from '../layouts/Base.astro';
 import StackExplorer from '../components/viz/StackExplorer.tsx';
-import HeroFlow from '../components/viz/HeroFlow.tsx';
+import HeroDaily from '../components/viz/HeroDaily.tsx';
+import { dayIndexOf } from '../lib/daily-card';
 import ContinueCard from '../components/ui/ContinueCard.tsx';
 import DailyCard from '../components/ui/DailyCard.tsx';
 import GameBadge from '../components/games/GameBadge.tsx';
@@ -50,6 +51,8 @@ const tools = [
   { href: '/tools/sandbox/', title: 'Sandbox', body: 'Run tool commands and real Python.', icon: 'local', c: swatch.forest },
 ];
 
+const now = new Date();
+const buildDay = dayIndexOf(now.getUTCFullYear(), now.getUTCMonth() + 1, now.getUTCDate());
 ---
 
 <Base>
@@ -69,7 +72,7 @@ const tools = [
         </div>
       </div>
       <ContinueCard client:load />
-      <HeroFlow client:load />
+      <HeroDaily client:load buildDay={buildDay} />
     </div>
   </section>
 
