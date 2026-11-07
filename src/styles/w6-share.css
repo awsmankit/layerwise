@@ -1,0 +1,20 @@
+/* Daily card page. Classes start with sh-. */
+.sh-bar { display: flex; flex-wrap: wrap; gap: 0.8rem 1.2rem; align-items: center; justify-content: space-between; margin: 1rem 0 0.4rem; }
+.sh-days { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.sh-date input { font: inherit; min-height: 44px; padding: 0.4rem 0.6rem; border: 1.5px solid var(--ink); border-radius: 12px; background: var(--surface); color: var(--ink); }
+.sh-format { display: inline-flex; border: 1.5px solid var(--ink); border-radius: 999px; overflow: hidden; max-width: 100%; }
+.sh-format button { font: inherit; font-weight: 650; min-height: 44px; padding: 0.4rem 1rem; border: 0; background: var(--surface); color: var(--ink); cursor: pointer; }
+.sh-format button + button { border-left: 1.5px solid var(--ink); }
+.sh-format button.is-on { background: var(--ink); color: var(--surface); }
+.sh-format button:focus-visible { outline: 3px solid var(--accent, #5b3df5); outline-offset: -3px; }
+.sh-date-line { margin: 0.4rem 0 0.8rem; font-weight: 650; color: var(--ink-2); }
+.sh-stage { max-width: 540px; }
+.sh-canvas { display: block; width: 100%; height: auto; border-radius: 18px; border: 1.5px solid var(--ink); background: #120f3d; }
+.sh-loading { color: var(--ink-2); }
+.sh-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin: 1rem 0 0.4rem; }
+.sh-note { min-height: 1.5rem; margin: 0.2rem 0 1rem; color: var(--ink-2); }
+.sh-text { max-width: var(--measure, 68ch); }
+.sh-text h2 { font-size: 1.05rem; margin: 1.2rem 0 0.4rem; }
+.sh-pre { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; line-height: 1.5; padding: 0.8rem 1rem; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); margin: 0; }
+.sh-fine { margin-top: 2rem; color: var(--ink-2); font-size: 0.9rem; }
+@media (max-width: 420px) { .sh-format { display: flex; width: 100%; } .sh-format button { flex: 1 1 0; padding-inline: 0.5rem; } }

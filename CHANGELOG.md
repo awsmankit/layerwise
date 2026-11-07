@@ -8,6 +8,15 @@ Versions follow [semantic versioning](https://semver.org/), read for a learning 
 - **Minor**: new lessons, labs, tools or features.
 - **Patch**: fixes and small corrections (wording, links, layout, accessibility).
 
+## [2.8.0] - 2026-11-08: Daily card and a new experiment on the home page every day
+
+A picture and caption for every day, ready to post, and a different live experiment on the landing page each day.
+
+- New Daily card page: one picture and caption per day for LinkedIn or Instagram, chosen by the date. The week rotates through a guess-first question, an AI term, an experiment, a takeaway and an interview question. Download the picture, copy the caption, and browse the days ahead to plan a week. Everything is made in your browser and nothing is uploaded.
+- The landing page now shows a different live What if…? experiment every day, with a link to guess first and try it.
+
+**At this release:** 164 lessons in 17 topics, 24 practice labs, 880 glossary terms.
+
 ## [2.7.0] - 2026-11-08: Guess first, 28 more experiments, and links between experiments, lessons and interviews
 
 The What if…? section grows to 87 experiments, each now asks for a guess before you flip the switch, and lessons and interview questions link to the experiments that teach the same idea.
@@ -209,6 +218,7 @@ Animated AI engineering lessons, games and tools, covering AWS, Azure and Google
 
 **At this release:** 44 lessons in 12 topics, 0 practice labs, 79 glossary terms.
 
+[2.8.0]: https://github.com/awsmankit/layerwise/compare/v2.7.0...v2.8.0
 [2.7.0]: https://github.com/awsmankit/layerwise/compare/v2.6.0...v2.7.0
 [2.6.0]: https://github.com/awsmankit/layerwise/compare/v2.5.0...v2.6.0
 [2.5.0]: https://github.com/awsmankit/layerwise/compare/v2.4.0...v2.5.0

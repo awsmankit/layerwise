@@ -55,6 +55,7 @@ export const footerGroups = [
       { href: '/cases/', label: 'Case studies' },
       { href: '/libraries/', label: 'AI libraries map' },
       { href: '/models/', label: 'Model radar' },
+      { href: '/share/', label: 'Daily card' },
       { href: '/watch/', label: 'Learning videos' },
       { href: '/rss.xml', label: 'RSS feed' },
     ],

@@ -34,6 +34,17 @@ export const repoUrl = 'https://github.com/awsmankit/layerwise';
 
 export const releases: Release[] = [
   {
+    version: '2.8.0',
+    date: '2026-11-08',
+    title: 'Daily card and a new experiment on the home page every day',
+    summary: 'A picture and caption for every day, ready to post, and a different live experiment on the landing page each day.',
+    highlights: [
+      'New Daily card page: one picture and caption per day for LinkedIn or Instagram, chosen by the date. The week rotates through a guess-first question, an AI term, an experiment, a takeaway and an interview question. Download the picture, copy the caption, and browse the days ahead to plan a week. Everything is made in your browser and nothing is uploaded.',
+      'The landing page now shows a different live What if…? experiment every day, with a link to guess first and try it.',
+    ],
+    stats: { lessons: 164, topics: 17, labs: 24, glossary: 880 },
+  },
+  {
     version: '2.7.0',
     date: '2026-11-08',
     title: 'Guess first, 28 more experiments, and links between experiments, lessons and interviews',

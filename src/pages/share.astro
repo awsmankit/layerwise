@@ -1,0 +1,30 @@
+---
+import Base from '../layouts/Base.astro';
+import ShareCard from '../components/ui/ShareCard.tsx';
+import '../styles/w6-share.css';
+import { dayIndexOf } from '../lib/daily-card';
+import { withBase } from '../lib/url';
+
+// the site address without a trailing slash, for links inside captions
+const origin = (Astro.site?.origin ?? 'https://awsmankit.github.io').replace(/\/$/, '');
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const siteUrl = `${origin}${base}`;
+const n = new Date();
+const buildDay = dayIndexOf(n.getUTCFullYear(), n.getUTCMonth() + 1, n.getUTCDate());
+---
+
+<Base title="Daily card" description="A new picture and caption every day for LinkedIn or Instagram: a guess-first question, an AI term, an experiment, a takeaway or an interview question.">
+  <div class="wrap">
+    <header class="page-head">
+      <h1>Daily card</h1>
+      <p>
+        One new picture and caption every day, picked by the date. Download the picture, copy the caption and post it. Browse the days ahead to plan a week.
+        Everything is made in your browser, nothing is uploaded, and nothing is posted for you.
+      </p>
+    </header>
+    <ShareCard client:load siteUrl={siteUrl} buildDay={buildDay} />
+    <p class="sh-fine">
+      Pictures link back to <a href={withBase('/')}>the site</a>. Lessons and questions are CC BY 4.0, so cards can be shared with credit.
+    </p>
+  </div>
+</Base>
