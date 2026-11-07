@@ -1,6 +1,6 @@
 # Layerwise
 
-**Learn how AI works, one layer at a time.** Free, interactive lessons, games, coding labs and revision tools for everyone from school students to professional engineers. No accounts, no tracking, and it works offline.
+**Learn how AI works, one layer at a time.** Free, interactive lessons, games, coding labs and revision tools for everyone from school students to professional engineers. No accounts, no cookies, only anonymous visit counts, and it works offline.
 
 **Live site: [awsmankit.github.io/layerwise](https://awsmankit.github.io/layerwise/)** · [What's new](https://awsmankit.github.io/layerwise/changelog/) · [Releases](https://github.com/awsmankit/layerwise/releases)
 

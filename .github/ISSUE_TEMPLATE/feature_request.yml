@@ -50,7 +50,7 @@ body:
     id: idea
     attributes:
       label: How you imagine it working (optional)
-      description: A rough sketch in words is plenty. Layerwise keeps everything in your browser: no accounts, no tracking.
+      description: A rough sketch in words is plenty. Layerwise keeps everything in your browser: no accounts, no cookies, and only an anonymous visit counter.
   - type: checkboxes
     id: help
     attributes:

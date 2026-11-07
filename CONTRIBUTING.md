@@ -63,7 +63,7 @@ The [Model radar](https://awsmankit.github.io/layerwise/models/) lists current m
 - **Sources.** Every fact, number and product name comes from something you read. Link it, and say when you checked. Label made-up example numbers as examples. Do not state legal, medical or financial advice.
 - **Phone first.** Check 360px wide, no sideways scrolling, tap targets at least 40px, readable text.
 - **Accessible.** Works by keyboard and touch, respects reduced motion, never relies on colour alone, has real buttons and labels.
-- **Private.** Layerwise has no accounts and no analytics. Progress lives in the learner's browser. Please do not add tracking, third-party scripts or fonts.
+- **Private.** Layerwise has no accounts and no cookies. Progress lives in the learner's browser. The only analytics is an anonymous visit counter (GoatCounter: page views, no cookies, no personal data, skipped when the browser says do not track). Please do not add other tracking, third-party scripts or fonts.
 - **Kind and clear.** British spelling, plain words, no filler.
 
 ## Releases

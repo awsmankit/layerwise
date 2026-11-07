@@ -9,7 +9,7 @@ export const site = {
    * GoatCounter site code (the part before .goatcounter.com). Empty means no visit counting at all.
    * GoatCounter sets no cookies, stores no personal data and counts page views only.
    */
-  goatcounter: '',
+  goatcounter: 'layerwise',
 };
 
 /** The header holds five places; games, calculators and the glossary sit under Practice and in the footer. */
