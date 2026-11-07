@@ -34,6 +34,21 @@ export const repoUrl = 'https://github.com/awsmankit/layerwise';
 
 export const releases: Release[] = [
   {
+    version: '2.6.0',
+    date: '2026-11-07',
+    title: '28 more What if…? experiments',
+    summary: 'The What if…? section grows from 31 to 59 experiments, with a new group for classical machine learning and data.',
+    highlights: [
+      'Inside a model: one attention head only, no feed-forward layer, every expert running for every token, and the big model checking every token itself (speculative decoding).',
+      'Training: a base model that is not instruction-tuned, a learning rate that is too high or too low, no regularisation, and training data that is not deduplicated.',
+      'Search and RAG: vectors only with no keyword matching, searching with the raw question, never checking the answer against its sources, and an index that is never refreshed.',
+      'Serving and cost: every request sent to the biggest model, a fixed server count, no per-user rate limits, and a server that waits for the whole batch to finish.',
+      'Agents and safety: no memory between sessions, no guardrails, agent code run with no sandbox, and tool errors left unhandled.',
+      'New Classical ML and data group: unscaled features, trusting a single train/test split, wrong labels, and never comparing with a simple baseline. Plus windowing in audio, devices that cannot be updated over the air, no fallback path and uncalibrated confidence.',
+    ],
+    stats: { lessons: 164, topics: 17, labs: 24, glossary: 880 },
+  },
+  {
     version: '2.5.0',
     date: '2026-11-06',
     title: 'What if…? experiments and the Model radar',

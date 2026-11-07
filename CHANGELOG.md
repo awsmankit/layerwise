@@ -8,6 +8,19 @@ Versions follow [semantic versioning](https://semver.org/), read for a learning 
 - **Minor**: new lessons, labs, tools or features.
 - **Patch**: fixes and small corrections (wording, links, layout, accessibility).
 
+## [2.6.0] - 2026-11-07: 28 more What if…? experiments
+
+The What if…? section grows from 31 to 59 experiments, with a new group for classical machine learning and data.
+
+- Inside a model: one attention head only, no feed-forward layer, every expert running for every token, and the big model checking every token itself (speculative decoding).
+- Training: a base model that is not instruction-tuned, a learning rate that is too high or too low, no regularisation, and training data that is not deduplicated.
+- Search and RAG: vectors only with no keyword matching, searching with the raw question, never checking the answer against its sources, and an index that is never refreshed.
+- Serving and cost: every request sent to the biggest model, a fixed server count, no per-user rate limits, and a server that waits for the whole batch to finish.
+- Agents and safety: no memory between sessions, no guardrails, agent code run with no sandbox, and tool errors left unhandled.
+- New Classical ML and data group: unscaled features, trusting a single train/test split, wrong labels, and never comparing with a simple baseline. Plus windowing in audio, devices that cannot be updated over the air, no fallback path and uncalibrated confidence.
+
+**At this release:** 164 lessons in 17 topics, 24 practice labs, 880 glossary terms.
+
 ## [2.5.0] - 2026-11-06: What if…? experiments and the Model radar
 
 Thirty-one interactive experiments that switch one part of an AI system off and show what breaks, and a dated, sourced page of facts on current models.
@@ -183,6 +196,7 @@ Animated AI engineering lessons, games and tools, covering AWS, Azure and Google
 
 **At this release:** 44 lessons in 12 topics, 0 practice labs, 79 glossary terms.
 
+[2.6.0]: https://github.com/awsmankit/layerwise/compare/v2.5.0...v2.6.0
 [2.5.0]: https://github.com/awsmankit/layerwise/compare/v2.4.0...v2.5.0
 [2.4.0]: https://github.com/awsmankit/layerwise/compare/v2.3.0...v2.4.0
 [2.3.0]: https://github.com/awsmankit/layerwise/compare/v2.2.0...v2.3.0

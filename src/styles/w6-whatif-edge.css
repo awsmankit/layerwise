@@ -91,3 +91,8 @@ html[data-cm-calm] .we-fill { transition: none; }
 
 /* ---------- sliders: at least 44px tall to touch ---------- */
 .we-controls input[type='range'] { min-height: 44px; }
+
+/* ---------- fleet dots (no-ota-updates) ---------- */
+.we-dot { transition: fill 0.3s ease, stroke 0.3s ease; }
+html[data-cm-calm] .we-dot { transition: none; }
+@media (prefers-reduced-motion: reduce) { .we-dot { transition: none; } }

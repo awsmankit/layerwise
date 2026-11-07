@@ -1,0 +1,83 @@
+/* "What if?" experiments, classical ML and data group. Classes in this file start with wm-. */
+
+/* ---------- svg text and shapes ---------- */
+.wm-svg { display: block; width: 100%; height: auto; }
+.wm-svg text { font-family: inherit; }
+.wm-t { font-size: 12px; fill: var(--ink-2); }
+.wm-tb { font-size: 12px; fill: var(--ink); font-weight: 650; }
+.wm-t-good { font-size: 12px; fill: #1a7f56; font-weight: 650; }
+.wm-t-bad { font-size: 12px; fill: #c0392f; font-weight: 650; }
+.wm-axl { stroke: var(--ink-2); stroke-width: 1; opacity: 0.6; fill: none; }
+.wm-frame { stroke: var(--ink-2); stroke-width: 1; fill: none; opacity: 0.5; }
+.wm-grid { stroke: var(--ink-2); stroke-width: 1; opacity: 0.18; stroke-dasharray: 3 4; fill: none; }
+.wm-cell { transition: fill 0.5s ease; }
+.wm-fig { max-width: 520px; margin: 0 auto; }
+.wm-fig + .wm-fig { margin-top: 0.9rem; }
+.wm-foot { margin: 0.7rem 0 0; font-size: 0.88rem; color: var(--ink-2); line-height: 1.5; }
+.wm-foot b { color: var(--ink); }
+.wm-h { margin: 1rem 0 0.2rem; font-size: 0.95rem; font-weight: 650; color: var(--ink); }
+.wm-h small { display: block; font-weight: 400; color: var(--ink-2); font-size: 0.83rem; }
+html[data-cm-calm] .wm-cell, html[data-cm-calm] .wm-fill { transition: none; }
+@media (prefers-reduced-motion: reduce) { .wm-cell, .wm-fill { transition: none; } }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .wm-t-good { fill: #4fd6a1; }
+  :root:not([data-theme='light']) .wm-t-bad { fill: #ff8a80; }
+}
+:root[data-theme='dark'] .wm-t-good { fill: #4fd6a1; }
+:root[data-theme='dark'] .wm-t-bad { fill: #ff8a80; }
+
+/* ---------- legend ---------- */
+.wm-legend { display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; margin: 0.6rem 0 0; padding: 0; list-style: none; font-size: 0.85rem; color: var(--ink-2); }
+.wm-legend li { display: inline-flex; align-items: center; gap: 0.35rem; }
+.wm-sw { display: inline-block; width: 0.8rem; height: 0.8rem; border-radius: 3px; flex: none; }
+.wm-sw.is-round { border-radius: 50%; }
+.wm-sw.is-ring { background: transparent; border: 2px solid currentColor; }
+
+/* ---------- score bars ---------- */
+.wm-meters { margin: 0.9rem 0 0; }
+.wm-meter { display: grid; grid-template-columns: 8.6rem minmax(0, 1fr) 3.6rem; align-items: center; gap: 0.5rem; margin: 0.25rem 0; font-size: 0.88rem; }
+.wm-meter > span { color: var(--ink-2); line-height: 1.2; }
+.wm-meter.is-top > span { color: var(--ink); font-weight: 650; }
+.wm-meter > b { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink); }
+.wm-track { position: relative; height: 18px; border-radius: 9px; background: color-mix(in srgb, var(--ink) 9%, transparent); overflow: hidden; }
+.wm-fill { height: 100%; border-radius: 9px; background: #1f9d6b; transition: width 0.4s ease; }
+.wm-fill.is-bad { background: #d6453d; }
+.wm-fill.is-mid { background: #e0a21e; }
+.wm-fill.is-grey { background: #8a8f98; }
+@media (max-width: 420px) { .wm-meter { grid-template-columns: 6.2rem minmax(0, 1fr) 3.4rem; gap: 0.35rem; font-size: 0.84rem; } }
+
+/* ---------- chips, buttons and verdict badges ---------- */
+.wm-picks { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+.wm-picks-label { flex-basis: 100%; font-size: 0.92rem; color: var(--ink-2); }
+.viz .wm-pick { min-height: 44px; padding: 0.35rem 0.85rem; border: 1.5px solid var(--ink); border-radius: 999px; background: var(--surface); color: var(--ink); font: inherit; font-size: 0.9rem; cursor: pointer; }
+.viz .wm-pick.is-on { background: var(--ink); color: var(--surface); }
+.viz .wm-pick:focus-visible { outline: 3px solid var(--accent, #5b3df5); outline-offset: 2px; }
+.wm-btnrow { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; }
+.wm-btnrow .btn { min-height: 44px; }
+.wm-controls { display: grid; gap: 0.8rem; }
+.wm-badge { display: inline-block; padding: 0.15rem 0.6rem; border-radius: 999px; font-size: 0.85rem; font-weight: 700; border: 1.5px solid currentColor; }
+.wm-badge.is-good { color: #1a7f56; }
+.wm-badge.is-bad { color: #c0392f; }
+.wm-badge.is-mid { color: #8a5a00; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .wm-badge.is-good { color: #4fd6a1; }
+  :root:not([data-theme='light']) .wm-badge.is-bad { color: #ff8a80; }
+  :root:not([data-theme='light']) .wm-badge.is-mid { color: #f0c15a; }
+}
+:root[data-theme='dark'] .wm-badge.is-good { color: #4fd6a1; }
+:root[data-theme='dark'] .wm-badge.is-bad { color: #ff8a80; }
+:root[data-theme='dark'] .wm-badge.is-mid { color: #f0c15a; }
+.wm-verdict-box { margin: 0.9rem 0 0; padding: 0.7rem 0.9rem; border: 1.5px solid var(--ink); border-radius: 14px; font-size: 0.95rem; line-height: 1.45; }
+.wm-verdict-box b { font-variant-numeric: tabular-nums; }
+.wm-big { margin: 0.6rem 0; text-align: center; }
+.wm-big b { display: block; font-size: 2.6rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.wm-big span { color: var(--ink-2); font-size: 0.92rem; }
+.wm-rot { transition: transform 0.6s ease; }
+html[data-cm-calm] .wm-rot { transition: none; }
+@media (prefers-reduced-motion: reduce) { .wm-rot { transition: none; } }
+
+/* ---------- small stat boxes ---------- */
+.wm-nums { display: flex; flex-wrap: wrap; gap: 0.45rem; margin: 0.8rem 0 0; padding: 0; list-style: none; }
+.wm-nums li { flex: 1 1 5.5rem; min-width: 0; padding: 0.4rem 0.6rem; border: 1.5px solid var(--line); border-radius: 12px; font-size: 0.82rem; color: var(--ink-2); line-height: 1.3; }
+.wm-nums b { display: block; color: var(--ink); font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+.wm-nums li.is-lit { border-color: var(--ink); }

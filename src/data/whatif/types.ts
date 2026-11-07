@@ -9,6 +9,7 @@ export const areas = {
   llm: 'Inside a language model',
   retrieval: 'Search and RAG',
   training: 'Training',
+  ml: 'Classical ML and data',
   serving: 'Serving and cost',
   agents: 'Agents and safety',
   edge: 'Devices and audio',

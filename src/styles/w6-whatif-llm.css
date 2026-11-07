@@ -105,3 +105,8 @@
   .wl-msg, .wl-tok { transition: none; }
 }
 .wi-svg.wl-cap { display: block; max-width: 560px; margin-inline: auto; }
+
+/* Wave 2: no-multi-head-attention, no-feed-forward, mixture-of-experts, speculative-decoding */
+.wl-btnrow { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: end; }
+.wl-btnrow .wl-btn { flex: 1 1 8rem; }
+.wl-field input[type='range']:focus-visible { outline: 3px solid var(--accent, #5b3df5); outline-offset: 2px; }

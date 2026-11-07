@@ -11,3 +11,56 @@
 @media (prefers-reduced-motion: reduce) {
   .wt-cell, .wt-bar { transition: none; }
 }
+.wt-btnrow .btn.quiet:focus-visible, .wt-btnrow .btn:focus-visible { outline: 3px solid var(--accent, #5b3df5); outline-offset: 2px; }
+
+/* no-instruction-tuning: the chat */
+.wt-chat { display: grid; gap: 0.7rem; }
+.wt-bubble { border: 1.5px solid var(--ink); border-radius: 14px; padding: 0.6rem 0.8rem; background: var(--surface); line-height: 1.5; min-width: 0; }
+.wt-who { display: block; font-size: 0.78rem; color: var(--ink-2); margin-bottom: 0.2rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.wt-user { font-weight: 600; }
+.wt-model.is-base { border-color: #d6453d; }
+.wt-model.is-tuned { border-color: #1f9d6b; }
+.wt-sent { display: flex; flex-wrap: wrap; gap: 0.3rem 0.5rem; align-items: baseline; padding: 0.25rem 0; border-top: 1px dashed color-mix(in srgb, var(--ink) 20%, transparent); }
+.wt-sent:first-of-type { border-top: 0; }
+.wt-tag { font-size: 0.72rem; font-weight: 700; padding: 0.05rem 0.45rem; border-radius: 999px; border: 1.5px solid var(--ink-2); color: var(--ink-2); white-space: nowrap; }
+.wt-tag.is-bad { border-color: #d6453d; color: #b3261e; }
+.wt-tag.is-good { border-color: #1f9d6b; color: #157a52; }
+.wt-words { display: inline-flex; flex-wrap: wrap; gap: 0.15rem 0.35rem; min-width: 0; }
+.wt-word { display: inline-block; }
+.wt-stop { display: block; margin-top: 0.3rem; font-size: 0.82rem; color: var(--ink-2); font-style: italic; }
+.wt-cands { border: 1.5px solid color-mix(in srgb, var(--ink) 30%, transparent); border-radius: 14px; padding: 0.6rem 0.8rem; }
+.wt-cands-title { margin: 0 0 0.4rem; font-size: 0.88rem; color: var(--ink-2); line-height: 1.4; }
+.wt-cand { display: grid; grid-template-columns: 4.2rem 1fr 2.6rem; gap: 0.5rem; align-items: center; padding: 0.12rem 0; font-size: 0.92rem; }
+.wt-cand-word { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; }
+.wt-cand-track { height: 12px; border-radius: 6px; background: color-mix(in srgb, var(--ink) 9%, transparent); overflow: hidden; }
+.wt-cand-track i { display: block; height: 100%; border-radius: 6px; background: var(--ink-2); }
+.wt-cand.is-top .wt-cand-track i { background: var(--ink); }
+.wt-cand.is-top .wt-cand-word { font-weight: 700; }
+.wt-cand-pct { text-align: right; font-variant-numeric: tabular-nums; }
+.viz .wt-chip { text-align: left; }
+.viz .wt-chip.is-on { background: var(--ink); color: var(--surface); }
+.wt-chip:focus-visible { outline: 3px solid var(--accent, #5b3df5); outline-offset: 2px; }
+
+/* no-deduplication: what the model writes */
+.wt-writes { max-width: 560px; margin: 0.4rem auto 0; border: 1.5px solid color-mix(in srgb, var(--ink) 30%, transparent); border-radius: 14px; padding: 0.6rem 0.8rem; }
+.wt-lines { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.35rem; }
+.wt-lines li { display: flex; flex-wrap: wrap; gap: 0.2rem 0.5rem; align-items: baseline; font-size: 0.9rem; line-height: 1.4; }
+.wt-lines li > span:last-child { min-width: 0; overflow-wrap: anywhere; }
+.wt-boiler { color: #b3261e; font-weight: 700; }
+
+/* readable status colours in light and dark */
+.wt-t-good { fill: #157a52; }
+.wt-t-bad { fill: #b3261e; }
+.wt-t-warn { fill: #8a6200; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .wt-t-good { fill: #4fd6a1; }
+  :root:not([data-theme='light']) .wt-t-bad { fill: #ff8a80; }
+  :root:not([data-theme='light']) .wt-t-warn { fill: #f0c060; }
+  :root:not([data-theme='light']) .wt-tag.is-bad, :root:not([data-theme='light']) .wt-boiler { color: #ff8a80; border-color: #ff8a80; }
+  :root:not([data-theme='light']) .wt-tag.is-good { color: #4fd6a1; border-color: #4fd6a1; }
+}
+:root[data-theme='dark'] .wt-t-good { fill: #4fd6a1; }
+:root[data-theme='dark'] .wt-t-bad { fill: #ff8a80; }
+:root[data-theme='dark'] .wt-t-warn { fill: #f0c060; }
+:root[data-theme='dark'] .wt-tag.is-bad, :root[data-theme='dark'] .wt-boiler { color: #ff8a80; border-color: #ff8a80; }
+:root[data-theme='dark'] .wt-tag.is-good { color: #4fd6a1; border-color: #4fd6a1; }
