@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { cardForDay, dayIndexFromIso, dayIndexOf, fitText, isoOf, type Card, type CardKind, type Pools } from '../../lib/daily-card';
+import { cardForDay, dayIndexFromIso, dayIndexOf, fitBullets, fitText, isoOf, type Card, type CardKind, type Pools } from '../../lib/daily-card';
 import { withBase } from '../../lib/url';
 
 const ACCENT: Record<CardKind, string> = { guess: '#FFC233', term: '#2ED3C0', whatif: '#FF8FB8', remember: '#C5E84A', interview: '#98A0F8' };
@@ -80,9 +80,10 @@ function draw(ctx: CanvasRenderingContext2D, card: Card, format: Format, siteHos
   const bottom = H - 230;
   const hasOptions = card.options.length > 0;
   const hasBody = card.body.length > 0;
-  const titleBox = hasOptions ? (bottom - top) * 0.42 : hasBody ? (bottom - top) * 0.45 : bottom - top;
+  const hasBullets = card.bullets.length > 0;
+  const titleBox = hasOptions ? (bottom - top) * 0.42 : hasBullets ? (bottom - top) * 0.34 : hasBody ? (bottom - top) * 0.45 : bottom - top;
   const titleFont = card.kind === 'term' ? `800 {s}px ${DISPLAY}` : `700 {s}px ${DISPLAY}`;
-  const t = fitText(card.title, W - 2 * M, titleBox, { max: card.kind === 'term' ? 130 : 72, min: 36, step: 2, lineHeight: 1.18 }, measure(titleFont));
+  const t = fitText(card.title, W - 2 * M, titleBox, { max: card.kind === 'term' ? 130 : hasBullets ? 60 : 72, min: 34, step: 2, lineHeight: 1.18 }, measure(titleFont));
   ctx.fillStyle = '#fff';
   ctx.font = titleFont.replace('{s}', String(t.size));
   let y = top + t.size;
@@ -101,6 +102,31 @@ function draw(ctx: CanvasRenderingContext2D, card: Card, format: Format, siteHos
     for (const line of b.lines) {
       ctx.fillText(line, M, y);
       y += b.lineHeight;
+    }
+  }
+
+  if (hasBullets) {
+    y += 8;
+    if (card.bulletsHeading) {
+      ctx.fillStyle = accent;
+      ctx.font = `700 28px ${DISPLAY}`;
+      ctx.fillText(card.bulletsHeading.toUpperCase(), M, y + 26);
+      y += 52;
+    }
+    const bulletFont = `500 {s}px ${BODY}`;
+    const bl = fitBullets(card.bullets, W - 2 * M, bottom - y, { max: 40, min: 24, step: 2, lineHeight: 1.32, indent: 44 }, measure(bulletFont));
+    ctx.font = bulletFont.replace('{s}', String(bl.size));
+    for (const block of bl.blocks) {
+      ctx.fillStyle = accent;
+      ctx.beginPath();
+      ctx.arc(M + 12, y + bl.size * 0.62, 9, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#fff';
+      for (const line of block) {
+        ctx.fillText(line, M + bl.indent, y + bl.size);
+        y += bl.lineHeight;
+      }
+      y += bl.gap;
     }
   }
 

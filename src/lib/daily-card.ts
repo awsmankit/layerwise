@@ -7,10 +7,10 @@
 export type CardKind = 'guess' | 'term' | 'whatif' | 'remember' | 'interview';
 
 export type GuessItem = { slug: string; title: string; question: string; options: [string, string, string]; answer: 0 | 1 | 2; why: string };
-export type TermItem = { id: string; term: string; short: string; lesson: string };
-export type WhatIfItem = { slug: string; title: string; blurb: string; takeaway: string };
-export type RememberItem = { path: string; lesson: string; takeaway: string };
-export type InterviewItem = { id: string; prompt: string; role: string; level: string };
+export type TermItem = { id: string; term: string; short: string; lesson: string; lessonTitle?: string };
+export type WhatIfItem = { slug: string; title: string; blurb: string; takeaways: string[] };
+export type RememberItem = { path: string; lesson: string; takeaways: string[] };
+export type InterviewItem = { id: string; prompt: string; role: string; level: string; strong: string[] };
 
 export type Pools = {
   guess: GuessItem[];
@@ -30,6 +30,10 @@ export type Card = {
   title: string;
   /** Supporting text under the title (may be empty). */
   body: string;
+  /** Short points that teach something (may be empty). */
+  bullets: string[];
+  /** A small heading above the bullets, e.g. "A strong answer covers" (may be empty). */
+  bulletsHeading: string;
   /** Answer choices for a guess card, already lettered "A) ...". */
   options: string[];
   /** Small line at the bottom, e.g. the lesson it comes from. */
@@ -136,8 +140,10 @@ export function cardForDay(dayIndex: number, pools: Pools, siteUrl: string): Car
       ...base,
       title: clip(g.question, 190),
       body: '',
+      bullets: [],
+      bulletsHeading: '',
       options,
-      footer: 'Try it yourself on Layerwise',
+      footer: 'Answer in the first comment. Try it on Layerwise.',
       path,
       caption: `Guess first 👇\n\n${g.question}\n\n${options.join('\n')}\n\nAnswer in the first comment. Then flip the switch and see it for yourself, with the numbers worked out: ${url(path)}\n\n${TAGS.guess}`,
       firstComment: `Answer: ${LETTERS[g.answer]}) ${g.options[g.answer]}\n\n${g.why}\n\nTry it: ${url(path)}`,
@@ -152,10 +158,12 @@ export function cardForDay(dayIndex: number, pools: Pools, siteUrl: string): Car
       ...base,
       title: t.term,
       body: clip(t.short, 230),
+      bullets: [],
+      bulletsHeading: '',
       options: [],
-      footer: 'AI terms in plain words',
+      footer: t.lessonTitle ? `Learn more: ${clip(t.lessonTitle, 60)}` : 'AI terms in plain words',
       path: t.lesson,
-      caption: `AI term of the day: ${t.term}\n\n${t.short}\n\nMore, with a lesson and a quiz: ${url(t.lesson)}\n\n${TAGS.term}`,
+      caption: `AI term of the day: ${t.term}\n\n${t.short}\n\nLearn more, with a lesson and a quiz: ${url(t.lesson)}\n\n${TAGS.term}`,
       firstComment: '',
       alt: `A card titled Term of the day. ${t.term}: ${t.short}`,
     };
@@ -165,48 +173,57 @@ export function cardForDay(dayIndex: number, pools: Pools, siteUrl: string): Car
     if (!pool.length) return null;
     const w = at(pool, occurrence);
     const path = `/whatif/${w.slug}/`;
+    const bullets = w.takeaways.slice(0, 3).map((x) => clip(x, 140));
     return {
       ...base,
       title: w.title,
-      body: clip(w.takeaway, 200),
+      body: '',
+      bullets,
+      bulletsHeading: 'What you will see',
       options: [],
-      footer: 'An interactive experiment',
+      footer: 'Interactive: guess first, then flip the switch',
       path,
-      caption: `${w.title}\n\n${w.blurb}\n\nThe short version: ${w.takeaway}\n\nTry it, it asks you to guess first: ${url(path)}\n\n${TAGS.whatif}`,
+      caption: `${w.title}\n\n${w.blurb}\n\n${bullets.map((b) => `• ${b}`).join('\n')}\n\nTry it, it asks you to guess first: ${url(path)}\n\n${TAGS.whatif}`,
       firstComment: '',
-      alt: `A card titled What if. ${w.title} ${w.takeaway}`,
+      alt: `A card titled What if. ${w.title} ${w.takeaways.slice(0, 3).join(' ')}`,
     };
   }
   if (kind === 'remember') {
     const pool = shuffled(pools.remember, (r) => r.path);
     if (!pool.length) return null;
     const r = at(pool, occurrence);
+    const bullets = r.takeaways.slice(0, 3).map((x) => clip(x, 150));
     return {
       ...base,
-      title: clip(r.takeaway, 230),
+      title: clip(r.lesson, 90),
       body: '',
+      bullets,
+      bulletsHeading: 'The short version',
       options: [],
-      footer: `From the lesson: ${clip(r.lesson, 60)}`,
+      footer: 'From a Layerwise lesson, with a quiz',
       path: r.path,
-      caption: `One thing to remember from "${r.lesson}":\n\n${r.takeaway}\n\nThe whole lesson, with a quiz: ${url(r.path)}\n\n${TAGS.remember}`,
+      caption: `${r.lesson}: the short version\n\n${bullets.map((b) => `• ${b}`).join('\n')}\n\nThe whole lesson, with a quiz: ${url(r.path)}\n\n${TAGS.remember}`,
       firstComment: '',
-      alt: `A card titled Remember this. ${r.takeaway} From the lesson ${r.lesson}.`,
+      alt: `A card titled Remember this. ${r.lesson}. ${r.takeaways.slice(0, 3).join(' ')}`,
     };
   }
   const pool = shuffled(pools.interview, (q) => q.id);
   if (!pool.length) return null;
   const q = at(pool, occurrence);
   const path = `/interview/q/${q.id}/`;
+  const bullets = q.strong.slice(0, 3).map((x) => clip(x, 135));
   return {
     ...base,
-    title: clip(q.prompt, 270),
+    title: clip(q.prompt, 220),
     body: '',
+    bullets,
+    bulletsHeading: 'A strong answer covers',
     options: [],
     footer: `${q.role}, ${q.level}`,
     path,
-    caption: `Interview question (${q.role}, ${q.level}):\n\n${q.prompt}\n\nWhat a strong answer covers, the follow-ups and the red flags: ${url(path)}\n\n${TAGS.interview}`,
+    caption: `Interview question (${q.role}, ${q.level}):\n\n${q.prompt}\n\nA strong answer covers:\n${bullets.map((b) => `• ${b}`).join('\n')}\n\nThe full list of points, the follow-ups and the red flags: ${url(path)}\n\n${TAGS.interview}`,
     firstComment: '',
-    alt: `A card titled Interview question for a ${q.role}. ${q.prompt}`,
+    alt: `A card titled Interview question for a ${q.role}. ${q.prompt} A strong answer covers: ${q.strong.slice(0, 3).join(' ')}`,
   };
 }
 
@@ -239,4 +256,45 @@ export function fitText(
     if (lines.length * size * lh <= maxHeight) return { lines, size, lineHeight: size * lh, fits: true };
   }
   return { lines: wrap(sizes.min), size: sizes.min, lineHeight: sizes.min * lh, fits: false };
+}
+
+/**
+ * Fit a list of short points under a heading: one font size for all of them, bullets indented, shrinking until
+ * every point fits the height. Returns the wrapped lines of each point.
+ */
+export function fitBullets(
+  items: string[],
+  maxWidth: number,
+  maxHeight: number,
+  sizes: { max: number; min: number; step?: number; lineHeight?: number; gap?: number; indent?: number },
+  measure: (line: string, size: number) => number,
+): { blocks: string[][]; size: number; lineHeight: number; gap: number; indent: number; fits: boolean } {
+  const step = sizes.step ?? 2;
+  const lhK = sizes.lineHeight ?? 1.3;
+  const indent = sizes.indent ?? 40;
+  const wrapAt = (text: string, size: number) => {
+    const lines: string[] = [];
+    let cur = '';
+    for (const w of text.split(/\s+/).filter(Boolean)) {
+      const next = cur ? `${cur} ${w}` : w;
+      if (cur && measure(next, size) > maxWidth - indent) {
+        lines.push(cur);
+        cur = w;
+      } else cur = next;
+    }
+    if (cur) lines.push(cur);
+    return lines;
+  };
+  const build = (size: number) => {
+    const gap = sizes.gap ?? Math.round(size * 0.55);
+    const blocks = items.map((t) => wrapAt(t, size));
+    const total = blocks.reduce((h, b) => h + b.length * size * lhK, 0) + gap * Math.max(0, blocks.length - 1);
+    return { blocks, gap, total };
+  };
+  for (let size = sizes.max; size >= sizes.min; size -= step) {
+    const b = build(size);
+    if (b.total <= maxHeight) return { blocks: b.blocks, size, lineHeight: size * lhK, gap: b.gap, indent, fits: true };
+  }
+  const b = build(sizes.min);
+  return { blocks: b.blocks, size: sizes.min, lineHeight: sizes.min * lhK, gap: b.gap, indent, fits: false };
 }

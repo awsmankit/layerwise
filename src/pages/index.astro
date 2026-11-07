@@ -20,8 +20,6 @@ import { lessonVideos } from '../data/videos';
 import { labs, labById } from '../data/labs';
 import { libraries } from '../data/libraries';
 import { whatifs } from '../data/whatif';
-import TodayExperiment from '../components/whatif/TodayExperiment.tsx';
-import { dayIndexOf } from '../lib/daily-card';
 import { models } from '../data/models';
 import { getLessons, formatDate } from '../lib/content';
 import headlines from '../data/headlines.json';
@@ -52,9 +50,6 @@ const tools = [
   { href: '/tools/sandbox/', title: 'Sandbox', body: 'Run tool commands and real Python.', icon: 'local', c: swatch.forest },
 ];
 
-const todayItems = whatifs.map((w) => ({ slug: w.slug, title: w.title, blurb: w.blurb }));
-const now = new Date();
-const buildDay = dayIndexOf(now.getUTCFullYear(), now.getUTCMonth() + 1, now.getUTCDate());
 ---
 
 <Base>
@@ -76,10 +71,6 @@ const buildDay = dayIndexOf(now.getUTCFullYear(), now.getUTCMonth() + 1, now.get
       <ContinueCard client:load />
       <HeroFlow client:load />
     </div>
-  </section>
-
-  <section class="lp-section wrap" aria-labelledby="today-h">
-    <TodayExperiment client:visible items={todayItems} buildDay={buildDay} />
   </section>
 
   <DailyCard client:load />

@@ -87,10 +87,3 @@
 .wi-predict-mark { flex: 0 0 1.1rem; font-weight: 800; }
 .wi-predict-why { margin: 0.8rem 0; line-height: 1.5; }
 
-/* landing page: the experiment of the day */
-.lp-today { margin-top: clamp(1.5rem, 4vw, 2.5rem); }
-.lp-today-head { max-width: var(--measure, 68ch); margin-bottom: 0.8rem; }
-.lp-today-tag { display: inline-block; margin: 0 0 0.4rem; padding: 0.15rem 0.7rem; border-radius: 999px; background: var(--ink); color: var(--surface); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
-.lp-today-head h2 { margin: 0 0 0.3rem; }
-.lp-today-head p { margin: 0; color: var(--ink-2); }
-.lp-today-links { display: flex; flex-wrap: wrap; gap: 0.6rem; margin: 1rem 0 0; }
