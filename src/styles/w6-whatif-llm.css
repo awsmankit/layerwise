@@ -110,3 +110,44 @@
 .wl-btnrow { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: end; }
 .wl-btnrow .wl-btn { flex: 1 1 8rem; }
 .wl-field input[type='range']:focus-visible { outline: 3px solid var(--accent, #5b3df5); outline-offset: 2px; }
+
+/* Wave 3: causal-mask, grouped-query-attention, no-flash-attention, lost-in-the-middle */
+.wl-pickrow { display: flex; flex-wrap: wrap; gap: 0.5rem; width: 100%; }
+.viz .wl-pick {
+  flex: 1 1 10rem;
+  min-height: 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.1rem;
+  padding: 0.45rem 0.8rem;
+  font: inherit;
+  font-weight: 650;
+  font-size: 0.92rem;
+  text-align: left;
+  border: 1.5px solid var(--ink);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+.viz .wl-pick small { font-weight: 400; font-size: 0.78rem; color: var(--ink-2); }
+.viz .wl-pick.is-on { background: var(--ink); color: var(--surface); }
+.viz .wl-pick.is-on small { color: var(--surface); opacity: 0.85; }
+.viz .wl-pick:focus-visible { outline: 3px solid var(--accent, #5b3df5); outline-offset: 2px; }
+
+/* no-flash-attention: size table */
+.wl-table { width: 100%; border-collapse: collapse; margin: 0.8rem 0 0.4rem; font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+.wl-table caption { text-align: left; font-size: 0.82rem; color: var(--ink-2); padding-bottom: 0.3rem; }
+.wl-table th, .wl-table td { text-align: left; padding: 0.3rem 0.4rem; border-bottom: 1px solid color-mix(in srgb, var(--ink) 14%, transparent); }
+.wl-table thead th { font-size: 0.78rem; color: var(--ink-2); font-weight: 600; }
+.wl-table tbody th { font-weight: 600; }
+.wl-table tr.is-now { background: color-mix(in srgb, var(--ink) 9%, transparent); font-weight: 700; }
+.wl-yes { color: #1a8a5e; font-weight: 600; }
+.wl-no { color: #c0392f; font-weight: 600; }
+
+/* lost-in-the-middle: quoted abstract */
+.wl-quote { margin: 0.8rem 0 0.4rem; padding: 0.5rem 0.9rem; border-left: 4px solid #c28a00; background: color-mix(in srgb, var(--ink) 4%, transparent); border-radius: 0 10px 10px 0; font-size: 0.92rem; line-height: 1.5; }
+.wl-quote p { margin: 0.2rem 0; font-style: italic; }
+.wl-quote footer { margin-top: 0.3rem; font-size: 0.8rem; color: var(--ink-2); }

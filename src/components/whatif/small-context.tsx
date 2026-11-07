@@ -118,7 +118,7 @@ export default function SmallContextWhatIf() {
             key={i}
             className={`wl-msg ${flags[i] ? 'is-in' : 'is-out'}`}
             initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: flags[i] ? 1 : 0.62, y: 0 }}
+            animate={{ opacity: flags[i] ? 1 : 0.85, y: 0 }}
             transition={{ duration: 0.4, ease: EASE }}
           >
             <span className="wl-msg-n">{i + 1}</span>

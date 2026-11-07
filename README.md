@@ -20,7 +20,7 @@
 Around 160 lessons in 17 topics (see the [changelog](CHANGELOG.md) for the exact count in each release), with a live demo in nearly every one:
 
 - **Interactive demos:** train a neural network in your browser, teach a computer to tell apples from bananas, watch a spectrogram of a sound, watch attention and the KV cache at work, and many more.
-- **What if…? experiments:** switch off the KV cache, the embeddings, attention or an approval gate and watch what breaks, with the numbers worked out in code.
+- **What if…? experiments:** switch off the KV cache, the embeddings, attention or an approval gate and watch what breaks, with the numbers worked out in code. Each one asks you to guess first.
 - **Games** that teach system design and trade-offs: Blueprint, Cost Crunch, Fit the Model, Rack and Stack, Incident Room.
 - **Coding labs** that run real Python in the browser and check your code.
 - **Calculators** for cost, model memory, GPUs, latency and break-even.

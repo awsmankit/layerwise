@@ -8,6 +8,19 @@ Versions follow [semantic versioning](https://semver.org/), read for a learning 
 - **Minor**: new lessons, labs, tools or features.
 - **Patch**: fixes and small corrections (wording, links, layout, accessibility).
 
+## [2.7.0] - 2026-11-08: Guess first, 28 more experiments, and links between experiments, lessons and interviews
+
+The What if…? section grows to 87 experiments, each now asks for a guess before you flip the switch, and lessons and interview questions link to the experiments that teach the same idea.
+
+- Guess first: every experiment now asks what you expect to happen before you touch the switch, then shows why. Guessing first makes the result stick.
+- Two new groups: How machines learn (start here), for readers from about 11 with everyday examples such as a computer that has only ever seen cats, and Responsible AI, with experiments on checking results group by group, data that does not look like the users, feedback loops and personal data in logs.
+- Inside a model: seeing the words that come after, every head keeping its own keys and values, storing the whole attention table, and an answer buried in a long context. Training: unshuffled data, no learning-rate warmup, no gradient clipping, and models training on their own output.
+- Search and agents: ignoring who the user is, retrieving far too many passages, no tracing, and a retry that repeats the action. Serving: no semantic cache, a model too big for one GPU, shipping to everyone at once, and unversioned prompts. Data and devices: shuffling time-ordered data, careless missing values, hundreds of useless features, and running the big model on silence.
+- Lessons now have a Try breaking it row, and interview questions link to related experiments.
+- An accessibility pass: every experiment page was scanned with an automated checker in light and dark mode, and low-contrast status text was fixed.
+
+**At this release:** 164 lessons in 17 topics, 24 practice labs, 880 glossary terms.
+
 ## [2.6.0] - 2026-11-07: 28 more What if…? experiments
 
 The What if…? section grows from 31 to 59 experiments, with a new group for classical machine learning and data.
@@ -196,6 +209,7 @@ Animated AI engineering lessons, games and tools, covering AWS, Azure and Google
 
 **At this release:** 44 lessons in 12 topics, 0 practice labs, 79 glossary terms.
 
+[2.7.0]: https://github.com/awsmankit/layerwise/compare/v2.6.0...v2.7.0
 [2.6.0]: https://github.com/awsmankit/layerwise/compare/v2.5.0...v2.6.0
 [2.5.0]: https://github.com/awsmankit/layerwise/compare/v2.4.0...v2.5.0
 [2.4.0]: https://github.com/awsmankit/layerwise/compare/v2.3.0...v2.4.0

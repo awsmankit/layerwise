@@ -64,3 +64,11 @@
 :root[data-theme='dark'] .wt-t-warn { fill: #f0c060; }
 :root[data-theme='dark'] .wt-tag.is-bad, :root[data-theme='dark'] .wt-boiler { color: #ff8a80; border-color: #ff8a80; }
 :root[data-theme='dark'] .wt-tag.is-good { color: #4fd6a1; border-color: #4fd6a1; }
+
+/* no-data-shuffling, no-lr-warmup, no-gradient-clipping, model-collapse: shared bits */
+.wt-fig-wide svg text { font-family: inherit; }
+.viz .wt-btnrow .btn { min-height: 44px; }
+
+/* model-collapse */
+.wt-hbar { transition: width 0.35s ease; }
+@media (prefers-reduced-motion: reduce) { .wt-hbar { transition: none; } }

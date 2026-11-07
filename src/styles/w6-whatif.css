@@ -68,3 +68,21 @@
 .wi-card p { margin: 0; color: var(--ink-2); font-size: 0.92rem; line-height: 1.45; }
 .wi-card small { display: block; margin-top: 0.6rem; color: var(--ink-2); font-size: 0.8rem; }
 @media (prefers-reduced-motion: reduce) { .wi-card:hover { transform: none; } }
+
+/* predict-first card */
+.wi-predict { margin: 0 0 1.4rem; padding: 1rem 1.1rem; border: 1.5px solid var(--ink); border-radius: 16px; background: var(--surface); max-width: var(--measure, 68ch); }
+.wi-predict-tag { margin: 0 0 0.3rem; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-2); }
+.wi-predict-q { margin: 0 0 0.8rem; font-weight: 650; line-height: 1.4; }
+.wi-predict-opts { display: grid; gap: 0.5rem; }
+.wi-predict-opt {
+  display: flex; align-items: flex-start; gap: 0.6rem; width: 100%; text-align: left;
+  font: inherit; line-height: 1.4; padding: 0.7rem 0.85rem; min-height: 44px;
+  border: 1.5px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink); cursor: pointer;
+}
+.wi-predict-opt:hover:not(:disabled) { border-color: var(--ink); }
+.wi-predict-opt:focus-visible { outline: 3px solid var(--accent, #5b3df5); outline-offset: 2px; }
+.wi-predict-opt:disabled { cursor: default; }
+.wi-predict-opt.is-right { border-color: #1f9d6b; background: color-mix(in srgb, #1f9d6b 14%, transparent); }
+.wi-predict-opt.is-wrong { border-color: #d6453d; background: color-mix(in srgb, #d6453d 12%, transparent); }
+.wi-predict-mark { flex: 0 0 1.1rem; font-weight: 800; }
+.wi-predict-why { margin: 0.8rem 0; line-height: 1.5; }

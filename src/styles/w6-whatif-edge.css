@@ -96,3 +96,16 @@ html[data-cm-calm] .we-fill { transition: none; }
 .we-dot { transition: fill 0.3s ease, stroke 0.3s ease; }
 html[data-cm-calm] .we-dot { transition: none; }
 @media (prefers-reduced-motion: reduce) { .we-dot { transition: none; } }
+
+/* ---------- voice-activity gate (no-voice-activity-detection) ---------- */
+.we-cell { transition: fill 0.4s ease, opacity 0.4s ease; }
+html[data-cm-calm] .we-cell { transition: none; }
+@media (prefers-reduced-motion: reduce) { .we-cell { transition: none; } }
+.we-words { margin: 0.7rem 0 0; padding: 0.5rem 0.75rem; border: 1.5px solid var(--line); border-radius: 12px; font-size: 0.95rem; line-height: 1.7; color: var(--ink); }
+.we-word.is-missed { color: #c0392f; text-decoration: line-through; text-decoration-thickness: 2px; font-weight: 650; }
+:root[data-theme='dark'] .we-word.is-missed { color: #ff8a80; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme='light']) .we-word.is-missed { color: #ff8a80; } }
+.we-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.we-controls { display: grid; gap: 0.6rem; }
+.we-svg { display: block; width: 100%; height: auto; }
+.we-fig { max-width: 520px; margin: 0 auto; }

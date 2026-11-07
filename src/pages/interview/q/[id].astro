@@ -2,12 +2,15 @@
 import Base from '../../../layouts/Base.astro';
 import { questions, roles, ilevels, kinds, rubric, type Question } from '../../../data/interview';
 import { getLessons, lessonPath, slugOf } from '../../../lib/content';
+import { whatifs } from '../../../data/whatif';
 import { withBase } from '../../../lib/url';
 
 export function getStaticPaths() {
   return questions.map((q) => ({ params: { id: q.id }, props: { q } }));
 }
 const { q } = Astro.props as { q: Question };
+// experiments that teach one of the same lessons, so a question can be practised by breaking the part it asks about
+const tryIt = whatifs.filter((w) => w.lessons.some((l) => q.lessons.includes(l))).slice(0, 3);
 const all = await getLessons();
 const byKey = Object.fromEntries(all.map((l) => [`${l.data.track}/${slugOf(l)}`, l]));
 ---
@@ -46,6 +49,14 @@ const byKey = Object.fromEntries(all.map((l) => [`${l.data.track}/${slugOf(l)}`,
           <b>Study:</b>{' '}
           {q.lessons.map((k) => byKey[k] && <a href={withBase(lessonPath(byKey[k]))}>{byKey[k].data.title}</a>)}
           {q.game && <a href={withBase(q.game.href)}>{q.game.label}</a>}
+        </p>
+      )
+    }
+    {
+      tryIt.length > 0 && (
+        <p class="gm-lessons">
+          <b>Try breaking it:</b>{' '}
+          {tryIt.map((w) => <a href={withBase(`/whatif/${w.slug}/`)}>{w.title}</a>)}
         </p>
       )
     }

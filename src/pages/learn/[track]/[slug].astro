@@ -14,6 +14,7 @@ import { DoneButton } from '../../../components/viz/Progress.tsx';
 import { tracks, trackById, levels } from '../../../data/tracks';
 import { extras } from '../../../data/lesson-extras';
 import { labs } from '../../../data/labs';
+import { whatifs } from '../../../data/whatif';
 import { videosFor, videosChecked } from '../../../data/videos';
 import { withBase } from '../../../lib/url';
 import { getLessons, lessonPath, slugOf, readingMinutes, formatDate } from '../../../lib/content';
@@ -35,6 +36,7 @@ const slug = slugOf(lesson);
 const key = `${track.id}/${slug}`;
 const extra = extras[key];
 const labsHere = labs.filter((l) => l.lesson === key);
+const breakIt = whatifs.filter((w) => w.lessons.includes(key));
 const videos = videosFor(key);
 const idx = all.findIndex((l) => l.id === lesson.id);
 const prev = all[idx - 1];
@@ -142,6 +144,15 @@ const groups = tracks.map((t) => ({
               </p>
             )}
           </>
+        )
+      }
+
+      {
+        breakIt.length > 0 && (
+          <p class="practise">
+            <b>Try breaking it:</b>{' '}
+            {breakIt.map((w) => <a class="btn quiet" href={withBase(`/whatif/${w.slug}/`)}>{w.title}</a>)}
+          </p>
         )
       }
 

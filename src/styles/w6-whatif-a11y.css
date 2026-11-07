@@ -1,0 +1,35 @@
+/* "What if?" experiments: text colours that meet the 4.5:1 contrast rule on light and dark backgrounds.
+   Loaded after the group files so it wins. The bright status colours (#1f9d6b, #d6453d) stay on shapes and fills; text uses these. */
+:root {
+  --wi-good: #0b6b45;
+  --wi-bad: #b3261e;
+  --wi-warn: #7a4a00;
+}
+:root[data-theme='dark'] {
+  --wi-good: #4ade99;
+  --wi-bad: #ff8a80;
+  --wi-warn: #f2b84b;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --wi-good: #4ade99;
+    --wi-bad: #ff8a80;
+    --wi-warn: #f2b84b;
+  }
+}
+.viz .wa-good,
+.viz .wl-yes,
+.viz .wr-badge-line.is-good,
+.viz .wl-q.is-ok .wl-q-icon { color: var(--wi-good); }
+.viz .wa-bad,
+.viz .wa-bad b,
+.viz .wl-no,
+.viz .wa-tr-flag,
+.viz .wl-q.is-lost .wl-q-icon,
+.viz .wl-q.is-lost em,
+.viz .wl-msg.is-out .wl-msg-meta,
+.viz .wr-badge-line.is-bad { color: var(--wi-bad); }
+.viz .wr-badge-line.is-warn { color: var(--wi-warn); }
+/* dimmed rows keep a dashed border; fading the text itself dropped it below the contrast limit */
+.viz .wr-row.is-dim,
+.viz li.wa-tr-row.is-hidden { opacity: 0.82; }

@@ -34,6 +34,21 @@ export const repoUrl = 'https://github.com/awsmankit/layerwise';
 
 export const releases: Release[] = [
   {
+    version: '2.7.0',
+    date: '2026-11-08',
+    title: 'Guess first, 28 more experiments, and links between experiments, lessons and interviews',
+    summary: 'The What if…? section grows to 87 experiments, each now asks for a guess before you flip the switch, and lessons and interview questions link to the experiments that teach the same idea.',
+    highlights: [
+      'Guess first: every experiment now asks what you expect to happen before you touch the switch, then shows why. Guessing first makes the result stick.',
+      'Two new groups: How machines learn (start here), for readers from about 11 with everyday examples such as a computer that has only ever seen cats, and Responsible AI, with experiments on checking results group by group, data that does not look like the users, feedback loops and personal data in logs.',
+      'Inside a model: seeing the words that come after, every head keeping its own keys and values, storing the whole attention table, and an answer buried in a long context. Training: unshuffled data, no learning-rate warmup, no gradient clipping, and models training on their own output.',
+      'Search and agents: ignoring who the user is, retrieving far too many passages, no tracing, and a retry that repeats the action. Serving: no semantic cache, a model too big for one GPU, shipping to everyone at once, and unversioned prompts. Data and devices: shuffling time-ordered data, careless missing values, hundreds of useless features, and running the big model on silence.',
+      'Lessons now have a Try breaking it row, and interview questions link to related experiments.',
+      'An accessibility pass: every experiment page was scanned with an automated checker in light and dark mode, and low-contrast status text was fixed.',
+    ],
+    stats: { lessons: 164, topics: 17, labs: 24, glossary: 880 },
+  },
+  {
     version: '2.6.0',
     date: '2026-11-07',
     title: '28 more What if…? experiments',

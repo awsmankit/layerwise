@@ -1,7 +1,8 @@
 ---
 import Base from '../../layouts/Base.astro';
 import WhatIfHost from '../../components/whatif/WhatIfHost.tsx';
-import { whatifs, areas, type WhatIf } from '../../data/whatif';
+import PredictFirst from '../../components/whatif/PredictFirst.tsx';
+import { whatifs, areas, type WhatIf, type Prediction } from '../../data/whatif';
 import { getLessons, slugOf, lessonPath } from '../../lib/content';
 import { withBase } from '../../lib/url';
 
@@ -15,6 +16,9 @@ const related = item.lessons
   .map((k) => lessons.find((l) => `${l.data.track}/${slugOf(l)}` === k))
   .filter((l): l is NonNullable<typeof l> => Boolean(l));
 const others = whatifs.filter((w) => w.slug !== item.slug && w.area === item.area).slice(0, 3);
+// predict-first questions live in the item, or for older items in predictions.ts (optional file)
+const predictionFiles = import.meta.glob<{ predictions: Record<string, Prediction> }>('../../data/whatif/predictions.ts', { eager: true });
+const prediction = item.predict ?? Object.values(predictionFiles)[0]?.predictions?.[item.slug];
 const level = { basic: 'Basic', intermediate: 'Intermediate', advanced: 'Advanced' }[item.level];
 ---
 
@@ -30,6 +34,7 @@ const level = { basic: 'Basic', intermediate: 'Intermediate', advanced: 'Advance
       <li>{item.minutes} minutes</li>
     </ul>
 
+    {prediction && <PredictFirst client:visible prediction={prediction} />}
     <WhatIfHost client:visible slug={item.slug} />
 
     <div class="prose wi-why" style="margin-top:2rem">

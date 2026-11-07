@@ -2,6 +2,8 @@ import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { whatifs, areas } from './index';
+import { predictions } from './predictions';
+import type { Prediction } from './types';
 
 const root = join(process.cwd(), 'src/content/lessons');
 const lessonKeys = new Set(
@@ -47,4 +49,38 @@ describe('what-if experiments', () => {
       });
     });
   }
+
+  describe('predict-first questions', () => {
+    const forItem = (slug: string): Prediction | undefined => whatifs.find((w) => w.slug === slug)?.predict ?? predictions[slug];
+
+    it('every experiment has exactly one question, in the item or in predictions.ts', () => {
+      for (const w of whatifs) {
+        expect(forItem(w.slug), `${w.slug} has no predict question`).toBeDefined();
+        if (w.predict) expect(predictions[w.slug], `${w.slug} has two questions`).toBeUndefined();
+      }
+    });
+
+    it('predictions.ts only names experiments that exist', () => {
+      const slugs = new Set(whatifs.map((w) => w.slug));
+      for (const slug of Object.keys(predictions)) expect(slugs.has(slug), slug).toBe(true);
+    });
+
+    it('every question is well formed', () => {
+      for (const w of whatifs) {
+        const p = forItem(w.slug)!;
+        expect(p.question.endsWith('?'), `${w.slug} question`).toBe(true);
+        expect(p.options.length).toBe(3);
+        expect(new Set(p.options).size, `${w.slug} options differ`).toBe(3);
+        expect([0, 1, 2]).toContain(p.answer);
+        expect(p.why.length, `${w.slug} why`).toBeGreaterThan(30);
+        for (const text of [p.question, p.why, ...p.options]) expect(text, w.slug).not.toMatch(/[—–]/);
+      }
+    });
+
+    it('spreads the right answer across the three positions', () => {
+      const counts = [0, 0, 0];
+      for (const w of whatifs) counts[forItem(w.slug)!.answer]++;
+      for (const c of counts) expect(c / whatifs.length).toBeGreaterThan(0.2);
+    });
+  });
 });

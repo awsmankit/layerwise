@@ -81,3 +81,9 @@ html[data-cm-calm] .wm-rot { transition: none; }
 .wm-nums li { flex: 1 1 5.5rem; min-width: 0; padding: 0.4rem 0.6rem; border: 1.5px solid var(--line); border-radius: 12px; font-size: 0.82rem; color: var(--ink-2); line-height: 1.3; }
 .wm-nums b { display: block; color: var(--ink); font-size: 1.05rem; font-variant-numeric: tabular-nums; }
 .wm-nums li.is-lit { border-color: var(--ink); }
+
+/* ---------- larger chart text for the time-split, missing-values and useless-features figures ---------- */
+.wm-svg.wm-svg-lg .wm-t,
+.wm-svg.wm-svg-lg .wm-tb,
+.wm-svg.wm-svg-lg .wm-t-good,
+.wm-svg.wm-svg-lg .wm-t-bad { font-size: 13px; }

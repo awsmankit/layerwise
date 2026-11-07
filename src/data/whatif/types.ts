@@ -6,15 +6,29 @@
  */
 
 export const areas = {
+  basics: 'How machines learn (start here)',
   llm: 'Inside a language model',
   retrieval: 'Search and RAG',
   training: 'Training',
   ml: 'Classical ML and data',
   serving: 'Serving and cost',
   agents: 'Agents and safety',
+  responsible: 'Responsible AI',
   edge: 'Devices and audio',
 } as const;
 export type Area = keyof typeof areas;
+
+/** A question to answer before touching the switch: guessing first makes the result stick. Written for the experiment's own numbers. */
+export type Prediction = {
+  /** "What do you think happens?" phrased for this experiment. */
+  question: string;
+  /** Exactly three plain options. */
+  options: [string, string, string];
+  /** Index (0 to 2) of the correct option. */
+  answer: 0 | 1 | 2;
+  /** One or two sentences that say why, with the key number from the experiment. */
+  why: string;
+};
 
 export type WhatIf = {
   /** kebab-case, equal to the file name and the demo component's file name. */
@@ -36,4 +50,6 @@ export type WhatIf = {
   sources: { label: string; url: string }[];
   /** ISO date the facts and example figures were checked. */
   updated: string;
+  /** Optional predict-first question. Items without one may have one in predictions.ts. */
+  predict?: Prediction;
 };
