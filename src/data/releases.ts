@@ -34,6 +34,17 @@ export const repoUrl = 'https://github.com/awsmankit/layerwise';
 
 export const releases: Release[] = [
   {
+    version: '2.10.0',
+    date: '2026-11-09',
+    title: 'Twelve more daily home page figures, and a cleaner link check',
+    summary: 'The animated figure on the home page now rotates through 23 drawings, and the weekly link check stops calling script-blocking sites broken.',
+    highlights: [
+      'Twelve new daily figures: how a model decides which words matter, how text is cut into pieces (a real byte-pair run), how meaning becomes numbers, how a model is adapted with a small add-on, how a model is made smaller, how a model learns what people prefer, how we test an answer, how a GPU serves many people at once, how we know a change helped, how we notice a model getting worse, how speech becomes text, and how an agent finds and uses tools. Every number is computed by tested code, and examples are labelled as examples.',
+      'The weekly link check now lists sites that answer scripts with 404 (NIST, Kaggle, Google Support and a few others) as check by hand, not broken, and fixed the Guardrails AI docs link.',
+    ],
+    stats: { lessons: 164, topics: 17, labs: 24, glossary: 880 },
+  },
+  {
     version: '2.9.0',
     date: '2026-11-08',
     title: 'A different animated figure on the home page every day',

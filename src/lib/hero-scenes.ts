@@ -11,6 +11,10 @@ import type { GlyphName } from '../components/viz/glyphs';
 import { shuffled } from './daily-card';
 import { PRESETS, convolve, type Grid } from './convolution';
 import { cacheBytesPerToken, positionsComputed, slowdown, totalComputed } from './whatif/kv-cache';
+import { example as batchExample, lastReplySeconds, perUserTokS, stepSeconds, totalTokS, weightsGB } from './whatif/no-batching';
+import { ALERT_SHIFT, COMPLAINT_ACCURACY, WINDOW, simulate as simulateDrift, warningDays } from './whatif/no-drift-monitoring';
+import { applyMerges, countPairs, encode as encodeBpe, tokenLabel, totalTokens, train as trainBpe, vocabBytes, wordsFromText } from './bpe';
+import { affineParams, dequantise, quantise } from './int-quant';
 
 /* ---------- the shapes of a scene ---------- */
 
@@ -693,6 +697,735 @@ function guardrailsScene(): StageScene {
   };
 }
 
+/* ---------- more helpers for the second batch ---------- */
+
+/** 16777216 as "16,777,216". */
+export const grp = (n: number): string => n.toLocaleString('en-US');
+
+/** A count in a few characters: 131072 becomes "131K", 16777216 becomes "16.8M". */
+export function compact(n: number): string {
+  if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
+  if (n >= 1e5) return `${Math.round(n / 1e3)}K`;
+  if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
+  return String(n);
+}
+
+const sigmoid = (x: number): number => 1 / (1 + Math.exp(-x));
+
+/* ---------- attention: which words matter ---------- */
+
+/** Toy numbers of 4 per word: the word "it" asks (query), each earlier word offers a key and a value. All made up. */
+export const ATTN = {
+  sentence: ['The', 'cat', 'drank', 'milk', 'because', 'it'],
+  query: [2, 2, 0, 2],
+  keys: [
+    [0.1, 0, 0.2, 0.1],
+    [1, 0.8, 0.1, 0.6],
+    [0.2, 0.1, 0.9, 0.2],
+    [0.5, 0.6, 0.3, 0.1],
+    [0.1, 0.2, 0.1, 0.4],
+  ],
+  values: [
+    [0.1, 0.2],
+    [0.9, 0.1],
+    [0.2, 0.8],
+    [0.7, 0.4],
+    [0.3, 0.3],
+  ],
+};
+
+/** The score of each earlier word: query dot key, divided by the square root of the number of numbers (4, so 2). */
+export function attentionScores(): number[] {
+  const d = ATTN.query.length;
+  return ATTN.keys.map((k) => k.reduce((s, v, i) => s + v * ATTN.query[i], 0) / Math.sqrt(d));
+}
+/** The weights after softmax, and the weighted sum of the value numbers. */
+export function attentionResult() {
+  const scores = attentionScores();
+  const weights = softmax(scores);
+  const mix = [0, 1].map((j) => weights.reduce((s, w, i) => s + w * ATTN.values[i][j], 0));
+  return { scores, weights, mix };
+}
+
+function attentionScene(): StageScene {
+  const a = attentionResult();
+  const words = ATTN.sentence.slice(0, 5);
+  const top = a.weights.indexOf(Math.max(...a.weights));
+  const maxScore = Math.max(...a.scores);
+  const mixText = `[${a.mix.map((v) => v.toFixed(2)).join(', ')}]`;
+  return {
+    id: 'attention',
+    title: 'How a model decides which words matter',
+    lesson: 'foundations/attention-intuition',
+    caption: 'The scores and weights are real arithmetic (dot products, then softmax) on example 4-number vectors; real models do this with many more numbers.',
+    stages: [
+      { label: '1  Read the word "it"', note: 'which earlier word does it mean? (example)', kind: 'chips', hot: [ATTN.sentence.length - 1], chips: ATTN.sentence.map((text) => ({ text })) },
+      {
+        label: '2  Score every earlier word',
+        note: 'score = query · key ÷ 2; example vectors; higher = more related',
+        kind: 'bars',
+        hot: top,
+        bars: words.map((w, i) => ({ label: w, value: Math.max(0, a.scores[i]) / maxScore, text: num(a.scores[i], 1) })),
+      },
+      {
+        label: '3  Scores to weights',
+        note: `softmax makes them add up to 100%: ${words[top]} gets ${pct(a.weights[top], 0)}`,
+        kind: 'bars',
+        hot: top,
+        bars: words.map((w, i) => ({ label: w, value: a.weights[i], text: pct(a.weights[i], 0) })),
+      },
+      {
+        label: '4  Blend the words by weight',
+        note: 'each word brings a value; the blend is the new "it"',
+        kind: 'text',
+        glyph: 'layers',
+        lines: ['mix = weight × value', `= ${mixText}`, `mostly from "${words[top]}"`],
+      },
+    ],
+    alt: `How a model decides which words matter, in four steps, with real arithmetic on made-up numbers. 1: in the sentence ${ATTN.sentence.join(' ')}, the model reads the word it and asks which earlier word it means. 2: each earlier word gets a score, the dot product of the question numbers with its key numbers divided by 2: ${words.map((w, i) => `${w} ${num(a.scores[i], 1)}`).join(', ')}. 3: a softmax turns the scores into weights that add up to 100 percent: ${words.map((w, i) => `${w} ${pct(a.weights[i], 0)}`).join(', ')}. 4: the model blends the words' value numbers by those weights, giving ${mixText}, mostly from ${words[top]}.`,
+  };
+}
+
+/* ---------- bpe: a real run of byte-pair merges ---------- */
+
+export const BPE_TEXT = 'the cat sat on the mat. the cat ate the rat. the rat sat on the mat.';
+export const BPE = { merges: 4, sample: 'the cat sat' };
+
+/** The first merges learned from the example text, how many pieces are left after each, and the sample cut into pieces. */
+export function bpeRun() {
+  const words = wordsFromText(BPE_TEXT);
+  const merges = trainBpe(BPE_TEXT, BPE.merges);
+  const bytes = vocabBytes(merges);
+  const label = (id: number) => tokenLabel(bytes.get(id) ?? []);
+  const start = totalTokens(words);
+  const left = merges.map((_, k) => totalTokens(applyMerges(words, merges, k + 1)));
+  const pairs = countPairs(words).slice(0, 4).map((p) => ({ name: `${label(p.pair[0])}+${label(p.pair[1])}`, count: p.count }));
+  const sampleIds = encodeBpe(BPE.sample, merges);
+  return {
+    start,
+    merges: merges.map((m, k) => ({ name: label(m.id), made: `${label(m.pair[0])}+${label(m.pair[1])}`, count: m.count, left: left[k] })),
+    pairs,
+    sampleBytes: BPE.sample.length,
+    sample: sampleIds.map((id) => ({ text: label(id), merged: (bytes.get(id) ?? []).length > 1 })),
+  };
+}
+
+function bpeScene(): StageScene {
+  const r = bpeRun();
+  return {
+    id: 'bpe',
+    title: 'How text is cut into pieces',
+    lesson: 'deep-learning/build-a-tokenizer',
+    caption: `Real byte-pair merging, run on a ${BPE_TEXT.length}-character example text; real tokenizers learn tens of thousands of merges from huge amounts of text.`,
+    stages: [
+      {
+        label: '1  Start with single letters',
+        note: `the whole example text is ${r.start} pieces (· = space)`,
+        kind: 'chips',
+        hot: [],
+        chips: 'the cat'.split('').map((c) => ({ text: c === ' ' ? '·' : c })),
+      },
+      {
+        label: '2  Count the pairs',
+        note: `the most common pair, ${r.pairs[0].name}, is joined into one piece`,
+        kind: 'bars',
+        hot: 0,
+        bars: r.pairs.map((p) => ({ label: p.name, value: p.count / r.pairs[0].count, text: String(p.count) })),
+      },
+      {
+        label: '3  Join it, then repeat',
+        note: 'under each new piece: pieces left in the whole text',
+        kind: 'chips',
+        reveal: true,
+        chips: r.merges.map((m) => ({ text: m.name, sub: String(m.left) })),
+      },
+      {
+        label: '4  Text becomes pieces',
+        note: `"${BPE.sample}": ${r.sampleBytes} letters became ${r.sample.length} pieces (example)`,
+        kind: 'chips',
+        hot: r.sample.map((c, i) => (c.merged ? i : -1)).filter((i) => i >= 0),
+        chips: r.sample.map((c) => ({ text: c.text })),
+      },
+    ],
+    alt: `How text is cut into pieces, in four steps, using a real byte-pair merge run on a short example text. 1: the text starts as ${r.start} single letters. 2: the most common neighbouring pairs are counted: ${r.pairs.map((p) => `${p.name} ${p.count} times`).join(', ')}. 3: the most common pair is joined into one piece and the count repeats; the first ${r.merges.length} pieces made are ${r.merges.map((m) => `${m.name} (${m.left} pieces left)`).join(', ')}. 4: the phrase ${BPE.sample} is now cut into ${r.sample.length} pieces instead of ${r.sampleBytes} letters: ${r.sample.map((c) => c.text).join(' ')}.`,
+  };
+}
+
+/* ---------- embeddings: meaning as numbers ---------- */
+
+/** Toy 2-number "meaning" vectors: how much a word is about animals, how much about wheeled things. Example numbers. */
+export const EMB_AXES = ['animal', 'wheels'] as const;
+export const EMB_WORDS = [
+  { word: 'cat', v: [0.9, 0.1] },
+  { word: 'kitten', v: [0.95, 0.2] },
+  { word: 'dog', v: [0.8, 0.3] },
+  { word: 'car', v: [0.1, 0.9] },
+  { word: 'truck', v: [0.2, 0.8] },
+];
+
+/** Cosine similarity of "cat" to each other word, best first. */
+export function embeddingNeighbours() {
+  const cat = EMB_WORDS[0];
+  return EMB_WORDS.slice(1)
+    .map((w) => ({ word: w.word, score: cosine(cat.v, w.v) }))
+    .sort((a, b) => b.score - a.score);
+}
+
+function embeddingsScene(): StageScene {
+  const near = embeddingNeighbours();
+  return {
+    id: 'embeddings',
+    title: 'How meaning becomes numbers',
+    lesson: 'foundations/tokens-and-embeddings',
+    caption: 'The similarities are real cosine arithmetic on example 2-number vectors; real embeddings have hundreds or thousands of numbers.',
+    stages: [
+      { label: '1  Start with words', note: 'a computer sees only letters', kind: 'chips', hot: [], chips: EMB_WORDS.map((w) => ({ text: w.word })) },
+      {
+        label: '2  Give each word numbers',
+        note: 'example: how much each word is about animals or wheels',
+        kind: 'cells',
+        header: true,
+        rows: [
+          ['word', ...EMB_AXES].map((t) => ({ text: t })),
+          ...EMB_WORDS.map((w) => [{ text: w.word }, ...w.v.map((x) => ({ text: x.toFixed(2), heat: x }))]),
+        ],
+      },
+      {
+        label: '3  Compare with "cat"',
+        note: 'cosine: 1 = same direction, 0 = unrelated',
+        kind: 'bars',
+        hot: 0,
+        bars: near.map((n) => ({ label: n.word, value: n.score, text: n.score.toFixed(2) })),
+      },
+      {
+        label: '4  Closest words win',
+        note: 'a search compares numbers, not spelling',
+        kind: 'stack',
+        hot: 1,
+        cards: [
+          { glyph: 'search', title: 'Look up: cat', sub: '' },
+          ...near.slice(0, 2).map((n) => ({ glyph: 'vector' as GlyphName, title: n.word, sub: n.score.toFixed(2) })),
+        ],
+      },
+    ],
+    alt: `How meaning becomes numbers, in four steps, with made-up 2-number vectors. 1: we start with the words ${EMB_WORDS.map((w) => w.word).join(', ')}. 2: each word gets two numbers, how much it is about animals and how much about wheeled things: ${EMB_WORDS.map((w) => `${w.word} ${w.v.join(' and ')}`).join('; ')}. 3: comparing each word with cat using cosine similarity gives ${near.map((n) => `${n.word} ${n.score.toFixed(2)}`).join(', ')}. 4: the closest words to cat are ${near[0].word} and ${near[1].word}, found by comparing numbers, not spelling.`,
+  };
+}
+
+/* ---------- lora: a small add-on instead of changing everything ---------- */
+
+export const LORA = { d: 4096, rank: 16, ranks: [4, 16, 64] };
+export const fullParams = (d: number): number => d * d;
+/** Two thin matrices: A is rank by d and B is d by rank. */
+export const loraParams = (d: number, rank: number): number => 2 * d * rank;
+
+function loraScene(): StageScene {
+  const { d, rank } = LORA;
+  const full = fullParams(d);
+  const small = loraParams(d, rank);
+  const share = (small / full) * 100;
+  return {
+    id: 'lora',
+    title: 'How a model is adapted with a small add-on',
+    lesson: 'llm/fine-tuning-in-practice',
+    caption: `The counts are exact for one example ${grp(d)} × ${grp(d)} layer; a real model has many such layers.`,
+    stages: [
+      { label: '1  One big weight matrix', note: 'an example layer; changing all of it is costly', kind: 'text', glyph: 'table', lines: [`${grp(d)} × ${grp(d)}`, `= ${grp(full)} numbers`] },
+      {
+        label: '2  Freeze it, add two thin ones',
+        note: `rank ${rank} (example): only A and B are trained`,
+        kind: 'stack',
+        hot: 1,
+        cards: [
+          { glyph: 'lock', title: 'Big matrix W', sub: 'frozen' },
+          { glyph: 'pen', title: `A: ${rank} × ${grp(d)}`, sub: grp(rank * d) },
+          { glyph: 'pen', title: `B: ${grp(d)} × ${rank}`, sub: grp(d * rank) },
+        ],
+      },
+      {
+        label: '3  Count what is trained',
+        note: `numbers to train in this layer, for different ranks`,
+        kind: 'bars',
+        hot: 2,
+        bars: [
+          { label: 'Full', value: 1, text: compact(full) },
+          ...[...LORA.ranks].reverse().map((r) => ({ label: `rank ${r}`, value: loraParams(d, r) / full, text: compact(loraParams(d, r)) })),
+        ],
+      },
+      { label: '4  Add the update back', note: 'B starts at zero, so training starts from the original', kind: 'text', glyph: 'layers', lines: ['output = W·x + B·A·x', `${share.toFixed(2)}% as many to train`] },
+    ],
+    alt: `How a model is adapted with a small add-on, in four steps, with exact counts for one example ${grp(d)} by ${grp(d)} layer. 1: the layer has ${grp(full)} numbers, and changing all of them is costly. 2: instead the big matrix is frozen and two thin matrices are added, A with ${rank} by ${grp(d)} and B with ${grp(d)} by ${rank}, ${grp(small)} numbers together. 3: comparing the numbers to train: full ${grp(full)}; rank 64 ${grp(loraParams(d, 64))}; rank 16 ${grp(small)}; rank 4 ${grp(loraParams(d, 4))}. 4: the layer's output is the frozen part plus the small add-on, and only ${share.toFixed(2)} percent as many numbers are trained.`,
+  };
+}
+
+/* ---------- quantization: fewer bits per weight ---------- */
+
+export const QUANT = { weights: [-0.4, -0.12, 0, 0.31, 0.74], paramsB: 8, bits: [32, 16, 8, 4] };
+
+/** Real 8-bit mapping of the example weights: scale, zero point, the integer for each, and the value you get back. */
+export function quantRun() {
+  const lo = Math.min(...QUANT.weights);
+  const hi = Math.max(...QUANT.weights);
+  const p = affineParams(lo, hi);
+  const q = QUANT.weights.map((w) => quantise(w, p));
+  const back = q.map((v) => dequantise(v, p));
+  return { lo, hi, scale: p.scale, zeroPoint: p.zeroPoint, q, back, err: QUANT.weights.map((w, i) => Math.abs(w - back[i])) };
+}
+/** Gigabytes needed to store `paramsB` billion weights at `bits` bits each. */
+export const weightGB = (paramsB: number, bits: number): number => (paramsB * bits) / 8;
+
+function quantizationScene(): StageScene {
+  const r = quantRun();
+  const mem = QUANT.bits.map((b) => weightGB(QUANT.paramsB, b));
+  return {
+    id: 'quantization',
+    title: 'How a model is made smaller',
+    lesson: 'edge/quantization-for-edge',
+    caption: `The 8-bit mapping is real arithmetic on 5 example weights; the memory is for an example ${QUANT.paramsB}-billion-weight model and ignores small extras.`,
+    stages: [
+      { label: '1  Weights are decimals', note: 'example weights, each stored in 32 bits', kind: 'chips', hot: [], chips: QUANT.weights.map((w) => ({ text: num(w), sub: '32 bits' })) },
+      {
+        label: '2  Find the scale and zero',
+        note: '256 steps from smallest to largest: scale = range ÷ 255',
+        kind: 'stack',
+        hot: 2,
+        cards: [
+          { glyph: 'arrow', title: 'Smallest', sub: num(r.lo) },
+          { glyph: 'arrow', title: 'Largest', sub: num(r.hi) },
+          { glyph: 'compress', title: 'Scale', sub: r.scale.toFixed(4) },
+          { glyph: 'target', title: 'Zero point', sub: num(r.zeroPoint, 0) },
+        ],
+      },
+      {
+        label: '3  Round to whole numbers',
+        note: 'int = round(w ÷ scale) + zero; back = (int − zero) × scale',
+        kind: 'cells',
+        header: true,
+        rows: [
+          ['weight', 'int8', 'back'].map((t) => ({ text: t })),
+          ...QUANT.weights.map((w, i) => [{ text: num(w) }, { text: num(r.q[i], 0), hot: r.q[i] === 127 || r.q[i] === -128 }, { text: num(r.back[i]) }]),
+        ],
+      },
+      {
+        label: '4  A quarter of the memory',
+        note: `weights of an example ${QUANT.paramsB}-billion model, by bits per weight`,
+        kind: 'bars',
+        hot: 2,
+        bars: QUANT.bits.map((b, i) => ({ label: `${b}-bit`, value: mem[i] / mem[0], text: `${mem[i]} GB` })),
+      },
+    ],
+    alt: `How a model is made smaller, in four steps, with real arithmetic on five example weights: ${QUANT.weights.map((w) => num(w)).join(', ')}. 1: each weight is a decimal stored in 32 bits. 2: the smallest, ${num(r.lo)}, and largest, ${num(r.hi)}, are mapped onto 256 whole-number steps, which gives a scale of ${r.scale.toFixed(4)} and a zero point of ${num(r.zeroPoint, 0)}. 3: each weight is rounded to a whole number from minus 128 to 127: ${r.q.map((v) => num(v, 0)).join(', ')}; converting back gives ${r.back.map((v) => num(v)).join(', ')}, close but not exact. 4: for an example ${QUANT.paramsB}-billion-weight model the weights take ${mem[0]} gigabytes in 32 bits, ${mem[1]} in 16 bits, ${mem[2]} in 8 bits and ${mem[3]} in 4 bits.`,
+  };
+}
+
+/* ---------- preference: a person picks, the scores move ---------- */
+
+export const PREF = { before: { a: 0.2, b: 0.5 }, picked: 'a' as 'a' | 'b', lr: 0.5 };
+
+/** One step of reward-model training on one pair: the chance the model gave the winner, the loss, and the new scores. */
+export function preferenceStep() {
+  const { a, b } = PREF.before;
+  const win = PREF.picked === 'a' ? a : b;
+  const lose = PREF.picked === 'a' ? b : a;
+  const chance = sigmoid(win - lose);
+  const loss = -Math.log(chance);
+  const move = PREF.lr * (1 - chance);
+  const newWin = win + move;
+  const newLose = lose - move;
+  const after = PREF.picked === 'a' ? { a: newWin, b: newLose } : { a: newLose, b: newWin };
+  return { chance, loss, move, after, chanceAfter: sigmoid(newWin - newLose) };
+}
+
+function preferenceScene(): StageScene {
+  const s = preferenceStep();
+  const { a, b } = PREF.before;
+  const pickA = PREF.picked === 'a';
+  return {
+    id: 'preference',
+    title: 'How a model learns what people prefer',
+    lesson: 'deep-learning/rl-post-training',
+    caption: 'The pick and the starting scores are an example; the update is the real pairwise-preference arithmetic, shown for a single pair.',
+    stages: [
+      {
+        label: '1  Two answers, one question',
+        note: 'an example pair of answers',
+        kind: 'stack',
+        cards: [
+          { glyph: 'question', title: 'A question', sub: '' },
+          { glyph: 'doc', title: 'Answer A', sub: 'brief, clear' },
+          { glyph: 'doc', title: 'Answer B', sub: 'long, vague' },
+        ],
+      },
+      { label: '2  A person picks one', note: 'the pick is the training signal (example)', kind: 'text', glyph: 'thumb', lines: [`They pick answer ${pickA ? 'A' : 'B'}`, 'it was clearer'] },
+      {
+        label: '3  The model scores both',
+        note: `chance = 1 ÷ (1 + e^−(own − other)): the model favoured ${a > b ? 'A' : 'B'}`,
+        kind: 'cells',
+        header: true,
+        rows: [
+          ['', 'A', 'B'].map((t) => ({ text: t })),
+          [{ text: 'score' }, { text: num(a) }, { text: num(b) }],
+          [{ text: 'chance' }, { text: pct(sigmoid(a - b), 0), hot: pickA }, { text: pct(sigmoid(b - a), 0), hot: !pickA }],
+        ],
+      },
+      {
+        label: '4  Nudge the scores',
+        note: `move = ${PREF.lr} × (1 − ${num(s.chance)}) = ${num(s.move)}; picked answer up, other down`,
+        kind: 'cells',
+        header: true,
+        rows: [
+          ['', 'A', 'B'].map((t) => ({ text: t })),
+          [{ text: 'before' }, { text: num(a) }, { text: num(b) }],
+          [{ text: 'after' }, { text: num(s.after.a), hot: pickA }, { text: num(s.after.b), hot: !pickA }],
+          [{ text: 'chance' }, { text: pct(sigmoid(s.after.a - s.after.b), 0) }, { text: pct(sigmoid(s.after.b - s.after.a), 0) }],
+        ],
+      },
+    ],
+    alt: `How a model learns what people prefer, in four steps, with an example pair of answers. 1: one question gets two answers, A is brief and clear, B is long and vague. 2: a person picks answer ${pickA ? 'A' : 'B'}. 3: a reward model gives scores of ${num(a)} to A and ${num(b)} to B, so it gave A only a ${pct(sigmoid(a - b), 0)} chance of winning. 4: the scores are nudged by ${num(s.move)}, up for the picked answer and down for the other, giving A ${num(s.after.a)} and B ${num(s.after.b)}; A's chance of winning rises to ${pct(sigmoid(s.after.a - s.after.b), 0)}.`,
+  };
+}
+
+/* ---------- evals: a test set, a pass rate and how sure it is ---------- */
+
+export const EVAL = { total: 20, failed: [3, 9, 14] };
+
+/** 95% Wilson score interval for k passes out of n. */
+export function wilsonInterval(k: number, n: number, z = 1.96): { lo: number; hi: number } {
+  const p = k / n;
+  const z2 = z * z;
+  const denom = 1 + z2 / n;
+  const centre = (p + z2 / (2 * n)) / denom;
+  const half = (z * Math.sqrt((p * (1 - p)) / n + z2 / (4 * n * n))) / denom;
+  return { lo: Math.max(0, centre - half), hi: Math.min(1, centre + half) };
+}
+
+function evalsScene(): StageScene {
+  const n = EVAL.total;
+  const passed = n - EVAL.failed.length;
+  const rate = passed / n;
+  const w = wilsonInterval(passed, n);
+  const cells: Cell[][] = Array.from({ length: 4 }, (_, r) =>
+    Array.from({ length: 5 }, (_, c) => {
+      const bad = EVAL.failed.includes(r * 5 + c);
+      return { text: bad ? 'fail' : 'pass', hot: bad, heat: bad ? 0.5 : 0.08 };
+    }),
+  );
+  return {
+    id: 'evals',
+    title: 'How we test an AI answer',
+    lesson: 'evals/evals-101',
+    caption: `The test results are an example (${passed} of ${n} passed); the pass rate and its 95% Wilson interval are real arithmetic.`,
+    stages: [
+      { label: '1  Make a set of test cases', note: 'an example set; real ones are bigger', kind: 'text', glyph: 'check', lines: [`${n} questions with`, 'known good answers'] },
+      { label: '2  Run the AI on every one', note: 'each answer is marked pass or fail (example)', kind: 'cells', rows: cells },
+      { label: '3  Count the passes', note: 'passed ÷ questions asked: the measured pass rate', kind: 'text', glyph: 'chart', lines: [`${passed} of ${n} passed`, `= ${pct(rate, 0)}`] },
+      {
+        label: '4  How sure are we?',
+        note: `95% Wilson interval: the true rate is probably in this range`,
+        kind: 'bars',
+        hot: 1,
+        bars: [
+          { label: 'Low end', value: w.lo, text: pct(w.lo) },
+          { label: 'Measured', value: rate, text: pct(rate) },
+          { label: 'High end', value: w.hi, text: pct(w.hi) },
+        ],
+      },
+    ],
+    alt: `How we test an AI answer, in four steps, with an example test set. 1: we make ${n} questions with known good answers. 2: the AI answers every one and each is marked pass or fail; in this example ${EVAL.failed.length} fail. 3: ${passed} of ${n} passed, which is ${pct(rate, 0)}. 4: with so few cases the true pass rate is uncertain: a 95 percent Wilson interval runs from ${pct(w.lo)} to ${pct(w.hi)}, so ${pct(rate, 0)} could easily be a little lower or higher on new questions.`,
+  };
+}
+
+/* ---------- batching: one read of the weights serves everyone ---------- */
+
+export const BATCH = { people: 16, sizes: [1, 4, 16, 64] };
+
+export function batchRun() {
+  const n = BATCH.people;
+  return {
+    alone: { step: stepSeconds(1) * 1000, total: totalTokS(1), each: perUserTokS(1) },
+    together: { step: stepSeconds(n) * 1000, total: totalTokS(n), each: perUserTokS(n) },
+    lastAlone: lastReplySeconds(1, true),
+    lastBatched: lastReplySeconds(n, true),
+    lastOneByOne: lastReplySeconds(n, false),
+    weightsGB: weightsGB(),
+    replyTokens: batchExample.replyTokens,
+  };
+}
+
+function batchingScene(): StageScene {
+  const b = batchRun();
+  const n = BATCH.people;
+  const fmtS = (s: number) => `${s.toFixed(1)} s`;
+  return {
+    id: 'batching',
+    title: 'How a GPU serves many people at once',
+    lesson: 'serving/inference-optimisation',
+    caption: `Computed from example numbers: an ${batchExample.paramsB}-billion-weight model in 16-bit and an example GPU. Real products differ.`,
+    stages: [
+      { label: '1  Many people ask at once', note: `an example: ${n} people, ${b.replyTokens}-token replies`, kind: 'text', glyph: 'user', lines: [`${n} people at once`, `each wants ${b.replyTokens} tokens`] },
+      {
+        label: '2  Alone: the GPU mostly waits',
+        note: `each step reads all ${b.weightsGB} GB of weights for one person`,
+        kind: 'text',
+        glyph: 'chip',
+        lines: [`one step: ${b.alone.step.toFixed(1)} ms`, `${Math.round(b.alone.total)} tokens/s in all`],
+      },
+      {
+        label: '3  Together: share each read',
+        note: `one read of the weights serves all ${n}; each adds a little cache`,
+        kind: 'text',
+        glyph: 'server',
+        lines: [`one step: ${b.together.step.toFixed(1)} ms`, `${grp(Math.round(b.together.total))} tokens/s in all`, `${Math.round(b.together.each)} tokens/s each`],
+      },
+      {
+        label: '4  Everyone gets done sooner',
+        note: `time until the last of ${n} has a whole reply; in turn = one by one`,
+        kind: 'bars',
+        hot: 1,
+        bars: [
+          { label: 'Just you', value: b.lastAlone / b.lastOneByOne, text: fmtS(b.lastAlone) },
+          { label: 'Batched', value: b.lastBatched / b.lastOneByOne, text: fmtS(b.lastBatched) },
+          { label: 'In turn', value: 1, text: fmtS(b.lastOneByOne) },
+        ],
+      },
+    ],
+    alt: `How a GPU serves many people at once, in four steps, with example numbers. 1: ${n} people send messages at the same moment and each wants a ${b.replyTokens}-token reply. 2: handled alone, each step takes ${b.alone.step.toFixed(1)} milliseconds, mostly reading the ${b.weightsGB} gigabytes of model weights from memory, for ${Math.round(b.alone.total)} tokens per second in all. 3: together in one batch the same weight read serves everyone; a step takes ${b.together.step.toFixed(1)} milliseconds, giving ${grp(Math.round(b.together.total))} tokens per second in all, ${Math.round(b.together.each)} for each person. 4: the last of the ${n} people has a whole reply after ${fmtS(b.lastBatched)} when batched, against ${fmtS(b.lastOneByOne)} if they are served one by one and ${fmtS(b.lastAlone)} for a single person alone.`,
+  };
+}
+
+/* ---------- abtest: did the change really help? ---------- */
+
+export const AB = { a: { yes: 240, n: 2000 }, b: { yes: 290, n: 2000 } };
+
+/** Two-proportion z test (pooled) and a 95% interval for the gap (unpooled), all in fractions. */
+export function twoProportions(a = AB.a, b = AB.b) {
+  const p1 = a.yes / a.n;
+  const p2 = b.yes / b.n;
+  const gap = p2 - p1;
+  const pooled = (a.yes + b.yes) / (a.n + b.n);
+  const se = Math.sqrt(pooled * (1 - pooled) * (1 / a.n + 1 / b.n));
+  const seGap = Math.sqrt((p1 * (1 - p1)) / a.n + (p2 * (1 - p2)) / b.n);
+  return { p1, p2, gap, se, z: gap / se, lo: gap - 1.96 * seGap, hi: gap + 1.96 * seGap };
+}
+
+function abtestScene(): StageScene {
+  const t = twoProportions();
+  const pts = (x: number) => signed(x * 100, 1);
+  return {
+    id: 'abtest',
+    title: 'How we know a change helped',
+    lesson: 'ml/is-the-difference-real',
+    caption: 'The two groups are an example; the rates, the z value and the interval are real arithmetic on those counts.',
+    stages: [
+      { label: '1  Split people into two groups', note: 'by chance; one sees the old version (example)', kind: 'text', glyph: 'user', lines: [`A: ${grp(AB.a.n)} people, old`, `B: ${grp(AB.b.n)} people, new`] },
+      {
+        label: '2  Count who succeeded',
+        note: 'an example outcome, such as "found the answer"',
+        kind: 'cells',
+        header: true,
+        rows: [
+          ['group', 'yes', 'of', 'rate'].map((x) => ({ text: x })),
+          [{ text: 'A old' }, { text: String(AB.a.yes) }, { text: grp(AB.a.n) }, { text: pct(t.p1) }],
+          [{ text: 'B new' }, { text: String(AB.b.yes), hot: true }, { text: grp(AB.b.n) }, { text: pct(t.p2), hot: true }],
+        ],
+      },
+      {
+        label: '3  Is the gap more than luck?',
+        note: 'a z beyond 1.96 happens under 5% of the time by luck alone',
+        kind: 'text',
+        glyph: 'chart',
+        lines: [`gap: ${pts(t.gap)} points`, `luck wobble: ${(t.se * 100).toFixed(2)} pts`, `z = ${t.z.toFixed(2)}`],
+      },
+      {
+        label: '4  The range it could be',
+        note: '95% range for the gap, in points; it stays above 0',
+        kind: 'bars',
+        hot: 1,
+        bars: [
+          { label: 'Low end', value: t.lo / t.hi, text: pts(t.lo) },
+          { label: 'Measured', value: t.gap / t.hi, text: pts(t.gap) },
+          { label: 'High end', value: 1, text: pts(t.hi) },
+        ],
+      },
+    ],
+    alt: `How we know a change helped, in four steps, with example groups. 1: people are split by chance into group A, ${grp(AB.a.n)} people who see the old version, and group B, ${grp(AB.b.n)} people who see the new one. 2: ${AB.a.yes} of A succeeded, ${pct(t.p1)}, and ${AB.b.yes} of B, ${pct(t.p2)}. 3: the gap is ${pts(t.gap)} points; with a luck-sized wobble of ${(t.se * 100).toFixed(2)} points the z value is ${t.z.toFixed(2)}, beyond 1.96, which luck alone would rarely produce. 4: the 95 percent range for the gap runs from ${pts(t.lo)} to ${pts(t.hi)} points, above zero, so the change very likely helped.`,
+  };
+}
+
+/* ---------- drift: the inputs move before the complaints come ---------- */
+
+export const DRIFT = { rate: 0.03, days: [10, 20, 40, 60] };
+
+export function driftRun() {
+  const sim = simulateDrift(DRIFT.rate);
+  return {
+    sim,
+    launchAcc: sim.acc[WINDOW - 1],
+    shift: DRIFT.days.map((d) => sim.shift[d]),
+    acc: DRIFT.days.map((d) => sim.acc[d]),
+    alertDay: sim.alertDay,
+    complaintDay: sim.complaintDay,
+    warning: warningDays(sim),
+  };
+}
+
+function driftScene(): StageScene {
+  const r = driftRun();
+  if (r.alertDay === null || r.complaintDay === null || r.warning === null) throw new Error('the drift example must alert and then slip');
+  const maxShift = Math.max(...r.shift);
+  return {
+    id: 'drift',
+    title: 'How we notice a model getting worse',
+    lesson: 'systems/monitoring-and-drift',
+    caption: 'A simulation with made-up data and an example drift speed, computed by running it; real drift is messier and needs many checks.',
+    stages: [
+      { label: '1  A model launches', note: 'example: 200 labelled cases a day; day 0 is launch', kind: 'text', glyph: 'check', lines: ['It tests well:', `${pct(r.launchAcc, 0)} right`] },
+      {
+        label: '2  The inputs slowly shift',
+        note: 'how far the 7-day average moved, in launch spreads',
+        kind: 'bars',
+        hot: 3,
+        bars: DRIFT.days.map((d, i) => ({ label: `day ${d}`, value: r.shift[i] / maxShift, text: num(r.shift[i]) })),
+      },
+      {
+        label: '3  The accuracy slips',
+        note: '7-day accuracy; bars start at 50%',
+        kind: 'bars',
+        hot: 3,
+        bars: DRIFT.days.map((d, i) => ({ label: `day ${d}`, value: (r.acc[i] - 0.5) / 0.5, text: pct(r.acc[i], 0) })),
+      },
+      {
+        label: '4  A monitor warns first',
+        note: `alert at a shift of ${num(ALERT_SHIFT)}; users complain below ${pct(COMPLAINT_ACCURACY, 0)} accuracy`,
+        kind: 'text',
+        glyph: 'bell',
+        lines: [`alert: day ${r.alertDay}`, `complaints: day ${r.complaintDay}`, `${r.warning} days of warning`],
+      },
+    ],
+    alt: `How we notice a model getting worse, in four steps, from a simulation with made-up data. 1: a model launches and tests well, about ${pct(r.launchAcc, 0)} right. 2: the inputs slowly shift; the 7-day average has moved ${DRIFT.days.map((d, i) => `${num(r.shift[i])} by day ${d}`).join(', ')} launch spreads. 3: the 7-day accuracy slips: ${DRIFT.days.map((d, i) => `${pct(r.acc[i], 0)} by day ${d}`).join(', ')}. 4: a monitor that needs no labels alerts on day ${r.alertDay}, when the shift passes ${num(ALERT_SHIFT)}; users would only complain on day ${r.complaintDay}, when accuracy drops below ${pct(COMPLAINT_ACCURACY, 0)}, which is ${r.warning} days of warning.`,
+  };
+}
+
+/* ---------- speech: slices, pitch bands, a model step, words ---------- */
+
+/** Four slices of 8 made-up sample values. */
+export const SPEECH_SLICES: number[][] = [
+  [3, -3, 3, -3, 2, -2, 3, -3],
+  [4, 4, 3, 3, -3, -3, -4, -4],
+  [3, 3, 4, 4, -2, -2, -3, -3],
+  [0, 1, 0, -1, 0, 0, 1, 0],
+];
+export const SPEECH_LETTERS = ['h', 'i', '_'] as const;
+/** Example weights of the stand-in model: letter h listens to the high band, i to the low band, and "_" (nothing) has a fixed score. */
+export const SPEECH_MODEL = { h: [0.5, 0, 0], i: [0, 0, 0.5], blank: 1 };
+
+const meanSquare = (a: number[]): number => a.reduce((s, v) => s + v * v, 0) / a.length;
+
+/** Energy in three pitch bands from a 3-level Haar split (sums and differences of neighbours, no trigonometry). */
+export function haarBands(slice: number[]): { high: number; mid: number; low: number } {
+  const pairs = (a: number[]) => Array.from({ length: a.length / 2 }, (_, i) => [a[2 * i], a[2 * i + 1]]);
+  const d1 = pairs(slice).map(([a, b]) => (a - b) / 2);
+  const s1 = pairs(slice).map(([a, b]) => (a + b) / 2);
+  const d2 = pairs(s1).map(([a, b]) => (a - b) / 2);
+  const s2 = pairs(s1).map(([a, b]) => (a + b) / 2);
+  const d3 = [(s2[0] - s2[1]) / 2];
+  const s3 = [(s2[0] + s2[1]) / 2];
+  return { high: meanSquare(d1), mid: meanSquare(d2), low: meanSquare([...d3, ...s3]) };
+}
+
+/** First step of CTC-style decoding: a letter repeated in neighbouring slices counts once. */
+export const mergeRepeats = (letters: string[]): string[] => letters.filter((l, i) => l !== letters[i - 1]);
+/** Second step: blanks are dropped. */
+export const collapseLetters = (letters: string[]): string[] => mergeRepeats(letters).filter((l) => l !== '_');
+
+const dot = (a: number[], b: number[]): number => a.reduce((s, v, i) => s + v * b[i], 0);
+
+export function speechRun() {
+  const bands = SPEECH_SLICES.map(haarBands);
+  const probs = bands.map((b) => softmax([dot(SPEECH_MODEL.h, [b.high, b.mid, b.low]), dot(SPEECH_MODEL.i, [b.high, b.mid, b.low]), SPEECH_MODEL.blank]));
+  const picks = probs.map((p) => SPEECH_LETTERS[p.indexOf(Math.max(...p))]);
+  const sure = probs.map((p) => Math.max(...p));
+  return { bands, probs, picks, sure, word: collapseLetters([...picks]).join('') };
+}
+
+function speechScene(): StageScene {
+  const r = speechRun();
+  const head = ['', ...SPEECH_SLICES.map((_, i) => String(i + 1))].map((text) => ({ text }));
+  const maxE = Math.max(...r.bands.flatMap((b) => [b.high, b.mid, b.low]));
+  const band = (name: 'high' | 'mid' | 'low'): Cell[] => [{ text: name }, ...r.bands.map((b) => ({ text: b[name].toFixed(2), heat: b[name] / maxE }))];
+  const repeats = mergeRepeats([...r.picks]);
+  return {
+    id: 'speech',
+    title: 'How speech becomes text',
+    lesson: 'audio/speech-recognition',
+    caption: 'Real arithmetic on 32 example sample values; the model weights are an example, and real recognisers use large trained networks.',
+    stages: [
+      {
+        label: '1  Sound is cut into slices',
+        note: `${SPEECH_SLICES.length} slices × ${SPEECH_SLICES[0].length} samples = ${SPEECH_SLICES.flat().length} example numbers`,
+        kind: 'text',
+        glyph: 'bell',
+        lines: ['A short clip of', 'someone talking'],
+      },
+      { label: '2  Energy in each pitch band', note: 'high, mid, low from a simple filter split (not a full spectrogram)', kind: 'cells', header: true, rows: [head, band('high'), band('mid'), band('low')] },
+      {
+        label: '3  A model picks a letter',
+        note: 'example weights; "_" means nothing new is said',
+        kind: 'cells',
+        header: true,
+        rows: [head, [{ text: 'letter' }, ...r.picks.map((l) => ({ text: l, hot: l !== '_' }))], [{ text: 'sure' }, ...r.sure.map((p) => ({ text: pct(p, 0), heat: p * 0.8 }))]],
+      },
+      {
+        label: '4  Letters become words',
+        note: 'repeats are merged and blanks dropped',
+        kind: 'text',
+        glyph: 'pen',
+        lines: [r.picks.join(' '), `merge repeats: ${repeats.join(' ')}`, `drop blanks: "${r.word}"`],
+      },
+    ],
+    alt: `How speech becomes text, in four steps, with real arithmetic on example numbers. 1: a short clip is cut into ${SPEECH_SLICES.length} slices of ${SPEECH_SLICES[0].length} sample values, ${SPEECH_SLICES.flat().length} numbers in all. 2: for each slice the energy in a high, a middle and a low pitch band is worked out with a simple filter split: high ${r.bands.map((b) => b.high.toFixed(2)).join(', ')}; mid ${r.bands.map((b) => b.mid.toFixed(2)).join(', ')}; low ${r.bands.map((b) => b.low.toFixed(2)).join(', ')}. 3: a stand-in model with example weights picks the most likely letter for each slice, ${r.picks.join(' ')}, with confidence ${r.sure.map((p) => pct(p, 0)).join(', ')}. 4: repeated letters are merged and blanks dropped, giving the text ${r.word}.`,
+  };
+}
+
+/* ---------- mcp: an agent, a shared protocol, two tool servers ---------- */
+
+/** The same running example as the MCP lesson: a work assistant with an issue tracker and a notes folder. */
+export const MCP_SERVERS = [
+  { name: 'Issues server', tools: ['create_issue', 'search_issues'], resources: [] as string[] },
+  { name: 'Notes server', tools: ['search_notes'], resources: ['read_note'] },
+];
+export const mcpToolCount = (): number => MCP_SERVERS.reduce((n, s) => n + s.tools.length, 0);
+
+function mcpScene(): StageScene {
+  const total = mcpToolCount();
+  const call = MCP_SERVERS[0];
+  const counts = MCP_SERVERS.map((s) => `${s.tools.length} tool${s.tools.length === 1 ? '' : 's'}`);
+  return {
+    id: 'mcp',
+    title: 'How an agent finds and uses tools',
+    lesson: 'rag-agents/mcp-in-depth',
+    caption: 'An example in the style of the MCP lesson: the task, the two servers and their tools are made up; the roles of host, client and server are real.',
+    stages: [
+      { label: '1  An agent gets a task', note: 'an example task in an app that hosts the agent', kind: 'text', glyph: 'target', lines: ['"File an issue for', 'the bug in my notes"'] },
+      {
+        label: '2  It asks what is on offer',
+        note: `${MCP_SERVERS.length} example servers list ${total} tools in one shared format`,
+        kind: 'stack',
+        hot: 1,
+        cards: [
+          { glyph: 'user', title: 'Agent + client', sub: 'host app' },
+          { glyph: 'network', title: 'MCP', sub: 'shared format' },
+          { glyph: 'server', title: call.name, sub: counts[0] },
+          { glyph: 'server', title: MCP_SERVERS[1].name, sub: counts[1] },
+        ],
+      },
+      { label: '3  It picks a tool and calls it', note: 'the app can ask you to approve a call first', kind: 'text', glyph: 'wrench', lines: [`call: ${call.tools[0]}`, `on: ${call.name}`, 'with: a title'] },
+      { label: '4  The result comes back', note: 'the agent reads it, then writes your reply (example)', kind: 'text', glyph: 'check', lines: ['result: created', 'goes back to the agent'] },
+    ],
+    alt: `How an agent finds and uses tools, in four steps, with an example. 1: an agent in a host app gets a task, file an issue for the bug in my notes. 2: through a client and a shared protocol, MCP, it asks each server what it offers: ${MCP_SERVERS.map((s, i) => `the ${s.name} has ${counts[i]}`).join(' and ')}, ${total} tools in all. 3: it picks ${call.tools[0]} on the ${call.name} and calls it with a title; the app can ask you to approve the call first. 4: the server sends the result, created, back to the agent, which reads it and writes the reply.`,
+  };
+}
+
 /* ---------- the list ---------- */
 
 /** The chatbot figure, drawn by HeroFlow itself. */
@@ -718,6 +1451,18 @@ export const HERO_SCENES: Scene[] = [
   hearingScene(),
   spamScene(),
   guardrailsScene(),
+  attentionScene(),
+  bpeScene(),
+  embeddingsScene(),
+  loraScene(),
+  quantizationScene(),
+  preferenceScene(),
+  evalsScene(),
+  batchingScene(),
+  abtestScene(),
+  driftScene(),
+  speechScene(),
+  mcpScene(),
 ];
 
 /* ---------- which figure today ---------- */

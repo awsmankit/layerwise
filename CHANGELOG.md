@@ -8,6 +8,15 @@ Versions follow [semantic versioning](https://semver.org/), read for a learning 
 - **Minor**: new lessons, labs, tools or features.
 - **Patch**: fixes and small corrections (wording, links, layout, accessibility).
 
+## [2.10.0] - 2026-11-09: Twelve more daily home page figures, and a cleaner link check
+
+The animated figure on the home page now rotates through 23 drawings, and the weekly link check stops calling script-blocking sites broken.
+
+- Twelve new daily figures: how a model decides which words matter, how text is cut into pieces (a real byte-pair run), how meaning becomes numbers, how a model is adapted with a small add-on, how a model is made smaller, how a model learns what people prefer, how we test an answer, how a GPU serves many people at once, how we know a change helped, how we notice a model getting worse, how speech becomes text, and how an agent finds and uses tools. Every number is computed by tested code, and examples are labelled as examples.
+- The weekly link check now lists sites that answer scripts with 404 (NIST, Kaggle, Google Support and a few others) as check by hand, not broken, and fixed the Guardrails AI docs link.
+
+**At this release:** 164 lessons in 17 topics, 24 practice labs, 880 glossary terms.
+
 ## [2.9.0] - 2026-11-08: A different animated figure on the home page every day
 
 The animated figure at the top of the home page now changes every day, and the daily card carries real teaching points.
@@ -227,6 +236,7 @@ Animated AI engineering lessons, games and tools, covering AWS, Azure and Google
 
 **At this release:** 44 lessons in 12 topics, 0 practice labs, 79 glossary terms.
 
+[2.10.0]: https://github.com/awsmankit/layerwise/compare/v2.9.0...v2.10.0
 [2.9.0]: https://github.com/awsmankit/layerwise/compare/v2.8.0...v2.9.0
 [2.8.0]: https://github.com/awsmankit/layerwise/compare/v2.7.0...v2.8.0
 [2.7.0]: https://github.com/awsmankit/layerwise/compare/v2.6.0...v2.7.0
