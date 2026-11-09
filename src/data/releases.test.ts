@@ -64,4 +64,22 @@ describe('release history', () => {
     const file = readFileSync(join(process.cwd(), 'CHANGELOG.md'), 'utf8');
     expect(file).toBe(changelog());
   });
+
+  it('only links to pages that exist from tryIt', () => {
+    const exists = (path: string) => {
+      const p = path.replace(/^\/|\/$/g, '');
+      if (p === '') return true;
+      const lesson = p.match(/^learn\/([^/]+)\/([^/]+)$/);
+      if (lesson) return readdirSync(join(process.cwd(), 'src/content/lessons', lesson[1])).includes(`${lesson[2]}.mdx`);
+      const whatif = p.match(/^whatif\/([^/]+)$/);
+      if (whatif) return readdirSync(join(process.cwd(), 'src/data/whatif')).includes(`${whatif[1]}.item.ts`);
+      const pages = join(process.cwd(), 'src/pages');
+      return readdirSync(join(pages, ...p.split('/').slice(0, -1)), { withFileTypes: true }).some((e) => e.name === `${p.split('/').pop()}.astro` || (e.isDirectory() && e.name === p.split('/').pop())) || false;
+    };
+    for (const r of releases) for (const l of r.tryIt ?? []) {
+      expect(l.href, `${r.version} ${l.label}`).toMatch(/^\/.*\/$|^\/$/);
+      expect(exists(l.href), `${r.version} ${l.href}`).toBe(true);
+      expect(l.label.length).toBeGreaterThan(3);
+    }
+  });
 });

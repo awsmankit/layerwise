@@ -26,6 +26,8 @@ export type Release = {
   title: string;
   summary: string;
   highlights: string[];
+  /** Optional links to try the new things: a short label and a site path. Shown on the home page and the changelog. */
+  tryIt?: { label: string; href: string }[];
   /** Counts in the repository at that tag. */
   stats: ReleaseStats;
 };
@@ -33,6 +35,22 @@ export type Release = {
 export const repoUrl = 'https://github.com/awsmankit/layerwise';
 
 export const releases: Release[] = [
+  {
+    version: '2.12.0',
+    date: '2026-11-09',
+    title: 'See what is new at a glance',
+    summary: 'The current version now shows beside the logo on every page, the home page has a What’s new panel, and each release links straight to the new things.',
+    highlights: [
+      'A version badge next to the logo on every page links to the full list of changes.',
+      'A What’s new panel on the home page shows the latest release with links to try each new thing.',
+      'Each version in the changelog now has Try it links to the pages it added or changed.',
+    ],
+    tryIt: [
+      { label: 'The What’s new panel', href: '/' },
+      { label: 'All versions', href: '/changelog/' },
+    ],
+    stats: { lessons: 164, topics: 17, labs: 24, glossary: 880 },
+  },
   {
     version: '2.11.0',
     date: '2026-11-09',
@@ -42,6 +60,11 @@ export const releases: Release[] = [
       'Interview section rebuilt for learning: 12 categories, every question opens straight to its answer, with a diagram and a worked example. The practice timer, scorecards and self-check flows are gone. 12 questions have full written answers so far, with the rest to follow; the others show what a good answer covers.',
       'Eight lessons now show real equations (attention, softmax, Adam, cross-entropy, bias and variance, confidence intervals, quantisation, cosine similarity), drawn at build time so they add no code for readers.',
       'The "no embeddings" experiment can now run a real sentence-embedding model on your device. It is an opt-in download of about 24 MB from Hugging Face, nothing you type leaves your device, and it works offline after the first load.',
+    ],
+    tryIt: [
+      { label: 'Interview answers by category', href: '/interview/' },
+      { label: 'Equations in a lesson', href: '/learn/foundations/attention-intuition/' },
+      { label: 'Run a real model on your device', href: '/whatif/no-embeddings/' },
     ],
     stats: { lessons: 164, topics: 17, labs: 24, glossary: 880 },
   },
@@ -54,6 +77,10 @@ export const releases: Release[] = [
       'Twelve new daily figures: how a model decides which words matter, how text is cut into pieces (a real byte-pair run), how meaning becomes numbers, how a model is adapted with a small add-on, how a model is made smaller, how a model learns what people prefer, how we test an answer, how a GPU serves many people at once, how we know a change helped, how we notice a model getting worse, how speech becomes text, and how an agent finds and uses tools. Every number is computed by tested code, and examples are labelled as examples.',
       'The weekly link check now lists sites that answer scripts with 404 (NIST, Kaggle, Google Support and a few others) as check by hand, not broken, and fixed the Guardrails AI docs link.',
     ],
+    tryIt: [
+      { label: 'Today’s home page figure', href: '/' },
+      { label: 'How a model is made smaller', href: '/learn/edge/quantization-for-edge/' },
+    ],
     stats: { lessons: 164, topics: 17, labs: 24, glossary: 880 },
   },
   {
@@ -65,6 +92,10 @@ export const releases: Release[] = [
       'The home page figure rotates through 11 animated line drawings, one per day: how a chatbot answers, how it answers from your own documents, how an AI agent finishes a task, how a model learns, how it picks the next word, how it avoids repeating work, how a computer recognises a picture, what happens when you press send, how a hearing device cleans up sound, how email is sorted into spam, and how a safety check wraps an assistant. Every number in them is computed by tested code, and examples are labelled as examples.',
       'The Daily card now teaches more: experiment, lesson and interview cards carry three real points, interview cards show the question that is actually asked, and captions carry the same points.',
     ],
+    tryIt: [
+      { label: 'Daily card', href: '/share/' },
+      { label: 'Today’s home page figure', href: '/' },
+    ],
     stats: { lessons: 164, topics: 17, labs: 24, glossary: 880 },
   },
   {
@@ -75,6 +106,9 @@ export const releases: Release[] = [
     highlights: [
       'New Daily card page: one picture and caption per day for LinkedIn or Instagram, chosen by the date. The week rotates through a guess-first question, an AI term, an experiment, a takeaway and an interview question. Download the picture, copy the caption, and browse the days ahead to plan a week. Everything is made in your browser and nothing is uploaded.',
       'The landing page now shows a different live What if…? experiment every day, with a link to guess first and try it.',
+    ],
+    tryIt: [
+      { label: 'Daily card', href: '/share/' },
     ],
     stats: { lessons: 164, topics: 17, labs: 24, glossary: 880 },
   },
@@ -91,6 +125,10 @@ export const releases: Release[] = [
       'Lessons now have a Try breaking it row, and interview questions link to related experiments.',
       'An accessibility pass: every experiment page was scanned with an automated checker in light and dark mode, and low-contrast status text was fixed.',
     ],
+    tryIt: [
+      { label: 'What if…? experiments', href: '/whatif/' },
+      { label: 'Try breaking the KV cache', href: '/whatif/kv-cache/' },
+    ],
     stats: { lessons: 164, topics: 17, labs: 24, glossary: 880 },
   },
   {
@@ -106,6 +144,9 @@ export const releases: Release[] = [
       'Agents and safety: no memory between sessions, no guardrails, agent code run with no sandbox, and tool errors left unhandled.',
       'New Classical ML and data group: unscaled features, trusting a single train/test split, wrong labels, and never comparing with a simple baseline. Plus windowing in audio, devices that cannot be updated over the air, no fallback path and uncalibrated confidence.',
     ],
+    tryIt: [
+      { label: 'What if…? experiments', href: '/whatif/' },
+    ],
     stats: { lessons: 164, topics: 17, labs: 24, glossary: 880 },
   },
   {
@@ -118,6 +159,10 @@ export const releases: Release[] = [
       'Six groups: inside a model, search and RAG, training, serving and cost, agents and safety, and devices, audio and data. Each page links to the lesson that teaches the part and to its sources.',
       'New Model radar: release dates, context windows, list prices, input types and open weights for current models, every row linked to the vendor\'s own page and dated, plus a calculator for what one task costs. It compares facts and ranks nothing.',
       'A weekly check opens a GitHub issue when a new model name shows up in the news feeds or a radar row has not been checked for 90 days, so a person can verify it before it is added.',
+    ],
+    tryIt: [
+      { label: 'Model radar', href: '/models/' },
+      { label: 'What if…? experiments', href: '/whatif/' },
     ],
     stats: { lessons: 164, topics: 17, labs: 24, glossary: 880 },
   },

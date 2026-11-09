@@ -578,3 +578,11 @@
   text-decoration-color: var(--line);
   text-underline-offset: 4px;
 }
+
+/* "What's new" panel on the home page */
+.lp-new-card { border: 1.5px solid var(--ink); border-radius: 18px; padding: clamp(1rem, 3vw, 1.5rem); background: var(--surface); }
+.lp-new-tag { display: inline-block; margin: 0 0 0.5rem; padding: 0.15rem 0.7rem; border-radius: 999px; background: var(--ink); color: var(--surface); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.04em; }
+.lp-new-card h2 { margin: 0 0 0.3rem; }
+.lp-new-card > p:not(.lp-new-tag) { max-width: var(--measure, 68ch); margin: 0 0 0.8rem; color: var(--ink-2); }
+.lp-new-try { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; margin: 0 !important; }
+.lp-new-all { font-weight: 650; padding: 0.4rem 0.2rem; }

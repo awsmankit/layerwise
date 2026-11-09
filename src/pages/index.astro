@@ -76,6 +76,22 @@ const buildDay = dayIndexOf(now.getUTCFullYear(), now.getUTCMonth() + 1, now.get
     </div>
   </section>
 
+  <section class="lp-section wrap lp-new" aria-labelledby="new-h">
+    <div class="lp-new-card">
+      <p class="lp-new-tag">What’s new · v{latestRelease.version} · {new Date(latestRelease.date + 'T00:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })}</p>
+      <h2 id="new-h">{latestRelease.title}</h2>
+      <p>{latestRelease.summary}</p>
+      {
+        latestRelease.tryIt && latestRelease.tryIt.length > 0 && (
+          <p class="lp-new-try">
+            {latestRelease.tryIt.map((l) => <a class="btn quiet" href={withBase(l.href)}>{l.label}</a>)}
+            <a class="lp-new-all" href={withBase('/changelog/')}>All versions →</a>
+          </p>
+        )
+      }
+    </div>
+  </section>
+
   <DailyCard client:load />
 
   <section class="lp-section wrap" aria-labelledby="path-h">

@@ -188,13 +188,16 @@ const trackStyle = track ? `--track:${track.color};--on-track:${track.on}` : und
     {progress && <div class="reading-progress" id="reading-progress" aria-hidden="true"></div>}
     <header class="site-header">
       <div class="wrap">
-        <a class="brand" href={withBase('/')} aria-label={`${site.name} home`}>
-          <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-            <path d="M2 5h18M4 11h14M7 17h8" stroke-linecap="round"></path>
-            <circle cx="11" cy="11" r="2.4" stroke="none"></circle>
-          </svg>
-          {site.name}
-        </a>
+        <div class="brand-group">
+          <a class="brand" href={withBase('/')} aria-label={`${site.name} home`}>
+            <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+              <path d="M2 5h18M4 11h14M7 17h8" stroke-linecap="round"></path>
+              <circle cx="11" cy="11" r="2.4" stroke="none"></circle>
+            </svg>
+            {site.name}
+          </a>
+          <a class="ver-pill" href={withBase('/changelog/')} title={`What is new in v${latestRelease.version}: ${latestRelease.title}`}>v{latestRelease.version}</a>
+        </div>
         <nav class="nav" id="site-nav" aria-label="Main">
           {
             nav.map((item) => (

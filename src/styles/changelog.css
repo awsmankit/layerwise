@@ -125,3 +125,5 @@
   display: inline-block;
   padding: 0.3rem 0;
 }
+
+.cl-try { margin: 0.6rem 0 0; display: flex; flex-wrap: wrap; gap: 0.4rem 0.9rem; align-items: baseline; }

@@ -8,6 +8,16 @@ Versions follow [semantic versioning](https://semver.org/), read for a learning 
 - **Minor**: new lessons, labs, tools or features.
 - **Patch**: fixes and small corrections (wording, links, layout, accessibility).
 
+## [2.12.0] - 2026-11-09: See what is new at a glance
+
+The current version now shows beside the logo on every page, the home page has a What’s new panel, and each release links straight to the new things.
+
+- A version badge next to the logo on every page links to the full list of changes.
+- A What’s new panel on the home page shows the latest release with links to try each new thing.
+- Each version in the changelog now has Try it links to the pages it added or changed.
+
+**At this release:** 164 lessons in 17 topics, 24 practice labs, 880 glossary terms.
+
 ## [2.11.0] - 2026-11-09: Interview answers by category, proper maths, and a real model in your browser
 
 The interview section is rebuilt as a category-wise reference with answers, diagrams and worked examples, lessons show real equations, and one experiment can run a real embedding model on your device.
@@ -246,6 +256,7 @@ Animated AI engineering lessons, games and tools, covering AWS, Azure and Google
 
 **At this release:** 44 lessons in 12 topics, 0 practice labs, 79 glossary terms.
 
+[2.12.0]: https://github.com/awsmankit/layerwise/compare/v2.11.0...v2.12.0
 [2.11.0]: https://github.com/awsmankit/layerwise/compare/v2.10.0...v2.11.0
 [2.10.0]: https://github.com/awsmankit/layerwise/compare/v2.9.0...v2.10.0
 [2.9.0]: https://github.com/awsmankit/layerwise/compare/v2.8.0...v2.9.0

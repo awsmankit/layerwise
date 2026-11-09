@@ -1,6 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import { releases, repoUrl } from '../data/releases';
+import { withBase } from '../lib/url';
 
 const tag = (v: string) => `v${v}`;
 const anchor = (v: string) => `v${v.replaceAll('.', '-')}`;
@@ -43,6 +44,12 @@ const dateLabel = (iso: string) => new Date(iso + 'T12:00:00Z').toLocaleDateStri
               <ul class="cl-hl">
                 {r.highlights.map((h) => <li>{h}</li>)}
               </ul>
+              {r.tryIt && r.tryIt.length > 0 && (
+                <p class="cl-try">
+                  <b>Try it:</b>{' '}
+                  {r.tryIt.map((l) => <a href={withBase(l.href)}>{l.label}</a>)}
+                </p>
+              )}
               <ul class="cl-stats" aria-label="At this release">
                 <li>{r.stats.lessons} lessons</li>
                 <li>{r.stats.topics} topics</li>
