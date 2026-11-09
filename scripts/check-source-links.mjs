@@ -4,13 +4,17 @@
  *   node scripts/check-source-links.mjs            all lessons
  *   node scripts/check-source-links.mjs llm cloud  only those tracks
  * Prints one line per problem. 403, 406 and 429 are reported as "blocked" (the site refuses
- * automated requests; open the link by hand), not as broken.
+ * automated requests; open the link by hand), not as broken. So are 404s from the few sites known to
+ * answer scripts with 404 while people can open the same page (BOT_404_HOSTS), and network errors that
+ * are not a missing domain, since a slow or filtering server looks the same as a dead one from here.
  */
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 const root = new URL('../src/content/lessons/', import.meta.url).pathname;
 const only = new Set(process.argv.slice(2));
+/** Sites that answer our script with 404 for pages that load fine in a browser (checked by hand on 9 November 2026). */
+const BOT_404_HOSTS = new Set(['nvlpubs.nist.gov', 'csrc.nist.gov', 'www.kaggle.com', 'support.google.com', 'law.go.kr', 'www.law.go.kr']);
 const UA = 'Mozilla/5.0 (compatible; LayerwiseLinkCheck/1.0; +https://github.com/awsmankit/layerwise)';
 
 const links = [];
@@ -30,9 +34,12 @@ async function check({ lesson, url }) {
     const moved = res.url && res.url.replace(/\/$/, '') !== url.replace(/\/$/, '') ? ` (now ${res.url})` : '';
     if (res.ok) return moved ? `moved   ${lesson}  ${url}${moved}` : null;
     if ([403, 406, 429].includes(res.status)) return `blocked ${lesson}  ${url}  (HTTP ${res.status}, check by hand)`;
+    if (res.status === 404 && BOT_404_HOSTS.has(new URL(url).hostname)) return `blocked ${lesson}  ${url}  (HTTP 404 from a site that does this to scripts, check by hand)`;
     return `BROKEN  ${lesson}  ${url}  (HTTP ${res.status})`;
   } catch (e) {
-    return `BROKEN  ${lesson}  ${url}  (${e.name}: ${e.message})`;
+    // a missing domain is broken; any other network failure (timeout, reset, TLS) could be the server filtering scripts
+    if (e?.cause?.code === 'ENOTFOUND') return `BROKEN  ${lesson}  ${url}  (domain not found)`;
+    return `blocked ${lesson}  ${url}  (${e.name}: ${e.cause?.code ?? e.message}, could not reach it from here, check by hand)`;
   }
 }
 

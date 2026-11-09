@@ -450,7 +450,7 @@ export const libraries: Library[] = [
     what: 'Adds checks, called guardrails, to the inputs and outputs of LLM applications.',
     bestFor: 'Validating model output against rules',
     install: 'pip install guardrails-ai',
-    docs: 'https://www.guardrailsai.com/docs',
+    docs: 'https://pypi.org/project/guardrails-ai/',
     repo: 'https://github.com/guardrails-ai/guardrails',
     licence: 'Apache-2.0',
     status: 'active',
