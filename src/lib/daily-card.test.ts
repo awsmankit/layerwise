@@ -139,3 +139,31 @@ describe('text helpers', () => {
     expect(tiny.size).toBe(20);
   });
 });
+
+describe('cards from written interview answers', () => {
+  it('turns a written answer into three whole sentences that fit', async () => {
+    const { answers } = await import('../data/interview/answers');
+    const { answerPoints } = await import('./daily-card');
+    for (const [id, a] of Object.entries(answers)) {
+      const pts = answerPoints(a);
+      expect(pts.length, id).toBe(3);
+      for (const p of pts) expect(p.length).toBeLessThanOrEqual(135);
+    }
+  });
+  it('uses the written answer for the bullets and the old points otherwise', () => {
+    const withAnswer: Pools = {
+      ...pools,
+      interview: pools.interview.map((q, i) => (i === 0 ? { ...q, answer: { short: 'A written short answer.', points: ['First written point here.', 'Second written point here.', 'Third written point here.'] } } : q)),
+    };
+    const first = pools.interview.map((q) => q.id);
+    const cards = Array.from({ length: 70 }, (_, d) => cardForDay(d, withAnswer, URL)!).filter((c) => c.kind === 'interview');
+    const written = cards.filter((c) => c.bulletsHeading === 'The short answer');
+    expect(written.length).toBeGreaterThan(0);
+    for (const c of written) {
+      expect(c.bullets).toEqual(['First written point here.', 'Second written point here.', 'Third written point here.']);
+      expect(c.caption).toContain('The full answer, with a diagram');
+      expect(c.path).toContain(first[0]);
+    }
+    expect(cards.some((c) => c.bulletsHeading === 'A strong answer covers')).toBe(true);
+  });
+});

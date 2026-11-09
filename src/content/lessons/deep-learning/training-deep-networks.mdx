@@ -133,11 +133,31 @@ Before any long run, train on a handful of examples and check the loss goes to n
 
 <Deep title="Adam's update, written out">
 
-For each weight, with gradient `g` at step `t`, Adam keeps two running averages: `m = β1·m + (1 − β1)·g` and `v = β2·v + (1 − β2)·g²`. The paper's suggested defaults are β1 = 0.9 and β2 = 0.999. Because both start at zero, early values are biased low, so they are corrected: `m̂ = m / (1 − β1^t)` and `v̂ = v / (1 − β2^t)`. The update is `w ← w − lr · m̂ / (√v̂ + ε)` with a tiny ε such as 1e-8.
+For each weight, with gradient $$g$$ at step $$t$$, Adam keeps two running averages: a smoothed gradient $$m$$ (the momentum part) and a smoothed squared gradient $$v$$ (how big the gradient usually is).
 
-AdamW changes only the last line: `w ← w − lr · (m̂ / (√v̂ + ε) + λ·w)`, so the decay `λ·w` is applied to the weight directly instead of being added to the gradient and then rescaled by `v̂`.
+$$
+m = \beta_1 m + (1 - \beta_1)\, g, \qquad v = \beta_2 v + (1 - \beta_2)\, g^2
+$$
 
-The figure's optimisers are exactly these formulas, run on the loss `0.5 × (1 × u² + 100 × v²)`, where u and v are the coordinates along and across the valley.
+The paper's suggested defaults are $$\beta_1 = 0.9$$ and $$\beta_2 = 0.999$$. Because both start at zero, early values are biased low, so they are corrected:
+
+$$
+\hat m = \frac{m}{1 - \beta_1^{\,t}}, \qquad \hat v = \frac{v}{1 - \beta_2^{\,t}}
+$$
+
+The update, with a tiny $$\varepsilon$$ such as 1e-8, takes a step along the smoothed gradient and divides by its usual size, so every weight moves at a similar pace:
+
+$$
+w \leftarrow w - \mathrm{lr}\cdot \frac{\hat m}{\sqrt{\hat v} + \varepsilon}
+$$
+
+AdamW changes only the last line, so the decay $$\lambda w$$ is applied to the weight directly instead of being added to the gradient and then rescaled by $$\hat v$$:
+
+$$
+w \leftarrow w - \mathrm{lr}\cdot \left(\frac{\hat m}{\sqrt{\hat v} + \varepsilon} + \lambda w\right)
+$$
+
+The figure's optimisers are exactly these formulas, run on the loss $$0.5 \times (1 \times u^2 + 100 \times v^2)$$, where $$u$$ and $$v$$ are the coordinates along and across the valley.
 
 </Deep>
 

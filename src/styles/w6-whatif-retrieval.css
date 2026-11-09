@@ -169,3 +169,23 @@ svg.wr-chart { display: block; width: 100%; height: auto; }
 .wr-tp-cell.is-gold.is-out { background: transparent; }
 .wr-score { margin-top: 0.6rem; }
 .wr-score-i .wr-big { font-size: 1.1rem; }
+
+/* opt-in real model panel (no-embeddings) */
+.wr-real { margin-top: 1rem; padding: 0.8rem 0.9rem; border: 1.5px solid var(--ink); border-radius: 12px; background: var(--surface); }
+.wr-real-h { margin: 0 0 0.3rem; font-size: 1rem; }
+.wr-real-p { margin: 0 0 0.6rem; font-size: 0.92rem; line-height: 1.5; color: var(--ink-2); }
+.wr-real-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.4rem; }
+.wr-real-row .btn { max-width: 100%; text-align: left; white-space: normal; }
+.wr-real-prog { margin-top: 0.6rem; }
+.wr-prog { width: 100%; height: 12px; accent-color: var(--ink); }
+.wr-real-status { margin: 0.5rem 0 0; min-height: 1.3em; font-size: 0.88rem; color: var(--ink-2); overflow-wrap: anywhere; }
+.wr-real-msg { margin: 0.5rem 0 0; padding: 0.5rem 0.7rem; border-radius: 10px; font-size: 0.92rem; line-height: 1.45; }
+.wr-real-msg.is-bad { border: 2px dashed var(--wr-bad); background: rgba(214, 69, 61, 0.1); }
+.wr-real-out { margin-top: 0.6rem; }
+.wr-real-verdict { margin: 0 0 0.7rem; font-weight: 600; line-height: 1.45; }
+.wr-real-table { font-size: 0.8rem; }
+.wr-real-table th, .wr-real-table td { white-space: normal; padding: 0.3rem 0.3rem; }
+.wr-real-table td { text-align: left; }
+.wr-real-table td:nth-child(n+2) { font-variant-numeric: tabular-nums; }
+.wr-real-table tr.is-now th, .wr-real-table tr.is-now td { background: rgba(128, 128, 128, 0.14); }
+.wr-real-table + .wr-note, .wr-scroll + .wr-note { margin-bottom: 0.8rem; }

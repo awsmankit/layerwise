@@ -8,6 +8,16 @@ Versions follow [semantic versioning](https://semver.org/), read for a learning 
 - **Minor**: new lessons, labs, tools or features.
 - **Patch**: fixes and small corrections (wording, links, layout, accessibility).
 
+## [2.11.0] - 2026-11-09: Interview answers by category, proper maths, and a real model in your browser
+
+The interview section is rebuilt as a category-wise reference with answers, diagrams and worked examples, lessons show real equations, and one experiment can run a real embedding model on your device.
+
+- Interview section rebuilt for learning: 12 categories, every question opens straight to its answer, with a diagram and a worked example. The practice timer, scorecards and self-check flows are gone. 12 questions have full written answers so far, with the rest to follow; the others show what a good answer covers.
+- Eight lessons now show real equations (attention, softmax, Adam, cross-entropy, bias and variance, confidence intervals, quantisation, cosine similarity), drawn at build time so they add no code for readers.
+- The "no embeddings" experiment can now run a real sentence-embedding model on your device. It is an opt-in download of about 24 MB from Hugging Face, nothing you type leaves your device, and it works offline after the first load.
+
+**At this release:** 164 lessons in 17 topics, 24 practice labs, 880 glossary terms.
+
 ## [2.10.0] - 2026-11-09: Twelve more daily home page figures, and a cleaner link check
 
 The animated figure on the home page now rotates through 23 drawings, and the weekly link check stops calling script-blocking sites broken.
@@ -236,6 +246,7 @@ Animated AI engineering lessons, games and tools, covering AWS, Azure and Google
 
 **At this release:** 44 lessons in 12 topics, 0 practice labs, 79 glossary terms.
 
+[2.11.0]: https://github.com/awsmankit/layerwise/compare/v2.10.0...v2.11.0
 [2.10.0]: https://github.com/awsmankit/layerwise/compare/v2.9.0...v2.10.0
 [2.9.0]: https://github.com/awsmankit/layerwise/compare/v2.8.0...v2.9.0
 [2.8.0]: https://github.com/awsmankit/layerwise/compare/v2.7.0...v2.8.0

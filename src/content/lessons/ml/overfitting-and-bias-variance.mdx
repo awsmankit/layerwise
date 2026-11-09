@@ -59,7 +59,11 @@ Two different things can go wrong, and the picture shows both.
 
 There is also **noise**: the random scatter in the measurements, which no model can predict. The test error splits into three parts.
 
-> typical squared error = bias squared + variance + noise
+$$
+\underbrace{\mathbb{E}\big[(y - \hat f(x))^2\big]}_{\text{typical squared error}} = \underbrace{\big(\mathbb{E}[\hat f(x)] - f(x)\big)^2}_{\text{bias squared}} + \underbrace{\mathrm{Var}\big[\hat f(x)\big]}_{\text{variance}} + \underbrace{\sigma^2}_{\text{noise}}
+$$
+
+In words: typical squared error = bias squared + variance + noise. Here $$f$$ is the true curve, $$\hat f$$ is the model fitted on a random training set, and $$\sigma^2$$ is the noise.
 
 The three bars under the chart show this for your current settings, averaged over 30 different training sets. At 96 points, a straight line has bias squared 0.20 and variance 0.005: nearly all its error is bias. A degree-12 curve has bias squared 0.001 and variance 0.04: nearly all of its error is variance. A degree-3 curve has both small (0.005 and 0.004), so it ends close to the noise floor.
 

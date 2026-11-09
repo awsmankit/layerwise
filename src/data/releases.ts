@@ -34,6 +34,18 @@ export const repoUrl = 'https://github.com/awsmankit/layerwise';
 
 export const releases: Release[] = [
   {
+    version: '2.11.0',
+    date: '2026-11-09',
+    title: 'Interview answers by category, proper maths, and a real model in your browser',
+    summary: 'The interview section is rebuilt as a category-wise reference with answers, diagrams and worked examples, lessons show real equations, and one experiment can run a real embedding model on your device.',
+    highlights: [
+      'Interview section rebuilt for learning: 12 categories, every question opens straight to its answer, with a diagram and a worked example. The practice timer, scorecards and self-check flows are gone. 12 questions have full written answers so far, with the rest to follow; the others show what a good answer covers.',
+      'Eight lessons now show real equations (attention, softmax, Adam, cross-entropy, bias and variance, confidence intervals, quantisation, cosine similarity), drawn at build time so they add no code for readers.',
+      'The "no embeddings" experiment can now run a real sentence-embedding model on your device. It is an opt-in download of about 24 MB from Hugging Face, nothing you type leaves your device, and it works offline after the first load.',
+    ],
+    stats: { lessons: 164, topics: 17, labs: 24, glossary: 880 },
+  },
+  {
     version: '2.10.0',
     date: '2026-11-09',
     title: 'Twelve more daily home page figures, and a cleaner link check',

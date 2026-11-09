@@ -536,3 +536,27 @@
 .w5b-badge .w5b-badge-sub {
   display: block;
 }
+
+/* ---------- build-time maths (KaTeX): see src/lib/katex-math.mjs ---------- */
+/* a display equation scrolls inside its own box, so a wide one never widens the page */
+.prose .math-block {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.35rem 0.5rem;
+  border-left: 2px solid var(--line-soft);
+  -webkit-overflow-scrolling: touch;
+}
+.prose .math-block .katex-display {
+  margin: 0.2rem 0;
+  text-align: left;
+}
+.prose .math-block .katex-display > .katex {
+  text-align: left;
+}
+/* KaTeX text sizes up a little against the serif body; keep it in step with the surrounding words */
+.prose .katex {
+  font-size: 1.05em;
+}
+.prose .math-block .katex {
+  font-size: 1.12em;
+}

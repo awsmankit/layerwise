@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import WhatIfFrame from './WhatIfFrame';
 import { EASE } from '../viz/shared';
+import RealEmbeddingsPanel from './real/RealEmbeddingsPanel';
 import { DIM_SHORT, DOCS, QUERIES, cosine, embed, rank, sharedWords, success, successCount } from '../../lib/whatif/no-embeddings';
 
 /**
@@ -96,6 +97,7 @@ export default function NoEmbeddingsWhatIf() {
       <p className="wr-note">
         Toy figures: the "meaning" side uses hand-built word vectors with five numbers per word. Real embeddings are learned from huge amounts of text and have hundreds or thousands of numbers.
       </p>
+      <RealEmbeddingsPanel qi={qi} />
       <details className="wr-details">
         <summary>Open the numbers</summary>
         <div className="wr-scroll">

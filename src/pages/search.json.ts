@@ -5,6 +5,8 @@ import { games } from '../data/games';
 import { tracks } from '../data/tracks';
 import type { SearchItem } from '../lib/search';
 import { questions, kinds } from '../data/interview';
+import { answers } from '../data/interview/answers';
+import { categories, categoryById, categoryOf } from '../data/interview/categories';
 import { searchPages } from '../data/search-pages';
 import { labs } from '../data/labs';
 import { libraries, categoryLabels } from '../data/libraries';
@@ -29,7 +31,13 @@ export const GET: APIRoute = async () => {
     ...libraries.map((b) => ({ t: b.name, u: u('/libraries/'), k: 'Library', s: `${categoryLabels[b.category]}. ${b.what}` })),
     ...cases.map((c) => ({ t: c.title, u: u('/cases/'), k: 'Case study', s: `${c.company}. ${c.learn ?? 'Link only.'}` })),
     ...pulse.map((p) => ({ t: p.data.title, u: u(`/pulse/${p.id}/`), k: 'News', s: p.data.tags.join(', ') })),
-    ...questions.map((q) => ({ t: q.prompt, u: u(`/interview/q/${q.id}/`), k: 'Interview', s: `${kinds[q.kind]}. ${q.topics.join(', ')}` })),
+    ...categories.map((c) => ({ t: c.title, u: u(`/interview/c/${c.id}/`), k: 'Interview', s: `Interview answers by topic. ${c.promise}` })),
+    ...questions.map((q) => {
+      const a = answers[q.id];
+      const cat = categoryById(categoryOf(q))!.title;
+      // a written answer is searchable by its short answer; the others by their topics
+      return { t: q.prompt, u: u(`/interview/q/${q.id}/`), k: 'Interview', s: a ? `${cat}. ${a.short}` : `${cat}. ${kinds[q.kind]}. ${q.topics.join(', ')}` };
+    }),
   ];
 
   return new Response(JSON.stringify(items), { headers: { 'Content-Type': 'application/json' } });

@@ -10,7 +10,8 @@ export type GuessItem = { slug: string; title: string; question: string; options
 export type TermItem = { id: string; term: string; short: string; lesson: string; lessonTitle?: string };
 export type WhatIfItem = { slug: string; title: string; blurb: string; takeaways: string[] };
 export type RememberItem = { path: string; lesson: string; takeaways: string[] };
-export type InterviewItem = { id: string; prompt: string; role: string; level: string; strong: string[] };
+/** `answer` is present when the question has a written answer: its short answer and up to three points from it. */
+export type InterviewItem = { id: string; prompt: string; role: string; level: string; strong: string[]; answer?: { short: string; points: string[] } };
 
 export type Pools = {
   guess: GuessItem[];
@@ -108,6 +109,16 @@ export function clip(text: string, max: number): string {
   const cut = t.slice(0, max - 1);
   const at = cut.lastIndexOf(' ');
   return (at > max * 0.6 ? cut.slice(0, at) : cut).replace(/[ ,;:.\-]+$/, '') + '…';
+}
+
+/**
+ * Up to three short points for a card from a written answer: sentences of the short answer first, then of
+ * the explanation, keeping only those that fit on the picture whole (no clipped sentences).
+ */
+export function answerPoints(a: { short: string; explain: { body: string }[] }, max = 135): string[] {
+  const sentences = (s: string) => s.split(/(?<=[.?!])\s+/).map((x) => x.trim());
+  const pool = [...sentences(a.short), ...a.explain.flatMap((e) => sentences(e.body))];
+  return pool.filter((x) => x.length >= 30 && x.length <= max).slice(0, 3);
 }
 
 const TAGS: Record<CardKind, string> = {
@@ -211,19 +222,22 @@ export function cardForDay(dayIndex: number, pools: Pools, siteUrl: string): Car
   if (!pool.length) return null;
   const q = at(pool, occurrence);
   const path = `/interview/q/${q.id}/`;
-  const bullets = q.strong.slice(0, 3).map((x) => clip(x, 135));
+  // a question with a written answer shows that answer; the others keep the points a strong answer covers
+  const written = q.answer && q.answer.points.length >= 3 ? q.answer : null;
+  const bullets = (written ? written.points : q.strong).slice(0, 3).map((x) => clip(x, 135));
+  const heading = written ? 'The short answer' : 'A strong answer covers';
   return {
     ...base,
     title: clip(q.prompt, 220),
     body: '',
     bullets,
-    bulletsHeading: 'A strong answer covers',
+    bulletsHeading: heading,
     options: [],
     footer: `${q.role}, ${q.level}`,
     path,
-    caption: `Interview question (${q.role}, ${q.level}):\n\n${q.prompt}\n\nA strong answer covers:\n${bullets.map((b) => `• ${b}`).join('\n')}\n\nThe full list of points, the follow-ups and the red flags: ${url(path)}\n\n${TAGS.interview}`,
+    caption: `Interview question (${q.role}, ${q.level}):\n\n${q.prompt}\n\n${heading}:\n${bullets.map((b) => `• ${b}`).join('\n')}\n\n${written ? 'The full answer, with a diagram and a worked example' : 'The full list of points, the follow-ups and the red flags'}: ${url(path)}\n\n${TAGS.interview}`,
     firstComment: '',
-    alt: `A card titled Interview question for a ${q.role}. ${q.prompt} A strong answer covers: ${q.strong.slice(0, 3).join(' ')}`,
+    alt: `A card titled Interview question for a ${q.role}. ${q.prompt} ${heading}: ${bullets.join(' ')}`,
   };
 }
 

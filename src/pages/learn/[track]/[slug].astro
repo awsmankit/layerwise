@@ -46,6 +46,8 @@ const here = lessonPath(lesson);
 
 const byKey = Object.fromEntries(all.map((l) => [`${l.data.track}/${slugOf(l)}`, l]));
 const lessonIndex = Object.fromEntries(all.map((l) => [`${l.data.track}/${slugOf(l)}`, { title: l.data.title, href: lessonPath(l) }]));
+// KaTeX styles and fonts are same-origin files in public/katex, linked only on lessons that contain maths
+const hasMath = /\$\$/.test(lesson.body ?? '');
 const hasDeep = /<Deep[\s>]/.test(lesson.body ?? '');
 const prereqs = (extra?.prereq ?? []).map((k) => byKey[k]).filter(Boolean);
 const trackLessons = all.filter((l) => l.data.track === track.id);
@@ -61,6 +63,7 @@ const groups = tracks.map((t) => ({
 ---
 
 <Base title={lesson.data.title} description={lesson.data.summary} progress track={{ color: track.color, on: track.on }}>
+  {hasMath && <link slot="head" rel="stylesheet" href={withBase('/katex/katex.css')} />}
   <section class="lesson-hero">
     <div class="wrap">
       <div class="lesson-head">

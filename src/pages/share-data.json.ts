@@ -5,6 +5,8 @@ import { glossary } from '../data/glossary';
 import { whatifs } from '../data/whatif';
 import { predictions } from '../data/whatif/predictions';
 import { questions, roles, ilevels } from '../data/interview';
+import { answers } from '../data/interview/answers';
+import { answerPoints } from '../lib/daily-card';
 import type { Pools } from '../lib/daily-card';
 
 /**
@@ -44,7 +46,8 @@ export const GET: APIRoute = async () => {
   };
   const interview: Pools['interview'] = questions.flatMap((q) => {
     const shown = asked(q.prompt);
-    return shown ? [{ id: q.id, prompt: shown, role: roles[q.roles[0]], level: ilevels[q.level], strong: q.strong.slice(0, 3) }] : [];
+    const a = answers[q.id];
+    return shown ? [{ id: q.id, prompt: shown, role: roles[q.roles[0]], level: ilevels[q.level], strong: q.strong.slice(0, 3), ...(a ? { answer: { short: a.short, points: answerPoints(a) } } : {}) }] : [];
   });
 
   const pools: Pools = { guess, term, whatif, remember, interview };

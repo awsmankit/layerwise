@@ -1,7 +1,8 @@
 /**
- * Interview questions. One shape serves both sides of the table: a candidate
- * practises against `strong` and `followUps`; an interviewer scores against
- * the same points, watches for `redFlags`, and uses the shared rubric.
+ * Interview questions. The pages teach: a reader opens a question and reads an answer. Where a written
+ * answer exists (src/data/interview/answers/) it is shown; otherwise `strong`, `followUps` and `redFlags`
+ * are shown as "what a good answer covers". They were written as evaluator notes and are also the source
+ * material for the written answers.
  */
 
 export const roles = {

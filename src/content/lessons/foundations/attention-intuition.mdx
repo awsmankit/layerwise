@@ -50,7 +50,13 @@ def attention(Q, K, V, causal=True):
 
 <Disclosure client:visible title="The formula">
 
-The standard form is `softmax(Q Kᵀ / √d) V`. Dividing by the square root of the dimension keeps the scores from growing with the vector size, which would push the softmax into regions where gradients vanish.
+The standard form is:
+
+$$
+\mathrm{Attention}(Q, K, V) = \mathrm{softmax}\!\left(\frac{Q K^{\top}}{\sqrt{d}}\right) V
+$$
+
+In words: compare every query with every key ($$QK^{\top}$$), shrink the scores, turn each row into weights that add up to 1 (softmax), and use those weights to blend the values. Dividing by the square root of the dimension $$d$$ keeps the scores from growing with the vector size, which would push the softmax into regions where gradients vanish.
 
 </Disclosure>
 

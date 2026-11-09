@@ -1,19 +1,20 @@
 ---
 import Base from '../../layouts/Base.astro';
-import Practice from '../../components/interview/Practice.tsx';
-import { getLessons, lessonPath, slugOf } from '../../lib/content';
 import { withBase } from '../../lib/url';
-
-const lessons = Object.fromEntries((await getLessons()).map((l) => [`${l.data.track}/${slugOf(l)}`, { title: l.data.title, href: lessonPath(l) }]));
+const home = withBase('/interview/');
 ---
 
-<Base title="Practise interview questions" description="Answer AI engineering interview questions against the clock, then check yourself against what a strong answer covers.">
+<Base title="Interview answers" description="The interview practice page has moved. Read answers by topic instead.">
+  <meta slot="head" http-equiv="refresh" content={`0; url=${home}`} />
   <div class="wrap">
     <header class="page-head">
-      <h1>Practise</h1>
-      <p>Pick your role and level, answer against the clock (out loud is best), then tick off what a strong answer covers and try the follow-ups. Questions you score low on come back sooner. Everything stays in this browser.</p>
-      <p class="gm-note"><a href={withBase('/interview/#rounds')}>How to approach each kind of question</a></p>
+      <h1>This page has moved</h1>
+      <p>Interview practice is now a set of answers you can read by topic, with diagrams and examples. <a href={home}>Go to the interview answers</a>.</p>
     </header>
-    <Practice client:load lessons={lessons} />
   </div>
+  <script is:inline define:vars={{ home }}>
+    // an old link with ?q=<id> goes straight to that question
+    var q = new URLSearchParams(location.search).get('q');
+    location.replace(q && /^[a-z0-9-]+$/.test(q) ? home + 'q/' + q + '/' : home);
+  </script>
 </Base>

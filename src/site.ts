@@ -17,7 +17,7 @@ export const nav: { href: string; label: string; also?: string[] }[] = [
   { href: '/start/', label: 'Start' },
   { href: '/learn/', label: 'Learn', also: ['/glossary/'] },
   { href: '/practice/', label: 'Practice', also: ['/play/', '/tools/', '/whatif/'] },
-  { href: '/interview/', label: 'Interviews' },
+  { href: '/interview/', label: 'Interview answers' },
   { href: '/pulse/', label: 'News' },
 ];
 
@@ -45,7 +45,7 @@ export const footerGroups = [
       { href: '/whatif/', label: 'What if…?' },
       { href: '/tools/', label: 'Calculators' },
       { href: '/tools/sandbox/', label: 'Sandbox' },
-      { href: '/interview/', label: 'Interview prep' },
+      { href: '/interview/', label: 'Interview answers' },
     ],
   },
   {

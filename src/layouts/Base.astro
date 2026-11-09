@@ -181,6 +181,7 @@ const trackStyle = track ? `--track:${track.color};--on-track:${track.on}` : und
         };
       })();
     </script>
+    <slot name="head" />
   </head>
   <body id="top" class:list={[track && 'has-track']} style={trackStyle}>
     <a class="skip" href="#main">Skip to content</a>

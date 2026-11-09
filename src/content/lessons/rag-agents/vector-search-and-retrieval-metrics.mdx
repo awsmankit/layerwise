@@ -63,7 +63,19 @@ Engines handle this differently (pgvector 0.8.0 added iterative index scans that
 - **Dot product** also rewards vector length.
 - **L2 (Euclidean) distance** measures straight-line distance.
 
-If vectors are normalised to unit length, all three give the same ranking, because squared L2 distance then equals 2 minus twice the cosine. Use the metric the embedding model was trained for (see its model card). For cosine, normalise vectors at write and query time so the index can use a plain dot product.
+Cosine similarity is the dot product divided by the two lengths. In words: it measures the angle between two vectors and ignores how long they are, so 1 means the same direction and 0 means unrelated.
+
+$$
+\cos(a, b) = \frac{a \cdot b}{\lVert a \rVert\, \lVert b \rVert}
+$$
+
+If vectors are normalised to unit length, all three give the same ranking, because squared L2 distance then equals 2 minus twice the cosine:
+
+$$
+\lVert a - b \rVert^2 = 2 - 2\cos(a, b) \qquad \text{when } \lVert a \rVert = \lVert b \rVert = 1
+$$
+
+Use the metric the embedding model was trained for (see its model card). For cosine, normalise vectors at write and query time so the index can use a plain dot product.
 
 ## Bi-encoders, cross-encoders and hybrid search
 

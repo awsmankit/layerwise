@@ -96,7 +96,7 @@ So report the gap and its interval, in units people care about: "B passed 3 more
 
 **Peeking.** If you check an A/B test every day and stop as soon as p dips below 0.05, you will often stop on a fluke. A fixed stopping rule, or a method designed for repeated looks, is needed. Evan Miller's note on the topic shows how badly checking early inflates false positives.
 
-**Many comparisons.** At the 5% level, one comparison between identical prompts gives a false alarm 5% of the time. Try 20 prompt variants and the chance of at least one false alarm is 1 - 0.95^20 = 64%. If you run many variants, expect something to "win", and treat the winner as a hypothesis to confirm on fresh cases. A simple fix is to demand a stricter threshold, for example 0.05 / 20 = 0.0025 for each (the Bonferroni correction). Another is to confirm the winner on cases you did not use to pick it. This is the same trap as overfitting to a validation set, which [Overfitting and bias-variance](../overfitting-and-bias-variance/) covers.
+**Many comparisons.** At the 5% level, one comparison between identical prompts gives a false alarm 5% of the time. Try 20 prompt variants and the chance of at least one false alarm is $$1 - 0.95^{20} = 64\%$$. If you run many variants, expect something to "win", and treat the winner as a hypothesis to confirm on fresh cases. A simple fix is to demand a stricter threshold, for example $$0.05 / 20 = 0.0025$$ for each (the Bonferroni correction). Another is to confirm the winner on cases you did not use to pick it. This is the same trap as overfitting to a validation set, which [Overfitting and bias-variance](../overfitting-and-bias-variance/) covers.
 
 ## How many cases do you need?
 
@@ -118,9 +118,21 @@ A few cautions for LLM evals:
 
 <Deep title="The sample-size formula and the simulation setup">
 
-For two pass rates p1 and p2 with p̄ their average, cases per group is approximately 2 p̄ (1 - p̄) (z_a + z_b)² / (p1 - p2)², where z_a = 1.96 for a two-sided 5% test and z_b = 0.84 for 80% power. For 70% against 75%: p̄ = 0.725, so 2 x 0.725 x 0.275 x 7.85 / 0.0025 = about 1,252.
+For two pass rates $$p_1$$ and $$p_2$$ with $$\bar p$$ their average, cases per group is approximately the following. In words: the noisier the pass rate and the smaller the gap, the more cases you need, and the gap counts squared. Here $$z_\alpha = 1.96$$ for a two-sided 5% test and $$z_\beta = 0.84$$ for 80% power.
 
-For the paired case, with d the share of cases where exactly one model passes and δ the gap: n = ((1.96 √d + 0.84 √(d - δ²)) / δ)². With d = 0.15 and δ = 0.05: ((0.759 + 0.323) / 0.05)² = about 469.
+$$
+n \approx \frac{2\,\bar p\,(1 - \bar p)\,(z_\alpha + z_\beta)^2}{(p_1 - p_2)^2}
+$$
+
+For 70% against 75%: $$\bar p = 0.725$$, so $$2 \times 0.725 \times 0.275 \times 7.85 / 0.0025 = $$ about 1,252.
+
+For the paired case, with $$d$$ the share of cases where exactly one model passes and $$\delta$$ the gap:
+
+$$
+n = \left(\frac{1.96\sqrt{d} + 0.84\sqrt{d - \delta^2}}{\delta}\right)^{2}
+$$
+
+With $$d = 0.15$$ and $$\delta = 0.05$$: $$\left(\frac{0.759 + 0.323}{0.05}\right)^2 = $$ about 469.
 
 In the simulator, model A truly passes 70% of cases. On 60% of the cases both models share the same random draw (they find the same cases easy), and on the rest their draws are independent, which keeps each model's own pass rate exactly as set. The random numbers are seeded, so the same settings always give the same results. "Clearly better" means the 95% paired-bootstrap interval, from 200 resamples, lies wholly above zero. The data in the tables above are made up for the lesson.
 

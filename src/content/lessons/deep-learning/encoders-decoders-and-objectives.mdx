@@ -80,7 +80,11 @@ Encoders are not obsolete. The ModernBERT paper (December 2024) notes that encod
 
 ## Measuring an objective: cross-entropy and perplexity
 
-Whichever shape, training reduces a **loss**: a number saying how wrong the predictions were. For language it is **cross-entropy**. At each position, the model gives a probability to every token in its vocabulary. The loss for that position is minus the log of the probability it gave to the token that was actually there. Probability 1 costs 0. A smaller probability costs more, and probability near 0 costs a lot.
+Whichever shape, training reduces a **loss**: a number saying how wrong the predictions were. For language it is **cross-entropy**. At each position, the model gives a probability to every token in its vocabulary. The loss for that position is minus the log of the probability it gave to the token that was actually there. Probability 1 costs 0. A smaller probability costs more, and probability near 0 costs a lot. Written out, with $$p_t$$ the probability the model gave to the true token at position $$t$$, over $$N$$ positions:
+
+$$
+\text{loss} = -\frac{1}{N} \sum_{t=1}^{N} \log p_t, \qquad \text{perplexity} = 2^{\text{loss in bits}} = e^{\text{loss in nats}}
+$$
 
 A worked example. A model gives the true next tokens probabilities 1/2, 1/4 and 1/8. In bits (logs to base 2), that is 1, 2 and 3. The average is 6 / 3 = 2 bits per token. **Perplexity** is 2 to that power, so 2² = 4: on average the model was as unsure as if it were choosing among 4 equally likely tokens. Libraries usually report natural logs (nats), where 1 bit is ln 2, about 0.693 nats. Perplexity comes out the same either way: it is 2 to the mean bits or *e* to the mean nats.
 
@@ -92,11 +96,15 @@ Things to try:
 - **Slide one word from 1/2 to 1/64.** One surprising token adds 5 bits to the total. Averages are dominated by the worst misses.
 - **Switch between word tokens and characters.** Perplexity per token changes a lot. Bits per byte does not.
 
-That last point matters whenever you compare models. The Hugging Face documentation points out that the tokeniser directly affects perplexity, so it should be considered when comparing models, and that perplexity is not well defined for masked language models like BERT. **Bits per byte** divides the total bits by the number of bytes of text, so any tokeniser gets the same yardstick. The Pile paper prefers it for that reason and gives the conversion: bits per byte = (tokens per byte) × loss in nats / ln 2, with 0.29335 GPT-2 tokens per byte across the Pile. For an example loss of 2.0 nats per token that is 0.29335 × 2.0 / 0.693 = about 0.85 bits per byte.
+That last point matters whenever you compare models. The Hugging Face documentation points out that the tokeniser directly affects perplexity, so it should be considered when comparing models, and that perplexity is not well defined for masked language models like BERT. **Bits per byte** divides the total bits by the number of bytes of text, so any tokeniser gets the same yardstick. The Pile paper prefers it for that reason and gives the conversion: $$\text{bits per byte} = \text{tokens per byte} \times \text{loss in nats} / \ln 2$$, with 0.29335 GPT-2 tokens per byte across the Pile. For an example loss of 2.0 nats per token that is 0.29335 × 2.0 / 0.693 = about 0.85 bits per byte.
 
 ## Measuring a gap: KL divergence
 
-Cross-entropy has a floor. Even a perfect model cannot go below the **entropy** of the data: the true uncertainty about the next word. Anything above is waste, and that waste is the **KL divergence**: cross-entropy = entropy + KL. It is the extra bits per token you pay for using the wrong distribution.
+Cross-entropy has a floor. Even a perfect model cannot go below the **entropy** of the data: the true uncertainty about the next word. Anything above is waste, and that waste is the **KL divergence**: cross-entropy = entropy + KL. It is the extra bits per token you pay for using the wrong distribution. For a true distribution $$p$$ and a model $$q$$:
+
+$$
+\underbrace{-\sum_x p(x)\log q(x)}_{\text{cross-entropy}} = \underbrace{-\sum_x p(x)\log p(x)}_{\text{entropy}} + \underbrace{\sum_x p(x)\log \frac{p(x)}{q(x)}}_{\text{KL}(p\,\|\,q)}
+$$
 
 <KlBars client:visible />
 

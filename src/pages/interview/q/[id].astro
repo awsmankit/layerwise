@@ -1,64 +1,180 @@
 ---
 import Base from '../../../layouts/Base.astro';
-import { questions, roles, ilevels, kinds, rubric, type Question } from '../../../data/interview';
+import AnswerDiagram from '../../../components/interview/diagrams/AnswerDiagram.tsx';
+import WhatIfHost from '../../../components/whatif/WhatIfHost.tsx';
+import { questions, roles, ilevels, kinds, type Question } from '../../../data/interview';
+import { answers } from '../../../data/interview/answers';
+import { categoryById, categoryOf, groupByCategory } from '../../../data/interview/categories';
 import { getLessons, lessonPath, slugOf } from '../../../lib/content';
 import { whatifs } from '../../../data/whatif';
+import { swatch } from '../../../lib/palette';
+import { cardStyle } from '../../../lib/color';
 import { withBase } from '../../../lib/url';
 
 export function getStaticPaths() {
-  return questions.map((q) => ({ params: { id: q.id }, props: { q } }));
+  const sets = groupByCategory(questions);
+  return sets.flatMap((s) =>
+    s.questions.map((q, i) => ({
+      params: { id: q.id },
+      props: { q, prev: s.questions[i - 1] ?? null, next: s.questions[i + 1] ?? null },
+    })),
+  );
 }
-const { q } = Astro.props as { q: Question };
-// experiments that teach one of the same lessons, so a question can be practised by breaking the part it asks about
-const tryIt = whatifs.filter((w) => w.lessons.some((l) => q.lessons.includes(l))).slice(0, 3);
+const { q, prev, next } = Astro.props as { q: Question; prev: Question | null; next: Question | null };
+const a = answers[q.id];
+const category = categoryById(categoryOf(q))!;
+const embedded = a?.diagram.kind === 'experiment' ? a.diagram.slug : null;
+// experiments that teach one of the same lessons, so a question can be understood by breaking the part it asks about
+const tryIt = whatifs.filter((w) => w.slug !== embedded && w.lessons.some((l) => q.lessons.includes(l))).slice(0, 3);
 const all = await getLessons();
 const byKey = Object.fromEntries(all.map((l) => [`${l.data.track}/${slugOf(l)}`, l]));
+const title = `${q.prompt.slice(0, 60)}${q.prompt.length > 60 ? '…' : ''}`;
 ---
 
-<Base title={`Interview question: ${q.prompt.slice(0, 60)}${q.prompt.length > 60 ? '…' : ''}`} description={q.prompt}>
+<Base title={`Answer: ${title}`} description={a ? a.short : q.prompt}>
   <div class="wrap iv-page">
-    <p class="crumbs"><a href={withBase('/interview/')}>Interview prep</a> <span aria-hidden="true">/</span> <span>{kinds[q.kind]}</span></p>
+    <p class="crumbs">
+      <a href={withBase('/interview/')}>Interview answers</a> <span aria-hidden="true">/</span>
+      <a href={withBase(`/interview/c/${category.id}/`)}>{category.title}</a>
+    </p>
     <p class="iv-meta">
+      <span class="iv-chip is-cat" style={cardStyle(swatch[category.swatch])}>{category.title}</span>
       <span class={`iv-chip k-${q.kind}`}>{kinds[q.kind]}</span>
       <span class="iv-chip">{ilevels[q.level]}</span>
-      <span class="iv-chip num">{q.minutes} min</span>
       {q.roles.map((r) => <span class="iv-tag">{roles[r]}</span>)}
     </p>
-    <h1 class="iv-prompt big">{q.prompt}</h1>
-    <div class="hero-cta">
-      <a class="btn" href={withBase(`/interview/practice/?q=${q.id}`)}>Practise this question</a>
+    <h1 class="iv-prompt">{q.prompt}</h1>
+
+    <div class="iv-body">
+      {
+        a ? (
+          <>
+            <section class="iv-short" aria-labelledby="short-h">
+              <b id="short-h">The short answer</b>
+              <p>{a.short}</p>
+            </section>
+
+            <section class="iv-section" aria-labelledby="pic-h">
+              <h2 id="pic-h">The picture</h2>
+              {
+                a.diagram.kind === 'experiment' ? (
+                  <div class="iv-exp">
+                    <WhatIfHost client:visible slug={a.diagram.slug} />
+                    {a.diagram.caption && <p class="gm-note">{a.diagram.caption}</p>}
+                  </div>
+                ) : (
+                  <AnswerDiagram client:load spec={a.diagram} />
+                )
+              }
+            </section>
+
+            {
+              a.explain.map((s) => (
+                <section class="iv-section">
+                  <h2>{s.heading}</h2>
+                  <p>{s.body}</p>
+                </section>
+              ))
+            }
+
+            <section class="iv-section">
+              <div class="iv-example">
+                <h3>{a.example.title}</h3>
+                <p>{a.example.text}</p>
+                {
+                  a.example.rows && (
+                    <dl class="iv-rows">
+                      {a.example.rows.map((r) => (
+                        <div>
+                          <dt>{r.label}</dt>
+                          <dd>{r.value}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  )
+                }
+              </div>
+            </section>
+
+            <section class="iv-section" aria-labelledby="fu-h">
+              <h2 id="fu-h">Follow-up questions</h2>
+              <dl class="iv-qa">
+                {
+                  a.followUps.map((f) => (
+                    <div>
+                      <dt>{f.q}</dt>
+                      <dd>{f.a}</dd>
+                    </div>
+                  ))
+                }
+              </dl>
+            </section>
+
+            <section class="iv-section" aria-labelledby="mk-h">
+              <h2 id="mk-h">Common mistakes</h2>
+              <ul>{a.mistakes.map((m) => <li>{m}</li>)}</ul>
+            </section>
+          </>
+        ) : (
+          <>
+            <section class="iv-section" aria-labelledby="cov-h">
+              <h2 id="cov-h">What a good answer covers</h2>
+              <ul>{q.strong.map((s) => <li>{s}</li>)}</ul>
+            </section>
+            <section class="iv-section" aria-labelledby="fu-h">
+              <h2 id="fu-h">Follow-up questions, and what to say</h2>
+              <dl class="iv-qa">
+                {
+                  q.followUps.map((f) => (
+                    <div>
+                      <dt>{f.q}</dt>
+                      <dd>{f.lookFor}</dd>
+                    </div>
+                  ))
+                }
+              </dl>
+            </section>
+            <section class="iv-section" aria-labelledby="mk-h">
+              <h2 id="mk-h">Easy ways to go wrong</h2>
+              <ul>{q.redFlags.map((f) => <li>{f}</li>)}</ul>
+            </section>
+            <p class="iv-soon">A full written answer with a diagram is coming for this question. Until then, these are the points a good answer makes.</p>
+          </>
+        )
+      }
+
+      {
+        (q.lessons.length > 0 || q.game) && (
+          <p class="gm-lessons">
+            <b>Learn more:</b>{' '}
+            {q.lessons.map((k) => byKey[k] && <a href={withBase(lessonPath(byKey[k]))}>{byKey[k].data.title}</a>)}
+            {q.game && <a href={withBase(q.game.href)}>{q.game.label}</a>}
+          </p>
+        )
+      }
+      {
+        tryIt.length > 0 && (
+          <p class="gm-lessons">
+            <b>Try breaking it:</b>{' '}
+            {tryIt.map((w) => <a href={withBase(`/whatif/${w.slug}/`)}>{w.title}</a>)}
+          </p>
+        )
+      }
+
+      <nav class="iv-pager" aria-label={`More in ${category.title}`}>
+        {prev && (
+          <a class="is-prev" href={withBase(`/interview/q/${prev.id}/`)} rel="prev">
+            <small>Previous in this topic</small>
+            {prev.prompt.length > 110 ? `${prev.prompt.slice(0, 107)}…` : prev.prompt}
+          </a>
+        )}
+        {next && (
+          <a class="is-next" href={withBase(`/interview/q/${next.id}/`)} rel="next">
+            <small>Next in this topic</small>
+            {next.prompt.length > 110 ? `${next.prompt.slice(0, 107)}…` : next.prompt}
+          </a>
+        )}
+      </nav>
     </div>
-
-    <details class="iv-reveal">
-      <summary>Show what a strong answer covers (try answering first)</summary>
-      <div class="prose">
-        <h2>Strong answer covers</h2>
-        <ul>{q.strong.map((s) => <li>{s}</li>)}</ul>
-        <h2>Follow-ups</h2>
-        <ol>{q.followUps.map((f) => <li><strong>{f.q}</strong> Look for: {f.lookFor}</li>)}</ol>
-        <h2>Red flags</h2>
-        <ul>{q.redFlags.map((f) => <li>{f}</li>)}</ul>
-        <h2>Rubric</h2>
-        <ul>{rubric.map((r) => <li><strong>{r.score} {r.label}:</strong> {r.meaning}</li>)}</ul>
-      </div>
-    </details>
-
-    {
-      (q.lessons.length > 0 || q.game) && (
-        <p class="gm-lessons">
-          <b>Study:</b>{' '}
-          {q.lessons.map((k) => byKey[k] && <a href={withBase(lessonPath(byKey[k]))}>{byKey[k].data.title}</a>)}
-          {q.game && <a href={withBase(q.game.href)}>{q.game.label}</a>}
-        </p>
-      )
-    }
-    {
-      tryIt.length > 0 && (
-        <p class="gm-lessons">
-          <b>Try breaking it:</b>{' '}
-          {tryIt.map((w) => <a href={withBase(`/whatif/${w.slug}/`)}>{w.title}</a>)}
-        </p>
-      )
-    }
   </div>
 </Base>

@@ -63,7 +63,7 @@ const buildDay = dayIndexOf(now.getUTCFullYear(), now.getUTCMonth() + 1, now.get
         <span class="lp-accent">one layer at a time</span>
       </h1>
       <div class="lp-hero-row">
-        <p>Interactive lessons, games and interview prep, from your first question to running AI in production.</p>
+        <p>Interactive lessons, games and interview answers, from your first question to running AI in production.</p>
         <div class="lp-hero-cta">
           <a class="btn" href={withBase('/start/')}>Find your starting point</a>
           <a class="btn quiet" href={withBase('/learn/')}>Browse lessons</a>
@@ -197,33 +197,33 @@ const buildDay = dayIndexOf(now.getUTCFullYear(), now.getUTCMonth() + 1, now.get
 
   <section class="lp-section wrap" aria-labelledby="iv-h">
     <div class="lp-head">
-      <h2 id="iv-h">Interview prep, both sides</h2>
-      <p>For candidates, and for the people interviewing them.</p>
+      <h2 id="iv-h">AI questions, answered with pictures</h2>
+      <p>Pick a topic and read the answer, with a diagram and a worked example.</p>
     </div>
     <div class="lp-grid lp-grid-3" data-stagger>
-      <a class="lp-card" data-reveal href={withBase('/interview/practice/')} style={cardStyle(swatch.purple)}>
+      <a class="lp-card" data-reveal href={withBase('/interview/c/llm-basics/')} style={cardStyle(swatch.pink)}>
         <span class="lp-plate"><TrackIcon name="llm" size={44} /></span>
         <span class="lp-body">
-          <h3>Practise answering</h3>
-          <p>A question for your role, against the clock.</p>
+          <h3>How language models work</h3>
+          <p>Tokens, sampling, prompts and context, explained.</p>
         </span>
-        <span class="lp-chip">Candidates</span>
+        <span class="lp-chip">Start here</span>
       </a>
-      <a class="lp-card" data-reveal href={withBase('/interview/run/')} style={cardStyle(swatch.lime)}>
-        <span class="lp-plate"><TrackIcon name="evals" size={44} /></span>
+      <a class="lp-card" data-reveal href={withBase('/interview/c/agents-tools/')} style={cardStyle(swatch.sky)}>
+        <span class="lp-plate"><TrackIcon name="skills" size={44} /></span>
         <span class="lp-body">
-          <h3>Run an interview</h3>
-          <p>A question set, follow-ups and a scorecard.</p>
+          <h3>Agents, tools and MCP</h3>
+          <p>How an agent loop runs, fails and costs.</p>
         </span>
-        <span class="lp-chip">Interviewers</span>
+        <span class="lp-chip">Popular</span>
       </a>
       <a class="lp-card" data-reveal href={withBase('/interview/')} style={cardStyle(swatch.magenta)}>
         <span class="lp-plate"><TrackIcon name="systems" size={44} /></span>
         <span class="lp-body">
-          <h3>How AI interviews work</h3>
-          <p>What each round tests, and how to answer.</p>
+          <h3>All 12 topics</h3>
+          <p>Search the questions, or filter by role and level.</p>
         </span>
-        <span class="lp-chip">Guides</span>
+        <span class="lp-chip">Interview answers</span>
       </a>
     </div>
   </section>

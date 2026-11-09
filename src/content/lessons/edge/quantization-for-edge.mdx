@@ -82,7 +82,13 @@ There are two ways to get to 8 bits. **Post-training quantization** (PTQ) takes 
 
 PTQ is the first thing to try, and often enough. Krishnamoorthi's whitepaper reports that quantizing weights per channel and activations per tensor to 8 bits, after training, kept accuracy within 2% of float across a range of image CNNs, and that QAT narrowed the gap to about 1%. It also reports that at 4-bit weights QAT was needed, with losses of 2% to 10% (all on image classification, so check your own task). The MLPerf Tiny closed division uses 8-bit PTQ with supplied calibration data. Jacob et al. found that simple PTQ lost significant accuracy on small, efficient networks, and named two causes: weight ranges that differ by more than 100 times between output channels, which a single scale handles badly, and outlier weights that stretch the range. Small models and depthwise convolutions are exactly what edge devices run, so reach for per-channel scales first, then QAT if the gap remains.
 
-On the chip nothing is floating point. Following the LiteRT 8-bit specification, a real value is `(q - zero_point) x scale`. Weights are int8 with zero point 0, one scale per output channel. Activations are int8 with a zero point, one scale per tensor. The bias is int32 with scale `S_w x S_x`. A layer accumulates int32 products, then rescales to the output's scale with `M = S_w x S_x / S_y`, which is below 1 and is stored as an int32 fraction and a bit shift. CMSIS-NN follows the same specification. A worked example, one output neuron, computed by `src/lib/int-quant.ts` and unit-tested:
+On the chip nothing is floating point. Following the LiteRT 8-bit specification, a real value is $$r = (q - z) \times S$$, where $$q$$ is the stored integer, $$z$$ the zero point and $$S$$ the scale. Weights are int8 with zero point 0, one scale per output channel. Activations are int8 with a zero point, one scale per tensor. The bias is int32 with scale $$S_w S_x$$. A layer accumulates int32 products, then rescales to the output's scale with the multiplier below, which is below 1 and is stored as an int32 fraction and a bit shift:
+
+$$
+M = \frac{S_w\, S_x}{S_y}
+$$
+
+CMSIS-NN follows the same specification. A worked example, one output neuron, computed by `src/lib/int-quant.ts` and unit-tested:
 
 | Step | Value |
 |---|---|

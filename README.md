@@ -13,7 +13,7 @@
 | An engineer building with LLMs | *I build with LLMs*: prompts, RAG, agents, evals, system design |
 | Running AI in production | *I run AI in production*, *I run GPUs and the platform*, *I build AI for devices and sound* |
 | Someone who needs to use AI responsibly | *I want to use and build AI responsibly*: bias, privacy, safety, rules |
-| Preparing for or running an interview | The interview section: candidate practice and an interviewer's scorecard |
+| Learning how AI works through questions, or preparing for an interview | The interview answers: questions by topic, each with a short answer, a diagram and a worked example |
 
 ## What is inside
 
@@ -26,7 +26,7 @@ Around 160 lessons in 17 topics (see the [changelog](CHANGELOG.md) for the exact
 - **Calculators** for cost, model memory, GPUs, latency and break-even.
 - **Revision:** a quiz on every lesson, a Daily 5 with spaced repetition, learning paths with progress, completion certificates, and a "what should I learn next?" page.
 - **Model radar:** dated, sourced facts on current models, with a task-cost calculator and no quality rankings.
-- **Interview prep** for 16 roles, for candidates and interviewers, a glossary, and engineering case studies.
+- **Interview answers** by topic for 16 roles, with diagrams and worked examples, a glossary, and engineering case studies.
 - **Comfort and access:** text size and reading comfort settings, read-aloud, offline mode, and a design that works on a phone.
 
 Lessons carry their sources, product facts are dated, and example numbers are labelled as examples.

@@ -104,7 +104,7 @@ Learned absolute positions cannot go past the longest position seen in training.
 After the final block and a last norm, one matrix (the **LM head**) turns the vector into one score per vocabulary token. **Softmax** turns scores into probabilities. Then a sampling rule picks:
 
 - **Greedy**: always the most likely token. Repeatable, but can loop or sound flat.
-- **Temperature**: divide the scores before softmax. Below 1 sharpens toward the top choice; above 1 flattens.
+- **Temperature**: divide the scores before softmax, so a token with score $$z_i$$ gets probability $$e^{z_i/T} / \sum_j e^{z_j/T}$$. Below 1 sharpens toward the top choice; above 1 flattens.
 - **Top-k**: keep only the k most likely tokens, renormalise, sample.
 - **Top-p (nucleus)**: keep the smallest set of tokens whose probabilities add up to at least p, renormalise, sample. If the top tokens have 0.5, 0.3 and 0.1 and p is 0.85, the first two only reach 0.8, so all three are kept and become about 0.56, 0.33 and 0.11.
 
@@ -114,34 +114,51 @@ A **mixture-of-experts** (MoE) layer replaces the single feed-forward network wi
 
 <Deep title="The equations">
 
-Attention for one head, with d_k the head size and a causal mask on the scores:
+Attention for one head, with $$d_k$$ the head size and a causal mask on the scores. In words: each token's query is compared with every key, the scores are scaled and turned into weights by softmax, and the weights blend the values. The heads are then joined and mixed by one more matrix.
 
-```text
-Attention(Q, K, V) = softmax(Q Kᵀ / √d_k) V
-Q = X W_Q,   K = X W_K,   V = X W_V
-MultiHead(X) = Concat(head_1, ..., head_H) W_O
-```
+$$
+\mathrm{Attention}(Q, K, V) = \mathrm{softmax}\!\left(\frac{Q K^{\top}}{\sqrt{d_k}}\right) V
+$$
 
-A pre-norm block:
+$$
+Q = X W_Q, \qquad K = X W_K, \qquad V = X W_V
+$$
 
-```text
-h   = x + MultiHead(Norm(x))
-out = h + FFN(Norm(h))
-FFN(x) = W_2 · act(W_1 x)          # gated: W_2 · (act(W_1 x) ⊙ W_3 x)
-```
+$$
+\mathrm{MultiHead}(X) = \mathrm{Concat}(\mathrm{head}_1, \dots, \mathrm{head}_H)\, W_O
+$$
 
-LayerNorm and RMSNorm on a vector x of size d, with learned gain g (and bias b for LayerNorm):
+A pre-norm block normalises first, applies attention or the feed-forward network, and adds the result back to the input (a residual connection):
 
-```text
-LayerNorm(x) = g ⊙ (x − mean(x)) / √(var(x) + ε) + b
-RMSNorm(x)   = g ⊙ x / √(mean(x²) + ε)
-```
+$$
+h = x + \mathrm{MultiHead}(\mathrm{Norm}(x)), \qquad \mathrm{out} = h + \mathrm{FFN}(\mathrm{Norm}(h))
+$$
 
-Sinusoidal positions, for position pos and dimension pair i: `PE(pos, 2i) = sin(pos / 10000^(2i/d))` and `PE(pos, 2i+1) = cos(pos / 10000^(2i/d))`.
+The feed-forward network is two matrices around a non-linearity. The gated form multiplies two parallel branches ($$\odot$$ means element by element):
 
-RoPE treats each pair of dimensions of q and k as a 2D point and rotates it by angle `pos × θ_i`, with `θ_i = 10000^(−2i/d)`. The dot product of a query rotated for position m with a key rotated for position n then depends only on m − n.
+$$
+\mathrm{FFN}(x) = W_2\, \mathrm{act}(W_1 x) \qquad \text{gated: } W_2\,\big(\mathrm{act}(W_1 x) \odot W_3 x\big)
+$$
 
-Parameter count for a dense block with width d and a 4d feed-forward: attention has 4d² (W_Q, W_K, W_V, W_O), the feed-forward has 8d², so about two thirds of the block is feed-forward. GQA shrinks W_K and W_V.
+LayerNorm and RMSNorm on a vector $$x$$ of size $$d$$, with learned gain $$g$$ (and bias $$b$$ for LayerNorm). In words: LayerNorm re-centres the numbers and rescales them to a standard spread; RMSNorm only rescales, which is cheaper.
+
+$$
+\mathrm{LayerNorm}(x) = g \odot \frac{x - \mathrm{mean}(x)}{\sqrt{\mathrm{var}(x) + \varepsilon}} + b
+$$
+
+$$
+\mathrm{RMSNorm}(x) = g \odot \frac{x}{\sqrt{\mathrm{mean}(x^2) + \varepsilon}}
+$$
+
+Sinusoidal positions, for position $$\mathrm{pos}$$ and dimension pair $$i$$, give each position a fixed pattern of sines and cosines at different speeds:
+
+$$
+\mathrm{PE}(\mathrm{pos}, 2i) = \sin\!\left(\frac{\mathrm{pos}}{10000^{2i/d}}\right), \qquad \mathrm{PE}(\mathrm{pos}, 2i+1) = \cos\!\left(\frac{\mathrm{pos}}{10000^{2i/d}}\right)
+$$
+
+RoPE treats each pair of dimensions of q and k as a 2D point and rotates it by the angle $$\mathrm{pos} \times \theta_i$$, with $$\theta_i = 10000^{-2i/d}$$. The dot product of a query rotated for position m with a key rotated for position n then depends only on m − n.
+
+Parameter count for a dense block with width $$d$$ and a $$4d$$ feed-forward: attention has $$4d^2$$ ($$W_Q$$, $$W_K$$, $$W_V$$, $$W_O$$), the feed-forward has $$8d^2$$, so about two thirds of the block is feed-forward. GQA shrinks W_K and W_V.
 
 Sampling in plain Python:
 
