@@ -36,6 +36,23 @@ export const repoUrl = 'https://github.com/awsmankit/layerwise';
 
 export const releases: Release[] = [
   {
+    version: '2.13.0',
+    date: '2026-11-10',
+    title: 'Every interview question now has a full answer',
+    summary: 'The Interview section is finished: each of its questions opens to a written answer with a diagram, a worked example, follow-up questions and common mistakes. The What’s new links now go to real pages.',
+    highlights: [
+      'Every interview question in all 12 topics now has a full written answer, with a picture, a worked example with real numbers, follow-up questions with short answers, and common mistakes.',
+      'The section is now simply called Interview, in the menu, the page title and the breadcrumbs, and the "key points" placeholder pages are gone.',
+      'The What’s new buttons no longer point back at the page you are already on: each one now opens the page it names.',
+    ],
+    tryIt: [
+      { label: 'Interview', href: '/interview/' },
+      { label: 'Security and safety answers', href: '/interview/c/security-safety/' },
+      { label: 'Evals and testing answers', href: '/interview/c/evals-testing/' },
+    ],
+    stats: { lessons: 164, topics: 17, labs: 24, glossary: 880 },
+  },
+  {
     version: '2.12.0',
     date: '2026-11-09',
     title: 'See what is new at a glance',
@@ -46,7 +63,6 @@ export const releases: Release[] = [
       'Each version in the changelog now has Try it links to the pages it added or changed.',
     ],
     tryIt: [
-      { label: 'The What’s new panel', href: '/' },
       { label: 'All versions', href: '/changelog/' },
     ],
     stats: { lessons: 164, topics: 17, labs: 24, glossary: 880 },

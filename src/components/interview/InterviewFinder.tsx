@@ -135,7 +135,6 @@ export default function InterviewFinder({ items, categories, children }: { items
                     {catOf[q.cat]?.title}
                   </span>
                   <span className="iv-chip">{ilevels[q.level]}</span>
-                  <span className={q.answered ? 'iv-badge' : 'iv-badge is-soon'}>{q.answered ? 'Full answer with diagram' : 'Key points'}</span>
                 </span>
                 <a href={withBase(`/interview/q/${q.id}/`)}>{q.prompt}</a>
               </li>

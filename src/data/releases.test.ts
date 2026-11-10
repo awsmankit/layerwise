@@ -7,6 +7,7 @@ import { glossary } from './glossary';
 import { labs } from './labs';
 // @ts-ignore plain JavaScript helper shared with the release workflow (typed or untyped depending on the checker)
 import { changelog } from '../../scripts/changelog.mjs';
+import { categoryIds } from './interview/categories';
 
 const semver = /^\d+\.\d+\.\d+$/;
 const parts = (v: string) => v.split('.').map(Number);
@@ -73,6 +74,8 @@ describe('release history', () => {
       if (lesson) return readdirSync(join(process.cwd(), 'src/content/lessons', lesson[1])).includes(`${lesson[2]}.mdx`);
       const whatif = p.match(/^whatif\/([^/]+)$/);
       if (whatif) return readdirSync(join(process.cwd(), 'src/data/whatif')).includes(`${whatif[1]}.item.ts`);
+      const topic = p.match(/^interview\/c\/([^/]+)$/);
+      if (topic) return (categoryIds as readonly string[]).includes(topic[1]);
       const pages = join(process.cwd(), 'src/pages');
       return readdirSync(join(pages, ...p.split('/').slice(0, -1)), { withFileTypes: true }).some((e) => e.name === `${p.split('/').pop()}.astro` || (e.isDirectory() && e.name === p.split('/').pop())) || false;
     };

@@ -10,7 +10,6 @@ import { cardStyle, cardColors } from '../../lib/color';
 import { withBase } from '../../lib/url';
 
 const sets = groupByCategory(questions);
-const written = Object.keys(answers).length;
 const items = questions.map((q) => ({ id: q.id, prompt: q.prompt, cat: categoryOf(q), roles: q.roles, level: q.level, topics: q.topics, answered: q.id in answers }));
 const finderCategories = sets.map((s) => {
   const { fill, on } = cardColors(swatch[s.category.swatch]);
@@ -18,15 +17,12 @@ const finderCategories = sets.map((s) => {
 });
 ---
 
-<Base title="Interview answers" description="Answers to AI interview questions, by topic, with diagrams and worked examples. For anyone learning AI and for people preparing for interviews.">
+<Base title="Interview" description="Answers to AI interview questions, by topic, with diagrams and worked examples. For anyone learning AI and for people preparing for interviews.">
   <div class="wrap">
     <header class="page-head">
-      <h1>Interview <span class="squig" style="--squig:#E69A00">answers</span></h1>
+      <h1><span class="squig" style="--squig:#E69A00">Interview</span></h1>
       <p>
         Pick a topic and read the answer: a short version first, then a picture, then the explanation with a worked example. It is for anyone learning how AI works, and for people getting ready for an interview. {questions.length} questions in {sets.length} topics.
-      </p>
-      <p class="iv-hero-note">
-        {written} questions have a full written answer with a diagram so far. The rest show the key points a good answer covers, and more are being written.
       </p>
     </header>
 
@@ -36,7 +32,6 @@ const finderCategories = sets.map((s) => {
         <div class="lp-grid lp-grid-3">
           {
             sets.map((s) => {
-              const done = s.questions.filter((q) => q.id in answers).length;
               return (
                 <a class="lp-card" href={withBase(`/interview/c/${s.category.id}/`)} style={cardStyle(swatch[s.category.swatch])}>
                   <span class="lp-plate"><TrackIcon name={s.category.icon} size={44} /></span>
@@ -44,7 +39,7 @@ const finderCategories = sets.map((s) => {
                     <h3>{s.category.title}</h3>
                     <p>{s.category.promise}</p>
                   </span>
-                  <span class="lp-chip iv-cat-count">{s.questions.length} questions{done > 0 ? `, ${done} with a full answer` : ''}</span>
+                  <span class="lp-chip iv-cat-count">{s.questions.length} questions</span>
                 </a>
               );
             })

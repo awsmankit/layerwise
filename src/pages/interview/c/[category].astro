@@ -13,7 +13,6 @@ export function getStaticPaths() {
 }
 const { set } = Astro.props as { set: CategorySet };
 const { category } = set;
-const written = set.questions.filter((q) => q.id in answers).length;
 const blocks = [
   { level: 'junior' as const, title: 'Fundamentals', note: 'Start here. Junior-level questions.' },
   { level: 'mid' as const, title: 'Going deeper', note: 'Mid-level questions.' },
@@ -28,11 +27,11 @@ const roleList = (q: Question) => q.roles.slice(0, 3).map((r) => roles[r]);
 <Base title={category.title} description={`${category.promise} ${set.questions.length} interview questions with answers.`}>
   <div class="wrap">
     <header class="page-head iv-cat-head" style={cardStyle(swatch[category.swatch])}>
-      <p class="crumbs"><a href={withBase('/interview/')}>Interview answers</a> <span aria-hidden="true">/</span> <span>{category.title}</span></p>
+      <p class="crumbs"><a href={withBase('/interview/')}>Interview</a> <span aria-hidden="true">/</span> <span>{category.title}</span></p>
       <span class="iv-plate"><TrackIcon name={category.icon} size={44} /></span>
       <h1>{category.title}</h1>
       <p>{category.intro}</p>
-      <p class="iv-hero-note">{set.questions.length} questions, from fundamentals to advanced. {written > 0 ? `${written} with a full written answer and diagram.` : 'Full written answers are on their way.'}</p>
+      <p class="iv-hero-note">{set.questions.length} questions, from fundamentals to advanced.</p>
     </header>
 
     {
@@ -53,16 +52,9 @@ const roleList = (q: Question) => q.roles.slice(0, 3).map((r) => roles[r]);
                       {q.roles.length > 3 && <span class="iv-tag">and {q.roles.length - 3} more</span>}
                     </p>
                     <h3><a href={withBase(`/interview/q/${q.id}/`)}>{q.prompt}</a></h3>
-                    {a ? (
-                      <p class="iv-qshort"><b>The short answer</b>{a.short}</p>
-                    ) : (
-                      <div class="iv-qpoints">
-                        <b>A good answer covers</b>
-                        <ul>{q.strong.slice(0, 2).map((s) => <li>{s}</li>)}</ul>
-                      </div>
-                    )}
+                    <p class="iv-qshort"><b>The short answer</b>{a.short}</p>
                     <a class="iv-more" href={withBase(`/interview/q/${q.id}/`)}>
-                      {a ? 'Read the full answer, with the diagram' : 'See all the key points'}<span aria-hidden="true"> →</span>
+                      Read the full answer, with the diagram<span aria-hidden="true"> →</span>
                     </a>
                   </article>
                 </li>

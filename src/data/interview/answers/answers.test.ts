@@ -92,3 +92,10 @@ describe('diagram checks', () => {
     expect(diagramAlt({ kind: 'timeline', caption: 'cap', steps: [{ label: 'a', detail: 'first' }, { label: 'b', detail: 'second' }] })).toContain('2. b: second');
   });
 });
+
+describe('coverage', () => {
+  it('has a written answer for every question', () => {
+    const missing = questions.filter((q) => !(q.id in answers)).map((q) => q.id);
+    expect(missing).toEqual([]);
+  });
+});

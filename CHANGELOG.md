@@ -8,6 +8,16 @@ Versions follow [semantic versioning](https://semver.org/), read for a learning 
 - **Minor**: new lessons, labs, tools or features.
 - **Patch**: fixes and small corrections (wording, links, layout, accessibility).
 
+## [2.13.0] - 2026-11-10: Every interview question now has a full answer
+
+The Interview section is finished: each of its questions opens to a written answer with a diagram, a worked example, follow-up questions and common mistakes. The What’s new links now go to real pages.
+
+- Every interview question in all 12 topics now has a full written answer, with a picture, a worked example with real numbers, follow-up questions with short answers, and common mistakes.
+- The section is now simply called Interview, in the menu, the page title and the breadcrumbs, and the "key points" placeholder pages are gone.
+- The What’s new buttons no longer point back at the page you are already on: each one now opens the page it names.
+
+**At this release:** 164 lessons in 17 topics, 24 practice labs, 880 glossary terms.
+
 ## [2.12.0] - 2026-11-09: See what is new at a glance
 
 The current version now shows beside the logo on every page, the home page has a What’s new panel, and each release links straight to the new things.
@@ -256,6 +266,7 @@ Animated AI engineering lessons, games and tools, covering AWS, Azure and Google
 
 **At this release:** 44 lessons in 12 topics, 0 practice labs, 79 glossary terms.
 
+[2.13.0]: https://github.com/awsmankit/layerwise/compare/v2.12.0...v2.13.0
 [2.12.0]: https://github.com/awsmankit/layerwise/compare/v2.11.0...v2.12.0
 [2.11.0]: https://github.com/awsmankit/layerwise/compare/v2.10.0...v2.11.0
 [2.10.0]: https://github.com/awsmankit/layerwise/compare/v2.9.0...v2.10.0

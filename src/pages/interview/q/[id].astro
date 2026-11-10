@@ -34,7 +34,7 @@ const title = `${q.prompt.slice(0, 60)}${q.prompt.length > 60 ? '…' : ''}`;
 <Base title={`Answer: ${title}`} description={a ? a.short : q.prompt}>
   <div class="wrap iv-page">
     <p class="crumbs">
-      <a href={withBase('/interview/')}>Interview answers</a> <span aria-hidden="true">/</span>
+      <a href={withBase('/interview/')}>Interview</a> <span aria-hidden="true">/</span>
       <a href={withBase(`/interview/c/${category.id}/`)}>{category.title}</a>
     </p>
     <p class="iv-meta">
@@ -47,7 +47,7 @@ const title = `${q.prompt.slice(0, 60)}${q.prompt.length > 60 ? '…' : ''}`;
 
     <div class="iv-body">
       {
-        a ? (
+        a && (
           <>
             <section class="iv-short" aria-labelledby="short-h">
               <b id="short-h">The short answer</b>
@@ -114,31 +114,6 @@ const title = `${q.prompt.slice(0, 60)}${q.prompt.length > 60 ? '…' : ''}`;
               <h2 id="mk-h">Common mistakes</h2>
               <ul>{a.mistakes.map((m) => <li>{m}</li>)}</ul>
             </section>
-          </>
-        ) : (
-          <>
-            <section class="iv-section" aria-labelledby="cov-h">
-              <h2 id="cov-h">What a good answer covers</h2>
-              <ul>{q.strong.map((s) => <li>{s}</li>)}</ul>
-            </section>
-            <section class="iv-section" aria-labelledby="fu-h">
-              <h2 id="fu-h">Follow-up questions, and what to say</h2>
-              <dl class="iv-qa">
-                {
-                  q.followUps.map((f) => (
-                    <div>
-                      <dt>{f.q}</dt>
-                      <dd>{f.lookFor}</dd>
-                    </div>
-                  ))
-                }
-              </dl>
-            </section>
-            <section class="iv-section" aria-labelledby="mk-h">
-              <h2 id="mk-h">Easy ways to go wrong</h2>
-              <ul>{q.redFlags.map((f) => <li>{f}</li>)}</ul>
-            </section>
-            <p class="iv-soon">A full written answer with a diagram is coming for this question. Until then, these are the points a good answer makes.</p>
           </>
         )
       }

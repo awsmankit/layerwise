@@ -31,7 +31,7 @@ export const GET: APIRoute = async () => {
     ...libraries.map((b) => ({ t: b.name, u: u('/libraries/'), k: 'Library', s: `${categoryLabels[b.category]}. ${b.what}` })),
     ...cases.map((c) => ({ t: c.title, u: u('/cases/'), k: 'Case study', s: `${c.company}. ${c.learn ?? 'Link only.'}` })),
     ...pulse.map((p) => ({ t: p.data.title, u: u(`/pulse/${p.id}/`), k: 'News', s: p.data.tags.join(', ') })),
-    ...categories.map((c) => ({ t: c.title, u: u(`/interview/c/${c.id}/`), k: 'Interview', s: `Interview answers by topic. ${c.promise}` })),
+    ...categories.map((c) => ({ t: c.title, u: u(`/interview/c/${c.id}/`), k: 'Interview', s: `Interview questions by topic. ${c.promise}` })),
     ...questions.map((q) => {
       const a = answers[q.id];
       const cat = categoryById(categoryOf(q))!.title;
