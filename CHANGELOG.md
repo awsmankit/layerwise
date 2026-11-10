@@ -8,6 +8,16 @@ Versions follow [semantic versioning](https://semver.org/), read for a learning 
 - **Minor**: new lessons, labs, tools or features.
 - **Patch**: fixes and small corrections (wording, links, layout, accessibility).
 
+## [2.13.1] - 2026-11-10: An "On this page" panel on interview answers
+
+On wide screens, interview answers now fill the empty space with a panel that lists each section, follows you as you scroll, and links to the next question.
+
+- An "On this page" list beside each interview answer jumps to the short answer, the picture, the explanation, the worked example, the follow-ups and the mistakes, and marks the section you are reading.
+- The panel also offers the next question in the topic, so it is one click to keep reading.
+- It appears on screens 1180 pixels wide and up, and stays out of the way on phones and tablets.
+
+**At this release:** 164 lessons in 17 topics, 24 practice labs, 880 glossary terms.
+
 ## [2.13.0] - 2026-11-10: Every interview question now has a full answer
 
 The Interview section is finished: each of its questions opens to a written answer with a diagram, a worked example, follow-up questions and common mistakes. The What’s new links now go to real pages.
@@ -266,6 +276,7 @@ Animated AI engineering lessons, games and tools, covering AWS, Azure and Google
 
 **At this release:** 44 lessons in 12 topics, 0 practice labs, 79 glossary terms.
 
+[2.13.1]: https://github.com/awsmankit/layerwise/compare/v2.13.0...v2.13.1
 [2.13.0]: https://github.com/awsmankit/layerwise/compare/v2.12.0...v2.13.0
 [2.12.0]: https://github.com/awsmankit/layerwise/compare/v2.11.0...v2.12.0
 [2.11.0]: https://github.com/awsmankit/layerwise/compare/v2.10.0...v2.11.0

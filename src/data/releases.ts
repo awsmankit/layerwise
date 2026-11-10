@@ -36,6 +36,19 @@ export const repoUrl = 'https://github.com/awsmankit/layerwise';
 
 export const releases: Release[] = [
   {
+    version: '2.13.1',
+    date: '2026-11-10',
+    title: 'An "On this page" panel on interview answers',
+    summary: 'On wide screens, interview answers now fill the empty space with a panel that lists each section, follows you as you scroll, and links to the next question.',
+    highlights: [
+      'An "On this page" list beside each interview answer jumps to the short answer, the picture, the explanation, the worked example, the follow-ups and the mistakes, and marks the section you are reading.',
+      'The panel also offers the next question in the topic, so it is one click to keep reading.',
+      'It appears on screens 1180 pixels wide and up, and stays out of the way on phones and tablets.',
+    ],
+    tryIt: [{ label: 'A tokenizer answer', href: '/interview/q/tokenization-effects/' }],
+    stats: { lessons: 164, topics: 17, labs: 24, glossary: 880 },
+  },
+  {
     version: '2.13.0',
     date: '2026-11-10',
     title: 'Every interview question now has a full answer',

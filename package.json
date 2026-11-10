@@ -1,7 +1,7 @@
 {
   "name": "ai-learning-site",
   "type": "module",
-  "version": "2.13.0",
+  "version": "2.13.1",
   "engines": {
     "node": ">=22.23.4"
   },

@@ -332,6 +332,89 @@
 .iv-body {
   max-width: 46rem;
 }
+.iv-layout .iv-section,
+.iv-layout .iv-short {
+  scroll-margin-top: 5rem;
+}
+/* the "On this page" panel fills the empty right side on wide screens */
+.iv-side {
+  display: none;
+}
+@media (min-width: 1180px) {
+  .iv-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 46rem) 17rem;
+    justify-content: start;
+    gap: 3.5rem;
+    align-items: start;
+  }
+  .iv-side {
+    display: block;
+    position: sticky;
+    top: 5.5rem;
+    max-height: calc(100vh - 7rem);
+    overflow-y: auto;
+    margin-top: 1.6rem;
+    padding-left: 1.1rem;
+    border-left: 2px solid var(--line);
+    font-size: 0.95rem;
+  }
+}
+.iv-side-h {
+  margin: 0 0 0.6rem;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.iv-toc {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.iv-toc li + li {
+  margin-top: 0.15rem;
+}
+.iv-toc a {
+  display: block;
+  padding: 0.3rem 0.6rem;
+  margin-left: -0.6rem;
+  border-radius: var(--r-sm);
+  color: var(--ink-2);
+  line-height: 1.35;
+  text-decoration: none;
+}
+.iv-toc a:hover {
+  color: var(--ink);
+  background: var(--paper-2);
+}
+.iv-toc a[aria-current] {
+  color: var(--ink);
+  font-weight: 700;
+  background: var(--signal-wash);
+}
+.iv-side-next {
+  display: block;
+  margin-top: 1.2rem;
+  padding: 0.7rem 0.8rem;
+  border: 1.5px solid var(--line);
+  border-radius: var(--r-md);
+  color: var(--ink);
+  text-decoration: none;
+  line-height: 1.35;
+}
+.iv-side-next small {
+  display: block;
+  margin-bottom: 0.2rem;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  color: var(--ink-2);
+}
+.iv-side-next:hover {
+  border-color: var(--signal);
+}
 .iv-short {
   margin: 1.6rem 0 0.4rem;
   padding: 1.1rem 1.25rem 1.2rem;
