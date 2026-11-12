@@ -4,7 +4,7 @@ track: foundations
 level: intermediate
 order: 4
 summary: The one mechanism inside every transformer, built up from a lookup analogy to a dozen lines of code.
-updated: 2026-10-26
+updated: 2026-11-12
 sources:
   - label: "Attention Is All You Need (Vaswani et al., 2017)"
     url: https://arxiv.org/abs/1706.03762
@@ -15,19 +15,19 @@ sources:
 import AttentionViz from '../../../components/viz/AttentionViz.tsx';
 import Disclosure from '../../../components/viz/Disclosure.tsx';
 
-Consider the sentence "The animal didn't cross the street because it was too tired." To understand "it" you have to connect it to "animal", not to "street". Attention is the mechanism that lets a model make that kind of connection: every token looks at the other tokens and decides how much each one matters for its own meaning.
+Read this sentence: "The animal didn't cross the street because it was too tired." What does "it" mean? You know it is the animal, not the street. A model has to work that out too. Attention is the trick that lets it. Every token (a small piece of text, often a word) looks at the other tokens and decides how much each one matters for its own meaning.
 
 ## A lookup, but soft
 
-Think of a dictionary lookup. You have a **query**, you compare it with the **keys** of all entries, and you get back the **value** of the matching one. Attention does the same, except that instead of picking one entry, it blends all of them, weighting each by how well its key matches the query.
+**Imagine this:** you are hungry, and you walk into a food street with ten stalls. You shout, "Something spicy!" Every stall hears you. The chaat stall waves hard. The biryani stall waves a bit. The ice-cream stall pretends it did not hear. That shout is the **query**: what you are looking for. Each stall's signboard is its **key**: what it offers. The food it hands you is the **value**. Here is the twist: a normal lookup picks one stall. Attention takes a little from every stall, and the stalls that matched best give the most. (Ice-cream still gets a tiny share. Nobody is perfect.) **In one line:** attention is a shout, ten signboards, and a plate that is mostly chaat.
 
-For each token the model computes three vectors from its current representation:
+For each token the model makes three vectors (lists of numbers) from what it currently knows about that token:
 
 - a **query**: what this token is looking for
 - a **key**: what this token offers to others
-- a **value**: the information this token passes on when it is attended to
+- a **value**: the information this token hands over when another token pays attention to it
 
-A token's new representation is the weighted sum of every token's value, where the weights come from comparing its query with every key.
+A token's new representation is a weighted sum of every token's value. The weights come from comparing its query with every key.
 
 <AttentionViz client:visible />
 
@@ -56,20 +56,22 @@ $$
 \mathrm{Attention}(Q, K, V) = \mathrm{softmax}\!\left(\frac{Q K^{\top}}{\sqrt{d}}\right) V
 $$
 
-In words: compare every query with every key ($$QK^{\top}$$), shrink the scores, turn each row into weights that add up to 1 (softmax), and use those weights to blend the values. Dividing by the square root of the dimension $$d$$ keeps the scores from growing with the vector size, which would push the softmax into regions where gradients vanish.
+In words: compare every query with every key ($$QK^{\top}$$), shrink the scores, turn each row into weights that add up to 1 (softmax), and use those weights to blend the values. The shrinking step divides by the square root of the dimension $$d$$ (the length of each vector). Without it, scores grow as vectors get longer. That pushes the softmax into regions where gradients vanish, meaning the learning signal becomes too tiny to train on.
 
 </Disclosure>
 
 ## What a full transformer adds
 
-- **Many heads.** The model runs several attention computations in parallel, each with its own learned projections, so different heads can track different relationships such as grammar, reference or position.
-- **Many layers.** Attention is followed by a small feed-forward network, and the pair is stacked dozens of times. Early layers tend to capture local patterns and later layers more abstract ones.
-- **A causal mask for generation.** In a text-generating model, a token can only attend to tokens before it. That is what makes generation sequential: each new token depends on all the earlier ones.
+**Imagine this:** a class project where five friends read the same story. One checks the grammar, one tracks who is who, one watches the order of events. Then they pool notes. Real heads learn their jobs; nobody assigns them.
+
+- **Many heads.** A head is one copy of attention. The model runs several at the same time, each with its own learned projections. So one head can follow grammar, another can follow who "it" refers to, and another can follow position.
+- **Many layers.** Attention is followed by a small feed-forward network (a small neural network). This pair is stacked dozens of times. Early layers tend to capture local patterns and later layers more abstract ones.
+- **A causal mask for generation.** When a model writes text, a token can only look at tokens before it. That is why generation is sequential: each new token depends on all the earlier ones.
 
 ## Why this matters for engineering
 
-- **Cost grows with context.** Every token attends to every earlier token, so the work for a prompt grows roughly with the square of its length. This is one reason long context is expensive and slow to first token.
-- **Attention is what the KV cache stores.** During generation the keys and values of earlier tokens are kept so they are not recomputed, which is the subject of the KV cache lesson.
-- **Position in the prompt is not neutral.** Models often use information in the middle of a very long prompt less reliably than information at the start or end, which affects how you order context.
+- **Cost grows with context.** Every token looks at every earlier token. So the work grows roughly with the square of the length. This is one reason long context is expensive and slow to first token.
+- **Attention is what the KV cache stores.** While generating, the model keeps the keys and values of earlier tokens so it does not recompute them. That saved copy is the KV cache, the subject of the KV cache lesson.
+- **Position in the prompt is not neutral.** Models often use information in the middle of a very long prompt less reliably than information at the start or end. So think about the order in which you place context.
 
 Real attention weights are rarely as tidy as the picture above, and many heads do things people cannot easily interpret. Treat the diagram as a way to build intuition, not as an explanation of any specific model.

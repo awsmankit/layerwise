@@ -4,7 +4,7 @@ track: start
 level: basic
 order: 10
 summary: What happens between an app and the model behind it, how an app can use its own documents without building a new model, and why every answer costs money and time.
-updated: 2026-10-29
+updated: 2026-11-12
 sources:
   - label: "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks (Lewis et al., 2020)"
     url: https://arxiv.org/abs/2005.11401
@@ -14,11 +14,11 @@ import PipelineFlow from '../../../components/viz/PipelineFlow.tsx';
 import Callout from '../../../components/ui/Callout.astro';
 import Deep from '../../../components/ui/Deep.astro';
 
-You now know how a chatbot writes its answer. But the chat app on your phone is not the model itself. It is an app that talks to a model. This lesson shows how that works.
+You now know how a chatbot writes its answer. But the chat app on your phone is not the model itself. It is an app that talks to a model. This lesson shows how that works, and what it costs.
 
 ## The model and the app are different
 
-The model is the part that learned. It is really a very big file of numbers, plus code to run it. Give it text, and it writes more text.
+The model is the part that learned. It is a very big file of numbers, plus code to run it. Give it text, and it writes more text.
 
 It has no buttons, no login and no memory of yesterday.
 
@@ -28,17 +28,17 @@ The app is everything around it: the screen, your account, your saved chats and 
 
 Big models need very powerful computers, so most apps do not run them on your phone. Instead, the app sends your message over the internet to a company that runs the model. Then it gets the answer back.
 
-The app asks through an **API**, a set of rules for how one program asks another for something. API is short for application programming interface.
+The app asks through an **API**: a set of rules for how one program asks another for something. The letters stand for application programming interface.
 
 ## The waiter
 
-Think of a restaurant. You do not walk into the kitchen. You tell the waiter what you want, and the waiter brings your food.
+**Imagine this:** a restaurant. You do not walk into the kitchen. You tell the waiter what you want, and the waiter brings your food.
 
-The API is the waiter, and the model is the kitchen. The app shows a secret key, a bit like a membership card, so the company knows who is ordering. And like a restaurant, there is a bill for every order.
+The waiter is the **API**, and the kitchen is the model. (The waiter never cooks, and the kitchen never takes your table number.) The app shows a secret key, a bit like a membership card, so the company knows who is ordering. And as in a restaurant, every order goes on the bill.
 
 ## What the model actually reads
 
-Say you type "Can I change my delivery address?" into a shop's help chat. The model gets much more than that. The app builds a bigger package called the **prompt**, which is everything the model reads before it answers. It usually holds:
+**Imagine this:** a substitute teacher walks into class. They know nothing, so the school hands them a folder: the rules, the day's notes, the class list, and your question on top. The folder is the **prompt**. Say you type "Can I change my delivery address?" into a shop's help chat. The model gets much more than that. The app builds that bigger package, the **prompt**: everything the model reads before it answers. It usually holds:
 
 - Instructions from the app's makers, such as "Be polite. Keep answers short."
 - The whole chat so far.
@@ -47,7 +47,7 @@ Say you type "Can I change my delivery address?" into a shop's help chat. The mo
 
 ## Why it seems to remember
 
-The model remembers nothing between messages. So each time you reply, the app sends the whole chat again. That is why the chatbot seems to remember.
+**Imagine this:** every time you talk to a friend, they forget you completely, so you hand them the full diary of your last chat before you speak. The model is that friend, and the diary is the chat history. In real life, that would be a very tiring friendship. The model remembers nothing between messages. So each time you reply, the app sends the whole chat again. That is the trick behind the chatbot seeming to remember.
 
 It is also why very long chats get slower. They can even hit the limit of what the model can read at once.
 
@@ -82,7 +82,9 @@ Usually, the app does what you would do in an open-book exam. Before answering, 
 3. It pastes them into the prompt with an instruction like "Answer using only this text."
 4. The model writes its answer from the pages in front of it.
 
-The good part is that new facts only need new pages, not a new model. The weak part is the search. If the app does not find the right page, the model may guess instead.
+The good part: new facts only need new pages, not a new model. The weak part: the search. If the app does not find the right page, the model may guess instead.
+
+In one line: the app looks up pages first, and the model answers from them.
 
 <Callout title="A useful test">
 
@@ -104,7 +106,7 @@ This open-book pattern is called **retrieval-augmented generation**, or **RAG**:
 
 ## Why answers cost money and time
 
-Every piece of text the model reads or writes takes real work on expensive computer chips. So:
+**Imagine this:** an auto-rickshaw with a meter. A longer ride costs more, and a bigger vehicle costs more per kilometre. The meter here counts text instead of distance. Every piece of text the model reads or writes takes real work on expensive computer chips. That work has a price, so:
 
 - Long prompts cost more. The model reads the instructions and the whole chat every time.
 - Long answers take longer. The model writes one small piece after another.

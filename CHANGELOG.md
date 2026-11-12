@@ -8,6 +8,17 @@ Versions follow [semantic versioning](https://semver.org/), read for a learning 
 - **Minor**: new lessons, labs, tools or features.
 - **Patch**: fixes and small corrections (wording, links, layout, accessibility).
 
+## [2.14.0] - 2026-11-12: The encoder step by step, livelier diagrams, and plainer lessons
+
+A new walkthrough follows one sentence through a transformer encoder, every diagram now uses rounded colour cards with a glow on the active step, and 24 beginner lessons were rewritten with everyday scenes.
+
+- A new 12-step walkthrough in "Inside a transformer block" follows "The cat licked its paw" through one encoder layer: embeddings, position, query, key and value, the score grid, scaling, softmax, blending, add and norm, feed-forward, and stacking. The numbers are real; only the weights are hand-made.
+- Switch off the scaling in the softmax step to see why scores are divided by the square root of the size: without it the model becomes far too sure of itself.
+- Diagrams across the site now use rounded colour cards, chunky outlines, a soft shadow, flowing dashed lines and a glow on the step you are on. It works in light and dark mode, and the movement stops if you prefer reduced motion.
+- All 17 Start lessons and 7 Foundations lessons are easier to read: each section opens with a short "Imagine this" scene before the term, terms are explained where they first appear, and the facts, numbers and code are unchanged.
+
+**At this release:** 164 lessons in 17 topics, 24 practice labs, 880 glossary terms.
+
 ## [2.13.1] - 2026-11-10: An "On this page" panel on interview answers
 
 On wide screens, interview answers now fill the empty space with a panel that lists each section, follows you as you scroll, and links to the next question.
@@ -276,6 +287,7 @@ Animated AI engineering lessons, games and tools, covering AWS, Azure and Google
 
 **At this release:** 44 lessons in 12 topics, 0 practice labs, 79 glossary terms.
 
+[2.14.0]: https://github.com/awsmankit/layerwise/compare/v2.13.1...v2.14.0
 [2.13.1]: https://github.com/awsmankit/layerwise/compare/v2.13.0...v2.13.1
 [2.13.0]: https://github.com/awsmankit/layerwise/compare/v2.12.0...v2.13.0
 [2.12.0]: https://github.com/awsmankit/layerwise/compare/v2.11.0...v2.12.0

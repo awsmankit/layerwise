@@ -4,7 +4,7 @@ track: foundations
 level: intermediate
 order: 6
 summary: Pretraining, instruction tuning and preference tuning, and what each stage does and does not change.
-updated: 2026-10-26
+updated: 2026-11-12
 sources:
   - label: "Training language models to follow instructions with human feedback (Ouyang et al., 2022)"
     url: https://arxiv.org/abs/2203.02155
@@ -18,7 +18,7 @@ import PipelineFlow from '../../../components/viz/PipelineFlow.tsx';
 import Disclosure from '../../../components/viz/Disclosure.tsx';
 import Callout from '../../../components/ui/Callout.astro';
 
-Most of the assistants you use are produced by a sequence of training stages. Knowing which stage does what tells you what a vendor can change in an update, what fine-tuning on your side can realistically achieve, and why a model has a knowledge cutoff.
+A chatbot is not made in one go. **Imagine this:** a chef spends years tasting everything (**pretraining**), then learns to take orders politely (**instruction tuning**), then adjusts the cooking to what diners liked (**preference tuning**). Nobody becomes a good chef in one afternoon. The comparison stops at one point: a model's stages are separate training runs, not one life. An assistant is built in stages. Knowing which stage does what tells you three things. You learn what a vendor can change in an update. You learn what fine-tuning on your side can realistically achieve. And you learn why a model has a knowledge cutoff.
 
 <PipelineFlow
   title="The pipeline"
@@ -36,27 +36,29 @@ Most of the assistants you use are produced by a sequence of training stages. Kn
 
 ## What each stage changes
 
-**Pretraining sets what the model knows and how well it can learn in context.** Facts, writing styles, code ability and languages come from here. This is also why a model has a **knowledge cutoff**: it only saw data up to a certain date.
+**Pretraining sets what the model knows and how well it can learn in context.** This is the long reading phase. Facts, writing styles, code ability and languages come from here. It is also why a model has a **knowledge cutoff**: it only saw data up to a certain date. **Imagine this:** a friend returns from months at a remote research station. They know everything up to the day they left, and nothing since. Ask about last week and they answer with total confidence. They are out of date, not broken.
 
-**Instruction and preference tuning mostly change behaviour, not knowledge.** The same pretrained model can feel very different depending on how it was post-trained: terse or chatty, cautious or compliant, good at following a format or not.
+**Instruction and preference tuning mostly change behaviour, not knowledge.** This is the manners-and-lessons phase. The same pretrained model can feel very different depending on how it was post-trained (trained further after pretraining). It can be terse or chatty, cautious or compliant, good at following a format or not.
 
-**Reasoning training changes how the model uses its output budget.** Some models produce a long chain of intermediate tokens before the final answer. Those tokens take time and are usually billed as output.
+**Reasoning training changes how the model uses its output budget.** Some models write a long chain of in-between tokens before the final answer, like working in the margin of an exam paper. Those tokens take time and are usually billed as output.
 
 <Callout kind="cost" title="Why training cost is not your cost">
-Training a frontier model is an enormous one-off expense for the lab. As a user you pay per token for inference instead, and that cost recurs for as long as the feature runs. Budget for the second one.
+Training a frontier model (one of the most capable models available) is an enormous one-off expense for the lab. As a user you pay per token for inference (running the model to get answers) instead. That cost recurs for as long as the feature runs. Budget for the second one.
 </Callout>
 
 <Disclosure client:visible title="RLHF versus DPO, in one paragraph">
 
-Reinforcement learning from human feedback trains a separate reward model from human rankings, then optimises the language model against that reward. Direct preference optimisation skips the reward model and trains the language model directly on pairs of preferred and rejected responses, which is simpler to run. Both turn "people preferred this answer" into a training signal.
+Reinforcement learning from human feedback trains a separate reward model (a scorer) from human rankings. It then optimises the language model to earn a high score from that scorer. Direct preference optimisation skips the scorer. It trains the language model directly on pairs of preferred and rejected responses, which is simpler to run. Both turn "people preferred this answer" into a training signal.
 
 </Disclosure>
 
 ## What this means when you build
 
-- **A vendor update can change behaviour without changing facts.** A new post-training run can alter format, tone and refusals. That is why you pin model versions and keep an eval suite.
+- **A vendor update can change behaviour without changing facts.** A new post-training run can alter format, tone and refusals. That is why you pin model versions (fix the exact version you call) and keep an eval suite (a set of tests that checks your own use case).
 - **Fine-tuning on your side is post-training in miniature.** It is good at style, format and narrow skills. It is a poor way to add large amounts of new knowledge.
 - **Scale is a trade-off.** Work on compute-optimal training showed that, for a fixed budget, many models had been trained on too little data for their size. It is one reason smaller models trained on more data can match larger ones.
+
+In one line: pretraining gives knowledge, post-training gives behaviour, and your bill comes from inference.
 
 ## Go deeper
 

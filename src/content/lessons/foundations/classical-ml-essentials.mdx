@@ -4,7 +4,7 @@ track: foundations
 level: intermediate
 order: 7
 summary: Splits, leakage, overfitting, the metrics that interviewers probe, choosing a threshold from the cost of errors, and how all of it carries over to evaluating LLMs.
-updated: 2026-10-26
+updated: 2026-11-12
 sources:
   - label: "scikit-learn: Cross-validation, evaluating estimator performance"
     url: https://scikit-learn.org/stable/modules/cross_validation.html
@@ -22,22 +22,22 @@ import Disclosure from '../../../components/viz/Disclosure.tsx';
 import DataSplit from '../../../components/viz/DataSplit.tsx';
 import ConfusionDots from '../../../components/viz/ConfusionDots.tsx';
 
-Large language models did not make classical machine learning obsolete. The habits that keep a fraud model honest are the same ones that keep an LLM feature honest: hold data back, do not let the answer leak in, pick a metric that matches the cost of being wrong. Interviewers still test these ideas because they separate people who measured something from people who hoped.
+Large language models did not make classical machine learning obsolete. The same habits keep a fraud model and an LLM feature honest. Hold some data back. Do not let the answer leak in. Pick a metric that matches the cost of being wrong. Interviewers still test these ideas because they separate people who measured something from people who hoped.
 
 ## Splits: train, validation, test
 
 <DataSplit client:visible />
 
-The **test set** estimates how the final choice will do on new data, which is why it is kept apart from the **validation set** you tune on (features, hyperparameters, thresholds, prompts).
+**Imagine this:** at school you practise on worksheets, then sit a mock paper, then the real exam. Nobody expects the real exam to be the worksheet again. Data works the same way. The **train set** is for learning. The **validation set** is what you tune on (features, hyperparameters, thresholds, prompts). The **test set** estimates how the final choice will do on new data, so it is kept apart and used once.
 
-**Cross-validation** splits the non-test data into k folds, trains k times, and validates on each fold in turn. It gives a steadier estimate when data is scarce. Two variants matter in practice:
+**Cross-validation** splits the non-test data into k folds (equal slices). It trains k times and validates on each slice in turn. That gives a steadier estimate when data is scarce. Two variants matter in practice:
 
 - **Time-based splits.** If the model will predict the future, train on the past and validate on later data. A random split lets the model peek at the future. scikit-learn's `TimeSeriesSplit` does this.
 - **Group splits.** If one customer or patient has many rows, keep all of their rows on the same side (`GroupKFold`). Otherwise the model can recognise the person rather than learn the pattern.
 
 ## Data leakage
 
-Leakage means the model is trained with information it will not have at prediction time. Scores look excellent, then production disappoints.
+**Imagine this:** a student sees the exam answers the night before. The marks look great, but they prove nothing (and the teacher is not fooled for long). **Leakage** is the same thing: the model is trained with information it will not have at prediction time. Scores look excellent, then production disappoints.
 
 1. **A feature that encodes the label.** A churn model includes "account closure date". It is only filled in for customers who already left, so the model learns to read the answer.
 2. **Preprocessing fitted on all the data.** Scaling, imputation or feature selection fitted before splitting lets test-set statistics shape training. The scikit-learn docs show feature selection on pure noise scoring well above chance this way. The fix is to split first and fit preprocessing inside a pipeline, on the training fold only.
@@ -46,9 +46,9 @@ Duplicates across splits and random splits on time series are the other usual su
 
 ## Overfitting, bias and variance
 
-**Overfitting** is learning the training set's noise: training error keeps falling while validation error rises. **Bias** is error from a model too simple to capture the pattern (underfitting). **Variance** is error from a model so flexible that it changes a lot with the particular sample it saw. More capacity lowers bias and raises variance; more data lowers variance.
+**Imagine this:** a student memorises last year's paper word for word. This year's paper has new questions, and the student is stuck. They learned the paper, not the subject. That is **overfitting**: the model learns the training set's noise, so training error keeps falling while validation error rises. **Bias** is error from a model too simple to capture the pattern (underfitting). **Variance** is error from a model so flexible that it changes a lot with the particular sample it saw. More capacity lowers bias and raises variance. More data lowers variance.
 
-**Regularisation** pushes toward simpler models:
+**Regularisation** (a gentle push toward simpler models) comes in a few forms:
 
 | Method | What it does |
 |---|---|
@@ -59,7 +59,7 @@ Duplicates across splits and random splits on time series are the other usual su
 
 ## Classification metrics, with real numbers
 
-A fraud model scores 1,000 transactions. 50 are really fraud. The model flags 60, of which 40 are fraud.
+**Imagine this:** a security guard at a mall gate stops 60 people, and 40 really were shoplifters. Not bad, but 10 shoplifters walked straight past. Precision asks about the 60 he stopped. Recall asks about the 50 thieves in the crowd. Here are the real numbers. A fraud model scores 1,000 transactions. 50 are really fraud. The model flags 60, of which 40 are fraud.
 
 <ConfusionDots client:visible />
 
@@ -68,11 +68,11 @@ A fraud model scores 1,000 transactions. 50 are really fraud. The model flags 60
 - **Recall** = TP / (TP + FN) = 40 / 50 = **0.80** (of the fraud, how much was caught)
 - **F1** = 2 x P x R / (P + R) = 2 x 0.667 x 0.80 / 1.467 = **0.727**, which equals 2TP / (2TP + FP + FN) = 80 / 110
 
-Now the trap: a model that never flags anything scores accuracy 950 / 1,000 = **0.95**, with recall 0. On imbalanced data accuracy mostly measures the majority class. Report precision and recall, or a cost.
+Now the trap: a model that never flags anything scores accuracy 950 / 1,000 = **0.95**, with recall 0. It catches no fraud at all. On imbalanced data accuracy mostly measures the majority class. Report precision and recall, or a cost.
 
 ## Choosing a threshold from the cost of errors
 
-Most classifiers output a score, and a threshold turns it into a decision. Lowering the threshold raises recall and usually lowers precision. Pick the threshold by cost, not by habit (0.5 is a default, not a decision).
+**Imagine this:** a smoke alarm. Make it very sensitive and it shrieks at toast. Make it dull and it sleeps through a fire. Where you set it depends on which mistake costs more. Most classifiers output a score, and a threshold (a cut-off line) turns it into a yes or no. Lowering the threshold raises recall and usually lowers precision. Pick the threshold by cost, not by habit. 0.5 is a default, not a decision.
 
 Suppose a missed fraud costs 100 times as much as a false alarm. At the current threshold the cost is 100 x 10 + 1 x 20 = **1,020** units. A lower threshold that gives FN = 4 and FP = 80 costs 100 x 4 + 80 = **480**: worse precision, much better business result. Choose thresholds on the validation set, then confirm once on test.
 
@@ -82,7 +82,7 @@ If the scores are calibrated probabilities p, flagging costs C_FP x (1 - p) in e
 
 ## Calibration
 
-A model is **calibrated** if, among cases it scores 0.8, about 80% are positive. Ranking can be excellent while probabilities are badly off. You need calibration whenever a probability feeds a decision, a cost formula or a human. Check it with a reliability plot (predicted versus observed rate, in bins). Fix it with Platt scaling (a sigmoid) or isotonic regression, fitted on data the model was not trained on. Resampling and class weights shift predicted probabilities, so recalibrate after using them.
+**Imagine this:** a weather app says 80% chance of rain. On a hundred such days it should rain on about 80 of them. If it rains on only 40, the app is confident and wrong. A model is **calibrated** if, among cases it scores 0.8, about 80% are positive. Ranking can be excellent while probabilities are badly off. You need calibration whenever a probability feeds a decision, a cost formula or a human. Check it with a reliability plot (predicted versus observed rate, in bins). Fix it with Platt scaling (a sigmoid) or isotonic regression, fitted on data the model was not trained on. Resampling and class weights shift predicted probabilities, so recalibrate after using them.
 
 ## Regression metrics, briefly
 
@@ -96,7 +96,9 @@ A model is **calibrated** if, among cases it scores 0.8, about 80% are positive.
 
 ## The tabular baseline
 
-For tables of rows and columns, gradient-boosted trees (XGBoost, LightGBM, CatBoost) are the baseline to beat. A 2022 benchmark study found tree-based models still ahead of deep learning on typical medium-sized tabular data. They need little preprocessing and train quickly. An LLM is rarely the right first tool for a table of numbers.
+**Imagine this:** a spreadsheet of customers. A team of small helpers each fix the last helper's mistakes, and soon the sheet is predicted well. For tables of rows and columns, gradient-boosted trees (many small decision trees, each fixing the last one's mistakes) are the baseline to beat. Popular tools are XGBoost, LightGBM and CatBoost. A 2022 benchmark study found tree-based models still ahead of deep learning on typical medium-sized tabular data. They need little preprocessing and train quickly. An LLM is rarely the right first tool for a table of numbers.
+
+In one line: measure honestly, then pick the metric and threshold by the cost of being wrong.
 
 <Deep title="ROC versus PR curves, and when each misleads">
 

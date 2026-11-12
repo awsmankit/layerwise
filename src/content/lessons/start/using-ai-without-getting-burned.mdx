@@ -4,7 +4,7 @@ track: start
 level: basic
 order: 8
 summary: Simple habits for using AI safely, for homework and beyond, and how to spot when an answer is probably made up.
-updated: 2026-10-29
+updated: 2026-11-12
 sources:
   - label: "NIST AI Risk Management Framework"
     url: https://www.nist.gov/itl/ai-risk-management-framework
@@ -15,25 +15,27 @@ sources:
 import Deep from '../../../components/ui/Deep.astro';
 import TrustCheck from '../../../components/viz/TrustCheck.tsx';
 
-You now know that a chatbot writes what sounds right, one piece at a time. It cannot check itself. This lesson turns that into simple habits. They work for homework and hobbies now, and for work later on.
+A chatbot writes what sounds right, one small piece at a time. It cannot check itself. So how do you use it without getting fooled? With a few simple habits. They work for homework and hobbies now, and for work later on.
 
 ## Seven habits
 
-1. Treat the answer as a first draft. Think of a fast helper who is often great but sometimes wrong. You are the one in charge.
+**Imagine this:** a classmate has read a thousand books and answers every question at once. They never say "I don't know". Mostly they are right, and sometimes they are confidently wrong. You would still ask them, but you would check the important bits. A chatbot is that classmate, so these habits are the checking. (Unlike your classmate, it never gets tired of questions.)
+
+1. Treat the answer as a first draft. You are the one in charge.
 2. Check the facts that matter. Names, numbers, dates, quotes and links can all be wrong. Look them up in a book or on a trusted website.
-3. Give it the facts. Paste in the text you need help with and ask about that. Asking it to remember a tiny detail invites a guess.
+3. Give it the facts. Paste in the text you need help with and ask about that. If you ask it to remember a tiny detail, it may just guess.
 4. Be clear about what you want. "Explain how volcanoes erupt in five sentences, for a 10-year-old" works far better than "volcanoes".
 5. Keep personal details private. Never type in your full name, address, school, phone number, passwords or photos of yourself. Treat a chatbot like a stranger online.
-6. Ask how it knows, then check. Asking for sources makes mistakes easier to spot. But it can make up sources too, so look them up.
+6. Ask how it knows, then check. Asking for sources makes mistakes easier to spot. But it can make up sources too, so look each one up.
 7. Ask a trusted adult. If an answer worries you, confuses you or feels wrong, talk to a parent, carer or teacher.
 
 ## Homework and school rules
 
-Every school has its own rules about AI. Some allow it for ideas or for checking your work, and some do not allow it at all. Check what your school and your teacher allow before you use it.
+Is it cheating to use AI for homework? That depends on your school. Every school has its own rules. Some allow AI for ideas or for checking your work, and some do not allow it at all. Ask what your school and your teacher allow before you use it.
 
 If you are allowed, use it to understand, not to copy. Ask it to explain an idea, to quiz you, or to point out mistakes in your work. Then write the answer in your own words.
 
-Handing in AI writing as your own is like copying a friend's homework. You skip the learning, which is the whole point. If your school asks you to say when you used AI, always say so.
+Handing in AI writing as your own is like copying a friend's homework. You skip the learning, and learning is the whole point. If your school asks you to say when you used AI, always say so.
 
 ## Good uses and risky uses
 
@@ -47,17 +49,17 @@ Handing in AI writing as your own is like copying a friend's homework. You skip 
 
 ## How to spot a made-up answer
 
-Here are some warning signs. None of them is proof on its own.
+**Imagine this:** a stranger at the bus stop tells you the next bus leaves at 4:17, with a lot of confidence. Do you trust it? You glance at the timetable. The chatbot is that confident stranger, and the warning signs are the glance at the timetable. How can you tell when it has made something up? Look for these. None of them is proof on its own.
 
 - A source you cannot find. Book titles, links and quotes are often invented, so look them up.
 - Details that are too neat. Very exact numbers or names, with nothing to show where they came from.
 - Sounding very sure about something unusual or hard to know.
 - It changes when you ask again. Ask the same question twice. If the facts differ, at least one answer is wrong.
-- It agrees with your mistake. If your question has a wrong idea built in, the chatbot may just go along with it. Ask in a neutral way instead.
+- It agrees with your mistake. If your question has a wrong idea hidden inside it, the chatbot may just go along with it. Ask in a neutral way instead.
 
 ## Before you rely on an answer
 
-Ask yourself one question: if this is wrong, what happens, and who would find out?
+**Imagine this:** in cricket, a wrong guess about the weather costs you a wet picnic. A wrong call on a run-out costs someone their wicket. Same guess, different stakes. So ask yourself one question: if this is wrong, what happens, and who would find out?
 
 If the answer is "not much", using it as a draft is fine. If someone could be hurt, embarrassed or misled, check it properly first. The chart below walks through that question for a fact you might use in homework.
 
@@ -65,7 +67,7 @@ If the answer is "not much", using it as a draft is fine. If someone could be hu
 
 <Deep title="Using AI at work">
 
-The same habits apply at work, with a few more rules.
+The same habits apply at work. There are a few extra rules too.
 
 - **Protect private information.** Do not paste passwords, customer data, health records or confidential documents into a tool your organisation has not approved. Check how a tool stores what you send and whether it may be used for training.
 - **Review before publishing.** Anything that goes out under your name, or your company's, needs a person to read it first.
@@ -76,7 +78,7 @@ The same habits apply at work, with a few more rules.
 
 <Deep title="Why builders care about all this">
 
-Every habit above is a human version of something engineers build into systems. Giving the model the facts is **retrieval**. Checking claims is **evaluation**. Protecting private data is **access control and guardrails**. Saving and testing prompts is **prompt versioning and evals**. The rest of this site covers how to build those protections properly.
+Every habit above is a human version of something engineers build into software. Giving the model the facts is called **retrieval**. Checking claims is **evaluation**. Protecting private data is **access control and guardrails**. Saving and testing prompts is **prompt versioning and evals**. The rest of this site covers how to build those protections properly.
 
 </Deep>
 

@@ -4,7 +4,7 @@ track: start
 level: basic
 order: 6.5
 summary: A computer cannot just look at a photo of a cat. See how it turns the picture into numbers, hunts for tiny patterns, adds them up into a shape, and draws a box around what it found. Then see how it gets fooled.
-updated: 2026-11-01
+updated: 2026-11-12
 sources:
   - label: "Stanford CS231n: Convolutional Neural Networks (patterns that slide over a picture)"
     url: https://cs231n.github.io/convolutional-networks/
@@ -26,27 +26,27 @@ import PixelDetective from '../../../components/viz/PixelDetective.tsx';
 import PipelineFlow from '../../../components/viz/PipelineFlow.tsx';
 import Deep from '../../../components/ui/Deep.astro';
 
-You see a cat in a photo in a blink. For a computer, the same job is hard.
+You spot a cat in a photo in a blink. For a computer, the same job is hard. Why?
 
 In this lesson you will see how it can be done. Then you will play detective yourself.
 
 ## A photo is a grid of numbers
 
-A photo is made of tiny dots called **pixels**. Each pixel has a number for how bright it is. Black is a small number and white is a big one.
+**Imagine this:** a cross-stitch pattern. From far away it is a picture of a cat. Up close it is just rows of tiny coloured stitches. A photo works the same way. Zoom far into a photo on your phone and you see little coloured squares. These tiny dots are called **pixels**. Each pixel has a number for how bright it is. Black is a small number and white is a big one.
 
 So the computer does not see a cat. It sees a huge grid of numbers.
 
 ## It hunts for small patterns first
 
-The computer does not start by looking for "cat". That is too big a jump. It starts with tiny patterns, like a line where dark meets light. That line is called an **edge**.
+**Imagine this:** you hunt for the word "CAT" in a word search. You do not look for the whole word at once. You scan for the letter C first, then check the letters beside it. The computer also starts small. Looking for a whole "cat" straight away is too big a jump. So the computer starts with tiny patterns, like a line where dark meets light. That line is called an **edge**.
 
-It slides a small pattern-spotter across the whole picture. It marks every place where the pattern fits. One spotter hunts for up-and-down edges. Another hunts for sideways ones.
+It slides a small pattern-spotter across the whole picture, like a magnifying glass moving over a page. It marks every place where the pattern fits. One spotter hunts for up-and-down edges. Another hunts for sideways ones.
 
 ## Then it adds the patterns up
 
-Small patterns join up into bigger ones. Edges make corners and curves. Curves and corners make an ear, an eye or a whisker. Ears, eyes and whiskers together make a cat's face.
+**Imagine this:** a Lego cat. Single bricks make a leg, bricks make a tail, and legs, tail and head make the cat. (Nobody has ever stepped on a pixel, which is a point in their favour.) Small patterns join up into bigger ones in the same way. Edges make corners and curves. Curves and corners make an ear, an eye or a whisker. Ears, eyes and whiskers together make a cat's face.
 
-Nobody types in these patterns. A computer finds the useful ones by itself, by training on lots of examples, just like the fruit game in [How a computer learns](../how-computers-learn/).
+Nobody types in these patterns. The computer finds the useful ones by itself, by training on lots of examples, just like the fruit game in [How a computer learns](../how-computers-learn/).
 
 <PipelineFlow
   client:visible
@@ -65,7 +65,7 @@ Nobody types in these patterns. A computer finds the useful ones by itself, by t
 
 This detective is much simpler than a real one. It knows only four shapes: a plus, a cross, a square and a letter L. Tap squares to shade them, or pick a picture to start from.
 
-First it looks for **small patterns**: three shaded squares in a row. Then it checks which shape those lines add up to. It also says how sure it is.
+First it looks for **small patterns**: three shaded squares in a row. Then it checks which shape those short lines add up to. It also says how sure it is.
 
 <PixelDetective client:visible />
 
@@ -80,13 +80,13 @@ Things to try:
 
 When the detective finds a shape, it draws a dashed **box** around it. Real detectors do the same, and they give each box a **confidence** score. It is a number for how sure the computer is, such as 90 out of 100.
 
-A high score is not a promise. A confident computer can still be wrong.
+**Imagine this:** a friend says, "I am 90 percent sure that is Meena's bike." You still glance at the bell. The score is the **confidence**, and it is only how sure the guesser feels. A high score is not a promise. A confident computer can still be wrong, just like a confident person.
 
 ## Why it gets fooled
 
-The detective gave up when you left a gap. Real systems are far better than that. But they still have blind spots. A shadow, a strange angle or a half-hidden object can confuse them.
+**Imagine this:** you spot a friend in a crowd by their red backpack, but today a stranger wears the same one. You would be fooled until you saw the face. Computers lean on small clues like that too. The detective gave up when you left a gap. Real systems are far better than that. But they still have blind spots. A shadow, a strange angle or a half-hidden object can confuse them.
 
-Researchers have found that tiny changes can fool a computer. People would not even notice them.
+Researchers have found that tiny changes can fool a computer. People would not even notice these changes.
 
 In one experiment, black and white stickers were put on a real stop sign. A road-sign program the researchers had built then read it as a different sign. People still saw a stop sign.
 

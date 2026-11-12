@@ -4,7 +4,7 @@ track: foundations
 level: basic
 order: 3
 summary: How text becomes numbers a model can use, why you are billed in tokens, and how meaning turns into distance.
-updated: 2026-10-28
+updated: 2026-11-12
 sources:
   - label: "Neural Machine Translation of Rare Words with Subword Units (Sennrich et al., 2015)"
     url: https://arxiv.org/abs/1508.07909
@@ -17,21 +17,23 @@ import TokenDissect from '../../../components/viz/TokenDissect.tsx';
 import EmbeddingSpace from '../../../components/viz/EmbeddingSpace.tsx';
 import Callout from '../../../components/ui/Callout.astro';
 
-A language model never sees letters or words. Computers only work with numbers, so text is turned into numbers in two steps: first each piece of text becomes a whole number (an ID, like a page number in a dictionary), then each ID becomes a list of numbers that captures its meaning. Both steps explain things you will run into in practice: odd costs, odd failures, and how search over documents works.
+A language model never sees letters or words. It only sees numbers. So text is turned into numbers in two steps. First, each piece of text becomes a whole number (an ID, like a page number in a dictionary). Then each ID becomes a list of numbers that captures its meaning. Both steps explain things you will meet in practice: odd costs, odd failures, and how search over documents works.
 
 ## Tokens
 
-A **tokenizer** splits text into pieces called tokens and gives each piece an ID number from a fixed list, the vocabulary. Common words get a single token. Rarer words are split into pieces that were frequent in the tokenizer's training text, which do not always match grammar: one widely used tokenizer splits "unhappiness" into "un", "h" and "appiness". Anything unusual falls back to smaller pieces, down to single characters. That keeps the vocabulary to a manageable size, from tens of thousands of pieces in older models to a few hundred thousand in some recent ones, while still being able to write any text. (The most common way of building such a vocabulary is called byte-pair encoding, if you want to look it up.)
+**Imagine this:** a shop sells one box of Lego with a fixed set of brick shapes, each stamped with a number. To build your sentence, you snap together bricks from that box. Common words are one big brick. Rare words are built from several small ones. (Your name may cost three bricks. Do not take it personally.) The box is the vocabulary, each stamped number is a token ID, and the person who picks the bricks is the **tokenizer**.
+
+The tokenizer splits text into pieces called tokens and gives each piece an ID number from a fixed list, the vocabulary. Rarer words are split into pieces that were frequent in the tokenizer's training text. Those pieces do not always match grammar: one widely used tokenizer splits "unhappiness" into "un", "h" and "appiness". Anything unusual falls back to smaller pieces, down to single characters. That keeps the vocabulary a manageable size, from tens of thousands of pieces in older models to a few hundred thousand in some recent ones. It can still write any text. (The most common way of building such a vocabulary is called byte-pair encoding, if you want to look it up.)
 
 <TokenChips client:visible />
 
 <TokenDissect client:visible />
 
-Three consequences follow.
+Three things follow from this.
 
-- **Tokens are the unit of cost and capacity.** Prices are quoted per million tokens, and the context window is a token limit. For ordinary English, a token is roughly three quarters of a word, but that ratio is only a rule of thumb.
+- **Tokens are the unit of cost and capacity.** Prices are quoted per million tokens. The context window (how much text the model can read at once) is also a token limit. For ordinary English, a token is roughly three quarters of a word, but that ratio is only a rule of thumb.
 - **Not all text is equal.** Code, numbers, rare words and many non-English languages usually take more tokens per character than plain English, so the same content can cost more.
-- **Models see pieces, not letters.** Questions such as counting the letters in a word are hard because the word may be one or two tokens. This is a tokenization effect, not a lack of intelligence.
+- **Models see pieces, not letters.** Counting the letters in a word is hard because the word may be only one or two tokens. The model never sees the letters. This is a tokenization effect, not a lack of intelligence.
 
 <Callout kind="cost" title="Count with the real tokenizer">
 Different model families use different tokenizers, so the same text has a different token count on each. Use the counter or usage field from the provider you will actually call.
@@ -39,19 +41,21 @@ Different model families use different tokenizers, so the same text has a differ
 
 ## Embeddings
 
-Each token ID is looked up in a table to get an **embedding**: a list of numbers, typically hundreds or thousands long. Think of it as coordinates. Two numbers would place a word on a flat map; a thousand numbers place it in a space with a thousand directions, which is impossible to picture but works the same way. During training the model adjusts these coordinates so that tokens used in similar ways end up near each other.
+**Imagine this:** on the first day of school, kids drift into groups. Cricket fans gather by the nets, chess fans by the library. Each token is a kid, and the spot where it stands is its **embedding**. How do you tell a computer that "cat" and "kitten" are close in meaning? You give each one coordinates, like a spot on a playground. Each token ID is looked up in a table to get an **embedding**: a list of numbers, typically hundreds or thousands long. Two numbers would place a word on a flat map. A thousand numbers place it in a space with a thousand directions. That is impossible to picture, but it works the same way. During training the model adjusts these coordinates so that tokens used in similar ways end up near each other.
 
-The same idea works on whole sentences and documents. A separate **embedding model** reads a piece of text and returns one vector for it. Texts with similar meaning land close together, which makes it possible to search by meaning rather than by keyword.
+The same idea works on whole sentences and documents. A separate **embedding model** reads a piece of text and returns one vector (a list of numbers) for it. Texts with similar meaning land close together. That lets you search by meaning instead of by keyword.
 
 <EmbeddingSpace client:visible />
 
-Closeness is usually measured by the angle between two embeddings (called **cosine similarity**: the smaller the angle, the more similar) or by plain distance. To search a library by meaning, you compute the embedding of every document once, compute the embedding of the question when it is asked, and return the documents closest to it. Many AI products work this way to answer from your own documents; it is called **retrieval**, and the RAG lessons build it step by step.
+Closeness is usually measured by the angle between two embeddings (called **cosine similarity**: the smaller the angle, the more similar) or by plain distance. Searching a library by meaning takes three steps. Embed every document once. Embed the question when it is asked. Return the documents closest to it. Many AI products answer from your own documents this way. It is called **retrieval**, and the RAG lessons build it step by step.
+
+In one line: tokens turn text into IDs, embeddings turn IDs into positions, and nearby positions mean similar meaning.
 
 ## Things worth remembering
 
-- Embeddings from different models live in different spaces. You cannot compare a vector from one model with a vector from another, and changing the embedding model means re-embedding everything.
+- Embeddings from different models live in different spaces, like maps drawn with different rulers. You cannot compare a vector from one model with a vector from another. Changing the embedding model means re-embedding everything.
 - Similar does not mean relevant. Two passages can be close in meaning and still not answer the question, which is why retrieval quality needs its own measurement.
-- When documents are split into passages for search, the size of each passage matters, because one embedding has to summarise the whole passage.
+- When documents are split into passages for search, the size of each passage matters, because one embedding has to summarise the whole passage. A huge passage blurs into one vague point.
 
 ## Go deeper
 

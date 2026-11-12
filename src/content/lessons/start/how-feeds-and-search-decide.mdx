@@ -4,7 +4,7 @@ track: start
 level: basic
 order: 3.5
 summary: Find out how a search engine or a video feed picks what to show you, why it keeps showing more of the same, and how to take some control back. Build a feed yourself.
-updated: 2026-11-01
+updated: 2026-11-12
 sources:
   - label: "How Google Search ranks results (Google Search, checked 1 November 2026)"
     url: https://www.google.com/search/howsearchworks/how-search-works/ranking-results/
@@ -26,11 +26,11 @@ import FeedBuilder from '../../../components/viz/FeedBuilder.tsx';
 import Callout from '../../../components/ui/Callout.astro';
 import Deep from '../../../components/ui/Deep.astro';
 
-Open a video app and the first thing you see was chosen for you. Out of millions of posts, a computer picked a few and put them in an order. This lesson shows how that works, and how to take some control back.
+Open a video app and the first thing you see was chosen for you. Out of millions of posts, a computer picked a few and put them in an order. Why those ones? This lesson shows how that works, and how to take some control back.
 
 ## Search: match, then rank
 
-When you search, the computer does two jobs. First it **matches**: it finds pages that fit your words and what you probably mean. Then it **ranks**: it puts the most useful pages first.
+**Imagine this:** you ask a librarian for a book about cricket. First they pull out every book that fits. Then they stack the best ones on top. (They do not stack them by who has the shiniest cover, we hope.) A search engine does the same two jobs. First it **matches**: it finds pages that fit your words and what you probably mean. Then it **ranks**: it puts the most useful pages first.
 
 Google says its ranking looks at the words you typed, how relevant and useful a page is, how much the source can be trusted, and things like your location and settings. For news, newer pages count for more.
 
@@ -38,17 +38,17 @@ Location matters. Google's own example is "football". In Chicago you will probab
 
 ## A feed is a sorted list
 
-A feed is different, because you did not ask for anything. So the app has to guess. It gives every post a score that means "will this person enjoy it?". Then it sorts the posts, highest score first.
+A feed is different, because you did not ask for anything. So the app has to guess. It gives every post a score that means "will this person enjoy it?". Then it sorts the posts, highest score first, like a school league table.
 
-Because each person gets different scores, each person gets a different feed. That is called **personalising**.
+Each person gets different scores, so each person gets a different feed. Making a feed fit one person is called **personalising**.
 
 ## What goes into the score
 
-Each clue the computer can measure is a **signal**. Apps watch what you like, what you watch for a long time, what you skip and who you follow. They also watch what other people do.
+**Imagine this:** a shopkeeper who watches which shelf you stop at, what you pick up, and what you put back. Each of those clues is a **signal**: a clue the computer can measure. Apps watch what you like, what you watch for a long time, what you skip and who you follow. They also watch what other people do.
 
 YouTube says it looks at viewing behaviour, likes, dislikes, subscriptions and feedback, including surveys that ask whether you enjoyed a video. Meta says it looks at how other people have reacted to a post, and how you reacted to similar posts.
 
-Companies do not share their exact recipes. The feed below is a simple, made-up one.
+Companies do not share their exact recipes. The feed below is a simple, made-up one, so you can see the idea.
 
 ## Try it: build a feed
 
@@ -58,15 +58,17 @@ Switch on "What you liked before". Then like another football post and watch wha
 
 ## Why you see more of the same
 
-Here is the loop. You watch football. The app learns that you like football, so it shows more. You watch more, and it learns even more.
+**Imagine this:** a canteen server notices you took a samosa three days in a row. On day four your tray already has one. On day five there are two, and the salad has quietly vanished. That is the loop. You watch football. The app learns that you like football, so it shows more. You watch more, and it learns even more.
 
-Nobody has to plan this. The score guesses, and you keep confirming the guess. When your feed gets narrow like this, it is called a **filter bubble**: you mostly see things like what you already liked.
+Nobody has to plan this. The score makes a guess, and you keep proving it right. When your feed gets narrow like this, it is called a **filter bubble**: you mostly see things like what you already liked.
+
+In one line: more watching teaches the app to show more of the same.
 
 Google says its Search does not put people in filter bubbles. Researchers also disagree about how strong the effect is on social apps. What is clear is that a narrow feed is easy to end up with, and a varied one takes some effort.
 
 ## Ads
 
-An ad is a post that a company paid to show. Look for a label such as "Ad" or "Sponsored". Google says paying for ads does not change where websites appear in its normal search results.
+**Imagine this:** a newspaper page with a box marked "Advertisement". The shop paid for that box, and the label tells you so. An **ad** online is a post that a company paid to have shown to you. Look for a label such as "Ad" or "Sponsored". Google says paying for ads does not change where websites appear in its normal search results.
 
 In the lab, the ad always sits in third place, with a label. The feed did not choose it because you liked it.
 

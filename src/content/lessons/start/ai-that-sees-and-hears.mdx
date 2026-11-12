@@ -4,7 +4,7 @@ track: start
 level: basic
 order: 6
 summary: Pictures and sounds can be turned into numbers, just like words. See how one kind of AI can answer questions about a photo, turn speech into text and back, and draw pictures from a description.
-updated: 2026-10-29
+updated: 2026-11-12
 sources:
   - label: "An Image is Worth 16x16 Words, Vision Transformer (Dosovitskiy et al., 2020)"
     url: https://arxiv.org/abs/2010.11929
@@ -21,19 +21,21 @@ import Deep from '../../../components/ui/Deep.astro';
 
 In the last lesson, words became numbers. But many AI apps do more than read. They can look at photos, listen to voices and even draw.
 
-The trick is the same as before: turn everything into numbers first.
+How? The trick is the same as before: turn everything into numbers first.
 
 ## A photo is already numbers
 
 A phone photo is made of **pixels**, tiny coloured dots in a grid. Each pixel is stored as three numbers. They say how much red, green and blue it has.
 
-So a photo is really a huge grid of numbers.
+**Imagine this:** a cross-stitch kit. The pattern is a grid of tiny squares, and each square says which thread colour to use. Step back and you see a cat. Up close it is only squares and colour codes. A photo is the same: each square is a **pixel**, and its colour code is three numbers. (Unlike cross-stitch, nobody gets a sore thumb.) So a photo is really a huge grid of numbers. A computer never sees a "cat", only numbers.
 
 ## Cut into squares, like words into pieces
 
-A chatbot cuts text into tokens. An AI that sees does something similar with pictures. It cuts the photo into small squares called **patches**, like a sheet of stamps.
+A chatbot cuts text into small pieces called tokens. An AI that sees does something similar with pictures. It cuts the photo into small squares called **patches**, like a sheet of stamps.
 
 Each patch becomes a list of numbers, just as each token does. Then the model reads the patches one after another, as if they were words. A bigger, sharper photo means more patches to read.
+
+In one line: a picture becomes a row of patches, and patches are read like words.
 
 ## Try it: a photo and a question
 
@@ -54,19 +56,21 @@ Press Run, or tap a step.
 
 ## Sound becomes numbers too
 
-Sound is a wobble in the air. A microphone measures that wobble thousands of times a second. Each measurement is a number.
+**Imagine this:** you twang a ruler on the edge of a desk. It shakes, the air shakes, and your ear feels the shaking as a buzz. A microphone does what your ear does, but it writes down a number for each tiny moment. Sound is a wobble in the air. A microphone measures that wobble thousands of times a second. Each measurement is a number.
 
-The AI cuts the sound into short slices, like patches of a picture. It reads them in order and writes down the words it hears. This is called speech to text, and it is how live captions work.
+The AI cuts the sound into short slices, like the patches of a picture. It reads them in order and writes down the words it hears. This is called **speech to text**, and it is how live captions work.
 
 ## Talking back
 
-It can go the other way too. Text to speech turns written words into a spoken voice.
+It can go the other way too. **Text to speech** turns written words into a spoken voice.
 
 Modern voices sound natural because the AI learned from real people talking. That is how a phone assistant answers out loud.
 
 ## Drawing from a description
 
 Image generators make new pictures from words. They start with pure **noise**, random coloured speckles like a fuzzy old TV screen. Then the model cleans it up a little, step by step.
+
+**Imagine this:** a steamed-up bathroom mirror. You wipe one stroke and a faint shape shows. You wipe again and it gets clearer. The fog is the **noise**, each wipe is one cleaning step, and your description tells the model which picture to uncover. The picture stops being exact because the model is not uncovering a hidden picture. It is making a new one.
 
 At each step, your description guides the cleaning. After many steps, a clear picture appears that matches your words. It learned by adding noise to real pictures and practising removing it.
 
@@ -92,7 +96,7 @@ A fake voice message can sound just like someone you know. If something seems sh
 
 ## Ask before you upload
 
-Photos you upload may be kept by the company behind the AI. So never upload photos of other people without asking them first. That includes friends, family and classmates.
+Photos you upload may be kept by the company behind the AI. So do not upload photos of other people without asking them first. That includes friends, family and classmates.
 
 Also avoid photos that show your face, your school badge or your address.
 

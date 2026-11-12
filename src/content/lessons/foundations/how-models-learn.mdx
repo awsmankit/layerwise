@@ -4,7 +4,7 @@ track: foundations
 level: basic
 order: 2
 summary: What training actually does to a model's numbers, worked through by hand on three points, with the ideas that carry over to the largest models.
-updated: 2026-10-26
+updated: 2026-11-12
 sources:
   - label: "Adam: A Method for Stochastic Optimization (Kingma and Ba, 2014)"
     url: https://arxiv.org/abs/1412.6980
@@ -18,23 +18,23 @@ import Callout from '../../../components/ui/Callout.astro';
 import LearningCurves from '../../../components/viz/LearningCurves.tsx';
 import Deep from '../../../components/ui/Deep.astro';
 
-"The model learned from data" sounds mysterious. It is not. Training is a loop that makes a guess, measures how wrong it was, and nudges a set of numbers so the next guess is a little less wrong. This lesson builds that loop from scratch with three data points and a pencil. The same loop, scaled up enormously, trains every large language model.
+"The model learned from data" sounds like magic. It is not. Training is a loop. The model makes a guess, checks how wrong it was, and nudges some numbers so the next guess is a little less wrong. Here we build that loop from scratch with three data points and a pencil. The same loop, scaled up enormously, trains every large language model.
 
 ## A neural network is layers of numbers
 
-A **neural network** takes numbers in and gives numbers out. In between are **layers**. Each layer multiplies its inputs by a grid of numbers called **weights**, adds a few more numbers, and applies a simple bend so the network can represent curves, not only straight lines. The output of one layer is the input to the next.
+Think of a machine that takes numbers in and gives numbers out. That is a **neural network**. In between sit **layers**. Each layer multiplies its inputs by a grid of numbers called **weights** and adds a few more numbers. Then it applies a simple bend, so the network can draw curves and not only straight lines. The output of one layer is the input to the next.
 
-Picture a mixing desk with a huge number of dials. Each weight is one dial. A small model has millions; a large language model has billions. Training never changes the design of the desk. It only turns the dials. The dials together are called the model's **parameters**.
+Picture a mixing desk with a huge number of dials. Each weight is one dial. A small model has millions; a large language model has billions. Training never changes the design of the desk. It only turns the dials. All the dials together are the model's **parameters**.
 
 ## A loss is a score of how wrong
 
-To turn dials in a useful direction you need a single number that says how badly the model is doing. That number is the **loss**. Lower is better; zero means perfect on the examples you checked.
+**Imagine this:** you bowl at the stumps, and a friend calls out how far each ball missed. "Two feet wide." "One foot short." Those misses, added up, are your score of how wrong. (A perfect bowler has a boring score.) The model gets the same kind of feedback. How do you know which way to turn a dial? First you need one number that says how badly the model is doing. That number is the **loss**. Lower is better. Zero means perfect on the examples you checked.
 
-A common choice is the **squared error**: take the difference between the prediction and the right answer, square it so misses in either direction count, and add these up over the examples. A language model uses a different loss, based on how much probability it gave to the actual next token, but the idea is the same.
+A common choice is the **squared error**. Take the gap between the prediction and the right answer. Square it, so a miss in either direction counts. Then add these up over the examples. A language model uses a different loss, based on how much probability it gave to the actual next token, but the idea is the same: one score for how wrong.
 
 ## A worked example by hand
 
-Here are three data points. The hidden rule is y = 2x + 1, but the model does not know that.
+Here are three data points. The hidden rule is y = 2x + 1, but the model does not know that. Its job is to find the rule.
 
 | x | Right answer y |
 |---|---|
@@ -42,7 +42,7 @@ Here are three data points. The hidden rule is y = 2x + 1, but the model does no
 | 2 | 5 |
 | 3 | 7 |
 
-The model is a straight line with two dials: a slope **w** and an offset **b**. Its prediction is w times x, plus b. Try some settings and score each one with the squared error.
+The model is a straight line with two dials. One is the slope **w**, how steep the line is. The other is the offset **b**, how high it sits. Its prediction is w times x, plus b. Try some settings and score each one with the squared error.
 
 | Dials (w, b) | Predictions | Errors (prediction minus answer) | Squared errors | Loss |
 |---|---|---|---|---|
@@ -55,11 +55,11 @@ Guessing works for two dials. It is hopeless for a billion. Training needs a way
 
 ## Gradient descent: walking downhill in fog
 
-Imagine standing on a hillside in thick fog, trying to reach the valley floor. You cannot see the valley, but you can feel the slope under your feet. So you take a step in the steepest downhill direction, feel again, and repeat.
+Imagine standing on a hillside in thick fog, trying to reach the valley floor. You cannot see the valley, but you can feel the slope under your feet. So you step in the steepest downhill direction, feel again, and repeat.
 
-The landscape is the loss for every possible setting of the dials. The slope under your feet is the **gradient**: for each dial, how much the loss would rise or fall if you turned that dial up a little. **Gradient descent** means: work out the gradient, turn every dial a small step against it, repeat.
+That is the whole idea. The landscape is the loss for every possible setting of the dials. The slope under your feet is the **gradient**: for each dial, how much the loss would rise or fall if you turned that dial up a little. **Gradient descent** means three things: work out the gradient, turn every dial a small step against it, repeat.
 
-Start from (w, b) = (1, 0), loss 29. Every prediction is too low, so both dials should go up. The errors are biggest where x is biggest, and w is multiplied by x, so w has more effect on the loss. Worked out exactly (see the deeper section), the gradient is -40 for w and -18 for b. Multiply by a **learning rate** of 0.01 and step the other way:
+Start from (w, b) = (1, 0), loss 29. Every prediction is too low, so both dials should go up. The errors are biggest where x is biggest, and w is multiplied by x, so w has more effect on the loss. Worked out exactly (see the deeper section), the gradient is -40 for w and -18 for b. Now pick a **learning rate**, the size of each step. Here it is 0.01. Multiply the gradient by it and step the other way:
 
 | | w | b | Predictions | Loss |
 |---|---|---|---|---|
@@ -72,11 +72,11 @@ Nobody told the model the rule. It found w = 2 and b = 1 by repeatedly stepping 
 
 ## Backpropagation: which dials to nudge, and by how much
 
-In a big network a dial in the first layer affects the output only through every layer after it. **Backpropagation** is the bookkeeping method that works out, for every dial at once, how much it contributed to the final error. It starts at the loss and works backwards through the layers, passing blame along. The result is the gradient for every parameter, computed in roughly the same time as a couple of forward passes. Gradient descent then uses it to take the step.
+**Imagine this:** a group project gets a bad mark, and the teacher asks who is to blame. Each person's share depends on how their part fed into the next person's part. That blame-sharing is the idea here, though a network shares it with exact arithmetic, not opinion. In a big network, a dial in the first layer reaches the output only by passing through every layer after it. So who is to blame for a wrong answer? **Backpropagation** is the bookkeeping method that works this out, for every dial at once. It starts at the loss and works backwards through the layers, passing blame along. The result is the gradient for every parameter, computed in roughly the same time as a couple of forward passes (a forward pass is one run from input to output). Gradient descent then uses it to take the step.
 
 ## The learning rate matters
 
-The learning rate is the size of each step. The same problem with three rates:
+**Imagine this:** you tune an old radio. Twist the knob too hard and you fly past the station. Twist too gently and the match ends before you find it. The learning rate is the size of each step. Too big and you leap over the valley. Too small and you crawl. Here is the same problem with three rates:
 
 <LearningCurves client:visible show="rate" />
 
@@ -84,13 +84,13 @@ Real training often starts with a small warm-up, then lowers the learning rate g
 
 ## Batches and epochs
 
-Real datasets are too big to compute the loss on everything before each step. So training takes a random **batch** of examples, computes the loss and gradient on just those, and takes a step. The estimate is noisy, but steps are cheap and the noise averages out. One pass through the whole dataset is an **epoch**. Small models often train for many epochs; large language models often see most of their data only about once.
+**Imagine this:** a cook does not drink the whole pot to check the salt. One spoonful is enough to decide. A **batch** is that spoonful. Real datasets are too big to compute the loss on everything before each step. So training grabs a random **batch**, a small handful of examples. It computes the loss and gradient on just those and takes a step. The estimate is noisy, but steps are cheap and the noise averages out. One pass through the whole dataset is an **epoch**. Small models often train for many epochs; large language models often see most of their data only about once.
 
 ## Overfitting and generalisation
 
-The goal is not to do well on the training examples. It is to do well on examples the model has never seen. That is **generalisation**.
+Doing well on the examples you practised on is easy. The real goal is to do well on examples the model has never seen. That is **generalisation**.
 
-A model with lots of dials and few examples can memorise the training set, noise and all, and then fail on anything new. That is **overfitting**, like a student who memorises past exam answers without understanding them. To catch it, keep some data aside as a **validation set** that is never used for training. If the training loss keeps falling while the validation loss starts rising, the model has begun to memorise. A separate **test set** is kept untouched until the very end, for an honest final score.
+A model with lots of dials and few examples can memorise the training set, noise and all, and then fail on anything new. That is **overfitting**, like a student who memorises past exam answers without understanding them. To catch it, keep some data aside as a **validation set** that is never used for training. If the training loss keeps falling while the validation loss starts rising, the model has begun to memorise. A separate **test set** stays untouched until the very end, for an honest final score.
 
 <LearningCurves client:visible show="overfit" />
 
@@ -102,7 +102,7 @@ Training loss falls, validation loss falls: learning. Training loss falls, valid
 
 ## Why more data and bigger models helped
 
-For years the worry was that bigger models would just overfit. In practice, large neural networks trained on far more data kept getting better. Research on language models found that loss falls smoothly and predictably as model size, data and compute grow together, and later work showed that many large models had been trained on too little data for their size. More data gives more patterns to learn and makes memorising harder; more parameters give room to store those patterns. Both cost compute, which is why training the largest models needs thousands of chips.
+**Imagine this:** a cook who has made ten dishes in total knows little. A cook who has made ten thousand has seen every kind of mistake, and has a bigger kitchen to try ideas in. That is roughly why more data and bigger models both help. For years people worried that bigger models would just overfit. In practice, large neural networks trained on far more data kept getting better. Research on language models found that loss falls smoothly and predictably as model size, data and compute grow together. Later work showed that many large models had been trained on too little data for their size. More data gives more patterns to learn and makes memorising harder. More parameters give room to store those patterns. Both cost compute (the raw calculating work), which is why training the largest models needs thousands of chips.
 
 <Deep title="The maths, and the example in Python">
 
@@ -157,7 +157,7 @@ Notice that w overshoots to about 2.17 early on while b lags behind. The loss su
 - A model is a fixed design with many adjustable numbers. Training only changes the numbers.
 - The loss is one number that says how wrong the model is. Training tries to make it smaller.
 - Gradient descent steps every dial downhill; backpropagation works out the direction for each dial.
-- Too large a learning rate diverges, too small crawls.
+- Too large a learning rate diverges (the loss blows up), too small crawls.
 - Judge a model on held-out validation data, never only on the data it trained on.
 
 Next: [Tokens and embeddings](../tokens-and-embeddings/) shows how text becomes the numbers a network can use. Then [How a model is trained, stage by stage](../training-pipeline/) shows how this loop is used to build an assistant.

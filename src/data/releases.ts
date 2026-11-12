@@ -36,6 +36,23 @@ export const repoUrl = 'https://github.com/awsmankit/layerwise';
 
 export const releases: Release[] = [
   {
+    version: '2.14.0',
+    date: '2026-11-12',
+    title: 'The encoder step by step, livelier diagrams, and plainer lessons',
+    summary: 'A new walkthrough follows one sentence through a transformer encoder, every diagram now uses rounded colour cards with a glow on the active step, and 24 beginner lessons were rewritten with everyday scenes.',
+    highlights: [
+      'A new 12-step walkthrough in "Inside a transformer block" follows "The cat licked its paw" through one encoder layer: embeddings, position, query, key and value, the score grid, scaling, softmax, blending, add and norm, feed-forward, and stacking. The numbers are real; only the weights are hand-made.',
+      'Switch off the scaling in the softmax step to see why scores are divided by the square root of the size: without it the model becomes far too sure of itself.',
+      'Diagrams across the site now use rounded colour cards, chunky outlines, a soft shadow, flowing dashed lines and a glow on the step you are on. It works in light and dark mode, and the movement stops if you prefer reduced motion.',
+      'All 17 Start lessons and 7 Foundations lessons are easier to read: each section opens with a short "Imagine this" scene before the term, terms are explained where they first appear, and the facts, numbers and code are unchanged.',
+    ],
+    tryIt: [
+      { label: 'The encoder, step by step', href: '/learn/foundations/inside-a-transformer/' },
+      { label: 'A plainer lesson', href: '/learn/foundations/attention-intuition/' },
+    ],
+    stats: { lessons: 164, topics: 17, labs: 24, glossary: 880 },
+  },
+  {
     version: '2.13.1',
     date: '2026-11-10',
     title: 'An "On this page" panel on interview answers',

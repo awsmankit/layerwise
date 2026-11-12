@@ -4,7 +4,7 @@ track: start
 level: basic
 order: 7
 summary: Not all AI learns from examples. See how a computer can decide with rules, a tree of questions, or by looking ahead in a game, and why it picks the move it does.
-updated: 2026-11-01
+updated: 2026-11-12
 sources:
   - label: "AI4K12 Big Idea 2: Representation and Reasoning"
     url: https://ai4k12.org/big-idea-2-overview/
@@ -30,23 +30,25 @@ import NimLookAhead from '../../../components/viz/NimLookAhead.tsx';
 import Callout from '../../../components/ui/Callout.astro';
 import Deep from '../../../components/ui/Deep.astro';
 
-So far, the computers in these lessons learned from examples. But a computer can also make good decisions without learning anything. It can follow rules, ask questions in a smart order, or look ahead in a game.
+So far, the computers in these lessons learned from examples. But a computer can also make good choices without learning anything. It can follow rules, ask questions in a smart order, or look ahead in a game.
 
-Computers that work this way are old, and they are still everywhere. A route in a map app and a game opponent can both be built from these ideas.
+These ideas are old, and they are still everywhere. The route in a map app and the opponent in a game can both be built from them.
 
 ## Rules
 
-A rule says "if this, then that". Remember the spam filter from the first lesson, with its rule about the word WINNER? A helper made only of rules like that is called **rule-based**.
+**Imagine this:** a school rule says, "If it rains, we play indoors." Nobody asks the clouds for their opinion. The teacher just checks the sky and follows the rule. A **rule** says "if this, then that". Remember the spam filter from the first lesson, with its rule about the word WINNER? A helper made only of rules like that is called **rule-based**.
 
 Try the helper below. It has three rules. Pick a type of weather and a temperature.
 
 <RuleHelper client:visible />
 
-Rules are easy to read and easy to check. But a person must think of every case. When you pick snowy and warm, no rule fits. Real rule lists grow and grow, which is why many jobs moved to learning from examples.
+Rules are easy to read and easy to check. But a person must think of every case. Pick snowy and warm, and no rule fits. Real rule lists keep growing, which is why many jobs moved to learning from examples.
+
+In one line: rules are clear, but they only cover what a person thought of.
 
 ## Twenty questions
 
-You know the game. Someone thinks of an animal, and you ask yes or no questions to find it. A **decision tree** is a plan for which question to ask next, based on each answer.
+You know the game. Someone thinks of an animal, and you ask yes or no questions to find it. A **decision tree** is a plan that says which question to ask next, depending on each answer.
 
 A good tree asks questions that cut the animals in half. A bad one wastes questions. Build one below, or let the computer finish it for you.
 
@@ -60,19 +62,19 @@ Here you picked the questions. A computer can also work them out from examples. 
 
 Now a game. Five sticks lie on the table. You take 1 or 2 sticks on your turn. Whoever takes the last stick wins.
 
-Before it moves, the computer builds a **look-ahead tree**. It tries each move, then each reply, then each reply to that, until the game ends. This is called **search**. It then picks a move that wins whatever you do.
+**Imagine this:** a cricket captain at the end of an over. If I bring on the spinner, the batter may hit out. If he does, I need a fielder at long-on. If I move him there, a gap opens at cover. The captain looks a few steps ahead before moving anyone. (Real captains also shout at the fielders, which the computer skips.) Before it moves, the computer does the same, playing the game in its head, like a chess player thinking "if I do this, you do that". It builds a **look-ahead tree**: each move, then each reply, then each reply to that, until the game ends. Trying all these paths is called **search**. Then it picks a move that wins whatever you do.
 
 <NimLookAhead client:visible />
 
 Play it twice, once going first and once going second. Can you ever win against it? Hint: which pile of sticks is bad for whoever has to move? Look at the blue and yellow circles and squares to see why. A square is blue when every move you have still leads to a computer win.
 
-The computer is not learning here. It checks every possible game, which takes no examples at all.
+The computer is not learning here. It simply checks every possible game, so it needs no examples at all.
 
 ## Too many games to check
 
-Take-away is tiny, with 20 positions in the tree. Tic-tac-toe is small too, with 26,830 possible games when you ignore rotations and mirror images. A computer can check them all.
+**Imagine this:** checking every page of a thin notebook takes a minute. Checking every page of every book in a huge library takes more than a lifetime. The take-away game is the notebook: it is tiny, with 20 positions in the tree. Tic-tac-toe is small too, with 26,830 possible games when you ignore rotations and mirror images. A computer can check them all.
 
-Chess is different. One well-known estimate says there are at least a 1 followed by 120 zeros of possible games, far more than any computer could check. So chess programs look only a few moves ahead, and use a score to judge the positions they reach.
+Chess is different. One well-known estimate says there are at least a 1 followed by 120 zeros of possible games, far more than any computer could check. So chess programs look only a few moves ahead. They use a score to judge how good each position looks.
 
 <Callout title="Three ideas to remember">
 Rules: a person writes them, and they miss cases. Trees: a plan of questions, best when each one splits the choices evenly. Search: look ahead, and pick the move that leads to a win.
@@ -80,7 +82,7 @@ Rules: a person writes them, and they miss cases. Trees: a plan of questions, be
 
 ## Thinking and learning together
 
-Many real systems mix these ideas with learning. A game program might use search to look ahead and learning to judge how good each position is. Neither idea replaces the other.
+Many real systems mix these ideas with learning. A game program might use search to look ahead, and learning to judge how good each position is. The ideas work as a team.
 
 <Deep title="For grown-ups: the technical names">
 

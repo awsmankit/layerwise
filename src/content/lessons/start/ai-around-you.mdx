@@ -4,7 +4,7 @@ track: start
 level: basic
 order: 1.5
 summary: Spot the AI in a normal day, and tell it apart from plain automation and from robots. Sort twelve everyday things and see what data each one uses.
-updated: 2026-11-01
+updated: 2026-11-12
 sources:
   - label: "Apple: About Face ID advanced technology"
     url: https://support.apple.com/en-us/102381
@@ -38,25 +38,27 @@ import AiOrNot from '../../../components/viz/AiOrNot.tsx';
 import Callout from '../../../components/ui/Callout.astro';
 import Deep from '../../../components/ui/Deep.astro';
 
-Think about a normal day. You wake up, check a phone, travel somewhere, watch something, and maybe chat with a bot. Some of that is AI. Some of it only looks clever.
+Think about your day. You wake up, check a phone, travel somewhere, watch something, and maybe chat with a bot. Some of that is AI. Some of it only looks clever.
 
-This lesson helps you tell the difference.
+This lesson helps you tell which is which.
 
 ## Three words that get mixed up
 
 - **Automation** means a machine follows fixed steps that a person wrote. A kettle that switches off when the water boils is automation.
-- **AI** means a model that learned from examples. Nobody wrote its rules by hand. Training found them.
+- **AI** means a model that learned from examples. A **model** is the thing that does the guessing. Nobody wrote its rules by hand. Training found them.
 - A **robot** is a machine that moves in the real world.
 
-A robot can follow fixed steps. It can use AI. It can do both. So a robot is a kind of body, and AI is a way of deciding. They are different things.
+A robot can follow fixed steps. It can use AI. It can do both. So a robot is a body, and AI is a way of deciding. They are different things.
+
+**Imagine this:** a school bus driver. The driver's body and the bus do the moving. The driver's brain decides which turn to take. The bus is the **robot**, the way the driver chooses is the **AI**, and a printed timetable stuck on the dashboard is **automation**. (A bus with a mind of its own would make for a very long trip to school.) The picture stops being exact because a real robot can run on a timetable alone, with no clever driver at all.
 
 ## Sensing is not thinking
 
 Think of a shop door that opens as you walk up. A **sensor** notices movement and gives the door a signal. The rule is: if something moves, open.
 
-The door has no idea that it is you. It did not learn anything. It is clever to watch, but it is plain automation.
+The door has no idea that it is you. It did not learn anything. It looks clever, but it is plain automation.
 
-AI often turns up when a sensor's signal needs recognising. Is that a face? What words are in that sound? Researchers call this perception, which means finding meaning in what the sensors pick up.
+AI often turns up when a signal needs recognising. Is that a face? What words are in that sound? Researchers call this **perception**: finding meaning in what the sensors pick up.
 
 ## Your turn: AI or not?
 
@@ -64,23 +66,23 @@ Here are twelve everyday things. For each one, pick "usually AI" or "usually pla
 
 <AiOrNot client:visible />
 
-Read the explanation even when you are right. It also tells you what data goes into each thing.
+Read the explanation even when you are right. It also says what data goes into each thing.
 
 ## Where the data comes from
 
-Every AI thing in the list needed examples to learn from. Many of them also use your data when you use them. Face unlock uses a picture of your face. A maps app uses how phones are moving on the roads. Suggestions use what people click.
+**Imagine this:** a shopkeeper who remembers what you bought last time and puts your favourite biscuits near the counter. He can only do that because you keep shopping there. Apps work the same way: your clicks and visits are the **data**. Every AI thing in the list needed examples to learn from. Many also use your data while you use them. Face unlock uses a picture of your face. A maps app uses how phones are moving on the roads. Suggestions use what people click.
 
 Some of this stays on your phone, and some goes to computers owned by a company. Settings let you choose some of it. You can find out more in [AI and your private life](../../responsible/ai-and-your-private-life/).
 
 ## Why it matters which one it is
 
-Plain rules do the same thing every time, so you can predict them. AI can be wrong in surprising ways. Automatic subtitles can mishear a name, and YouTube itself warns that accents and noise cause mistakes.
+Plain rules do the same thing every time, so you can predict them. Think of a vending machine: press B4 and you get B4, every time. AI is more like a friendly guesser who is right most days, then hands you the wrong snack. AI can be wrong in surprising ways, even when it usually works. Automatic subtitles can mishear a name, and YouTube itself warns that accents and noise cause mistakes.
 
 So when a mistake would matter, check the result. That means checking a route before a long trip, and reading subtitles for a school project.
 
 ## Why "usually"
 
-The same kind of thing can be built in different ways. Some thermostats are one simple rule. Others learn your habits. A washing machine can be a fixed list of steps. Its maker may also add AI to the name.
+The same kind of thing can be built in different ways. Some thermostats are one simple rule. Others learn your habits. A washing machine can be a fixed list of steps. Its maker may still put "AI" in the name.
 
 When you are not sure, ask two questions. What did it learn from? And what data does it use?
 

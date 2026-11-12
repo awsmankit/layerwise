@@ -4,7 +4,7 @@ track: start
 level: basic
 order: 1
 summary: What people mean by AI, how a computer can learn from examples, and what chatbots are good and bad at.
-updated: 2026-10-29
+updated: 2026-11-12
 sources:
   - label: "Google's Machine Learning Crash Course"
     url: https://developers.google.com/machine-learning/crash-course
@@ -16,7 +16,7 @@ import Nesting from '../../../components/viz/Nesting.tsx';
 import Callout from '../../../components/ui/Callout.astro';
 import Deep from '../../../components/ui/Deep.astro';
 
-People talk about AI all the time. It is in phones, games and homework apps. This lesson explains what it really is, in plain words. You do not need to know anything about computers first.
+People talk about AI all the time. It is in phones, games and homework apps. But what is it, really? This lesson explains it in plain words. You do not need to know anything about computers first.
 
 ## A job for a computer
 
@@ -24,15 +24,17 @@ Spam is junk email, like messages saying you have won a prize you never entered.
 
 ## Way one: write the rules
 
-You could write the rules yourself. "If the email says WINNER in capital letters, it is spam." "If it asks for a password, it is spam."
+**Imagine this:** you are the gatekeeper at a school fair. You get a list: "No entry without a ticket. No entry with a water balloon." Every rule is yours or someone's to write, and every new trick needs a new line on the list. That list is the **rules**. Now apply it to spam. You could write the rules yourself. "If the email says WINNER in capital letters, it is spam." "If it asks for a password, it is spam."
 
 This works for a while. Then the spammers change their words, and your rules miss them. You end up writing new rules for ever.
 
 ## Way two: learn from examples
 
-Or you could collect thousands of emails that people have already marked "spam" or "not spam". Then you let the computer find the patterns that tell the two apart. Nobody writes the rules.
+**Imagine this:** a new post office worker is not given a rulebook. Instead, a colleague hands over a big tray of letters and says, "These go to the bin, these go to the homes." After a few thousand letters, the worker spots the patterns alone. The marked letters are the **examples**. (Unlike the worker, a computer never needs a tea break, but it also cannot ask what you meant.) For spam, you could collect thousands of emails that people have already marked "spam" or "not spam". Then you let the computer find the patterns that tell the two apart. Nobody writes the rules.
 
 When spammers try new tricks, you show the computer new examples. This second way is called **machine learning**: the computer learns the rules from examples. Nearly everything called AI today works like this.
+
+In one line: with machine learning, you show examples instead of writing rules.
 
 | | Writing the rules | Learning from examples |
 |---|---|---|
@@ -48,17 +50,17 @@ People use "AI", "machine learning" and "chatbot" as if they meant the same thin
 
 ## What a model is
 
-A **model** is the part of an AI system that has learned something. Picture a machine covered in millions of tiny dials. Each way of setting the dials gives different answers.
+A **model** is the part of an AI system that has learned something. Picture a machine covered in millions of tiny dials, like a giant mixing desk. Each way of setting the dials gives different answers.
 
 Before it learns anything, the dials are set at random. So at first, its answers are nonsense.
 
 ## How a model learns
 
-**Training** is how the dials get set, by learning from examples. The model sees an example and makes a guess. Then every dial is turned a tiny bit, so the next guess is a little better.
+**Training** is how the dials get set. The model sees an example and makes a guess. Then every dial is turned a tiny bit, so the next guess is a little better.
 
 This happens millions of times. Slowly the dials settle where they capture the patterns in the examples.
 
-It is a bit like practising penalty kicks. Each miss tells you to aim a little differently. After thousands of kicks, you hit the target far more often.
+It is a bit like practising penalty kicks. Each miss tells you to aim a little differently. After thousands of kicks, you hit the target far more often. (The comparison stops here: a model has millions of dials, not one aim.)
 
 Once training is over, the dials stay where they are. They do not change while you chat. The [next lesson](../how-computers-learn/) lets you turn a dial yourself.
 
@@ -72,7 +74,7 @@ Using a trained model is called **inference**. Training is expensive because it 
 
 ## What a chatbot does
 
-The models behind chatbots are called **large language models**, because they learn from a huge amount of writing. Their main training task sounds simple: look at some text and guess what comes next.
+The models behind chatbots are called **large language models**, because they learn from a huge amount of writing. Their main training task sounds simple: look at some text and guess what comes next. **Imagine this:** you text "See you at the" and your phone offers "station", "party" or "gym". It is guessing from what people usually write next. A large language model plays that same guessing game, but it has read far more, so its guesses are far better. (Yours still beat it at knowing which station you meant.)
 
 To guess well, a model has to pick up grammar, facts and styles of writing. Answering questions and writing stories both grow out of that one skill.
 

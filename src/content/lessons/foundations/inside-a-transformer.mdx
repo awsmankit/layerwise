@@ -20,6 +20,7 @@ sources:
 
 import NodeGraph from '../../../components/viz/NodeGraph.tsx';
 import TransformerFlow from '../../../components/viz/TransformerFlow.tsx';
+import EncoderWalkthrough from '../../../components/viz/EncoderWalkthrough.tsx';
 import Callout from '../../../components/ui/Callout.astro';
 import Deep from '../../../components/ui/Deep.astro';
 
@@ -98,6 +99,14 @@ Learned absolute positions cannot go past the longest position seen in training.
 | Decoder-only | Causal attention; predicts the next token | Chat, generation, code, general assistants | GPT series, Llama, Mistral |
 | Encoder-only | Every token sees every other token; outputs a vector per token | Classification, embeddings for search, reranking | BERT and many embedding models |
 | Encoder-decoder | Encoder reads the input fully; decoder generates while attending to it | Translation, summarisation, speech to text | The original Transformer, T5, Whisper |
+
+## The encoder, step by step
+
+The encoder is the half of a transformer that reads a whole input at once and turns every word into a vector that knows about its neighbours. Here is one full encoder layer on a five-word sentence, small enough to see every number. The puzzle: when the model reaches "its", how does it work out that the paw belongs to the cat? Press Next, tap a word to follow it, and use the switch in step 7 to see why the scores get divided by a square root.
+
+<EncoderWalkthrough client:visible />
+
+The order is always the same: embed, add position, make Q, K and V, score every pair, scale, softmax, blend the values, add and norm, feed-forward, add and norm. Then the next layer starts from that output.
 
 ## From the last layer to a token
 

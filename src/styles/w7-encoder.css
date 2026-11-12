@@ -1,0 +1,381 @@
+/* Styles for the "Encoder, step by step" walkthrough. Every class is under the ew- prefix. */
+
+.viz.ew {
+  --ew-cell: 2.7rem;
+  --ew-c: 1.9rem;
+}
+.ew-dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin: 0 0 0.8rem;
+  padding: 0;
+  list-style: none;
+}
+.ew-dot {
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink-2);
+  font: 700 0.8rem var(--font-display);
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.2s var(--pop);
+}
+.ew-dot.is-done {
+  background: var(--signal-wash);
+  border-color: var(--signal);
+}
+.ew-dot.is-on {
+  background: var(--signal);
+  border-color: var(--signal);
+  color: var(--on-signal);
+  transform: scale(1.12);
+}
+.ew-dot:focus-visible,
+.ew-chip:focus-visible,
+.ew-rowhead:focus-visible,
+.ew input[type='range']:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.ew-card {
+  padding: 1rem 1rem 1.1rem;
+  border: 2px solid var(--ink);
+  border-radius: var(--r-md);
+  background: var(--paper);
+  box-shadow: var(--hard);
+}
+.ew-kicker {
+  margin: 0;
+  font: 700 0.75rem var(--font-display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--signal-ink);
+}
+.ew-title {
+  margin: 0.15rem 0 0.4rem;
+  font: 800 1.35rem/1.15 var(--font-display);
+  color: var(--ink);
+}
+.ew-hook {
+  margin: 0 0 0.8rem;
+  font-size: 1.02rem;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.ew-why {
+  margin: 0.9rem 0 0;
+  padding: 0.65rem 0.8rem;
+  border-left: 4px solid var(--sun);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  background: var(--tint-sun);
+  color: #15123d;
+  font-size: 0.93rem;
+  line-height: 1.45;
+}
+.ew-why b {
+  margin-right: 0.3rem;
+}
+.ew-stage {
+  margin-top: 0.4rem;
+}
+.ew-cap,
+.ew-legend {
+  margin: 0.6rem 0 0.35rem;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  color: var(--ink-2);
+}
+.ew-pill {
+  display: inline-block;
+  margin: 0 0.3rem 0.3rem 0;
+  padding: 0.05rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 0.78rem;
+  color: var(--ink-2);
+}
+
+/* chips and rows */
+.ew-row,
+.ew-who {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.2rem 0 0.7rem;
+}
+.ew-whol {
+  font-size: 0.85rem;
+  font-weight: 650;
+  color: var(--ink-3);
+}
+.viz .ew-chip {
+  min-height: 40px;
+  padding: 0.25rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font: 600 0.9rem var(--font-display);
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+.ew-chip:hover {
+  border-color: var(--signal);
+}
+.viz .ew-chip[aria-pressed='true'] {
+  background: var(--signal);
+  border-color: var(--signal);
+  color: var(--on-signal);
+}
+
+/* tokens */
+.ew-tokens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.ew-token {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 4.2rem;
+  padding: 0.5rem 0.8rem;
+  border: 2px solid var(--ink);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  text-align: center;
+}
+.ew-token b {
+  font: 800 1.15rem var(--font-display);
+}
+.ew-token small {
+  font-size: 0.72rem;
+  color: var(--ink-3);
+}
+.ew-token.is-star {
+  background: var(--tint-sun);
+  color: #15123d;
+}
+.ew-token.is-star small {
+  color: #403c6b;
+}
+
+/* vectors */
+.ew-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.5rem;
+  margin: 0.3rem 0;
+}
+.ew-name {
+  flex: 0 0 4.2rem;
+  font: 700 0.88rem var(--font-display);
+  color: var(--ink);
+}
+.ew-strip {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.ew-tag {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.ew-cells {
+  display: inline-flex;
+  flex-wrap: wrap;
+  max-width: calc(var(--ew-c) * 6 + 7px);
+  gap: 1px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--line-soft);
+}
+.ew-c {
+  display: grid;
+  place-items: center;
+  width: var(--ew-c);
+  height: 1.9rem;
+  font: 600 0.7rem var(--font-mono);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.ew-c.is-strong {
+  color: var(--on-signal);
+}
+.ew-op {
+  font: 800 1.1rem var(--font-display);
+  color: var(--ink-3);
+}
+.ew-sum .ew-strip {
+  min-width: 0;
+}
+
+/* grids */
+.ew-gridwrap {
+  max-width: 100%;
+  overflow-x: auto;
+  padding-bottom: 0.2rem;
+}
+.ew-grid {
+  display: inline-grid;
+  gap: 2px;
+  align-items: center;
+}
+.ew-colhead {
+  text-align: center;
+  font: 700 0.72rem var(--font-display);
+  color: var(--ink-3);
+}
+.ew-rowhead {
+  min-height: 2.4rem;
+  padding: 0 0.4rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink);
+  font: 700 0.85rem var(--font-display);
+  text-align: left;
+  cursor: pointer;
+}
+.ew-rowhead:hover {
+  border-color: var(--signal);
+}
+.ew-rowhead.is-on {
+  background: var(--signal);
+  color: var(--on-signal);
+}
+.ew-gc {
+  width: var(--ew-cell);
+  height: 2.4rem;
+  border-radius: 6px;
+}
+.ew-gc.is-row {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+}
+
+/* Q K V columns */
+.ew-qkv {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0.2rem 1.2rem;
+}
+
+/* blend */
+.ew-bar {
+  position: relative;
+  width: 4rem;
+  height: 0.7rem;
+  border-radius: 999px;
+  background: var(--line-soft);
+  overflow: hidden;
+}
+.ew-bar i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--signal);
+  border-radius: 999px;
+}
+.ew-pc {
+  width: 2.6rem;
+  font: 700 0.8rem var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+.ew-result {
+  margin-top: 0.6rem;
+  padding-top: 0.5rem;
+  border-top: 2px dashed var(--line);
+}
+
+/* waves */
+.ew-waves {
+  display: inline-grid;
+  gap: 1px;
+  max-width: 100%;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+.ew-wrow {
+  display: flex;
+  gap: 1px;
+}
+.ew-wrow span {
+  width: 0.7rem;
+  height: 0.7rem;
+}
+
+/* stack */
+.ew-slide {
+  display: grid;
+  gap: 0.2rem;
+  margin: 0.2rem 0 0.4rem;
+  font-size: 0.92rem;
+  color: var(--ink-2);
+}
+.ew-slide input {
+  width: 100%;
+  max-width: 22rem;
+}
+.ew-mini {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+.ew-minicol {
+  display: grid;
+  justify-items: center;
+  gap: 0.15rem;
+  min-width: 2.6rem;
+}
+.ew-minicol i {
+  display: block;
+  width: 1.2rem;
+  border-radius: 4px 4px 0 0;
+  background: var(--signal);
+}
+.ew-minicol small {
+  font-size: 0.68rem;
+  color: var(--ink-3);
+}
+
+.ew-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.9rem 0 0.4rem;
+}
+.viz.ew .btn {
+  min-height: 44px;
+}
+
+@media (max-width: 480px) {
+  .viz.ew {
+    --ew-cell: 2.3rem;
+    --ew-c: 1.7rem;
+  }
+  .ew-name {
+    flex-basis: 100%;
+  }
+  .ew-card {
+    padding: 0.8rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ew-dot {
+    transition: none;
+  }
+}

@@ -4,7 +4,7 @@ track: start
 level: basic
 order: 3
 summary: Learning from labelled examples, finding groups on its own, and learning by trial and reward. Try all three on one pile of fruit, then see which one chatbots use.
-updated: 2026-11-01
+updated: 2026-11-12
 sources:
   - label: "Elements of AI (free introductory course)"
     url: https://www.elementsofai.com
@@ -32,25 +32,34 @@ Computers can learn in these three ways too. This lesson shows all of them on on
 
 ## Way one: with the answers
 
-Remember the spam filter, and the apple and banana game? In both, the computer saw examples that came with the right answer. A **label** is that answer, such as "spam" or "banana".
+Remember the spam filter, and the apple and banana game? In both, the computer saw examples that came with the right answer. That answer is called a **label**, such as "spam" or "banana".
 
-Learning from labelled examples is called **supervised learning**. The labels act like a teacher checking your work. It is the most common kind of machine learning.
+**Imagine this:** a teacher marks your maths homework with a red pen and writes the right answer beside each mistake. You compare, fix your thinking, and do better next time. The red-pen answers are the **labels**, and the teacher is why this way is called supervised.
+
+Learning from labelled examples is called **supervised learning**. It is the most common kind of machine learning.
+
+In one line: the computer learns from examples that come with answers.
 
 The labels must be right and fair. If they are wrong, or some kinds are missing, the computer learns the wrong lesson. [When examples are unfair](../../responsible/when-examples-are-unfair/) looks at this.
 
 ## Way two: no answers at all
 
-Now imagine the same pile with the name tags removed. Nobody says which fruit is which.
+**Imagine this:** you tip out a box of mixed LEGO and nobody tells you what to build. You still make piles: all the red bricks here, all the flat ones there. Nobody gave you the pile names, you just noticed which bricks looked alike. Now picture the same pile of fruit with the name tags removed.
 
-The computer can still look for fruit that sit close together, like short red ones and long yellow ones. Finding groups with no labels is called **unsupervised learning**. A music app does this when it puts similar songs into one playlist.
+The computer can still look for fruit that sit close together, like short red ones and long yellow ones. Finding groups without any labels is called **unsupervised learning**. A music app does this when it puts similar songs into one playlist. (Your LEGO piles never argue about which colour is red. Computers sometimes do.)
 
 There is a catch. The computer finds groups, but it cannot name them. A person has to say "these are bananas". Also, you choose how many groups to look for, and a different number gives different groups.
 
+In one line: the computer finds the piles, and a person names them.
+
 ## Way three: points for trying
 
-In the third way, nobody gives answers, and nobody sorts anything. A learner tries something, then gets a score. A **reward** is a point for doing well. Losing points is the opposite.
+In the third way, nobody gives answers, and nobody sorts anything. A learner tries something, then gets a score. The score for doing well is called a **reward**. Losing points is the opposite.
 
-Learning from rewards is called **reinforcement learning**. Think of a dog learning "sit" for a treat, or a game bot that tries a level thousands of times. It begins by wandering. Slowly it remembers which moves led to points.
+Learning from rewards is called **reinforcement learning**. 
+**Imagine this:** you play a video game level for the first time. You wander, fall in a hole, and lose a life. Next time you avoid that hole. After many tries you know the whole route, and nobody ever explained it. The points and lost lives are the **rewards**. A game bot does the same, only it can try thousands of times. The picture stops being exact in one way: a bot starts with no common sense, so it wanders far more than you would.
+
+In one line: try, get a score, and keep what worked.
 
 ## Try all three
 
@@ -64,11 +73,13 @@ In the third tab, press "Try 10 times" a few times. At first the robot wanders a
 
 A robot does what earns points, not what you meant. Imagine a racing game bot that gets points for picking up coins. It might drive in circles collecting coins and never finish the race.
 
-So people who build these systems think hard about what to reward. A badly chosen reward gives odd behaviour.
+So people who build these systems think hard about what to reward. A badly chosen reward gives odd behaviour, like a pupil who studies only for the marks, not for the learning.
 
 ## Chatbots mix all three
 
-A chatbot learns first from huge amounts of text. It hides the next word and guesses it. The text itself holds the answer, so nobody has to write labels. Along the way it also finds patterns, such as which words belong together.
+**Imagine this:** a teacher gives you a book with one word covered on every page. You guess the hidden word, then peek to check. The book is the answer key, so no one has to mark your work.
+
+A chatbot learns first the same way, from huge amounts of text. It hides the next word and guesses it, like a fill-in-the-blank quiz. The text itself holds the answer, so nobody has to write labels. Along the way it also finds patterns, such as which words belong together.
 
 Then people read pairs of its answers and pick the better one. Those choices act as rewards. They nudge the chatbot towards answers people like. This is one reason chatbots sound so helpful. It can also push them towards answers that please people rather than answers that are true.
 

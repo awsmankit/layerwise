@@ -4,7 +4,7 @@ track: start
 level: basic
 order: 1.2
 summary: AI is more than 70 years old. Tap through the big moments, from Turing's question to chatbots, and see why it had two "winters" and what finally made it work.
-updated: 2026-11-01
+updated: 2026-11-12
 sources:
   - label: "Alan Turing (1950), Computing Machinery and Intelligence, Mind (copy hosted by UMBC)"
     url: https://courses.cs.umbc.edu/471/papers/turing.pdf
@@ -40,9 +40,9 @@ import ShortHistory from '../../../components/viz/ShortHistory.tsx';
 import Callout from '../../../components/ui/Callout.astro';
 import Deep from '../../../components/ui/Deep.astro';
 
-AI is not new. People have worked on it for more than 70 years. There were big hopes, big disappointments and a few big surprises.
+Is AI brand new? Not at all. People have worked on it for more than 70 years. There were big hopes, big letdowns and a few big surprises.
 
-Tap through the timeline to see the main moments. Then read why things went up, down and up again.
+Tap through the timeline to see the main moments. Then read why things went up, down and up again, like a long cricket match.
 
 ## The timeline
 
@@ -50,31 +50,37 @@ Tap through the timeline to see the main moments. Then read why things went up, 
 
 ## Two big ideas
 
-Look at the colours in the timeline. Early on, people tried to write down the rules of thinking by hand. A rule says "if this, then that". The expert systems of the 1980s were big lists of rules like that. People who knew a job well wrote them.
+**Imagine this:** you want a computer to sort mangoes. One way is to write a recipe card: "If it is yellow and soft, it is ripe." The other way is to show it a thousand mangoes, each marked ripe or not, and let it work out the pattern. The card is the **rules** way. The thousand mangoes are the **learning** way. (Mangoes do not read recipe cards.)
 
-Later, people did something different. They gave computers lots of examples and let them find the rules. This is **machine learning**, and you met it in [What AI actually is](../what-is-ai-in-plain-english/). Rules are easy to read, but someone must think of every case. Learning needs a lot of examples.
+Look at the colours in the timeline. There are two ways to make a computer clever. The first is to write the rules yourself. A rule says "if this, then that". The expert systems of the 1980s were big lists of such rules, written by people who knew a job well.
+
+The second way is different. You give the computer lots of examples and let it find the rules. This is **machine learning**, and you met it in [What AI actually is](../what-is-ai-in-plain-english/). Rules are easy to read, but someone must think of every case. Learning needs a lot of examples.
+
+In one line: first people wrote the rules, then computers learned them from examples.
 
 ## Why there were winters
 
-An **AI winter** is a time when money and interest in AI drop. In the 1970s, a British report said AI had not delivered what its researchers had promised. In the 1980s, expert systems turned out to be costly to keep up to date. They could also make strange mistakes on questions nobody had planned for.
+**Imagine this:** a neighbour promises a rooftop garden by summer. By summer there is one wilted plant. Next time, you do not lend money so quickly, even if the idea was good. That drying up of trust and money is the shape of an **AI winter**. Real ideas were often sound, only early.
 
-Each time, hopes had run ahead of what the programs could do. When the results came later than promised, the money went away. Learning from examples was also hard back then. Big piles of examples and fast computers were much harder to get.
+Sometimes people stop paying for an idea that has not paid off yet. An **AI winter** is a time when money and interest in AI drop. In the 1970s, a British report said AI had not delivered what its researchers had promised. In the 1980s, expert systems turned out to be costly to keep up to date. They could also make strange mistakes on questions nobody had planned for. A rulebook cannot cover a case nobody thought of.
+
+Each time, hopes ran ahead of what the programs could do. Results came later than promised, so the money went away. Learning from examples was also hard back then, because big piles of examples and fast computers were hard to get.
 
 ## Why learning took off
 
-Around 2010 three things came together.
+**Imagine this:** a cook with a few ingredients and one tiny stove cannot feed a hundred guests. Give the same cook a full market and a big kitchen, and it works. Around 2010, three things came together at last: data was the market, chips were the kitchen, and better methods were the cook's skill.
 
 - **Data.** Huge piles of examples, such as ImageNet's millions of labelled photos.
-- **Fast chips.** Graphics chips, called **GPUs**, can do thousands of small sums at the same time. That suits training a neural network.
-- **Better methods.** Deep neural networks, which have many layers, could finally be trained well.
+- **Fast chips.** Graphics chips, called **GPUs**, can do thousands of small sums at the same time. Training a neural network needs exactly that.
+- **Better methods.** Deep neural networks, which stack many layers of simple number-crunching, could finally be trained well.
 
 In 2012 a network called AlexNet used all three. It won the ImageNet contest by a wide margin. Many researchers then switched to deep learning.
 
 ## From chess to chatbots
 
-Deep Blue beat the chess champion in 1997 mostly by looking ahead very fast. It did not learn like AlexNet. AlphaGo, in 2016, mixed both ideas: neural networks to pick promising moves, and search to look ahead. You can try look-ahead yourself in [Computers that decide and plan](../computers-that-decide-and-plan/).
+Deep Blue beat the chess champion in 1997 mostly by looking ahead very fast, checking move after move. It did not learn like AlexNet. AlphaGo, in 2016, mixed both ideas: neural networks to pick promising moves, and search to look ahead. You can try look-ahead yourself in [Computers that decide and plan](../computers-that-decide-and-plan/).
 
-Then came the transformer in 2017, and ChatGPT in 2022. A chatbot like that is still learning from examples. It simply learned from a huge amount of writing. [How a chatbot answers](../how-a-chatbot-answers/) shows how it works.
+Then came the transformer in 2017, and ChatGPT in 2022. Is a chatbot something totally new? Not really. It still learns from examples. Its examples are just a huge amount of writing. [How a chatbot answers](../how-a-chatbot-answers/) shows how it works.
 
 ## What stayed the same
 

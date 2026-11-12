@@ -4,7 +4,7 @@ track: start
 level: basic
 order: 9
 summary: A chatbot only talks. An AI agent can also use tools, loop through think, act and look, and make mistakes with real effects. See why it needs limits and a person in charge.
-updated: 2026-11-01
+updated: 2026-11-12
 sources:
   - label: "Anthropic: Building effective agents"
     url: https://www.anthropic.com/engineering/building-effective-agents
@@ -17,15 +17,17 @@ import AgentLoop from '../../../components/viz/AgentLoop.tsx';
 import Callout from '../../../components/ui/Callout.astro';
 import Deep from '../../../components/ui/Deep.astro';
 
-You can ask a chatbot for ideas on how to plan your week. But it cannot look at your calendar or book anything. It can only talk. An **AI agent** goes one step further.
+You can ask a chatbot for ideas on how to plan your week. But it cannot look at your calendar or book anything. It can only talk. An **AI agent** goes one step further: it can do things.
 
 ## A chatbot talks
 
-A chatbot reads your message and writes words back. That is all it does. If you ask what is on your timetable, it cannot look. It can only guess, or tell you how to find out.
+A chatbot reads your message and writes words back. That is all it does. Ask what is on your timetable and it cannot look. It can only guess, or tell you how to find out.
 
 ## An agent can also do things
 
-An agent is a program that uses an AI model to work towards a goal. It can use **tools**: a search engine, a calendar, a calculator or another app. A tool is just something the agent can ask to do a job.
+**Imagine this:** you ask a friend how to get to the shop, and they explain the route. That friend is a chatbot. Now you ask a friend to go to the shop for you, and they come back with the milk. That friend is an agent.
+
+More exactly, an agent is a program that uses an AI model to work towards a goal. It can use **tools**: a search engine, a calendar, a calculator or another app. A tool is just something the agent can ask to do a job, like a pupil asking a teacher for a ruler.
 
 Here are two everyday examples:
 
@@ -34,9 +36,11 @@ Here are two everyday examples:
 
 ## The loop: think, act, look, repeat
 
-An agent works in a loop. First it thinks about what to do next. Then it uses a tool. Then it looks at the result. Then it thinks again.
+**Imagine this:** a cook tastes the soup, decides it needs salt, adds some, and tastes again. Tasting and deciding is **think**, adding salt is **act**, and tasting again is **look**. An agent works in the same loop. (The cook stops when the soup is good. The agent stops when the job is done.) First it thinks about what to do next. Then it uses a tool. Then it looks at the result. Then it thinks again.
 
 It stops when the job is done, or when it has run out of tries.
+
+In one line: an agent is a model, some tools and a loop.
 
 <PipelineFlow
   client:visible
@@ -59,13 +63,13 @@ You are the person in charge. Step through the agent's work, and decide what it 
 
 ## Agents can make mistakes with real effects
 
-When a chatbot gets something wrong, you read a wrong answer. When an agent gets something wrong, something can actually happen. A message can be sent. A file can be deleted. Something can be bought.
+**Imagine this:** you type a wrong word in a message and then press send. Now it is in everyone's pocket. Agents can press send for you. When a chatbot gets something wrong, you read a wrong answer. When an agent gets something wrong, something can actually happen. A message can be sent. A file can be deleted. Something can be bought.
 
-Agents also only know what their tools show them. The calendar did not know about football. And an agent can make the same mistakes a chatbot makes, such as believing something false, and then build more steps on top of it.
+Agents also only know what their tools show them. The calendar did not know about football. And an agent can make the same mistakes a chatbot makes, such as believing something false. Then it builds more steps on top of that mistake.
 
 ## So we give it limits
 
-Builders keep agents safe in a few ways:
+**Imagine this:** you give a younger cousin your phone for one game. You do not give them your bank app, and you say "ten minutes, then ask me". Builders do the same with agents, in four ways:
 
 - **Few tools.** The agent can only use what it is given.
 - **Small powers.** It might read a calendar but not delete it.

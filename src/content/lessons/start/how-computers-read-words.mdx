@@ -4,7 +4,7 @@ track: start
 level: basic
 order: 5
 summary: Computers only work with numbers. See how a chatbot cuts your words into pieces, turns each piece into a number, and places words with similar meanings close together.
-updated: 2026-10-29
+updated: 2026-11-12
 sources:
   - label: "tiktoken, OpenAI's tokenizer library (o200k_base)"
     url: https://github.com/openai/tiktoken
@@ -18,11 +18,11 @@ import Deep from '../../../components/ui/Deep.astro';
 
 Computers only work with numbers. Every photo, song and message on your phone is stored as numbers. So how does a chatbot read the words you type?
 
-It turns them into numbers, in three steps.
+It turns them into numbers, in three steps. Think of it as a post office: first cut the letter up, then number each piece, then work out where it lives.
 
 ## Step one: cut the text into pieces
 
-First, the chatbot cuts your text into small pieces called **tokens**. A token is often a whole word, and sometimes only part of one. Common words get one piece each. Rare words and names get split.
+**Imagine this:** you cut a big sandwich into bites. A small piece stays whole, and a huge one gets split. The chatbot does this to your text, and the bites are called **tokens**. (Unlike a sandwich, the bites are never eaten.) A token is often a whole word, and sometimes only part of one. Common words get one piece each. Rare words and names get split.
 
 Tap each tab and count the pieces.
 
@@ -34,39 +34,41 @@ The very long word gets cut into ten pieces. A dot in front of a piece means a s
 
 ## Step two: each piece gets a number
 
-The chatbot has a long list of every piece it knows, a bit like a dictionary. Each piece has its own number in that list. Here is "What is the capital of France?" as real numbers. They come from the cutting tool that some ChatGPT models use.
+The chatbot keeps a long list of every piece it knows, a bit like a dictionary. Each piece has its own number in that list. Here is "What is the capital of France?" as real numbers. They come from the piece-cutting tool (the tokenizer) that some ChatGPT models use.
 
 | Piece | What | ·is | ·the | ·capital | ·of | ·France | ? |
 |---|---|---|---|---|---|---|---|
 | Number | 4827 | 382 | 290 | 9029 | 328 | 10128 | 30 |
 
-But 9029 says nothing about what "capital" means. It is just a place in the list, like a locker number at school.
+**Imagine this:** a cricket team where every player wears a jersey number. Number 7 tells you nothing about how that player bats. It only says who is who. In the same way, 9029 says nothing about what "capital" means. It is just a place in the list, like a locker number at school.
 
 ## Step three: words get an address on a map
 
-So each piece also gets a second set of numbers, which works like an address on a map. Words with similar meanings live close together. Cat lives near dog, apple near banana, and car near bus.
+So each piece also gets a second set of numbers. **Imagine this:** in a library, the dog books sit right beside the cat books, far from the books on engines. Where a book sits tells you what it is about. Our map works like that, with an address for every piece. Words with similar meanings live close together. Cat lives near dog, apple near banana, and car near bus.
 
 Nobody places the words by hand. The computer learns the addresses during training, from how words are used. "I fed my cat" and "I fed my dog" are similar sentences, so cat and dog end up as neighbours.
 
-Experts call this address an **embedding**: a list of numbers that says where a word sits on the map of meanings. Tap a word below to see its nearest neighbours.
+Experts call this address an **embedding**: a list of numbers that says where a word sits on the map of meanings. Tap a word below to see which words live next door.
 
 <EmbeddingSpace client:visible simple />
 
 ## Why this matters: chatbots count in pieces
 
-Many AI services count your messages in tokens, not words. There is a limit on how many tokens one chat can hold. Apps that pay for AI are often charged per token too.
+**Imagine this:** a bus charges per stop, not per kilometre. Many AI services count your messages in tokens, not words. One chat can only hold so many tokens, a bit like a page that can only fit so many lines. Apps that pay for AI are often charged per token too.
 
 Rare words, names and some languages need more pieces. So the same message can cost more in one language than in another.
+
+In one line: chatbots read and count in pieces, not in words.
 
 ## Why this matters: letter puzzles are hard
 
 Ask a chatbot how many r's are in "strawberry". It does not see ten letters. It sees three pieces: st, raw and berry.
 
-It never looks at the letters one by one, so it can miscount. Newer chatbots often get this one right, but similar letter puzzles can still trip them up.
+It never looks at the letters one by one, so it can miscount. It is like asking you to count the stripes on a flag you only saw for a second. Newer chatbots often get this one right, but similar letter puzzles can still trip them up.
 
 ## Why this matters: searching by meaning
 
-Similar meanings sit close together on the map. So apps can search by meaning, not just by matching words. Search for "puppy" and you might find a page about young dogs, even if it never says "puppy".
+Similar meanings sit close together on the map. So an app can look near your search and find things that mean the same, not just things that match the same words. Search for "puppy" and you might find a page about young dogs, even if it never says "puppy".
 
 <Deep title="For grown-ups: tokenizers and embeddings">
 
