@@ -24,6 +24,7 @@ export const swatch = {
   periwinkle: '#98A0F8',
   peach: '#F8C8A0',
   wine: '#600038',
+  olive: '#888818',
 } as const;
 
 export type Swatch = keyof typeof swatch;
@@ -48,6 +49,7 @@ export const pair = (name: Swatch) => ({ color: swatch[name], on: textOn(swatch[
 export const trackSwatch: Record<string, Swatch> = {
   start: 'yellow',
   foundations: 'turquoise',
+  maths: 'olive',
   llm: 'pink',
   'rag-agents': 'lime',
   evals: 'red',
@@ -78,7 +80,7 @@ export const gameSwatch: Record<string, Swatch> = {
  * three after it (the next in a row, and the next row in a two or three column grid)
  * are as different as the palette allows. Use cycleSwatch(index).
  */
-export const cardCycle: Swatch[] = ['slate', 'turquoise', 'lime', 'pink', 'cocoa', 'forest', 'wine', 'tangerine', 'periwinkle', 'mint', 'peach', 'magenta', 'navy', 'sky', 'red', 'yellow', 'purple'];
+export const cardCycle: Swatch[] = ['slate', 'turquoise', 'lime', 'pink', 'cocoa', 'forest', 'wine', 'tangerine', 'periwinkle', 'olive', 'mint', 'peach', 'magenta', 'navy', 'sky', 'red', 'yellow', 'purple'];
 export const cycleSwatch = (index: number): string => swatch[cardCycle[index % cardCycle.length]];
 
 /** The eight layers of an AI product, top to bottom. */

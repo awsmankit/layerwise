@@ -1,0 +1,84 @@
+---
+title: "Gradient descent by hand: one dial, one step at a time"
+track: maths
+level: basic
+order: 1.8
+summary: The update rule of gradient descent, worked by hand on one dial. A widget lets you set the learning rate and take steps, so you can see the creeping, the landing and the blow-up.
+updated: 2026-11-18
+sources:
+  - label: "Deep Learning, chapter 4.3: Gradient-based optimisation (Goodfellow, Bengio and Courville)"
+    url: https://www.deeplearningbook.org/
+  - label: "Why Momentum Really Works (Gabriel Goh, Distill, 2017)"
+    url: https://distill.pub/2017/momentum/
+  - label: "CS231n: Optimization (Stanford)"
+    url: https://cs231n.github.io/optimization-1/
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import GradientStepper from '../../../components/viz/GradientStepper.tsx';
+
+The previous lesson gave us the slope. Gradient descent uses it in one line. Here is the whole idea on a single dial, $$w$$, with a loss that is smallest at $$w = 3$$.
+
+## The loss and its slope
+
+Take the loss $$L(w) = (w - 3)^2$$. It is a bowl with its bottom at $$w = 3$$, where the loss is zero. Its slope is $$\frac{dL}{dw} = 2(w - 3)$$. Two facts from the slope matter:
+
+- If $$w$$ is less than 3, the slope is negative, so the loss falls as $$w$$ rises.
+- If $$w$$ is greater than 3, the slope is positive, so the loss falls as $$w$$ drops.
+
+Either way, the way to go down is **against** the slope.
+
+## The update rule
+
+Gradient descent moves the dial by a small amount in the downhill direction:
+
+$$
+w_{\text{new}} = w_{\text{old}} - \text{learning rate} \times \frac{dL}{dw}
+$$
+
+The **learning rate** is a number you choose, usually small. It sets how far to move each step. The slope sets the direction and the rough size of the move.
+
+## Work it by hand
+
+Start at $$w = 0$$ with a learning rate of 0.1.
+
+- The slope at 0 is $$2(0 - 3) = -6$$.
+- The new value is $$0 - 0.1 \times (-6) = 0.6$$.
+- The slope at 0.6 is $$2(0.6 - 3) = -4.8$$.
+- The new value is $$0.6 - 0.1 \times (-4.8) = 1.08$$.
+
+The dial moves towards 3 each time, and each step is a little smaller because the slope is shallower near the bottom. Use the widget to check these numbers and then try others.
+
+<GradientStepper client:visible />
+
+## Three behaviours to recognise
+
+- **Too small a rate creeps.** Try 0.01. The dial moves, but it takes many steps to get close to 3.
+- **A good rate lands.** Try 0.1 or 0.3. Each step gets closer and the loss falls quickly.
+- **Too large a rate overshoots.** Try 1.1. The dial jumps past 3, comes back further on the other side, and the steps grow. The loss blows up.
+
+<Callout title="The learning rate is the knob you tune">
+
+Most of the time spent training a model goes into choosing the learning rate and how it changes during training. Real models use many dials at once, so the rule is the same but applied to a vector of slopes: each dial moves by the learning rate times its own slope. The overshoot in the widget happens to every dial when the rate is too large.
+
+</Callout>
+
+## Where it sits in training
+
+The training loop from [How a model learns](../../foundations/how-models-learn/) is this rule run many times. Compute the loss on a batch of examples, compute the slope of that loss for every dial, and move each dial against its slope. Modern optimisers such as Adam keep the same rule but adjust the step for each dial using memory of past slopes. Adam was introduced by [Kingma and Ba](https://arxiv.org/abs/1412.6980) and is built on gradient descent.
+
+<Deep title="Momentum, in one paragraph">
+
+Plain gradient descent can zigzag in narrow valleys. Momentum keeps a running average of past slopes, so steps that keep pointing the same way build speed and steps that flip back and forth cancel out. The update becomes a velocity: each step adds a fraction of the last step to the new slope. The widget shows only the plain rule, so you can see the baseline before adding momentum.
+
+</Deep>
+
+## What to take forward
+
+- The slope tells you which way is downhill.
+- The update is $$w \leftarrow w - \text{rate} \times \text{slope}$$.
+- The learning rate controls the size of each step. Too small is slow; too large makes the loss blow up.
+- Training repeats this for every dial, on batches of data.
+
+Previous: [Derivatives: the slope at one point](../derivatives-and-slopes/). Next: [Matrices as layers](../matrices-as-layers/).

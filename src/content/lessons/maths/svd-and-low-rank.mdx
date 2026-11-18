@@ -1,0 +1,66 @@
+---
+title: "SVD and low-rank approximation: keep the strongest stretches"
+track: maths
+level: intermediate
+order: 9.18
+summary: The singular value decomposition splits any matrix into stretches along perpendicular directions. Keeping only the largest stretch gives the best simple approximation. Adjust the entries of a 2 by 2 matrix and see how much of its size the first singular value keeps.
+updated: 2026-11-18
+sources:
+  - label: "3Blue1Brown: Singular value decomposition (Essence of linear algebra)"
+    url: https://www.3blue1brown.com/lessons/singular-value-decomposition
+  - label: "Deep Learning, chapter 2.7-2.8 (Goodfellow, Bengio and Courville)"
+    url: https://www.deeplearningbook.org/
+  - label: "Eckart and Young, The approximation of one matrix by another of lower rank (1936)"
+    url: https://doi.org/10.1007/BF02288367
+---
+
+import Deep from '../../../components/ui/Deep.astro';
+import Callout from '../../../components/ui/Callout.astro';
+import SvdRank from '../../../components/viz/SvdRank.tsx';
+
+Eigenvectors work cleanly only for square, symmetric matrices. Real data is rarely square, and its matrices often aren't symmetric. The **singular value decomposition**, or SVD, works for any matrix. It writes a matrix as a sum of simple pieces, each a stretch along one direction, ordered from strongest to weakest.
+
+## Stretches along perpendicular directions
+
+Any matrix $$A$$ can be written as
+
+$$
+A = U \Sigma V^{\top}
+$$
+
+Here $$U$$ and $$V$$ have perpendicular columns, and $$\Sigma$$ is diagonal with non-negative entries $$\sigma_1 \ge \sigma_2 \ge \dots$$. These are the **singular values**. Each one says how much the matrix stretches along one pair of perpendicular directions. The square of a singular value is an eigenvalue of $$A^{\top}A$$, which is how you compute them.
+
+## Keep the strongest part
+
+Write the SVD as a sum of rank-one pieces, $$\sigma_1 u_1 v_1^{\top} + \sigma_2 u_2 v_2^{\top} + \dots$$. Keeping only the first piece gives a rank-one approximation. Eckart and Young proved in 1936 that this is the best possible rank-one approximation, measured by the total squared error. The error left over is exactly $$\sigma_2$$ for a 2 by 2 matrix.
+
+## Try it
+
+The default matrix is diagonal, with stretches 3 and 1. The first singular value keeps $$9 / (9 + 1) = 90$$ per cent of the squared size. Change the entries and the matrix gets less tidy, so the split between the two singular values moves.
+
+<SvdRank client:visible />
+
+<Callout title="Why ML uses it">
+
+Compressing a big weight matrix, reducing the dimension of data, and making sense of recommendation tables all rely on keeping the top singular values. Low-rank adaptation (LoRA), a common way to fine-tune large models, trains small matrices whose product is a low-rank update, which is the same idea put to work.
+
+</Callout>
+
+## Where it came from
+
+Eugenio Beltrami and Camille Jordan introduced the decomposition in 1873 and 1874. Carl Eckart and Gale Young proved the approximation result in 1936. The method became practical with computers in the 1960s and is now standard in numerical software.
+
+<Deep title="Computing a 2 by 2 singular value">
+
+For $$A = \begin{pmatrix} a & b \\ c & d \end{pmatrix}$$, form $$A^{\top}A$$ and find its eigenvalues $$\lambda$$ from the trace $$T$$ and determinant $$D$$: $$\lambda = \tfrac{1}{2}\left(T \pm \sqrt{T^2 - 4D}\right)$$. The singular values are the square roots. The widget uses exactly this formula, so with $$A = \text{diag}(3, 1)$$ it gives $$\sigma_1 = 3$$ and $$\sigma_2 = 1$$.
+
+</Deep>
+
+## What to take forward
+
+- The SVD works for any matrix and splits it into perpendicular stretches, ordered by strength.
+- Keeping the largest stretches gives the best low-rank approximation.
+- The error of a rank-one approximation is the next singular value.
+- Low-rank methods are a standard way to compress models and data.
+
+Previous: [Eigenvectors and PCA](../eigenvectors-and-pca/). Next: [The ELBO and variational inference](../elbo-and-variational-inference/).

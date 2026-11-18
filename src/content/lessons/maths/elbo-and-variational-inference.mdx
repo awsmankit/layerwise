@@ -1,0 +1,68 @@
+---
+title: "The ELBO: approximating what you cannot compute"
+track: maths
+level: intermediate
+order: 9.19
+summary: How variational inference replaces an impossible calculation with a simpler guess, and how the evidence lower bound (ELBO) scores that guess. A slider moves the guess and shows the gap to the truth closing at one point.
+updated: 2026-11-18
+sources:
+  - label: "Blei, Kucukelbir and McAuliffe, Variational Inference: A Review for Statisticians (2017)"
+    url: https://arxiv.org/abs/1601.00670
+  - label: "Kingma and Welling, Auto-Encoding Variational Bayes (2013)"
+    url: https://arxiv.org/abs/1312.6114
+  - label: "Deep Learning, chapter 19.4 (Goodfellow, Bengio and Courville)"
+    url: https://www.deeplearningbook.org/
+---
+
+import Deep from '../../../components/ui/Deep.astro';
+import Callout from '../../../components/ui/Callout.astro';
+import ElboGap from '../../../components/viz/ElboGap.tsx';
+
+Many models have hidden variables: the topic behind a document, the cause behind an image, the true state behind a noisy sensor. Given the data, the question is what those hidden variables probably were. That answer is the **posterior**, and for most models it is too hard to compute exactly, because it needs sums or integrals over every possible hidden value. **Variational inference** avoids the calculation by choosing a simpler guess and making it as close to the truth as possible.
+
+## Bound the thing you can't compute
+
+Write $$p(x)$$ for the probability of the data. It needs a sum over hidden states, which is hard. The **evidence lower bound**, the ELBO, is a quantity you can compute for any guess $$q(z)$$:
+
+$$
+\text{ELBO}(q) = \mathbb{E}_{q}\big[\log p(x, z) - \log q(z)\big]
+$$
+
+It is always less than or equal to $$\log p(x)$$. The gap between them is exactly the KL divergence from the guess $$q$$ to the true posterior $$p(z \mid x)$$:
+
+$$
+\log p(x) = \text{ELBO}(q) + D_{\text{KL}}\big(q(z) \parallel p(z \mid x)\big)
+$$
+
+So maximising the ELBO over $$q$$ does two things at once: it pushes up a lower bound on the evidence, and it pulls $$q$$ towards the true posterior.
+
+## Try it
+
+The hidden variable can be 0 or 1. The data is more likely under 0, so the true posterior puts 80 per cent on 0. Move the guess $$q(z = 0)$$. The ELBO is highest, and the gap is zero, when the guess matches 0.80. Anywhere else the ELBO sits below $$\log p(x)$$.
+
+<ElboGap client:visible />
+
+<Callout title="Why this powers modern generative models">
+
+A variational autoencoder learns an encoder that gives a guess $$q$$ for each input and a decoder that explains the data. Training maximises the ELBO with gradients. The same idea sits behind many latent-variable models, which is why the KL divergence from the earlier lesson keeps reappearing: it is the price of the approximation.
+
+</Callout>
+
+## Where it came from
+
+Variational bounds have long been used in statistical physics and in Bayesian statistics. In machine learning, variational methods for latent-variable models developed through the 1990s and 2000s, and Kingma and Welling's 2013 paper made the approach practical for deep networks trained with gradients.
+
+<Deep title="Why the bound is never above the truth">
+
+Start from $$\log p(x) = \log \sum_z p(x,z) = \log \sum_z q(z) \frac{p(x,z)}{q(z)}$$. Jensen's inequality for the concave logarithm says the log of an average is at least the average of the logs, so $$\log p(x) \ge \sum_z q(z) \log \frac{p(x,z)}{q(z)}$$. The right side is the ELBO. Equality holds exactly when $$q$$ equals the posterior.
+
+</Deep>
+
+## What to take forward
+
+- The posterior over hidden variables is often too hard to compute exactly.
+- Variational inference replaces it with a simpler guess and optimises that guess.
+- The ELBO is a computable lower bound on the log evidence.
+- The gap between the ELBO and the evidence is the KL divergence to the true posterior, so maximising the ELBO also improves the guess.
+
+Previous: [SVD and low-rank approximation](../svd-and-low-rank/). Next: [The Fourier transform](../fourier-transform/).

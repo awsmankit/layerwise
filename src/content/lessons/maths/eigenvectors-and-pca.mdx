@@ -1,0 +1,60 @@
+---
+title: "Eigenvectors and principal components: the direction of greatest spread"
+track: maths
+level: intermediate
+order: 9.7
+summary: What an eigenvector is, and how principal component analysis uses the direction of greatest spread to simplify data. Turn the line through a cloud of points and find the angle where the spread peaks.
+updated: 2026-11-18
+sources:
+  - label: "3Blue1Brown: Eigenvectors and eigenvalues (Essence of linear algebra)"
+    url: https://www.3blue1brown.com/lessons/eigenvalues
+  - label: "A Tutorial on Principal Component Analysis (Jonathon Shlens, 2014)"
+    url: https://arxiv.org/abs/1404.1100
+  - label: "Deep Learning, chapter 2.7-2.8 (Goodfellow, Bengio and Courville)"
+    url: https://www.deeplearningbook.org/
+---
+
+import Deep from '../../../components/ui/Deep.astro';
+import Callout from '../../../components/ui/Callout.astro';
+import PrincipalAxis from '../../../components/viz/PrincipalAxis.tsx';
+
+Most matrices rotate and stretch the vectors they act on. An **eigenvector** is a special direction that the matrix only stretches, without turning. The stretch factor is its **eigenvalue**. Eigenvectors matter in ML because they point to the directions that carry the most information in a dataset.
+
+## Eigenvectors: the directions a matrix keeps
+
+If a matrix $$A$$ has an eigenvector $$v$$, then $$A v = \lambda v$$ for some number $$\lambda$$, the eigenvalue. Multiplying by $$A$$ just scales $$v$$. For most vectors, a matrix changes both the length and the direction. The eigenvectors are the exceptions, and they give the matrix's natural axes.
+
+## Principal components: where the data spreads most
+
+Take a cloud of points. Its **covariance matrix** records how the dials vary together. Its eigenvectors are the directions in which the cloud is stretched, and the largest eigenvalue belongs to the direction of greatest spread. That direction is the **first principal component**. Keeping only the top few components is principal component analysis (PCA), a way to shrink data while keeping most of its variation.
+
+## Try it
+
+The twelve points lie roughly along a tilted line. Move the direction slider and watch the spread along the line. It rises, peaks, and falls. The peak is the principal component, and it is found by the angle formula in the lesson below rather than by trying every angle.
+
+<PrincipalAxis client:visible />
+
+<Callout title="Why spread is a good proxy for information">
+
+A dial that barely varies across the data tells you little about it, and removing it loses little. A direction along which the data spreads widely carries most of the differences between examples. PCA keeps those directions, which is why it is a standard first step for compressing or visualising data.
+
+</Callout>
+
+## Where it came from
+
+Karl Pearson introduced principal components in 1901, to find the best-fitting line through a cloud of points. Harold Hotelling developed the method in the 1930s. Eigenvalues themselves came from studies of vibrations and quadratic forms in the 1700s and 1800s.
+
+<Deep title="The angle formula, and why it works">
+
+For points with variances $$S_{xx}$$, $$S_{yy}$$ and covariance $$S_{xy}$$, the spread along a direction at angle $$\theta$$ is $$\cos^2\theta \, S_{xx} + 2\sin\theta\cos\theta \, S_{xy} + \sin^2\theta \, S_{yy}$$. Setting its derivative to zero gives $$\tan 2\theta = \dfrac{2S_{xy}}{S_{xx} - S_{yy}}$$, which is the angle the widget reports. The largest eigenvalue of the covariance matrix is the spread in that direction.
+
+</Deep>
+
+## What to take forward
+
+- An eigenvector is a direction a matrix only stretches; the stretch is its eigenvalue.
+- Principal components are the eigenvectors of the data's covariance matrix.
+- The first component is the direction of greatest spread.
+- PCA keeps the top components to compress data while keeping most of its variation.
+
+Previous: [Partial derivatives and gradients](../partial-derivatives-and-gradients/). Next: [Sampling and temperature](../sampling-and-temperature/).

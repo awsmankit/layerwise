@@ -1,0 +1,68 @@
+---
+title: "Partial derivatives and gradients: many dials at once"
+track: maths
+level: intermediate
+order: 9.6
+summary: What a partial derivative is when a function depends on several dials, and how the gradient collects them into one arrow that points uphill. Two sliders show each slope and the arrow.
+updated: 2026-11-18
+sources:
+  - label: "3Blue1Brown: Gradient descent, how neural networks learn (Deep learning, chapter 2)"
+    url: https://www.3blue1brown.com/lessons/gradient-descent
+  - label: "Khan Academy: Partial derivatives"
+    url: https://www.khanacademy.org/math/multivariable-calculus
+  - label: "CS231n: Optimization (Stanford)"
+    url: https://cs231n.github.io/optimization-1/
+---
+
+import Deep from '../../../components/ui/Deep.astro';
+import Callout from '../../../components/ui/Callout.astro';
+import PartialSlopes from '../../../components/viz/PartialSlopes.tsx';
+
+A real model has millions of dials, so its loss depends on many inputs at once. The one-dial derivative from earlier extends naturally: hold every dial still except one, measure the slope along that dial, and repeat for each. Each such slope is a **partial derivative**. Collected together, they form the **gradient**.
+
+## One dial at a time
+
+Take $$f(x, y) = x^2 + 3y^2$$, a bowl over two dials. The partial derivative with respect to $$x$$, written $$\partial f / \partial x$$, treats $$y$$ as a fixed number and differentiates in $$x$$ alone: $$2x$$. Similarly $$\partial f / \partial y = 6y$$. Each one answers a single question: if I move this dial a little and leave the others, how does the loss change?
+
+## The gradient: one arrow for all the dials
+
+Stack the partial derivatives into a vector:
+
+$$
+\nabla f = \left( \frac{\partial f}{\partial x}, \frac{\partial f}{\partial y} \right) = (2x, 6y)
+$$
+
+The gradient points in the direction of steepest increase, the uphill direction. Gradient descent moves the opposite way, which is the update rule from [Gradient descent by hand](../gradient-descent-by-hand/), now applied to every dial together.
+
+## Try it
+
+Move the point. The dashed line goes from the origin to the point, and the arrow shows the gradient from there. Its direction is uphill, away from the centre. The ellipses are contours: each is a set of points with the same loss. The gradient is always perpendicular to the contour it sits on.
+
+<PartialSlopes client:visible />
+
+<Callout title="Why the arrow bends">
+
+The bowl is steeper along $$y$$ than $$x$$, because the $$y$$ term has the larger coefficient: 3 against 1 in the function, which gives $$6y$$ against $$2x$$ in the slopes. So the gradient tilts towards $$y$$. A gradient method that ignores this difference can zigzag, the problem the momentum lesson addresses.
+
+</Callout>
+
+## Where it came from
+
+The gradient and its link to contours were developed in the 19th century in the study of fields in physics. Augustin-Louis Cauchy described steepest descent in 1847. In ML, the same vector is what backpropagation computes for every dial in the network.
+
+<Deep title="Notation you'll see in papers">
+
+- $$\nabla_\theta L$$: the gradient of the loss $$L$$ with respect to all the parameters $$\theta$$.
+- $$\partial L / \partial w$$: one partial derivative, for a single weight $$w$$.
+- Backpropagation is an efficient way to compute every entry of $$\nabla_\theta L$$ in roughly the cost of one forward pass, which is why training large networks is practical.
+
+</Deep>
+
+## What to take forward
+
+- A partial derivative is the slope along one dial, with the others held still.
+- The gradient collects all the partial derivatives into one vector.
+- The gradient points uphill and is perpendicular to the contours.
+- Training moves against the gradient, all dials at once.
+
+Previous: [Integration](../integration-area-under-curve/). Next: [Eigenvectors and principal components](../eigenvectors-and-pca/).

@@ -8,6 +8,17 @@ Versions follow [semantic versioning](https://semver.org/), read for a learning 
 - **Minor**: new lessons, labs, tools or features.
 - **Patch**: fixes and small corrections (wording, links, layout, accessibility).
 
+## [2.15.0] - 2026-11-18: Maths for ML: its own track, with interactive lessons
+
+The maths behind machine learning now has its own track. Each lesson explains one idea in plain words, with a picture you can move, the formula, and where it shows up in models. The track starts with integration for beginners and covers probability, calculus, linear algebra, statistics and information theory.
+
+- A new "Maths for ML" track with 27 lessons, from integration as adding up slices to the ELBO, the Fourier transform and the singular value decomposition.
+- Most maths lessons have a widget you can move: a loaded die, a gradient-descent walk, a Bayes test grid of 1,000 people, a Markov weather chain, a p-value for a coin, and a Fourier spectrum of two waves.
+- Each lesson links to the parts of the site that use it, such as cross-entropy in training and softmax in language models.
+- Fixes from review: the Fourier and gradient widgets draw the same on the server and in the browser, and the entropy chart labels its outcomes.
+
+**At this release:** 191 lessons in 18 topics, 24 practice labs, 880 glossary terms.
+
 ## [2.14.0] - 2026-11-12: The encoder step by step, livelier diagrams, and plainer lessons
 
 A new walkthrough follows one sentence through a transformer encoder, every diagram now uses rounded colour cards with a glow on the active step, and 24 beginner lessons were rewritten with everyday scenes.
@@ -287,6 +298,7 @@ Animated AI engineering lessons, games and tools, covering AWS, Azure and Google
 
 **At this release:** 44 lessons in 12 topics, 0 practice labs, 79 glossary terms.
 
+[2.15.0]: https://github.com/awsmankit/layerwise/compare/v2.14.0...v2.15.0
 [2.14.0]: https://github.com/awsmankit/layerwise/compare/v2.13.1...v2.14.0
 [2.13.1]: https://github.com/awsmankit/layerwise/compare/v2.13.0...v2.13.1
 [2.13.0]: https://github.com/awsmankit/layerwise/compare/v2.12.0...v2.13.0

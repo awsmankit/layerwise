@@ -1,0 +1,75 @@
+---
+title: "Expectation and variance: the average and the spread"
+track: maths
+level: intermediate
+order: 9.1
+summary: What the expected value and the variance of a random outcome mean, worked on a die you can load. Two numbers that summarise almost every random quantity in ML.
+updated: 2026-11-18
+sources:
+  - label: "Seeing Theory: Probability distributions (Brown University)"
+    url: https://seeing-theory.brown.edu/
+  - label: "Khan Academy: Expected value"
+    url: https://www.khanacademy.org/math/statistics-probability/random-variables-stats-library
+  - label: "Deep Learning, chapter 3.3-3.4 (Goodfellow, Bengio and Courville)"
+    url: https://www.deeplearningbook.org/
+---
+
+import Deep from '../../../components/ui/Deep.astro';
+import Callout from '../../../components/ui/Callout.astro';
+import ExpectationDie from '../../../components/viz/ExpectationDie.tsx';
+
+A **random variable** is a number that depends on chance: a die roll, the loss on one example, the next word a model picks. You can't predict one outcome, but you can describe the whole pattern with two numbers. The first is the **expected value**, the average you'd get over many tries. The second is the **variance**, how far the outcomes typically sit from that average.
+
+## Expected value: weight each outcome by its chance
+
+For a fair die, the outcomes are 1 to 6, each with probability 1/6. The expected value multiplies each outcome by its probability and adds up:
+
+$$
+E[X] = \sum_i x_i \, p_i = 1 \times \tfrac{1}{6} + 2 \times \tfrac{1}{6} + \dots + 6 \times \tfrac{1}{6} = 3.5
+$$
+
+Nobody rolls 3.5, but over thousands of rolls the average settles near it.
+
+## Variance: how far from the average
+
+The variance is the average squared distance from the expected value:
+
+$$
+\text{Var}[X] = \sum_i (x_i - \mu)^2 \, p_i
+$$
+
+Squaring makes every distance positive, so a miss above and a miss below both count. For the fair die the variance is 35/12, about 2.92. Its square root, the **standard deviation**, is about 1.71, in the same units as the die.
+
+## Try it
+
+The die below is loaded: you set the chance of a six, and the other faces share the rest equally. Raise the six and the expected value climbs above 3.5 while the spread changes too.
+
+<ExpectationDie client:visible />
+
+<Callout title="Why ML cares">
+
+A model's loss on a random example is a random variable. Its expected value is the loss you care about over the whole data, and its variance tells you how much the loss changes from one example to the next. Evaluation reports the average, and a careful evaluation also looks at the spread.
+
+</Callout>
+
+## Where it came from
+
+The idea of an expected value appeared in the 1650s, when Blaise Pascal and Pierre de Fermat worked out how to split the stakes of an unfinished game of chance fairly. Andrey Kolmogorov put probability on firm axioms in 1933, and variance became standard in statistics in the early 20th century.
+
+<Deep title="The rules you'll use">
+
+- $$E[aX + b] = aE[X] + b$$: scaling and shifting the outcome scales and shifts the average.
+- $$E[X + Y] = E[X] + E[Y]$$, always, even if $$X$$ and $$Y$$ depend on each other.
+- $$\text{Var}[X] = E[X^2] - E[X]^2$$: a shortcut that's often easier to compute.
+- $$\text{Var}[aX] = a^2 \text{Var}[X]$$: the spread grows with the square of the scale.
+
+</Deep>
+
+## What to take forward
+
+- The expected value is the probability-weighted average of the outcomes.
+- The variance is the probability-weighted average squared distance from it.
+- The standard deviation is the square root of the variance, in the outcome's own units.
+- Two numbers, the centre and the spread, describe most random quantities well enough to compare them.
+
+Previous: [Softmax](../softmax-and-probabilities/). Next: [The normal distribution](../normal-distribution/).

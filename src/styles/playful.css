@@ -328,14 +328,13 @@ html:not(.js) .squig::after,
   font-size: 1.2rem;
   line-height: 1.5;
   color: inherit;
-  opacity: 0.92;
 }
+/* No fading here: faded text on a saturated track colour falls below WCAG contrast. */
 .lesson-hero .crumbs,
 .lesson-hero .crumbs a,
 .lesson-hero .level,
 .lesson-hero .lesson-meta {
   color: inherit;
-  opacity: 0.9;
 }
 .lesson-hero .level i b {
   border-color: currentColor;

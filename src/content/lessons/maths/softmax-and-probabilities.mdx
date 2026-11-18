@@ -1,0 +1,102 @@
+---
+title: "Softmax: turning scores into probabilities"
+track: maths
+level: basic
+order: 1.5
+summary: What softmax does, why a model needs it, how to work an example by hand, and why the word probability fits its output. No calculus needed.
+updated: 2026-11-18
+sources:
+  - label: "CS231n: Linear classification and the softmax loss (Stanford)"
+    url: https://cs231n.github.io/linear-classify/
+  - label: "Visual Information Theory (Christopher Olah, 2015)"
+    url: https://colah.github.io/posts/2015-09-Visual-Information/
+  - label: "Deep Learning, chapter 6.2 (Goodfellow, Bengio and Courville)"
+    url: https://www.deeplearningbook.org/
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import TemperatureSoftmax from '../../../components/viz/TemperatureSoftmax.tsx';
+
+When a model answers a question with a choice, it does not output the answer directly. It outputs a **score** for every option: one number per choice, where a bigger number means "more likely, as far as I can tell". Scores are awkward to use. They can be negative, they don't add up to anything, and nobody knows what a score of 4 means. **Softmax** is the step that turns a list of scores into **probabilities**: numbers between 0 and 1 that add up to 1.
+
+## Why a model needs it
+
+Imagine a model that reads a sentence and must pick the next word from three options: "cat", "dog" and "car". It produces three raw scores, say 2.0, 1.0 and 0.1. Those numbers mean "cat is strongest", but they don't say how strongly. Softmax answers the question a person would ask: out of 100 chances, how many should go to each option?
+
+A language model does exactly this, with one score for every word in its vocabulary, which can be tens of thousands of options. Its last step is a softmax over all of them, and the word it picks is drawn from the resulting probabilities.
+
+## The recipe, in three steps
+
+1. **Make every score positive** by taking the exponential, written $$e^{x}$$. Here $$e$$ is about 2.718. Bigger scores become much bigger, and negatives become small positives. The exponential is what makes the next step fair.
+2. **Add them all up** to get one total.
+3. **Divide each one by the total.** Each option's share of the total is its probability.
+
+In symbols, for a list of scores $$z_1, \dots, z_n$$:
+
+$$
+\text{softmax}(z)_i = \frac{e^{z_i}}{\sum_{j=1}^{n} e^{z_j}}
+$$
+
+## A worked example by hand
+
+Take the scores 2.0, 1.0 and 0.1 from above.
+
+| Word | eˢ | Share |
+|---|---|---|
+| cat (score 2.0) | 7.39 | 0.66 |
+| dog (score 1.0) | 2.72 | 0.24 |
+| car (score 0.1) | 1.11 | 0.10 |
+| **Total** | **11.21** | **1.00** |
+
+The share is each eˢ divided by the total 11.21: for cat, 7.39 ÷ 11.21 = 0.66.
+
+The three probabilities add to 1, as they should. "Cat" gets about two chances in three, which is the model's way of saying it is fairly sure but not certain.
+
+Try the same scores with the temperature control. At temperature 1 you see exactly the numbers above. Lower it and the top word takes over; raise it and the choice flattens.
+
+<TemperatureSoftmax client:visible />
+
+<Callout title="Why the exponential, and not just the score divided by the total?">
+
+If you divided each raw score by the sum of the scores, 2.0, 1.0 and 0.1 would give shares of about 0.65, 0.32 and 0.03. That works, but it breaks the moment a score is negative or zero, because the shares can go negative or undefined. The exponential always gives a positive number, and it grows fast, so the largest score gets the biggest share by a lot. That "winner takes more" behaviour is useful when the model should be decisive.
+
+</Callout>
+
+## What the numbers tell you
+
+- **The ratio between scores matters, not their size.** Add 10 to every score and the probabilities don't change, because the exponential of a shift is a constant factor that cancels in the division. That is why softmax is a good way to turn relative preferences into shares.
+- **A bigger gap makes the output more confident.** Scores of 5, 1 and 0 give a top probability of about 0.98. Scores of 2, 1.9 and 1.8 give nearly equal probabilities, about 0.37, 0.33 and 0.30. The model is unsure when its best options look alike.
+- **The output is a belief, not a fact.** A probability of 0.66 means the model gives "cat" 66 chances in 100. It does not mean "cat" is 66 per cent true. This is why the model can still be wrong with high confidence.
+
+## How it came into the picture
+
+The same formula is much older. It appears in 19th-century physics as the Boltzmann distribution, which describes how likely a system is to sit in each energy state. In 1989 John Bridle named it "softmax" when describing how a neural network's outputs can be read as probabilities: a soft version of picking the maximum. Once neural networks started predicting one word from thousands, a softmax on the output became the standard final step. It is still there in almost every language model.
+
+<Deep title="The same idea in Python">
+
+```python
+import math
+
+scores = {"cat": 2.0, "dog": 1.0, "car": 0.1}
+
+exps = {k: math.exp(v) for k, v in scores.items()}
+total = sum(exps.values())
+probs = {k: e / total for k, e in exps.items()}
+
+print(probs)  # {'cat': 0.659, 'dog': 0.242, 'car': 0.099}
+print(sum(probs.values()))  # 1.0
+```
+
+Real libraries subtract the largest score before taking exponentials, so very large scores don't overflow. The answer is the same.
+
+</Deep>
+
+## What to take forward
+
+- Softmax turns any list of scores into probabilities that are positive and add to 1.
+- It uses the exponential, so the largest score gets a disproportionately large share.
+- Only the gaps between scores matter.
+- The probability is the model's belief, which can be wrong.
+
+Next: [How a model learns](../../foundations/how-models-learn/) uses these probabilities to measure how wrong a guess is. The measure is called cross-entropy, and the next lesson explains it.

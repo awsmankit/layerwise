@@ -1,0 +1,62 @@
+---
+title: "Markov chains: the next step depends only on now"
+track: maths
+level: intermediate
+order: 9.17
+summary: What a Markov chain is, how a transition matrix moves probability from one step to the next, and why the chance settles to a steady value. Two sliders change how sticky the weather is, and the long-run value updates.
+updated: 2026-11-18
+sources:
+  - label: "Seeing Theory: Markov chains (Brown University)"
+    url: https://seeing-theory.brown.edu/
+  - label: "Speech and Language Processing, chapter 3 (Jurafsky and Martin)"
+    url: https://web.stanford.edu/~jurafsky/slp3/
+  - label: "The Curious Case of Neural Text Degeneration (Holtzman et al., 2019)"
+    url: https://arxiv.org/abs/1904.09751
+---
+
+import Deep from '../../../components/ui/Deep.astro';
+import Callout from '../../../components/ui/Callout.astro';
+import MarkovChain from '../../../components/viz/MarkovChain.tsx';
+
+A **Markov chain** is a sequence of states where the next state depends only on the current one, not on the whole history. Weather, a queue, a random walk and the next word in a simple text model can all be modelled this way. The rule is captured by a **transition matrix**: a table of the chance of moving from each state to each other state.
+
+## The transition matrix
+
+Take two states, sunny and rainy. Suppose a sunny day is followed by sun 90 per cent of the time, and a rainy day by rain 50 per cent of the time. The matrix records those chances, and each row adds up to 1:
+
+$$
+P = \begin{pmatrix} 0.9 & 0.1 \\ 0.5 & 0.5 \end{pmatrix}
+$$
+
+If today's distribution is a row vector $$\pi$$, tomorrow's is $$\pi P$$. Repeat the multiplication and the probability moves through the chain one step at a time.
+
+## Try it
+
+Start with a certainly sunny day and watch the chance of sun over 20 days. It drops quickly at first and then levels off. The flat level is the **stationary distribution**, and it is the same whatever the starting day. Change how sticky the states are and the flat level moves.
+
+<MarkovChain client:visible />
+
+<Callout title="Why language models are chains">
+
+A language model that generates one word at a time is a Markov chain over words if it looks only at the last word. Real models look at a long context, so the chain is far bigger, but the idea of a probability distribution over the next state, given the current one, is the same. The temperature and sampling lesson describes how that distribution becomes one chosen word.
+
+</Callout>
+
+## Where it came from
+
+Andrey Markov introduced the idea in 1906 while studying letter sequences in a Pushkin novel, a question about whether independence was needed for the law of large numbers. The theory became central to physics, queueing, and later to speech recognition and text modelling.
+
+<Deep title="Finding the steady state">
+
+A stationary distribution $$\pi$$ satisfies $$\pi P = \pi$$, together with the requirement that its entries add to 1. For the two-state chain with sunny stays 0.9 and rainy stays 0.5, the balance condition gives $$\pi_s \cdot 0.1 = \pi_r \cdot 0.5$$, so $$\pi_r = 0.2\,\pi_s$$. Adding up gives $$\pi_s = 1/1.2 \approx 0.833$$. The widget's dashed line is this value.
+
+</Deep>
+
+## What to take forward
+
+- A Markov chain's next state depends only on its current state.
+- A transition matrix gives the chance of each move, and each row sums to 1.
+- Repeated multiplication moves the probability through the chain.
+- For many chains the distribution settles to a stationary value that does not depend on the start.
+
+Previous: [Hypothesis testing and p-values](../hypothesis-testing-and-p-values/). Next: [Sampling and temperature](../sampling-and-temperature/) shows how a model picks from such a distribution.

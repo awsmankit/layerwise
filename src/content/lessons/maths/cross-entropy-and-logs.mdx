@@ -1,0 +1,109 @@
+---
+title: "Cross-entropy and logarithms: how wrong is a probability?"
+track: maths
+level: basic
+order: 1.6
+summary: Why models are scored with cross-entropy, what the logarithm does in that score, and how to read the numbers. Builds on softmax, with worked examples and no calculus.
+updated: 2026-11-18
+sources:
+  - label: "CS231n: Linear classification and the softmax loss (Stanford)"
+    url: https://cs231n.github.io/linear-classify/
+  - label: "Visual Information Theory (Christopher Olah, 2015)"
+    url: https://colah.github.io/posts/2015-09-Visual-Information/
+  - label: "Deep Learning, chapter 5.5 (Goodfellow, Bengio and Courville)"
+    url: https://www.deeplearningbook.org/
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import CrossEntropyLoss from '../../../components/viz/CrossEntropyLoss.tsx';
+
+A model that outputs probabilities needs a way to score them. If it gave "cat" 66 per cent and the answer was "cat", that is a good guess. If it gave "cat" 1 per cent and the answer was "cat", that is a bad guess. We need one number that says how bad, so training can push the model to do better. That number is the **cross-entropy**, and for a single example it is almost always the same as taking the negative logarithm of the probability the model gave to the right answer.
+
+## The rule in one line
+
+For each example, the loss is:
+
+$$
+\text{loss} = -\ln(p_{\text{correct}})
+$$
+
+Here $$p_{\text{correct}}$$ is the probability the model gave to the answer that was right. The symbol $$\ln$$ is the natural logarithm, and the minus sign makes the result positive. A probability is between 0 and 1, so its logarithm is negative, and the minus flips it.
+
+## Read the numbers
+
+| Probability given to the right answer | Loss | What it means |
+|---|---|---|
+| 0.99 | 0.01 | Nearly certain and right. Almost no penalty. |
+| 0.66 | 0.42 | Fairly sure and right. A small penalty. |
+| 0.50 | 0.69 | A coin toss between two options. |
+| 0.10 | 2.30 | Right answer was one of ten options, and the model barely considered it. |
+| 0.01 | 4.61 | Confidently wrong. A big penalty. |
+
+Two things stand out. Loss is small when the probability is near 1, and it grows without limit as the probability heads to 0. Going from 0.50 to 0.10 adds 1.61 to the loss, and going from 0.10 to 0.01 adds 2.30 more. That steep climb is what stops a model from ignoring a right answer that it considers unlikely.
+
+## Why a logarithm, and not just "1 minus the probability"?
+
+Imagine a sentence of ten words, where the model gives each correct word a probability of 0.5. The chance of the whole sentence being right is the product of the ten probabilities: 0.5 multiplied by itself ten times, about 0.001. Products are awkward to add up, so we take logs. A logarithm turns a product into a sum: $$\ln(a \times b) = \ln a + \ln b$$. The loss for the sentence becomes the sum of the loss for each word, which is easy to measure and to push down.
+
+Taking logs also gives the penalty that climbs steeply near zero, which is the behaviour we want.
+
+## Try it
+
+Set the probability the model gave the right answer. The curve shows the penalty at every probability; the dot is your setting.
+
+<CrossEntropyLoss client:visible />
+
+## Averaging over many examples
+
+Training uses many examples at once, so the loss is the average of the per-example losses. If the model gave the right answer a probability of 0.66 on every example, the average loss would be 0.42. If it gave 0.99 on every example, the average loss would be 0.01. Real examples vary, so the average is the mean of the individual losses. Lower is better, and zero would be perfect.
+
+<Callout title="Why people quote perplexity">
+
+For language models, the average cross-entropy is often turned into **perplexity**: $$e$$ raised to that average. Perplexity is roughly "how many equally likely options the model is choosing between, on average". A perplexity of 1 means no doubt. A perplexity of 10 means the model is as unsure as if it were picking among ten equal options. It's the same information, in a form that is easier to picture.
+
+</Callout>
+
+## Bits: the same idea with base 2
+
+You will sometimes see the loss in **bits** instead of nats. Use the base-2 logarithm, $$\log_2$$, in place of $$\ln$$. A probability of 0.5 costs 1 bit, which is the cost of one yes-or-no question. A probability of 0.25 costs 2 bits, which is two questions. Bits are the unit used in information theory, and the cross-entropy measures how many bits a model's beliefs waste on the right answer.
+
+## Where the loss meets the softmax
+
+The softmax from the last lesson produces $$p_{\text{correct}}$$. Cross-entropy takes that probability and scores it. Together they are the usual training setup for a classifier and for a language model's next-word prediction. There is one useful fact about the pair: when you work out how the loss changes with respect to each raw score, the answer is simply the model's predicted probability minus the true answer (1 for the right option, 0 for the others). That simple form is why the pair trains well, and it's the first step the training loop in [How a model learns](../../foundations/how-models-learn/) relies on.
+
+<Deep title="The same idea in Python">
+
+```python
+import math
+
+probs = {"cat": 0.659, "dog": 0.242, "car": 0.099}
+
+def loss_if_right(p):
+    return -math.log(p)
+
+for answer, p in probs.items():
+    print(f"answer={answer:<4} p={p:.3f} loss={loss_if_right(p):.2f}")
+
+# answer=cat  p=0.659 loss=0.42
+# answer=dog  p=0.242 loss=1.42
+# answer=car  p=0.099 loss=2.31
+
+# Average over a batch of examples
+losses = [loss_if_right(0.659), loss_if_right(0.242), loss_if_right(0.099)]
+print(round(sum(losses) / len(losses), 2))  # 1.38
+```
+
+The same code works for a language model. There the list of probabilities has one entry per word in the vocabulary, and the loss is taken for the word that actually came next.
+
+</Deep>
+
+## What to take forward
+
+- Cross-entropy scores a model's probability for the right answer: loss = −ln(p).
+- Confident and right costs almost nothing. Confident and wrong costs a lot.
+- The logarithm turns a product of probabilities into a sum, which is why it fits sentences and long documents.
+- Average the loss over many examples; lower is better.
+- Perplexity and bits are the same measure in other units.
+
+Previous: [Softmax: turning scores into probabilities](../softmax-and-probabilities/). Next: [How a model learns](../../foundations/how-models-learn/) uses this loss to move each dial in the right direction.

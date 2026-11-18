@@ -1,0 +1,66 @@
+---
+title: "Jacobians: when a function has many outputs"
+track: maths
+level: intermediate
+order: 9.13
+summary: What a Jacobian is, the grid of partial derivatives for a function with several outputs, and how it gives the best linear guess for a small change. Two sliders compare the guess with the exact change.
+updated: 2026-11-18
+sources:
+  - label: "3Blue1Brown: Multivariable calculus (Essence of calculus)"
+    url: https://www.3blue1brown.com/topics/multivariable-calculus
+  - label: "Khan Academy: Multivariable calculus"
+    url: https://www.khanacademy.org/math/multivariable-calculus
+  - label: "Deep Learning, chapter 6.5 (Goodfellow, Bengio and Courville)"
+    url: https://www.deeplearningbook.org/
+---
+
+import Deep from '../../../components/ui/Deep.astro';
+import Callout from '../../../components/ui/Callout.astro';
+import JacobianStep from '../../../components/viz/JacobianStep.tsx';
+
+The gradient handles a function with one output and many inputs. A layer in a network has many outputs too, each depending on many inputs. The **Jacobian** collects every partial derivative for that case into one grid.
+
+## The grid
+
+Take $$F(x, y) = (xy,\; x + y^2)$$. It has two inputs and two outputs. The Jacobian has one row per output and one column per input, and each entry is the partial derivative of an output with respect to an input:
+
+$$
+J = \begin{pmatrix} \partial F_1/\partial x & \partial F_1/\partial y \\ \partial F_2/\partial x & \partial F_2/\partial y \end{pmatrix} = \begin{pmatrix} y & x \\ 1 & 2y \end{pmatrix}
+$$
+
+At $$(x, y) = (1, 2)$$ this is $$\begin{pmatrix} 2 & 1 \\ 1 & 4 \end{pmatrix}$$.
+
+## The best linear guess
+
+Near a point, a small input step $$(\Delta x, \Delta y)$$ changes the output by approximately $$J \cdot (\Delta x, \Delta y)$$. That is a matrix times a vector, the same operation as a neural network layer. The Jacobian is the local version of the layer.
+
+## Try it
+
+Set the point and the step. The predicted change comes from the Jacobian, the exact change from evaluating $$F$$ at both points. Make the step small and the two agree closely. Make it large and the gap grows, because the linear guess only holds locally.
+
+<JacobianStep client:visible />
+
+<Callout title="Why ML needs it">
+
+Backpropagation is the chain rule applied to Jacobians. Each layer contributes its Jacobian, and the gradient of the loss is the product of those Jacobians applied to the loss's own slope. Frameworks compute these products without forming the full matrices, which is why very large networks remain trainable.
+
+</Callout>
+
+## Where it came from
+
+Carl Gustav Jacob Jacobi studied these determinants and matrices in the 1830s, and the name Jacobian was given in his honour. The Hessian, the matrix of second derivatives, is named after Ludwig Otto Hesse, who worked on it in the 1840s.
+
+<Deep title="The Hessian in one paragraph">
+
+The Hessian is the Jacobian of the gradient: the matrix of second partial derivatives $$\partial^2 f / \partial x_i \partial x_j$$. It describes curvature. At a minimum, the Hessian is positive in every direction, so the surface curves up on all sides. Optimisers that use curvature, such as Newton's method, use it to choose better steps, but for large models the full Hessian is too big to store, so practical methods approximate it.
+
+</Deep>
+
+## What to take forward
+
+- A Jacobian is the grid of partial derivatives for a function with several outputs.
+- Near a point, it gives the best linear prediction of a small input change.
+- Backpropagation is the chain rule applied to Jacobians, layer by layer.
+- The Hessian is the next level up, describing curvature.
+
+Previous: [Partial derivatives and gradients](../partial-derivatives-and-gradients/). Next: [Common distributions: counts and waiting](../common-distributions/).

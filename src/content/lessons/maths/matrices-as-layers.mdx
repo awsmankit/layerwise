@@ -1,0 +1,70 @@
+---
+title: "Matrices as layers: dot products, one row at a time"
+track: maths
+level: basic
+order: 1.9
+summary: What a matrix and a dot product are, and why a neural network layer is one. Change the weights and inputs in the widget and see each output come from one row dotted with the input.
+updated: 2026-11-18
+sources:
+  - label: "3Blue1Brown: Linear combinations, span and basis vectors (Essence of linear algebra)"
+    url: https://www.3blue1brown.com/lessons/linear-combinations
+  - label: "3Blue1Brown: Matrix multiplication as composition"
+    url: https://www.3blue1brown.com/lessons/matrix-multiplication
+  - label: "Deep Learning, chapter 2 (Goodfellow, Bengio and Courville)"
+    url: https://www.deeplearningbook.org/
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import MatrixLayer from '../../../components/viz/MatrixLayer.tsx';
+
+Most of the arithmetic inside a neural network is one operation repeated: multiply a list of numbers by a grid of weights and add them up. The grid is a **matrix**, and the operation is a **matrix-vector product**. Once you see it as dot products, the whole network becomes less mysterious.
+
+## A dot product is multiply and add
+
+Take two lists of the same length. Multiply them pair by pair and add the results. That is the **dot product**:
+
+$$
+\mathbf{a} \cdot \mathbf{b} = a_1 b_1 + a_2 b_2 + \dots + a_n b_n
+$$
+
+A dot product is large when the two lists point in similar directions and small or negative when they point apart. A neuron that adds up weighted inputs is computing one dot product: its weights are one list, the inputs are the other.
+
+## A matrix is a stack of rows
+
+A matrix is a rectangle of numbers. Multiplying it by a list of inputs gives one output per row, and each output is the dot product of that row with the inputs. So a layer with three neurons is a matrix with three rows. Each row is one neuron's weights.
+
+## Try it
+
+The widget starts with a 2 by 2 weight grid and the input $$(3, 4)$$. The first output is $$1 \times 3 + 2 \times 4 = 11$$. The second is $$0 \times 3 + (-1) \times 4 = -4$$. Change any weight or input and watch which outputs move.
+
+<MatrixLayer client:visible />
+
+<Callout title="What a layer does with each output">
+
+Each output answers one question about the input: how much does it match the pattern in this row? A large output means "yes, strongly". A negative output means "the opposite". Training adjusts the rows, so the outputs become useful signals.
+
+</Callout>
+
+## Why this is a machine for many inputs
+
+A layer that reads 512 numbers and produces 1,024 outputs is a grid with 1,024 rows and 512 columns. That is about half a million weights, each one a dial that training adjusts. A whole language model is many such grids, stacked, with a bend between each stack. The bend, such as ReLU, is what stops the stack from collapsing into one big grid.
+
+## How it came into the picture
+
+Matrices were introduced in the 1850s by Arthur Cayley, to write systems of linear equations compactly. They became central to physics and engineering in the 20th century. Neural networks in the 1950s and 1960s used the same operation, and the arrival of GPUs made it fast enough to train very large grids, because GPUs are built to do many dot products at once.
+
+<Deep title="Shapes: the rule that stops most bugs">
+
+A matrix with $$m$$ rows and $$n$$ columns can multiply a list of length $$n$$, and gives a list of length $$m$$. Writing the shapes down is the quickest check on a model's code. If a layer takes 512 inputs and produces 1,024 outputs, its weight matrix has shape 1,024 by 512, and the output has shape 1,024. Most shape errors in deep learning come from a mismatch on this one rule.
+
+</Deep>
+
+## What to take forward
+
+- A dot product multiplies two lists pair by pair and adds the results.
+- A matrix times a list gives one dot product per row.
+- A neural network layer is a matrix, plus a bend.
+- Count the shapes first when a model's code fails: rows of the weights match outputs, columns match inputs.
+
+Previous: [Gradient descent by hand](../gradient-descent-by-hand/). Next: [Bayes' rule: how sure is a test?](../bayes-and-conditional-probability/).

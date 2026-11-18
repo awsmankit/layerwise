@@ -8,6 +8,11 @@ import { extrasCloud } from './extras/cloud';
 import { extrasLocal } from './extras/local';
 import { extrasInfra } from './extras/infra';
 import { extrasCore } from './extras/core';
+import { extrasMathsMl } from './extras/maths-ml';
+import { extrasMathsMl2 } from './extras/maths-ml-2';
+import { extrasMathsMl3 } from './extras/maths-ml-3';
+import { extrasMathsMl4 } from './extras/maths-ml-4';
+import { extrasMathsMl5 } from './extras/maths-ml-5';
 import { extrasRetrievalServing } from './extras/retrieval-serving';
 import { extrasOps } from './extras/ops';
 import { extrasModels } from './extras/models';
@@ -522,4 +527,4 @@ const baseExtras: Record<string, Extra> = {
 };
 
 /** Core lessons plus the per-track files in ./extras. */
-export const extras: Record<string, Extra> = { ...baseExtras, ...extrasCloud, ...extrasInfra, ...extrasLocal, ...extrasCore, ...extrasModels, ...extrasEcosystem, ...extras_frameworks, ...extras_mcp, ...extras_promptpatterns, ...extras_libraries, ...extras_reasoning, ...extras_agenteval, ...extras_euai, ...extrasOps, ...extrasRetrievalServing, ...extrasStart, ...extrasW1StartA, ...extrasW1RespA, ...extrasW1RespB, ...extrasW1Skills, ...extrasW1DlA, ...extrasW1DlB, ...extrasW1MlA, ...extrasW1MlB, ...extrasW1Audio, ...extrasW2AgentsA, ...extrasW2AgentsB, ...extrasW2Product, ...extrasW2Evals, ...extrasW2Docs, ...extrasW2DlA, ...extrasW2DlB, ...extrasW2Resp, ...extrasW3EdgeA, ...extrasW3EdgeB, ...extrasW3EdgeC, ...extrasW3AudioA, ...extrasW3AudioB, ...extrasW3MlopsA, ...extrasW3MlopsB, ...extrasW3MlopsC, ...extrasW3AppliedA, ...extrasW3AppliedB, ...extrasW4DlA, ...extrasW4DlB, ...extrasW4DlC, ...extrasW4Skills, ...extrasW4StartA, ...extrasW4StartB, ...extrasW4RespA, ...extrasW4RespB, ...extrasW4RespC, ...extrasW4RespD, ...extrasW4BuildA, ...extrasW4BuildB, ...extrasW4BuildC, ...extrasW4BuildD, ...extrasW4BuildE, ...extrasW4Misc, ...extrasW5LessonsA, ...extrasW5LessonsB, ...extrasW6Arch };
+export const extras: Record<string, Extra> = { ...baseExtras, ...extrasCloud, ...extrasInfra, ...extrasLocal, ...extrasCore, ...extrasMathsMl, ...extrasMathsMl2, ...extrasMathsMl3, ...extrasMathsMl4, ...extrasMathsMl5, ...extrasModels, ...extrasEcosystem, ...extras_frameworks, ...extras_mcp, ...extras_promptpatterns, ...extras_libraries, ...extras_reasoning, ...extras_agenteval, ...extras_euai, ...extrasOps, ...extrasRetrievalServing, ...extrasStart, ...extrasW1StartA, ...extrasW1RespA, ...extrasW1RespB, ...extrasW1Skills, ...extrasW1DlA, ...extrasW1DlB, ...extrasW1MlA, ...extrasW1MlB, ...extrasW1Audio, ...extrasW2AgentsA, ...extrasW2AgentsB, ...extrasW2Product, ...extrasW2Evals, ...extrasW2Docs, ...extrasW2DlA, ...extrasW2DlB, ...extrasW2Resp, ...extrasW3EdgeA, ...extrasW3EdgeB, ...extrasW3EdgeC, ...extrasW3AudioA, ...extrasW3AudioB, ...extrasW3MlopsA, ...extrasW3MlopsB, ...extrasW3MlopsC, ...extrasW3AppliedA, ...extrasW3AppliedB, ...extrasW4DlA, ...extrasW4DlB, ...extrasW4DlC, ...extrasW4Skills, ...extrasW4StartA, ...extrasW4StartB, ...extrasW4RespA, ...extrasW4RespB, ...extrasW4RespC, ...extrasW4RespD, ...extrasW4BuildA, ...extrasW4BuildB, ...extrasW4BuildC, ...extrasW4BuildD, ...extrasW4BuildE, ...extrasW4Misc, ...extrasW5LessonsA, ...extrasW5LessonsB, ...extrasW6Arch };

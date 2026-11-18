@@ -1,0 +1,66 @@
+---
+title: "The beta distribution: updating a belief about a chance"
+track: maths
+level: intermediate
+order: 9.15
+summary: The beta distribution as a belief about a probability between 0 and 1, and how each new success or failure updates it. Drag the counts and watch the belief narrow around the data.
+updated: 2026-11-18
+sources:
+  - label: "Seeing Theory: Bayesian inference (Brown University)"
+    url: https://seeing-theory.brown.edu/
+  - label: "Gelman et al., Bayesian Data Analysis, chapter 2"
+    url: https://sites.stat.columbia.edu/gelman/book/
+  - label: "3Blue1Brown: Bayes theorem"
+    url: https://www.3blue1brown.com/lessons/bayes-theorem
+---
+
+import Deep from '../../../components/ui/Deep.astro';
+import Callout from '../../../components/ui/Callout.astro';
+import BetaUpdate from '../../../components/viz/BetaUpdate.tsx';
+
+Suppose you don't know a chance, such as the click-through rate of a new button, and you want to say how sure you are about it. The **beta distribution** is the standard way to express that belief. It lives between 0 and 1, which is exactly where probabilities live. Each new success or failure then updates the belief in a simple way.
+
+## The belief has two numbers
+
+A beta belief is written $$\text{Beta}(a, b)$$. Think of $$a - 1$$ as the successes you've already seen and $$b - 1$$ as the failures. $$\text{Beta}(1, 1)$$ is flat: every chance is equally believable before any data. The mean of the belief is $$a / (a + b)$$.
+
+## Updating is adding counts
+
+Bayes' rule, from the earlier lesson, says the new belief is the old belief times the evidence. For a beta belief and yes-or-no data, that multiplication has a neat result: add the successes to $$a$$ and the failures to $$b$$.
+
+$$
+\text{Beta}(a, b) \;\xrightarrow{\;s \text{ successes},\ f \text{ failures}\;}\; \text{Beta}(a + s,\; b + f)
+$$
+
+The new mean is $$(a + s) / (a + b + s + f)$$. With a flat start and 7 successes and 3 failures, the mean is $$8/12 = 0.67$$.
+
+## Try it
+
+Start flat, then add the counts. Each extra observation narrows the belief, and the peak moves towards the observed share of successes. Early on the belief is wide and easily moved; with lots of data it is narrow and resists change.
+
+<BetaUpdate client:visible />
+
+<Callout title="Why this is useful in ML">
+
+Beta beliefs appear in A/B tests, where each variant's conversion rate gets a belief, in Bayesian optimisation, and in Thompson sampling, which picks the option whose sampled chance is highest. They show how sure the data has made you, not only the average. A test with 3 successes out of 4 and one with 300 out of 400 have the same observed share, 75 per cent, but very different spreads.
+
+</Callout>
+
+## Where it came from
+
+Thomas Bayes and Pierre-Simon Laplace worked on updating beliefs from data in the 1700s. The idea of a conjugate prior, a choice of belief whose update stays in the same family, was formalised in the 1960s, and the beta family is the standard example for a chance.
+
+<Deep title="Why adding counts works">
+
+The beta density is proportional to $$x^{a-1}(1-x)^{b-1}$$. A binomial likelihood for $$s$$ successes and $$f$$ failures is proportional to $$x^{s}(1-x)^{f}$$. Multiplying the two gives $$x^{a+s-1}(1-x)^{b+f-1}$$, which is a beta density with parameters $$a + s$$ and $$b + f$$. Only the exponents change, so the update is just addition.
+
+</Deep>
+
+## What to take forward
+
+- A beta distribution is a belief about a chance between 0 and 1.
+- Its two parameters can be read as counts of prior successes and failures.
+- Updating with data adds the successes and failures to those parameters.
+- The mean gives the estimate; the spread tells you how sure you are.
+
+Previous: [Common distributions](../common-distributions/). Next: [Hypothesis testing and p-values](../hypothesis-testing-and-p-values/).

@@ -1,0 +1,75 @@
+---
+title: "Derivatives: the slope at one point"
+track: maths
+level: basic
+order: 1.7
+summary: What a derivative is, drawn as the slope of a curve at one point. Move the point and the step size, and watch the slope of a chord close in on the true slope. No formulas to memorise.
+updated: 2026-11-18
+sources:
+  - label: "3Blue1Brown: The paradox of the derivative (Essence of calculus)"
+    url: https://www.3blue1brown.com/lessons/paradox-of-the-derivative
+  - label: "Khan Academy: Differential calculus"
+    url: https://www.khanacademy.org/math/differential-calculus
+  - label: "Deep Learning, chapter 4.3 (Goodfellow, Bengio and Courville)"
+    url: https://www.deeplearningbook.org/
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import DerivativeSlope from '../../../components/viz/DerivativeSlope.tsx';
+
+Training a model means asking, for each dial: if I turn this a little, does the error go up or down, and by how much? The answer to that question is a **derivative**. It is the slope of the error curve at the point you are standing on.
+
+## Slope is rise over run
+
+On a straight line, the slope is how much the height changes for each step to the right. A line that climbs 2 for every 1 step to the right has slope 2. On a curve, the slope changes from place to place, so the question has to be asked at one point.
+
+Here is the trick. Pick a point on the curve and a second point a small distance $$h$$ further along. Draw the line through both. Its slope is called a **secant** slope:
+
+$$
+\text{secant slope} = \frac{f(x + h) - f(x)}{h}
+$$
+
+Make $$h$$ smaller and the second point slides towards the first. The secant turns into the **tangent**, the line that just touches the curve at that point. Its slope is the derivative.
+
+## Try it
+
+Use the widget. The curve is $$f(x) = x^2$$, a bowl shape. Its true slope at any $$x$$ is $$2x$$, so at $$x = 1$$ the slope is 2. Set $$h$$ to 1 and the chord is far off. Drag $$h$$ towards 0.05 and the secant slope closes in on 2.
+
+<DerivativeSlope client:visible />
+
+<Callout title="What to notice">
+
+A large step gives a chord whose slope is a poor guide to the curve. A small step gives a better guide. The derivative is what remains when the step shrinks to nothing. You never need to shrink it to zero in practice: for this curve, a step of 0.05 already gets within 0.05 of the true slope.
+
+</Callout>
+
+## Why a model needs it
+
+A model's loss is a curve over its dials. The derivative of the loss with respect to a dial says which way to move the dial to reduce the loss, and how fast the loss changes as it moves. If the slope is positive, nudge the dial down. If it is negative, nudge it up. Training does this for every dial at once, and the next lesson, [Gradient descent by hand](../gradient-descent-by-hand/), shows the loop.
+
+## How it came into the picture
+
+Slopes of curves were studied for centuries before calculus. In the 1660s and 1670s, Isaac Newton and Gottfried Leibniz each developed a method for finding them, and the notation $$\frac{dy}{dx}$$ is Leibniz's. Newton used it to describe how planets move. Machine learning uses the same idea, now applied to millions of dials at once, and the computer finds the slopes automatically.
+
+<Deep title="The rules, without the proofs">
+
+For common functions you can write the derivative down directly:
+
+- $$x^n$$ has derivative $$n x^{n-1}$$. So $$x^2$$ gives $$2x$$.
+- A constant has derivative 0.
+- Sums add: the derivative of $$f + g$$ is $$f' + g'$$.
+- The **chain rule** handles a function inside a function. For $$h(x) = f(g(x))$$, the derivative is $$f'(g(x)) \cdot g'(x)$$: slopes multiply. This is the rule that backpropagation uses at every layer, covered in [Backpropagation from scratch](../../deep-learning/backprop-from-scratch/).
+
+You can check any derivative numerically with the secant formula and a tiny $$h$$, as the widget does.
+
+</Deep>
+
+## What to take forward
+
+- A derivative is the slope of a curve at one point.
+- It comes from a secant slope: a chord whose two ends move together.
+- The sign tells you the direction to move a dial to reduce the loss. The size tells you how fast.
+- Models do not compute derivatives by hand. They compute them automatically, and the rules above are what that automation applies.
+
+Previous: [Softmax](../softmax-and-probabilities/) and [Cross-entropy](../cross-entropy-and-logs/). Next: [Gradient descent by hand](../gradient-descent-by-hand/).

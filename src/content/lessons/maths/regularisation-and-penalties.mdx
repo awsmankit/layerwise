@@ -1,0 +1,62 @@
+---
+title: "Regularisation: penalising big dials"
+track: maths
+level: intermediate
+order: 9.11
+summary: How adding a penalty for large weights pulls a model away from fitting noise and towards simpler answers. A slider shows the best setting sliding from the data's answer towards zero as the penalty grows.
+updated: 2026-11-18
+sources:
+  - label: "Deep Learning, chapter 7.1 (Goodfellow, Bengio and Courville)"
+    url: https://www.deeplearningbook.org/
+  - label: "Hoerl and Kennard, Ridge Regression (Technometrics, 1970)"
+    url: https://www.jstor.org/stable/1267351
+  - label: "An Introduction to Statistical Learning, chapter 6 (James et al.)"
+    url: https://www.statlearning.com/
+---
+
+import Deep from '../../../components/ui/Deep.astro';
+import Callout from '../../../components/ui/Callout.astro';
+import RidgeShrink from '../../../components/viz/RidgeShrink.tsx';
+
+A model with many dials can fit almost any data, including the noise in it. The training loss goes down, but the model does worse on new data. This is overfitting, shown in the earlier lesson on learning curves. **Regularisation** is the standard remedy: add a penalty to the loss for large dial values, so the model must justify every big weight with the data.
+
+## The penalised loss
+
+Take the fit loss $$(w - 3)^2$$, which the data wants to minimise at $$w = 3$$. Add a penalty $$\lambda w^2$$:
+
+$$
+L(w) = (w - 3)^2 + \lambda w^2
+$$
+
+The penalty grows with $$w$$, so it pulls the best $$w$$ towards zero. The strength $$\lambda$$ sets how hard. This is called **ridge** regularisation or L2 regularisation, and it is the most common form. Other penalties, such as the absolute value of $$w$$ (L1), tend to push some weights exactly to zero.
+
+## Try it
+
+Slide $$\lambda$$ from 0 upwards. With no penalty the best $$w$$ is 3, the value the data gives. As $$\lambda$$ grows, the best $$w$$ slides towards 0. The lowest point is at $$w = 3/(1+\lambda)$$, which you can check from the slope: $$2(w - 3) + 2\lambda w = 0$$.
+
+<RidgeShrink client:visible />
+
+<Callout title="A trade-off, not a free lunch">
+
+A bigger penalty makes the model simpler and less likely to chase noise, but too big a penalty underfits: it ignores real signal. The right strength is found by checking performance on held-out validation data, the same rule as the overfitting lesson. Set λ too low and you keep the overfitting; too high and the model is too rigid.
+
+</Callout>
+
+## Where it came from
+
+Andrey Tikhonov introduced the idea in the 1940s and 1960s for solving ill-posed problems. Arthur Hoerl and Robert Kennard applied it to regression in 1970 under the name ridge regression. In neural networks it is usually called weight decay, and most modern training uses some form of it.
+
+<Deep title="Why it works, in one picture">
+
+Without a penalty, the fit can use any dial value, so it can wiggle through every point of noisy data. The penalty makes large dials expensive, so the model keeps only the changes that the data supports strongly. In Bayesian terms, the penalty is a prior belief that weights should be small, and the L2 penalty is the same as a normal prior centred on zero.
+
+</Deep>
+
+## What to take forward
+
+- Regularisation adds a penalty for large weights to the loss.
+- The L2 (ridge) penalty pulls every weight towards zero, by a factor set by λ.
+- It fights overfitting; too much penalty causes underfitting.
+- Choose λ on validation data, never on the training loss.
+
+Previous: [Momentum and Adam](../momentum-and-adam/). Next: [The sigmoid and logistic regression](../the-sigmoid-and-logistic-regression/).

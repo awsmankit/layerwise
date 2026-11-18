@@ -36,6 +36,23 @@ export const repoUrl = 'https://github.com/awsmankit/layerwise';
 
 export const releases: Release[] = [
   {
+    version: '2.15.0',
+    date: '2026-11-18',
+    title: 'Maths for ML: its own track, with interactive lessons',
+    summary: 'The maths behind machine learning now has its own track. Each lesson explains one idea in plain words, with a picture you can move, the formula, and where it shows up in models. The track starts with integration for beginners and covers probability, calculus, linear algebra, statistics and information theory.',
+    highlights: [
+      'A new "Maths for ML" track with 27 lessons, from integration as adding up slices to the ELBO, the Fourier transform and the singular value decomposition.',
+      'Most maths lessons have a widget you can move: a loaded die, a gradient-descent walk, a Bayes test grid of 1,000 people, a Markov weather chain, a p-value for a coin, and a Fourier spectrum of two waves.',
+      'Each lesson links to the parts of the site that use it, such as cross-entropy in training and softmax in language models.',
+      'Fixes from review: the Fourier and gradient widgets draw the same on the server and in the browser, and the entropy chart labels its outcomes.',
+    ],
+    tryIt: [
+      { label: 'Integration from the start', href: '/learn/maths/integration-from-the-start/' },
+      { label: 'Softmax, with temperature', href: '/learn/maths/softmax-and-probabilities/' },
+    ],
+    stats: { lessons: 191, topics: 18, labs: 24, glossary: 880 },
+  },
+  {
     version: '2.14.0',
     date: '2026-11-12',
     title: 'The encoder step by step, livelier diagrams, and plainer lessons',

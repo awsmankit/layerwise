@@ -1,0 +1,67 @@
+---
+title: "Maximum likelihood: the setting that makes the data least surprising"
+track: maths
+level: intermediate
+order: 9.5
+summary: How to estimate a model's setting from data by choosing the value that makes the observed data most likely. Worked on coin flips, with a curve that peaks at the answer.
+updated: 2026-11-18
+sources:
+  - label: "Seeing Theory: Bayesian inference and maximum likelihood (Brown University)"
+    url: https://seeing-theory.brown.edu/
+  - label: "Deep Learning, chapter 5.5 (Goodfellow, Bengio and Courville)"
+    url: https://www.deeplearningbook.org/
+  - label: "Visual Information Theory (Christopher Olah, 2015)"
+    url: https://colah.github.io/posts/2015-09-Visual-Information/
+---
+
+import Deep from '../../../components/ui/Deep.astro';
+import Callout from '../../../components/ui/Callout.astro';
+import MleCoin from '../../../components/viz/MleCoin.tsx';
+
+Training a model is almost always an estimation problem: we have data and want the setting of the dials that best explains it. **Maximum likelihood** gives one standard answer. Choose the setting under which the data you actually observed would have been most probable.
+
+## Likelihood is a probability read backwards
+
+Probability asks: given a setting, how likely is this data? Likelihood flips the question: given this data, how plausible is each setting? The function is the same, but you hold the data fixed and vary the setting.
+
+Take a coin with unknown chance $$p$$ of heads. You flip it 10 times and get 7 heads and 3 tails. How likely is those exact flips for each $$p$$?
+
+$$
+L(p) = p^7 (1 - p)^3
+$$
+
+For $$p = 0.5$$ this is about 0.0010. For $$p = 0.7$$ it is about 0.0022, roughly twice as likely. The curve has one peak, and the peak is the maximum likelihood estimate.
+
+## Try it
+
+Change the number of heads and watch the peak move. With $$k$$ heads out of $$n$$ flips the peak sits at $$k/n$$, the share of heads, which matches what you would guess. Maximum likelihood gives the common-sense answer here, which is reassuring for a general method.
+
+<MleCoin client:visible />
+
+<Callout title="Why ML uses the logarithm">
+
+Products of many probabilities become tiny, so software works with the logarithm instead. The log of a product is the sum of the logs, and the logarithm always increases, so the peak stays in the same place. This is why training minimises the negative log-likelihood, which is the same loss as cross-entropy from the earlier lesson.
+
+</Callout>
+
+## Where it came from
+
+Carl Friedrich Gauss and Pierre-Simon Laplace used likelihood-style reasoning in the early 1800s. Ronald Fisher made it the central method of estimation in the 1910s and 1920s, and it became the default way to fit most statistical models.
+
+<Deep title="The general recipe">
+
+1. Write the probability of one data point as a function of the setting $$\theta$$.
+2. Multiply over independent points to get the likelihood, then take the logarithm to get the log-likelihood $$\ell(\theta)$$.
+3. Find the $$\theta$$ that maximises $$\ell$$. Where the curve is smooth, the peak is where its slope is zero: set the derivative to zero.
+4. For the coin, $$\ell(p) = 7\ln p + 3\ln(1-p)$$. Its derivative is $$7/p - 3/(1-p)$$, which is zero at $$p = 0.7$$.
+
+</Deep>
+
+## What to take forward
+
+- Likelihood asks how probable the observed data is under each setting.
+- The maximum likelihood estimate is the setting that makes the data least surprising.
+- For coin flips it is the share of heads, which is the common-sense answer.
+- Training a classifier with cross-entropy is maximum likelihood in disguise.
+
+Previous: [Entropy and KL divergence](../entropy-and-kl-divergence/). Next: [Partial derivatives and gradients](../partial-derivatives-and-gradients/).

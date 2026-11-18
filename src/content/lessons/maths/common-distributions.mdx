@@ -1,0 +1,72 @@
+---
+title: "Common distributions: binomial and Poisson counts"
+track: maths
+level: intermediate
+order: 9.14
+summary: The binomial distribution for successes in a fixed number of tries, and the Poisson distribution for events at a steady rate. Set their parameters and watch the bars and the mean and variance change.
+updated: 2026-11-18
+sources:
+  - label: "Seeing Theory: Probability distributions (Brown University)"
+    url: https://seeing-theory.brown.edu/
+  - label: "Khan Academy: Binomial distribution"
+    url: https://www.khanacademy.org/math/statistics-probability/random-variables-stats-library
+  - label: "Deep Learning, chapter 3.9 (Goodfellow, Bengio and Courville)"
+    url: https://www.deeplearningbook.org/
+---
+
+import Deep from '../../../components/ui/Deep.astro';
+import Callout from '../../../components/ui/Callout.astro';
+import DistributionBars from '../../../components/viz/DistributionBars.tsx';
+
+Most counting problems fall into a few shapes. Two of the most useful are the **binomial** distribution, which counts successes in a fixed number of independent tries, and the **Poisson** distribution, which counts events in a fixed time at a steady average rate. They appear in A/B tests, error counts, traffic and arrivals.
+
+## Binomial: successes in n tries
+
+Flip a coin $$n$$ times, each with chance $$p$$ of heads. The chance of exactly $$k$$ heads is:
+
+$$
+P(k) = \binom{n}{k} p^k (1 - p)^{n - k}
+$$
+
+The first factor counts the ways to choose which flips are heads. The rest is the chance of one particular sequence with $$k$$ heads. The mean is $$np$$ and the variance is $$np(1-p)$$.
+
+## Poisson: events at a steady rate
+
+When $$n$$ is very large and $$p$$ is small, the binomial becomes the Poisson distribution with rate $$\lambda = np$$:
+
+$$
+P(k) = \frac{e^{-\lambda} \lambda^k}{k!}
+$$
+
+Its mean and variance are both $$\lambda$$. A call centre that averages 4 calls a minute, with calls arriving independently, has calls per minute distributed as Poisson with $$\lambda = 4$$.
+
+## Try it
+
+Switch between the two. For the binomial, raise $$n$$ and the bars spread out and the mean moves with $$np$$. For the Poisson, raise $$\lambda$$ and the peak moves right, with the spread growing as $$\sqrt{\lambda}$$.
+
+<DistributionBars client:visible />
+
+<Callout title="Why the mean and variance matter">
+
+Once you know a count's mean and variance you know most of its behaviour. The Poisson's equal mean and variance is a quick check: if observed counts have a variance far from their mean, a Poisson model is the wrong choice. That kind of check guards against picking a distribution that doesn't fit the data.
+
+</Callout>
+
+## Where it came from
+
+Jacob Bernoulli proved the law of large numbers for coin flips in 1713, which led to the binomial. Siméon Denis Poisson published his distribution in 1837 while studying jury verdicts and later described it as the law of rare events. Ladislaus Bortkiewicz used it in 1898 to count horse-kick deaths in the Prussian army, a classic example.
+
+<Deep title="Where the Poisson comes from">
+
+Split one minute into a million tiny slots, each with chance $$\lambda / 10^6$$ of an event. The total count is binomial with $$n = 10^6$$ and $$p = \lambda / 10^6$$. As the slots get finer, the binomial settles to $$e^{-\lambda}\lambda^k / k!$$, which is why the Poisson fits rare events in continuous time.
+
+</Deep>
+
+## What to take forward
+
+- The binomial counts successes in $$n$$ independent tries with chance $$p$$.
+- The Poisson counts events at a steady average rate $$\lambda$$, and has mean and variance both equal to $$\lambda$$.
+- The Poisson is the binomial with many tries and rare successes.
+- Check the mean and variance of your counts before you pick a model.
+
+Previous: [Jacobians](../jacobians-and-hessians/). Next: [Beta and updating beliefs](../beta-and-updating-beliefs/).

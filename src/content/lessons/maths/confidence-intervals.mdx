@@ -1,0 +1,66 @@
+---
+title: "Confidence intervals: how sure is an average?"
+track: maths
+level: intermediate
+order: 9.9
+summary: What a 95 per cent confidence interval says about an average, why it narrows only with the square root of the sample size, and what it does not mean. A slider shows the width shrinking as measurements pile up.
+updated: 2026-11-18
+sources:
+  - label: "Seeing Theory: Confidence intervals (Brown University)"
+    url: https://seeing-theory.brown.edu/
+  - label: "Efron and Tibshirani, An Introduction to the Bootstrap (1993)"
+    url: https://www.routledge.com/An-Introduction-to-the-Bootstrap/Efron-Tibshirani/p/book/9780412042317
+  - label: "Deep Learning, chapter 5.4 (Goodfellow, Bengio and Courville)"
+    url: https://www.deeplearningbook.org/
+---
+
+import Deep from '../../../components/ui/Deep.astro';
+import Callout from '../../../components/ui/Callout.astro';
+import ConfidenceWidth from '../../../components/viz/ConfidenceWidth.tsx';
+
+A model's accuracy on a test set is an average, and an average from a sample is never exact. A **confidence interval** puts a range around it. The usual 95 per cent interval for a mean is the average plus or minus about two standard errors, where the standard error is the spread of single measurements divided by the square root of the count.
+
+## The formula
+
+For $$n$$ measurements with known spread $$\sigma$$:
+
+$$
+\bar{x} \pm 1.96 \times \frac{\sigma}{\sqrt{n}}
+$$
+
+The 1.96 comes from the [normal distribution](../normal-distribution/): 95 per cent of the area lies within 1.96 standard deviations of the middle. The $$\sigma/\sqrt{n}$$ term is the standard error, which shrinks as you collect more data.
+
+## Try it
+
+The average here is 50 and single measurements spread by 10. Move the count from 4 to 400. The interval starts wide and narrows, but more slowly than the count rises: multiply the data by four and the width only halves.
+
+<ConfidenceWidth client:visible />
+
+<Callout title="What it does not mean">
+
+A 95 per cent interval does not mean the true value has a 95 per cent chance of being inside this particular interval. It means that if you repeated the whole study many times, about 95 per cent of the intervals built this way would contain the true value. The true value is fixed, and the interval is the random part.
+
+</Callout>
+
+## Why it matters for ML evaluation
+
+A test accuracy of 91 per cent on 100 examples has a wide interval, roughly ±6 points, so two models at 91 and 89 can't be told apart. The same accuracy on 10,000 examples has a half-width of about 0.6 points, so differences of about one point start to count. Always report the sample size next to a metric, and when two models differ by less than the interval, treat the difference as noise.
+
+## Where it came from
+
+Jerzy Neyman introduced confidence intervals in 1937. Their use spread through statistics during the 20th century, and today they are standard in clinical trials and in model benchmarks. For data without a simple formula, the bootstrap, introduced by Bradley Efron in 1979, estimates the interval by resampling the data.
+
+<Deep title="The square-root rule">
+
+Averaging $$n$$ independent measurements cancels noise at the rate $$\sqrt{n}$$. Going from 16 to 64 measurements quadruples the data and halves the standard error. Going from 1,000 to 4,000 buys the same halving for four times the cost, so precision gets expensive fast, a point that matters when choosing how big an evaluation set should be.
+
+</Deep>
+
+## What to take forward
+
+- A confidence interval gives a range for an average, built from the spread and the sample size.
+- The width shrinks with the square root of the sample size.
+- It describes the method's long-run coverage, not the chance the fixed truth is inside.
+- For model evaluation, a difference smaller than the interval is not a real difference.
+
+Previous: [Sampling and temperature](../sampling-and-temperature/). Next: [Momentum and Adam](../momentum-and-adam/).

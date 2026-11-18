@@ -1,0 +1,74 @@
+---
+title: "Bayes' rule: how sure is a positive test?"
+track: maths
+level: basic
+order: 1.95
+summary: Conditional probability and Bayes' rule, explained with a medical test. A widget counts 1,000 people so you can see why a positive result is often not what it seems.
+updated: 2026-11-18
+sources:
+  - label: "Seeing Theory: Bayesian inference (Brown University)"
+    url: https://seeing-theory.brown.edu/
+  - label: "3Blue1Brown: Bayes theorem"
+    url: https://www.3blue1brown.com/lessons/bayes-theorem
+  - label: "Khan Academy: Bayes' theorem"
+    url: https://www.khanacademy.org/math/statistics-probability/probability-library
+---
+
+import Callout from '../../../components/ui/Callout.astro';
+import Deep from '../../../components/ui/Deep.astro';
+import BayesTest from '../../../components/viz/BayesTest.tsx';
+
+A test for a rare condition is 90 per cent accurate. You test positive. How worried should you be? Most people say "very", and most people are wrong. The question is about the reverse of what the test measures, and that difference is what **Bayes' rule** fixes.
+
+## Two directions of the same question
+
+The test tells you the chance of a positive result for someone who is sick. That is a **conditional probability**, written $$P(\text{positive} \mid \text{sick})$$, read "the probability of positive given sick". You want the other direction: $$P(\text{sick} \mid \text{positive})$$. These are different numbers, and treating one as the other is a common mistake. This mix-up has a name: confusing the prosecutor's fallacy, or the base-rate fallacy.
+
+## The rule
+
+Bayes' rule converts from one direction to the other:
+
+$$
+P(\text{sick} \mid \text{positive}) = \frac{P(\text{positive} \mid \text{sick}) \cdot P(\text{sick})}{P(\text{positive})}
+$$
+
+The bottom term, $$P(\text{positive})$$, is every way a positive result can happen: sick people who test positive, plus healthy people who test positive by mistake. The prior, $$P(\text{sick})$$, is how common the condition is before you test. It matters a great deal.
+
+## Try it
+
+The widget uses 1,000 people so the numbers are whole. The defaults are 1 per cent with the condition, a test that catches 90 per cent of sick people, and a test that is quiet for 91 per cent of healthy people.
+
+<BayesTest client:visible />
+
+Count the squares. 10 people are sick and 9 of them test positive. Of the 990 healthy people, 9 per cent test positive by mistake, which is 89 people. That makes 98 positive results, of which 9 are real. So a positive result means about a 9 per cent chance of disease. The test is good, and the answer is still low.
+
+<Callout title="Why the answer is small">
+
+The rare condition makes most positives come from the large healthy group. Even a small rate of false alarms among 990 healthy people outweighs the true positives among 10 sick people. Raise the prevalence and the answer rises quickly. Move the prevalence slider to 20 per cent and the same test becomes much more convincing.
+
+</Callout>
+
+## How it came into the picture
+
+Thomas Bayes, an English minister, wrote down the idea in the 1740s, and it was published after his death in 1763. Pierre-Simon Laplace developed it into the form used today. It was argued about for centuries and became standard in statistics in the 20th century. Machine learning uses it to update beliefs as new data arrives, and classifiers such as naive Bayes apply it directly.
+
+<Deep title="The arithmetic in one line">
+
+With prevalence $$p$$, sensitivity $$s$$ and specificity $$q$$:
+
+$$
+P(\text{sick} \mid \text{positive}) = \frac{p\,s}{p\,s + (1 - p)(1 - q)}
+$$
+
+For $$p = 0.01$$, $$s = 0.9$$ and $$q = 0.91$$: the top is $$0.009$$, the bottom is $$0.009 + 0.0891 = 0.0981$$, and the answer is $$0.0917$$, about 9 per cent.
+
+</Deep>
+
+## What to take forward
+
+- $$P(A \mid B)$$ and $$P(B \mid A)$$ are different numbers. Keep the direction straight.
+- Bayes' rule converts between them using the base rate.
+- A rare condition with a good test can still give mostly false positives.
+- The same idea is how models update their beliefs with new evidence.
+
+Previous: [Matrices as layers](../matrices-as-layers/). Next: [How a model learns](../../foundations/how-models-learn/) puts the loss and the slopes together.

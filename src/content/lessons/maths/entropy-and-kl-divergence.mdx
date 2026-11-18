@@ -1,0 +1,74 @@
+---
+title: "Entropy and KL divergence: surprise, and the cost of a wrong guess"
+track: maths
+level: intermediate
+order: 9.4
+summary: Entropy measures how uncertain a distribution is, and KL divergence measures how much you lose by using a wrong distribution. Two sliders show the true and model distributions and their numbers in bits.
+updated: 2026-11-18
+sources:
+  - label: "Visual Information Theory (Christopher Olah, 2015)"
+    url: https://colah.github.io/posts/2015-09-Visual-Information/
+  - label: "Elements of Information Theory (Cover and Thomas), chapter 2"
+    url: https://www.wiley.com/en-us/Elements+of+Information+Theory%2C+2nd+Edition-p-9780471241959
+  - label: "Deep Learning, chapter 3.13 (Goodfellow, Bengio and Courville)"
+    url: https://www.deeplearningbook.org/
+---
+
+import Deep from '../../../components/ui/Deep.astro';
+import Callout from '../../../components/ui/Callout.astro';
+import EntropyKL from '../../../components/viz/EntropyKL.tsx';
+
+Cross-entropy from the earlier lesson is a sum of surprise. Two ideas underneath it are worth separating: **entropy**, the surprise built into a distribution itself, and **KL divergence**, the extra surprise you pay for using the wrong distribution. Together they explain why a model's loss can never reach zero on noisy data, and what its loss is really measuring.
+
+## Surprise and entropy
+
+A rare outcome is more surprising than a common one. The surprise of an outcome with probability $$p$$ is $$-\log_2 p$$ bits. A coin that lands heads half the time gives 1 bit of surprise per flip. A coin that lands heads 99 per cent of the time gives almost none.
+
+**Entropy** is the average surprise over the outcomes of a distribution $$p$$:
+
+$$
+H(p) = -\sum_i p_i \log_2 p_i
+$$
+
+A distribution that is certain has entropy 0. A fair coin has 1 bit, a fair die about 2.58 bits. The more even the outcomes, the higher the entropy.
+
+## KL divergence: the cost of a wrong model
+
+Suppose the truth is $$p$$ but you model it with $$q$$. Each outcome costs you $$-\log_2 q_i$$ bits instead of $$-\log_2 p_i$$. The **KL divergence** is the average extra cost:
+
+$$
+D_{\text{KL}}(p \parallel q) = \sum_i p_i \log_2 \frac{p_i}{q_i}
+$$
+
+It is zero only when $$q$$ matches $$p$$, and positive otherwise. It is not symmetric: $$D_{\text{KL}}(p \parallel q)$$ and $$D_{\text{KL}}(q \parallel p)$$ are generally different, so the order matters.
+
+## Try it
+
+Set the true distribution $$p$$ and the model $$q$$ with the sliders. The third outcome is what is left. Make $$q$$ match $$p$$ and the KL drops to zero. Push $$q$$ away and it rises.
+
+<EntropyKL client:visible />
+
+<Callout title="Cross-entropy is entropy plus KL">
+
+Cross-entropy $$H(p, q) = H(p) + D_{\text{KL}}(p \parallel q)$$. When training a classifier, the data's own entropy $$H(p)$$ does not change, so minimising cross-entropy is the same as minimising KL divergence. That's the reason the loss works, and it's why a noisy dataset gives a loss that cannot fall below its entropy.
+
+</Callout>
+
+## Where it came from
+
+Claude Shannon introduced entropy in 1948 to measure how much information a message carries, and it is still the basis of data compression. Solomon Kullback and Richard Leibler defined the divergence in 1951. Both are now standard in ML for losses, for comparing distributions, and for measuring how far a model's outputs drift.
+
+<Deep title="Nats, bits, and the two-line proof">
+
+Using $$\ln$$ instead of $$\log_2$$ gives the same ideas in nats. The change of unit just multiplies by a constant. For the cross-entropy identity, write $$-\sum p_i \ln q_i = -\sum p_i \ln p_i + \sum p_i \ln \frac{p_i}{q_i}$$: the left side is cross-entropy, and the two terms on the right are entropy and KL.
+
+</Deep>
+
+## What to take forward
+
+- Entropy is the average surprise of a distribution, in bits or nats.
+- KL divergence is the extra cost of modelling a distribution with the wrong one.
+- Cross-entropy equals entropy plus KL, so minimising it moves the model towards the truth.
+- KL is not symmetric; the order of the two distributions matters.
+
+Previous: [Cross-entropy and logarithms](../cross-entropy-and-logs/). Next: [Maximum likelihood](../maximum-likelihood/).

@@ -1,0 +1,66 @@
+---
+title: "Momentum and Adam: smarter steps downhill"
+track: maths
+level: intermediate
+order: 9.10
+summary: Why plain gradient descent zigzags in a narrow valley, how momentum remembers past steps to cancel the zigzag, and how Adam gives each dial its own step size. A slider compares the paths.
+updated: 2026-11-18
+sources:
+  - label: "Why Momentum Really Works (Gabriel Goh, Distill, 2017)"
+    url: https://distill.pub/2017/momentum/
+  - label: "Adam: A Method for Stochastic Optimization (Kingma and Ba, 2014)"
+    url: https://arxiv.org/abs/1412.6980
+  - label: "CS231n: Optimization (Stanford)"
+    url: https://cs231n.github.io/optimization-1/
+---
+
+import Deep from '../../../components/ui/Deep.astro';
+import Callout from '../../../components/ui/Callout.astro';
+import MomentumValley from '../../../components/viz/MomentumValley.tsx';
+
+Plain gradient descent follows the slope at each point and forgets the last step. That works on a round bowl. On a long, narrow valley, the slope points mostly across the valley rather than along it, so each step bounces from one wall to the other and progress along the valley is slow. Momentum and Adam are two standard fixes.
+
+## Momentum: keep a running velocity
+
+Momentum keeps a velocity $$v$$, a running sum of past slopes that decays a little each step. Each update adds the current slope to the decayed velocity, then moves by the velocity:
+
+$$
+v \leftarrow \beta v + \nabla L, \qquad w \leftarrow w - \eta \, v
+$$
+
+Here $$\beta$$ (usually about 0.9) controls how much memory to keep. Steps that keep pointing the same way build up speed. Steps that flip from side to side cancel out, which damps the zigzag.
+
+## Try it
+
+The valley is $$f(x, y) = x^2 + 10y^2$$. The dashed path is plain descent: it zigzags across the valley. The solid path uses momentum. Drag $$\beta$$ from 0 to 0.9 and watch the zigzag turn into a steady run towards the bottom.
+
+<MomentumValley client:visible />
+
+## Adam: a step size for each dial
+
+Adam goes one step further. It keeps a running average of the slope (the first moment) and of the squared slope (the second moment), then scales each dial's step by the size of its own recent slopes. Dials with consistently large slopes take smaller steps, and dials with small slopes take larger ones. The default settings work across a wide range of models, which is why Adam, or its variant AdamW, is the usual choice for training neural networks.
+
+<Callout title="The learning rate still matters">
+
+Adam makes the step size adapt per dial, but it still needs a base learning rate. Most training runs tune that rate and often add a schedule that lowers it over time. Adam is not a substitute for choosing the rate; it reduces how sensitive training is to the choice.
+
+</Callout>
+
+## Where it came from
+
+The momentum idea comes from Boris Polyak in 1964, who modelled a ball rolling in a valley. Yurii Nesterov proposed a variant in 1983 with stronger guarantees. Adam was introduced by Diederik Kingma and Jimmy Ba in 2014 and became the default optimiser for much of deep learning.
+
+<Deep title="The update, step by step">
+
+With $$\beta = 0.9$$ and a slope that is constant at $$g$$, the velocity approaches $$g / (1 - \beta) = 10g$$, so steps grow tenfold. With a slope that flips sign each step, the velocity hovers near zero. That is the mechanism that damps zigzags while speeding up consistent progress. Adam's full update adds bias corrections to the two running averages so the early steps are not too small.
+
+</Deep>
+
+## What to take forward
+
+- Plain descent zigzags in narrow valleys because each slope ignores the last step.
+- Momentum keeps a velocity: consistent steps speed up, zigzags cancel.
+- Adam gives each dial its own step size from its recent slopes.
+- The base learning rate still needs tuning, even with Adam.
+
+Previous: [Confidence intervals](../confidence-intervals/). Next: [Regularisation: penalising big dials](../regularisation-and-penalties/).

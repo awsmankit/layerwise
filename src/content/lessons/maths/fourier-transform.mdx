@@ -1,0 +1,64 @@
+---
+title: "The Fourier transform: which waves make up a signal?"
+track: maths
+level: intermediate
+order: 9.20
+summary: The Fourier transform splits a signal into the sine waves that make it up, and shows each one as a spike at its frequency. Choose two waves, with their frequencies and amplitudes, and see the spectrum separate them.
+updated: 2026-11-18
+sources:
+  - label: "3Blue1Brown: But what is the Fourier transform? (YouTube)"
+    url: https://www.youtube.com/watch?v=spUNpyF58BY
+  - label: "The Scientist and Engineer's Guide to DSP, chapter 8 (Steven Smith)"
+    url: https://www.dspguide.com/
+---
+
+import Deep from '../../../components/ui/Deep.astro';
+import Callout from '../../../components/ui/Callout.astro';
+import FourierSpectrum from '../../../components/viz/FourierSpectrum.tsx';
+
+A sound, a sensor reading or a signal over time often looks like a jumble. The **Fourier transform** asks a different question: which pure waves, at which frequencies, add up to this? Its answer, the **spectrum**, shows each frequency and how strong it is. It is the basis of audio features such as spectrograms, and it appears in many signal and image methods.
+
+## Waves add up
+
+A pure sine wave has one frequency and one amplitude. Add two sine waves together and you get a wave that looks more complicated, but it is still just two waves. The Fourier transform runs the other way: given the combined wave, it recovers the two frequencies and their amplitudes.
+
+## How it works, in one line
+
+For a sampled signal $$x_n$$ of length $$N$$, the discrete Fourier transform gives one number per frequency $$k$$ (the number of whole cycles in the window):
+
+$$
+X_k = \sum_{n=0}^{N-1} x_n \, e^{-2\pi i k n / N}
+$$
+
+Each term multiplies the signal by a wave at frequency $$k$$. If the signal contains that frequency, the products add up to a large value. If not, they cancel. The size of $$X_k$$, scaled by $$2/N$$, is the amplitude of that frequency in the signal.
+
+## Try it
+
+Choose two waves. The top panel is the signal over time. The bottom panel is the spectrum, with one spike at each wave's frequency. The spike heights equal the amplitudes you chose, so the spectrum reads straight back into the ingredients.
+
+<FourierSpectrum client:visible />
+
+<Callout title="Why ML cares">
+
+Speech models often start from a spectrogram, which is a Fourier transform taken over short windows as the signal moves on. Many image models use frequency ideas to filter noise or compress data. Knowing that a spike means a wave at that frequency makes these features easier to read in a paper or a model's code.
+
+</Callout>
+
+## Where it came from
+
+Joseph Fourier introduced the idea in 1807 while studying heat flow, claiming that any periodic function can be written as a sum of sines and cosines. The discrete version used on computers was popularised by the Cooley-Tukey fast Fourier transform (FFT) in 1965, which made the calculation fast enough for everyday use.
+
+<Deep title="Why the spikes are exactly at the right heights">
+
+With $$N$$ samples and a whole number of cycles $$k$$, a pure sine of amplitude $$A$$ gives a Fourier value of $$AN/2$$ at its frequency, and close to zero everywhere else. Scaling by $$2/N$$ turns that into $$A$$ exactly. The widget uses whole cycles, so each spike is clean. Real signals rarely fit whole cycles, which smears the spike into nearby frequencies; that effect is called spectral leakage.
+
+</Deep>
+
+## What to take forward
+
+- The Fourier transform splits a signal into the sine waves that make it up.
+- Each frequency in the spectrum has a height equal to the amplitude of that wave.
+- The discrete transform is a sum of the signal times waves at each frequency.
+- Spectrograms and frequency features rely on this idea, and it explains much of audio processing.
+
+Previous: [The ELBO and variational inference](../elbo-and-variational-inference/). This completes the maths track in this round; the next topic could be combinatorics or the Gaussian process.

@@ -1,0 +1,78 @@
+---
+title: "Integration from the start: what it is, why, and how"
+track: maths
+level: basic
+order: 0.5
+summary: Integration explained from first principles, the way you would meet it in high school. A car's speed graph shows that the area under the line is the distance travelled. You cut the area into slices, add them up, and see why the answer gets exact.
+updated: 2026-11-18
+sources:
+  - label: "3Blue1Brown: Integration and the fundamental theorem of calculus (Essence of calculus)"
+    url: https://www.3blue1brown.com/lessons/integration
+  - label: "Khan Academy: Introduction to integral calculus"
+    url: https://www.khanacademy.org/math/integral-calculus/integration-intro
+---
+
+import Deep from '../../../components/ui/Deep.astro';
+import Callout from '../../../components/ui/Callout.astro';
+import IntegrationCar from '../../../components/viz/IntegrationCar.tsx';
+
+Integration sounds like a heavy word, but the idea is one you already use. If you drive at a steady speed for an hour, you know how far you went: speed times time. Integration handles the harder case, when the speed keeps changing. This lesson builds the idea up from there, one question at a time.
+
+## What is it?
+
+Integration adds up a quantity that changes continuously. Think of a car whose speed keeps rising, and you want the total distance it covers. The answer is a sum of many small distances, each one a short time multiplied by the speed during that moment.
+
+The symbol for this sum is an elongated S, $$\int$$. It means "add up the pieces". You will see it written as $$\int_0^T v(t)\,dt$$: add up the speed $$v(t)$$ from time 0 to time $$T$$.
+
+## Why does it matter?
+
+Many things in the world are not steady: the speed of a car, the water flowing into a tank, the chance of rain over a day, the power a solar panel makes through the afternoon. Whenever a rate changes and you want the total, you need integration. In machine learning it turns up in probabilities for continuous values, where the probability of a range is an area.
+
+## The big idea: the area is the total
+
+Here is the key picture. Draw time along the bottom and speed up the side. For a steady speed, the speed line is flat, and the area under it is a rectangle: speed times time. That rectangle is the distance.
+
+When the speed rises, the area under the line is no longer a rectangle, but it still means the same thing: the distance covered. The area under the speed graph is the distance. That is what integration measures.
+
+## How do you find it?
+
+You cannot get the area from one rectangle, so you cut it into slices. Each slice is thin, nearly a rectangle, so its area is easy: speed times a tiny time. Add the slices and you have an estimate of the total.
+
+Try it. The speed rises from 0 at the start to a higher value later. Move the slices up and watch the rectangles fill the shape. Then move the time and see the exact answer.
+
+<IntegrationCar client:visible />
+
+<Callout title="What to notice">
+
+With a few slices the estimate is rough: the rectangles leave gaps or stick out. With many slices the rectangles hug the line and the estimate gets close to the exact answer. The exact answer for this car is $$T^2$$ metres after $$T$$ seconds. Integration is the idea of letting the slices become infinitely thin, which gives that exact answer.
+
+</Callout>
+
+## The shortcut: reverse the derivative
+
+Adding up slices by hand is slow. There is a faster route, and it links integration to the derivative from the earlier lessons. The derivative of $$t^2$$ is $$2t$$, so the speed $$2t$$ comes from $$t^2$$ by differentiating. Going backwards, the integral of $$2t$$ is $$t^2$$. That reverse step is called finding an **antiderivative**, and the fundamental theorem of calculus says it gives the area:
+
+$$
+\int_0^T 2t\,dt = T^2 - 0^2 = T^2
+$$
+
+This is why integration is the opposite of differentiation. One asks for the rate of change; the other asks for the total that the rate builds up.
+
+## Where it came from
+
+Archimedes found areas and volumes by slicing shapes into thin pieces more than two thousand years ago. Newton and Leibniz, in the 1670s, showed that finding areas and finding slopes are opposite operations. That discovery is the fundamental theorem of calculus, and it is what makes integration practical.
+
+<Deep title="The slice formula, in one line">
+
+Split the time from $$0$$ to $$T$$ into $$n$$ slices, each of width $$\Delta t = T/n$$. Using the speed at the start of each slice, the total is $$\sum_{i=0}^{n-1} v(i\,\Delta t)\,\Delta t$$. For the car, that sum equals $$T^2 (n-1)/n$$. With $$T = 2$$ and $$n = 4$$ it gives 3, and the exact answer is 4. As $$n$$ grows, $$(n-1)/n$$ approaches 1, and the sum approaches $$T^2$$.
+
+</Deep>
+
+## What to take forward
+
+- Integration adds up a changing quantity. For a speed, it gives the distance.
+- The area under a rate graph is the total the rate builds up.
+- You estimate it by cutting the area into slices and adding them. More slices, better estimate.
+- The shortcut is to reverse the derivative: the integral of $$2t$$ is $$t^2$$.
+
+Next: [Integration: the area under a curve](../integration-area-under-curve/) uses the same idea for curves that are not straight, and [The normal distribution](../normal-distribution/) uses it to find probabilities.

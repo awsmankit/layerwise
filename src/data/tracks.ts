@@ -46,6 +46,13 @@ export const tracks = [
     blurb: 'From classical machine learning to transformers: what changed and why it matters.',
   },
   {
+    id: 'maths',
+    ...pair('olive'),
+    hue: 'olive',
+    title: 'Maths for ML',
+    blurb: 'The maths behind AI, one picture at a time: probability, calculus, linear algebra, statistics and information. Every idea has a widget to move.',
+  },
+  {
     id: 'llm',
     ...pair('pink'),
     hue: 'pink',

@@ -1,0 +1,56 @@
+---
+title: "Hypothesis testing and p-values: is this coin fair?"
+track: maths
+level: intermediate
+order: 9.16
+summary: How a hypothesis test asks whether data is surprising under a default assumption, what a p-value measures, and what it does not tell you. Observe heads in 20 flips and see the exact p-value with the more surprising counts shaded.
+updated: 2026-11-18
+sources:
+  - label: "Seeing Theory: Hypothesis tests (Brown University)"
+    url: https://seeing-theory.brown.edu/
+  - label: "Wasserstein and Lazar, The ASA Statement on p-values (2016)"
+    url: https://doi.org/10.1080/00031305.2016.1154108
+  - label: "An Introduction to Statistical Learning, chapter 13 (James et al.)"
+    url: https://www.statlearning.com/
+---
+
+import Deep from '../../../components/ui/Deep.astro';
+import Callout from '../../../components/ui/Callout.astro';
+import PValueCoin from '../../../components/viz/PValueCoin.tsx';
+
+A model's accuracy went up after a change. Is that real, or luck? A **hypothesis test** answers this by starting from a default assumption, the **null hypothesis**, and asking how surprising the data would be if it were true. The **p-value** is that surprise, as a probability.
+
+## The null and the p-value
+
+Start with the null: the coin is fair, so each flip is heads with chance 0.5. Flip it 20 times and count heads. Under the null, the counts follow a binomial distribution. The **two-sided p-value** for an observed count is the probability, under the null, of seeing a count at least as far from 10 as the one you saw.
+
+## Try it
+
+Move the count of heads. At 15 heads out of 20 the p-value is about 0.04: a fair coin would produce a result this extreme about 4 times in 100 runs. At 12 heads it is about 0.5, which is not surprising at all. The shaded bars are the counts that count as at least as surprising.
+
+<PValueCoin client:visible />
+
+<Callout title="What a p-value does not say">
+
+A p-value is not the chance the null is true. It does not measure how big or important an effect is, and it says nothing about why the result happened. With enough data, tiny effects get small p-values, so always look at the size of the effect alongside it. Also, testing many things at once will produce some small p-values by chance alone, which is why careful studies correct for multiple comparisons.
+
+</Callout>
+
+## Where it came from
+
+Ronald Fisher popularised the p-value in the 1920s and suggested 0.05 as a convenient threshold, a choice that has since been overused. Jerzy Neyman and Egon Pearson developed the formal framework of hypothesis tests in the 1930s, with the decision rules and error rates. In 2016 the American Statistical Association issued a statement warning against treating p-values as the sole test of a result.
+
+<Deep title="The exact test in the widget">
+
+For 20 flips with null chance 0.5, the probability of exactly $$k$$ heads is $$\binom{20}{k} / 2^{20}$$. The two-sided p-value adds the probability of every count whose probability is no larger than the observed one. For 15 heads that is the sum over counts 0 to 5 and 15 to 20, which comes to about 0.041.
+
+</Deep>
+
+## What to take forward
+
+- A hypothesis test starts from a default assumption, the null.
+- The p-value is the probability, under the null, of data at least as extreme as what you saw.
+- A small p-value is evidence against the null; it is not proof, and it is not the chance the null is true.
+- Always report the size of the effect with the p-value, and beware of testing many things at once.
+
+Previous: [Beta and updating beliefs](../beta-and-updating-beliefs/). Next: [Markov chains](../markov-chains/).

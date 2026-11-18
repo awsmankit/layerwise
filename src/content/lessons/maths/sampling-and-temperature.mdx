@@ -1,0 +1,66 @@
+---
+title: "Sampling and temperature: how a model chooses its next word"
+track: maths
+level: intermediate
+order: 9.8
+summary: How a model turns its probabilities into a choice, and what the temperature setting does to that choice. Move the temperature and watch the probabilities sharpen or flatten, with the entropy shown.
+updated: 2026-11-18
+sources:
+  - label: "The Curious Case of Neural Text Degeneration (Holtzman et al., 2019)"
+    url: https://arxiv.org/abs/1904.09751
+  - label: "Visual Information Theory (Christopher Olah, 2015)"
+    url: https://colah.github.io/posts/2015-09-Visual-Information/
+  - label: "Deep Learning, chapter 16 (Goodfellow, Bengio and Courville)"
+    url: https://www.deeplearningbook.org/
+---
+
+import Deep from '../../../components/ui/Deep.astro';
+import Callout from '../../../components/ui/Callout.astro';
+import TemperatureSoftmax from '../../../components/viz/TemperatureSoftmax.tsx';
+
+A language model does not output one word. It outputs a probability for every word in its vocabulary, from the softmax in an earlier lesson. Something then has to pick one. Picking the most likely word every time is called greedy decoding. Picking at random according to the probabilities is **sampling**. A single setting, the **temperature**, controls how much the choice follows the top probability and how much it wanders.
+
+## Sampling is drawing from a distribution
+
+If the probabilities are 66 per cent for "cat", 24 per cent for "dog" and 10 per cent for "car", sampling picks "cat" about two times in three. Each generated answer is one draw from this distribution, which is why asking the same question twice can give different answers.
+
+## Temperature rescales the scores
+
+Before the softmax, the scores are divided by the temperature $$T$$:
+
+$$
+p_i = \frac{e^{z_i / T}}{\sum_j e^{z_j / T}}
+$$
+
+At $$T = 1$$ this is the plain softmax. A low temperature makes the gaps between scores bigger, so the top word wins more often. A high temperature shrinks the gaps, so the choice spreads over more words.
+
+## Try it
+
+The scores are 2.0, 1.0 and 0.1. Set the temperature near 0.2 and "cat" takes almost all the probability, with the entropy close to zero. Set it near 3 and the three words become nearly equal, with the entropy near its maximum.
+
+<TemperatureSoftmax client:visible />
+
+<Callout title="Precise or varied">
+
+Low temperature gives repeatable answers, good for extraction, code and facts. High temperature gives varied answers, which can suit brainstorming, but it also makes errors more likely, because the model is picking less likely words more often. Most products pick a middle value, and many also use top-p sampling, which keeps only the most probable words before choosing.
+
+</Callout>
+
+## Where it came from
+
+The temperature idea comes from statistical physics, where the Boltzmann distribution uses the same division by a temperature to weigh how likely a system is to sit in each energy state. Its use in neural text generation became common in the late 2010s, when models were good enough that the choice of decoding changed how their output read.
+
+<Deep title="Why greedy decoding is not always best">
+
+Always taking the single most likely word can produce repetitive, flat text, because each step commits to the local best option. Sampling explores more of the possible sentences. Research such as Holtzman and colleagues (2019) showed that sampling with a suitable cut-off, rather than pure greedy decoding, gives more natural text for open-ended generation.
+
+</Deep>
+
+## What to take forward
+
+- A model outputs probabilities over its vocabulary, and something samples one word from them.
+- Temperature divides the scores before the softmax: low sharpens, high flattens.
+- Low temperature is repeatable; high temperature is varied and more error-prone.
+- Entropy measures how spread out the choice is, and it rises with temperature.
+
+Previous: [Eigenvectors and principal components](../eigenvectors-and-pca/). Next: [Confidence intervals](../confidence-intervals/).

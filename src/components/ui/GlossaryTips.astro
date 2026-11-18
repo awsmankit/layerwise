@@ -21,7 +21,7 @@ const data = { terms: glossaryForTooltips(), glossary: withBase('/glossary/') };
     var data = JSON.parse(node.textContent);
     var tip = document.getElementById('term-tip');
 
-    var SKIP = 'a,code,pre,h1,h2,h3,h4,button,astro-island,.viz,.term,summary,kbd,.deep-tag,table';
+    var SKIP = 'a,code,pre,h1,h2,h3,h4,button,astro-island,.viz,.term,summary,kbd,.deep-tag,table,.katex,math';
     var done = {};
 
     function esc(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }

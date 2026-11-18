@@ -1,0 +1,64 @@
+---
+title: "The sigmoid and logistic regression: a score turned into a probability"
+track: maths
+level: intermediate
+order: 9.12
+summary: How the sigmoid turns any number into a probability and how a logistic model uses it to classify. Adjust the weight, bias and input and watch the probability move along the S-shaped curve.
+updated: 2026-11-18
+sources:
+  - label: "CS231n: Linear classification (Stanford)"
+    url: https://cs231n.github.io/linear-classify/
+  - label: "An Introduction to Statistical Learning, chapter 4 (James et al.)"
+    url: https://www.statlearning.com/
+  - label: "Deep Learning, chapter 6.3 (Goodfellow, Bengio and Courville)"
+    url: https://www.deeplearningbook.org/
+---
+
+import Deep from '../../../components/ui/Deep.astro';
+import Callout from '../../../components/ui/Callout.astro';
+import SigmoidCurve from '../../../components/viz/SigmoidCurve.tsx';
+
+A linear model combines its inputs into a single score: $$z = w x + b$$. The score can be any number, from minus infinity to plus infinity. For a yes-or-no question we need a probability between 0 and 1. The **sigmoid** is the bridge, and a model that uses it is called **logistic regression**.
+
+## The sigmoid
+
+$$
+\sigma(z) = \frac{1}{1 + e^{-z}}
+$$
+
+For large positive $$z$$ the exponential is tiny, so $$\sigma$$ is close to 1. For large negative $$z$$ the exponential is huge, so $$\sigma$$ is close to 0. At $$z = 0$$ it is exactly 0.5. The S-shape is smooth and steepest at the middle, which means the model is most uncertain there.
+
+## Try it
+
+The weight $$w$$ sets how steep the S is, the bias $$b$$ slides it left or right, and the input $$x$$ picks a point on it. Set $$w = 1$$, $$b = 0$$ and $$x = 2$$: the score is 2 and the probability is about 0.88. Move $$b$$ to $$-2$$ and the same input gives exactly 0.5.
+
+<SigmoidCurve client:visible />
+
+<Callout title="Why the S matters for classification">
+
+The curve is flat at the ends and steep in the middle. A small change in the score matters most near the decision boundary, where the probability is near 0.5, and hardly at all for inputs that are clearly one class. This is why the sigmoid works for classification and why the cross-entropy loss from earlier pairs so well with it.
+
+</Callout>
+
+## How it fits training
+
+Logistic regression learns $$w$$ and $$b$$ by maximum likelihood, which for yes-or-no labels is the cross-entropy loss from the earlier lesson. The gradient has a simple form: the error $$\sigma(z) - y$$ times the input, the same neat result that appears for softmax. A neural network's output unit for a binary choice is exactly this model, with the inputs replaced by learned features.
+
+## Where it came from
+
+The logistic function was introduced by Pierre-François Verhulst in 1838 to model population growth. Joseph Berkson proposed using it for statistical models of binary outcomes in 1944, and the term logit came from that work. The sigmoid became a standard neural-network activation in the 1980s, and was later replaced in hidden layers by ReLU, though it remains the output for yes-or-no questions.
+
+<Deep title="The log-odds view">
+
+Solve $$p = \sigma(z)$$ for $$z$$ and you get $$z = \ln\frac{p}{1-p}$$. The right side is the log-odds: the logarithm of how many times more likely yes is than no. So the linear score is a log-odds, and each unit of $$w$$ multiplies the odds by $$e^{w}$$. This is why logistic coefficients are read as multipliers of the odds.
+
+</Deep>
+
+## What to take forward
+
+- The sigmoid squashes any score into a probability between 0 and 1.
+- In logistic regression the score is linear in the inputs, and the sigmoid turns it into a probability.
+- The model is most uncertain where the probability is near 0.5.
+- Its training uses cross-entropy, which gives the simple error-times-input gradient.
+
+Previous: [Regularisation](../regularisation-and-penalties/). Next: [How a model learns](../../foundations/how-models-learn/) brings the training loop together.

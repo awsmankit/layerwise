@@ -1,0 +1,68 @@
+---
+title: "The normal distribution: the bell curve and its areas"
+track: maths
+level: intermediate
+order: 9.2
+summary: The bell curve, why so much data looks like it, and how the area under it gives a probability. Pick a range and watch the shaded area become a percentage.
+updated: 2026-11-18
+sources:
+  - label: "Seeing Theory: Probability distributions (Brown University)"
+    url: https://seeing-theory.brown.edu/
+  - label: "3Blue1Brown: But what is a Gaussian distribution?"
+    url: https://www.3blue1brown.com/lessons/gaussian-integral
+  - label: "Deep Learning, chapter 3.9.3 (Goodfellow, Bengio and Courville)"
+    url: https://www.deeplearningbook.org/
+---
+
+import Deep from '../../../components/ui/Deep.astro';
+import Callout from '../../../components/ui/Callout.astro';
+import NormalArea from '../../../components/viz/NormalArea.tsx';
+
+The bell curve is the most common shape in statistics. Heights, measurement errors and many sums of small random effects fall into it. Its curve is symmetric about the middle, and most values sit close to the middle, with fewer and fewer far out.
+
+## The curve and the area under it
+
+The **standard normal** curve has its middle at 0 and a standard deviation of 1. The height of the curve at $$x$$ is:
+
+$$
+\varphi(x) = \frac{1}{\sqrt{2\pi}} e^{-x^2/2}
+$$
+
+The curve itself is not a probability: its height can be above 1. The **area** under the curve between two points is the probability that a value falls between them. The total area is 1, because some value always occurs.
+
+## Try it
+
+Drag the two ends. Between −1.96 and 1.96 the area is 95 per cent, which is why statisticians often quote "95 per cent intervals" that run that far either side of the middle.
+
+<NormalArea client:visible />
+
+<Callout title="Adding up the area">
+
+Finding an area means adding up the curve over a range. That sum is an integral, the subject of [Integration: area under a curve](../integration-area-under-curve/). The widget uses a numerical formula (the error function) to do the sum for you.
+
+</Callout>
+
+## Why it shows up so often
+
+The **central limit theorem** says that if you add up many independent random pieces, the total is approximately normal, whatever the pieces look like. That is why averages of measurements are normal, and why confidence intervals use this curve. It's also why many model errors look bell-shaped when you plot them.
+
+Many real data are not normal, though. Income is skewed, and counts of rare events are not symmetric. Check the shape before you trust a method that assumes the bell.
+
+## Where it came from
+
+Abraham de Moivre found the curve in 1733 while approximating coin-flip probabilities. Carl Friedrich Gauss used it in 1809 to model astronomical measurement errors, which is why it is also called the Gaussian. Adolphe Quetelet applied it to human heights in the 1830s.
+
+<Deep title="Two numbers define it">
+
+A normal distribution is fully described by its mean $$\mu$$ and standard deviation $$\sigma$$. Any normal variable can be turned into the standard one by $$Z = (X - \mu) / \sigma$$: subtract the mean, divide by the spread. That step, called standardising, is why you can look up areas for any normal distribution in a single table.
+
+</Deep>
+
+## What to take forward
+
+- The normal curve is symmetric and bell-shaped, with mean $$\mu$$ and spread $$\sigma$$.
+- A probability is an area under the curve, not a height.
+- About 68 per cent of values lie within one standard deviation, 95 per cent within two, and 99.7 per cent within three.
+- Averages of many things tend towards normal, which is why intervals use it.
+
+Previous: [Expectation and variance](../expectation-and-variance/). Next: [Integration: the area under a curve](../integration-area-under-curve/).
