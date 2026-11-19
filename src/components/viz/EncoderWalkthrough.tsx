@@ -7,11 +7,14 @@ const pct = (x: number) => `${Math.round(x * 100)}%`;
 const f1 = (x: number) => (Math.abs(x) < 0.05 ? '0' : x.toFixed(1));
 const f2 = (x: number) => x.toFixed(2);
 
-/** Signed colour: blue-violet for positive, amber for negative, strength by size. Returns the fill and whether the number on it needs light text. */
+/** The strongest fill is half colour, half surface: dark or light text stays readable on it in both themes (contrast 4.6 or better). */
+const MAX_TINT = 50;
+
+/** Signed colour: blue-violet for positive, amber for negative, strength by size. Returns the fill and whether the number is big enough to print in bold. */
 function tint(v: number, max: number) {
   const a = Math.min(1, Math.abs(v) / (max || 1));
   const c = v >= 0 ? 'var(--signal)' : 'var(--cost)';
-  return { bg: `color-mix(in srgb, ${c} ${Math.round(a * 88)}%, var(--surface))`, strong: a > 0.6 };
+  return { bg: `color-mix(in srgb, ${c} ${Math.round(a * MAX_TINT)}%, var(--surface))`, strong: a > 0.6 };
 }
 
 function Strip({ v, max = 1.5, nums, label, tag }: { v: Vec; max?: number; nums: boolean; label?: string; tag?: string }) {
@@ -57,7 +60,7 @@ function GridRow({ i, row, max, nums, pick, on, fmt, unit }: { i: number; row: V
         {TOKENS[i]}
       </button>
       {row.map((x, j) => {
-        const t = unit ? { bg: `color-mix(in srgb, var(--signal) ${Math.round(Math.min(1, x / max) * 88)}%, var(--surface))`, strong: x / max > 0.6 } : tint(x, max);
+        const t = unit ? { bg: `color-mix(in srgb, var(--signal) ${Math.round(Math.min(1, x / max) * MAX_TINT)}%, var(--surface))`, strong: x / max > 0.6 } : tint(x, max);
         return (
           <span key={j} className={`ew-c ew-gc${t.strong ? ' is-strong' : ''}${on ? ' is-row' : ''}`} style={{ background: t.bg }} aria-hidden="true">
             {nums || on ? fmt(x) : ''}

@@ -27,7 +27,7 @@
   background: var(--signal-wash);
   border-color: var(--signal);
 }
-.ew-dot.is-on {
+.viz .ew-dot.is-on {
   background: var(--signal);
   border-color: var(--signal);
   color: var(--on-signal);
@@ -71,7 +71,7 @@
   border-left: 4px solid var(--sun);
   border-radius: 0 var(--r-sm) var(--r-sm) 0;
   background: var(--tint-sun);
-  color: #15123d;
+  color: var(--ink);
   font-size: 0.93rem;
   line-height: 1.45;
 }
@@ -158,10 +158,10 @@
 }
 .ew-token.is-star {
   background: var(--tint-sun);
-  color: #15123d;
+  color: var(--ink);
 }
 .ew-token.is-star small {
-  color: #403c6b;
+  color: var(--ink-2);
 }
 
 /* vectors */
@@ -209,7 +209,7 @@
   font-variant-numeric: tabular-nums;
 }
 .ew-c.is-strong {
-  color: var(--on-signal);
+  font-weight: 800;
 }
 .ew-op {
   font: 800 1.1rem var(--font-display);
@@ -249,8 +249,9 @@
 .ew-rowhead:hover {
   border-color: var(--signal);
 }
-.ew-rowhead.is-on {
+.viz .ew-rowhead.is-on {
   background: var(--signal);
+  border-color: var(--signal);
   color: var(--on-signal);
 }
 .ew-gc {
