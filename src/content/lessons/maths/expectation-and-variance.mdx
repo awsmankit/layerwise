@@ -4,7 +4,7 @@ track: maths
 level: intermediate
 order: 9.1
 summary: What the expected value and the variance of a random outcome mean, worked on a die you can load. Two numbers that summarise almost every random quantity in ML.
-updated: 2026-11-18
+updated: 2026-11-27
 sources:
   - label: "Seeing Theory: Probability distributions (Brown University)"
     url: https://seeing-theory.brown.edu/
@@ -51,6 +51,30 @@ The die below is loaded: you set the chance of a six, and the other faces share 
 A model's loss on a random example is a random variable. Its expected value is the loss you care about over the whole data, and its variance tells you how much the loss changes from one example to the next. Evaluation reports the average, and a careful evaluation also looks at the spread.
 
 </Callout>
+
+## Adding up many random things
+
+**What happens to the spread when you add independent random things together?** The variances add. If $$X_1, \dots, X_n$$ are **independent** (knowing one tells you nothing about the others), then
+
+$$
+\text{Var}[X_1 + \dots + X_n] = \text{Var}[X_1] + \dots + \text{Var}[X_n]
+$$
+
+When all $$n$$ terms are alike, each with variance $$\sigma^2$$, the sum has variance $$n\sigma^2$$, so its standard deviation grows only as $$\sqrt{n}$$, not as $$n$$. The average divides the sum by $$n$$, and dividing by a number divides the variance by its square (from $$\text{Var}[aX] = a^2\text{Var}[X]$$):
+
+$$
+\text{Var}\!\left[\frac{X_1 + \dots + X_n}{n}\right] = \frac{n\sigma^2}{n^2} = \frac{\sigma^2}{n}
+$$
+
+So the **standard error**, the spread of an average, is $$\sigma/\sqrt{n}$$. It shrinks as one over the square root of $$n$$: to halve the noise in an average you need four times the data. All of this needs independence. If the terms move together, the variances do not simply add.
+
+**Example (100 coin flips).** One flip of a fair coin, scored 1 for heads and 0 for tails, has mean 0.5 and variance 0.25. For 100 independent flips the number of heads has mean 50 and variance $$100 \times 0.25 = 25$$, so a standard deviation of 5: typically 45 to 55 heads. The share of heads has variance $$25/100^2 = 0.0025$$, so a standard deviation of 0.05, typically 45 to 55 per cent. With 400 flips the share would be typically within 2.5 per cent of one half.
+
+**Where this shows up**
+
+- Attention scaling: why dot products are divided by $$\sqrt{d}$$, in [Attention intuition](../../foundations/attention-intuition/).
+- Weight initialisation: why initial weights are scaled by the layer width, in [Training deep networks](../../deep-learning/training-deep-networks/).
+- Confidence intervals: why more data narrows them, in [Confidence intervals](../confidence-intervals/).
 
 ## Where it came from
 

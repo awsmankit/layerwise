@@ -4,7 +4,7 @@ track: ml
 level: basic
 order: 2
 summary: Least squares in pictures (residuals, squared error, why the best line wins), what slope and intercept mean, several inputs, and how a sigmoid turns a score into a yes/no probability. Logistic regression is the one neuron that deep learning stacks.
-updated: 2026-11-01
+updated: 2026-11-27
 sources:
   - label: "Google Machine Learning Crash Course: Linear regression"
     url: https://developers.google.com/machine-learning/crash-course/linear-regression
@@ -12,6 +12,8 @@ sources:
     url: https://developers.google.com/machine-learning/crash-course/logistic-regression
   - label: "scikit-learn user guide: Linear models"
     url: https://scikit-learn.org/stable/modules/linear_model.html
+  - label: "Support-vector networks (Cortes and Vapnik, 1995)"
+    url: https://link.springer.com/article/10.1007/BF00994018
 ---
 
 import Callout from '../../../components/ui/Callout.astro';
@@ -84,6 +86,10 @@ The best fit is about **mark = 7.9 + 6.7 x revised + 3.4 x slept**. Read each co
 The 6.7 says that, in these students, more revision goes with higher marks. It does not prove that revising causes them. Inputs that move together (revision and tiredness, say) make the coefficients swing a lot from sample to sample, so read them with caution and never as a promise about what would happen if you changed one input.
 </Callout>
 
+**What does linear regression assume, and what is R squared?** The line is only trustworthy when four things roughly hold: the relation really is a straight line, the errors are independent of each other, the spread of the errors is about the same everywhere, and, if you want confidence intervals, the errors are roughly normal. Plot the residuals: a curve or a funnel shape means an assumption is failing. **R squared** is the share of the variance in y that the line explains: one minus (the sum of squared residuals divided by the total squared distance of y from its average). In the five-point example above, the residuals total 1.90 and y has an average of 4, so the total squared distance is 4 + 1 + 1 + 0 + 4 = 10, and R squared is 1 - 1.90 / 10 = 0.81. The line explains 81% of the variation in y. It always rises when you add inputs, even useless ones, so it says how well the line fits the data you have, not how well it will predict new data.
+
+**Multicollinearity** is when inputs move together, such as height in centimetres and height in inches, or revision hours and hours at the desk. The predictions can stay fine, but the weights become unstable: the data cannot tell which input deserves the credit, so the weights can trade off against each other and even flip sign from one sample to the next. The **variance inflation factor** (VIF) checks it: for each input, predict it from the other inputs and get its R squared, then VIF = 1 / (1 - R squared). If the others explain 90% of an input, VIF is 10, and the variance of its weight is about 10 times what it would be without the overlap. A common rule of thumb treats values above about 5 to 10 as a warning. Fixes: drop one of the overlapping inputs, combine them, or use **ridge** (L2) regression, which adds a penalty on the size of the weights and so keeps them small and steady.
+
 ## Yes or no: turn a score into a probability
 
 Now predict pass or fail. Fail is 0 and pass is 1. A straight line fitted to 0s and 1s would predict 1.3 for a keen student and -0.2 for a lazy one, and neither is a probability.
@@ -117,6 +123,24 @@ A probability is not yet a decision. To say "pass" or "fail" you pick a **thresh
 Move the threshold slider in the figure: the boundary slides with it, and the number of points on the wrong side changes. A lower threshold catches more yes cases but raises false alarms. The right value depends on what each kind of mistake costs, which is worked through in [Classical ML essentials](../../foundations/classical-ml-essentials/), under "Choosing a threshold from the cost of errors". Keep in mind that 0.5 is a default, not a decision.
 
 Because the boundary is straight, logistic regression cannot carve out a curved or patchy region unless you add features that bend it, such as hours squared. The tree models in [the next lessons](../decision-trees-and-random-forests/) cut such regions naturally.
+
+### A close cousin: support vector machines
+
+A **support vector machine** (SVM; Cortes and Vapnik, 1995) also draws a straight boundary between two classes, but it chooses the line differently. Many lines may separate the classes, so it picks the one with the widest gap, the **margin**, to the nearest points of each class. Those nearest points are the **support vectors**; the rest of the data could move around without changing the line, which is a different habit from logistic regression, where every point nudges the fit.
+
+The difference shows up in the loss. With the classes written as +1 and -1 and a score f, define the margin m as the class times the score, so m is positive when the point is on the right side. Logistic loss is ln(1 + e^-m) and **hinge loss** is max(0, 1 - m). These are example values:
+
+| Margin m | Hinge loss | Logistic loss |
+|---|---|---|
+| 2 (right, confident) | 0 | 0.127 |
+| 0.5 (right, close to the line) | 0.5 | 0.474 |
+| -1 (wrong) | 2 | 1.313 |
+
+Hinge loss is exactly zero once a point is correct by a margin of 1, so confident points stop mattering. Logistic loss never quite reaches zero, so every point keeps pulling a little.
+
+Real data is rarely separable, so a **soft margin** lets some points cross the gap or the line, at a price. The setting **C** is that price: a large C punishes violations heavily and fits the training points tightly, a small C allows a wider margin and more mistakes, and so works like the strength of regularisation (inverted: small C means more regularisation).
+
+The **kernel trick** gives curves. Instead of building extra features such as hours squared, an SVM compares two points through a **kernel**, a function that acts like a dot product in a richer feature space, without ever computing that space. A common choice, the RBF kernel, gives smooth curved boundaries. SVMs are still used on small to medium tabular and text data, where they are strong and need little tuning, though they scale poorly to very large datasets and, unlike logistic regression, do not give probabilities directly.
 
 ## The one neuron deep learning builds on
 

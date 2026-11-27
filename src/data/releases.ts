@@ -36,6 +36,25 @@ export const repoUrl = 'https://github.com/awsmankit/layerwise';
 
 export const releases: Release[] = [
   {
+    version: '2.17.0',
+    date: '2026-11-27',
+    title: 'The follow-up questions interviewers ask, and Daily cards that send you to the lesson',
+    summary: 'An audit of 101 common interview questions found 29 where a lesson answered the question but not the "why?" that comes next, or did not answer it at all. All 29 are now answered inside the existing lessons. Daily cards show a topic picture, never repeat soon, and show the start of a lesson rather than all of it.',
+    highlights: [
+      'Why attention divides by the square root of d and not by d, why the cache keeps keys and values but not queries, and why a low-rank LoRA update is enough.',
+      'Maths follow-ups: why L1 gives exact zeros, why cross-entropy beats squared error for classification, MLE versus MAP, why principal components are eigenvectors, which way round KL matters, and saddle points.',
+      'Machine learning follow-ups: why initialisation scales by fan-in, inverted dropout, batch size, dead ReLUs, bagging versus boosting, the curse of dimensionality, regression assumptions and R squared, and support vector machines.',
+      'Agents and retrieval: ReAct, plan-and-execute and reflection compared, how a model learns to call tools, and how to choose an embedding model.',
+      'A fix: output tokens cost more because they are written one at a time and wait on memory, not because each takes more arithmetic.',
+      'Daily cards carry the topic\u2019s picture, never show the same lesson within about a month, and show the first points with the rest waiting in the lesson.',
+    ],
+    tryIt: [
+      { label: 'Adding up random things', href: '/learn/maths/expectation-and-variance/' },
+      { label: 'Daily card', href: '/share/' },
+    ],
+    stats: { lessons: 191, topics: 18, labs: 24, glossary: 880 },
+  },
+  {
     version: '2.16.0',
     date: '2026-11-27',
     title: 'Daily cards you can teach from, and a clearer path for newcomers',

@@ -4,7 +4,7 @@ track: rag-agents
 level: advanced
 order: 3
 summary: How approximate nearest-neighbour indexes, hybrid search and rerankers work, and how to measure retrieval and RAG answers with numbers you can defend.
-updated: 2026-10-28
+updated: 2026-11-27
 sources:
   - label: "Efficient and robust approximate nearest neighbor search using Hierarchical Navigable Small World graphs (Malkov and Yashunin)"
     url: https://arxiv.org/abs/1603.09320
@@ -16,6 +16,8 @@ sources:
     url: https://github.com/pgvector/pgvector
   - label: "Reciprocal Rank Fusion outperforms Condorcet and individual rank learning methods (Cormack, Clarke and Buettcher, SIGIR 2009)"
     url: https://cormack.uwaterloo.ca/cormacksigir09-rrf.pdf
+  - label: "MTEB: Massive Text Embedding Benchmark (Muennighoff et al., 2022)"
+    url: https://arxiv.org/abs/2210.07316
   - label: "Ragas documentation: available metrics"
     url: https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/
 ---
@@ -80,6 +82,21 @@ Use the metric the embedding model was trained for (see its model card). For cos
 ## Bi-encoders, cross-encoders and hybrid search
 
 An embedding model is a **bi-encoder**: it encodes query and document separately, so document vectors are computed once at indexing time and a query costs one encoding plus an index lookup. A **cross-encoder** reads the query and a document together in one forward pass, so every token of the query can attend to every token of the document. That makes it more accurate at judging relevance, but nothing can be precomputed: 50 candidates means 50 model passes per query. That is why cross-encoders are used as **rerankers** over a short candidate list, never for first-stage search.
+
+### Choosing an embedding model
+
+**How do you choose an embedding model?** Do not pick from a public leaderboard alone. MTEB (Muennighoff et al., 2022) is a useful starting list of candidates, but its tasks are not your documents. Instead, write 50 to 200 real queries, mark the passages that are the right answers, and measure recall@k (defined in "Measuring retrieval" below) for each candidate on your own data. Then weigh the other costs:
+
+- **Dimensions:** more dimensions mean more storage and slower search. For 1 million chunks stored as float32 (4 bytes each), 768 dimensions take 1,000,000 x 768 x 4 = 3,072,000,000 bytes, about 3.1 GB. At 3,072 dimensions it is 1,000,000 x 3,072 x 4 = 12,288,000,000 bytes, about 12.3 GB: four times as much, before any index overhead.
+- **Maximum input length:** text beyond the limit is cut off, so it must fit your chunk size.
+- **Languages:** check the model was trained on yours.
+- **Cost and hosting:** per-token API price against running your own, and whether your data may leave your network.
+
+Switching models means **re-embedding everything**, because vectors from different models live in different spaces and cannot be compared. Budget for that, and keep the old index until the new one is measured.
+
+**When should you fine-tune one?** When your domain vocabulary is unusual (internal part codes, legal or medical jargon) and recall stays low even with the best off-the-shelf model. Train on pairs of a query and its right passage, and add **hard negatives**: passages that look relevant but are not the answer. Easy negatives teach little, because the model already separates them; hard negatives force it to learn the fine difference. Re-measure on queries held out from training.
+
+### Hybrid search
 
 **Hybrid search** adds a keyword engine such as BM25, which catches exact names, codes and rare terms that embeddings blur. The two scores live on different scales, so the usual way to merge them is **reciprocal rank fusion (RRF)**, which uses only ranks:
 

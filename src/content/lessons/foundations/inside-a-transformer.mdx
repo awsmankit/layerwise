@@ -4,7 +4,7 @@ track: foundations
 level: intermediate
 order: 5
 summary: Follow one token through a transformer block, from Q, K and V to the next-token choice, with the variants (GQA, RoPE, RMSNorm, mixture of experts) that interviewers ask about.
-updated: 2026-10-26
+updated: 2026-11-27
 sources:
   - label: "Attention Is All You Need (Vaswani et al., 2017)"
     url: https://arxiv.org/abs/1706.03762
@@ -16,6 +16,8 @@ sources:
     url: https://arxiv.org/abs/2101.03961
   - label: "Mixtral of Experts (Jiang et al., 2024)"
     url: https://arxiv.org/abs/2401.04088
+  - label: "The Curious Case of Neural Text Degeneration (Holtzman et al., 2019)"
+    url: https://arxiv.org/abs/1904.09751
 ---
 
 import NodeGraph from '../../../components/viz/NodeGraph.tsx';
@@ -61,6 +63,8 @@ Q, K and V are not extra inputs. The block holds three learned matrices, W_Q, W_
 ## Multi-head attention, and sharing K and V
 
 Instead of one big attention, the vector is split into several **heads**, each with its own slice of Q, K and V. Each head computes its own weights, so one head can track the previous word while another links a pronoun to its noun. Their outputs are joined and mixed by W_O. Many small views beat one large average.
+
+**Are more heads more expensive?** Not much. With H heads, each head works in d/H dimensions, so the total size of the projections and the arithmetic stay about the same as for one big head. Example: with d = 512 and H = 8, each head has 64 dimensions. The query projection is 8 heads x (512 x 64) = 262,144 weights, exactly the same as one head of 512 x 512. What you gain is several different attention patterns at once for roughly the same cost. (The attention weights are computed per head, but each is over fewer dimensions, so the score arithmetic also adds up to about the same.)
 
 During generation, the keys and values of every earlier token are kept in the [KV cache](../../serving/kv-cache-and-memory/), and that cache often limits how many users fit on a GPU. Two variants shrink it:
 
@@ -113,9 +117,12 @@ The order is always the same: embed, add position, make Q, K and V, score every 
 After the final block and a last norm, one matrix (the **LM head**) turns the vector into one score per vocabulary token. **Softmax** turns scores into probabilities. Then a sampling rule picks:
 
 - **Greedy**: always the most likely token. Repeatable, but can loop or sound flat.
+- **Beam search**: keep the k best partial outputs at each step and, at the end, pick the best whole sequence. It suits tasks with one right answer, such as translation or speech recognition. For open-ended chat text it tends to be dull and repetitive.
 - **Temperature**: divide the scores before softmax, so a token with score $$z_i$$ gets probability $$e^{z_i/T} / \sum_j e^{z_j/T}$$. Below 1 sharpens toward the top choice; above 1 flattens.
 - **Top-k**: keep only the k most likely tokens, renormalise, sample.
 - **Top-p (nucleus)**: keep the smallest set of tokens whose probabilities add up to at least p, renormalise, sample. If the top tokens have 0.5, 0.3 and 0.1 and p is 0.85, the first two only reach 0.8, so all three are kept and become about 0.56, 0.33 and 0.11.
+
+**Greedy, beam search or sampling?** Greedy takes the top token at every step, which can lock the model into a bad early choice. Beam search is the fix when there is one correct output: it keeps k options at once and returns the most probable whole sequence it found, which is usually, though not always, the most probable one overall. But Holtzman and colleagues showed that for open-ended text, the highest-probability sequences are often bland and repetitive, and human writing is not the most likely text. That is why chat models sample, using temperature and top-p to cut off the unlikely tail while keeping variety. See [sampling and temperature](../../maths/sampling-and-temperature/) for the maths.
 
 ## Mixture of experts
 

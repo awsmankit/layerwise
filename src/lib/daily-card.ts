@@ -1,18 +1,23 @@
 /**
  * The daily share card: one picture and caption per day, chosen by the date alone, so the same day always gives the
  * same card and a week can be planned ahead. Nothing here touches the network or the page; the picture is drawn in the
- * browser (see components/ui/DailyCard.tsx).
+ * browser (see components/ui/ShareCard.tsx).
+ *
+ * Two rules shape every card. It never repeats an item soon (experiments, which feed two kinds of card, share one
+ * sequence). And it shows the start of something, not all of it, so the reader has a reason to open the site.
  */
+
+import { trackById } from '../data/tracks';
 
 export type CardKind = 'guess' | 'term' | 'whatif' | 'remember' | 'interview';
 
-export type GuessItem = { slug: string; title: string; question: string; options: [string, string, string]; answer: 0 | 1 | 2; why: string };
+export type GuessItem = { slug: string; track?: string; title: string; question: string; options: [string, string, string]; answer: 0 | 1 | 2; why: string };
 /** `more` is up to two points from the lesson the term links to, so the card teaches more than the definition. */
-export type TermItem = { id: string; term: string; short: string; lesson: string; lessonTitle?: string; more?: string[] };
-export type WhatIfItem = { slug: string; title: string; blurb: string; takeaways: string[] };
-export type RememberItem = { path: string; lesson: string; takeaways: string[] };
+export type TermItem = { id: string; track?: string; term: string; short: string; lesson: string; lessonTitle?: string; more?: string[] };
+export type WhatIfItem = { slug: string; track?: string; title: string; blurb: string; takeaways: string[] };
+export type RememberItem = { path: string; track?: string; lesson: string; takeaways: string[] };
 /** `answer` is present when the question has a written answer: its short answer and up to three points from it. */
-export type InterviewItem = { id: string; prompt: string; role: string; level: string; strong: string[]; answer?: { short: string; points: string[] } };
+export type InterviewItem = { id: string; track?: string; prompt: string; role: string; level: string; strong: string[]; answer?: { short: string; points: string[] } };
 
 export type Pools = {
   guess: GuessItem[];
@@ -38,8 +43,14 @@ export type Card = {
   bulletsHeading: string;
   /** Answer choices for a guess card, already lettered "A) ...". */
   options: string[];
+  /** A line after the points saying what else is waiting on the site, e.g. "+1 more point and a quiz". May be empty. */
+  more: string;
   /** Small line at the bottom, e.g. the lesson it comes from. */
   footer: string;
+  /** Track id, for the picture's icon. */
+  track: string;
+  /** Track title, e.g. "Responsible AI". */
+  topic: string;
   /** Site path the card points to, e.g. /whatif/kv-cache/. */
   path: string;
   /** Post text ready to paste. */
@@ -60,8 +71,20 @@ export const KIND_LABEL: Record<CardKind, string> = {
   interview: 'Interview question',
 };
 
-/** The weekly rhythm: two guess cards and two terms because they are the most shareable. */
-export const CYCLE: CardKind[] = ['guess', 'term', 'whatif', 'remember', 'interview', 'guess', 'term'];
+/**
+ * The weekly rhythm. Guess and What if cards both come from the experiments, so together they get two days a week:
+ * with 87 experiments that is about ten months before any experiment comes round again.
+ */
+export const CYCLE: CardKind[] = ['guess', 'term', 'remember', 'interview', 'whatif', 'term', 'remember'];
+
+/** Kinds that draw on the same material share one sequence, so an item never comes back as a different kind of card. */
+export const SOURCE: Record<CardKind, 'experiment' | 'term' | 'remember' | 'interview'> = {
+  guess: 'experiment',
+  whatif: 'experiment',
+  term: 'term',
+  remember: 'remember',
+  interview: 'interview',
+};
 
 const EPOCH = Date.UTC(2026, 0, 1);
 
@@ -95,15 +118,26 @@ export function shuffled<T>(items: T[], idOf: (t: T) => string): T[] {
   return [...items].sort((a, b) => hash(idOf(a)) - hash(idOf(b)) || idOf(a).localeCompare(idOf(b)));
 }
 
-/** Which kind a day shows, and which occurrence of that kind it is (0, 1, 2, ...). */
+/** Which kind a day shows, and which item of its source sequence it takes (0, 1, 2, ...). */
 export function slotFor(dayIndex: number): { kind: CardKind; occurrence: number } {
   const week = Math.floor(dayIndex / CYCLE.length);
   const w = ((dayIndex % CYCLE.length) + CYCLE.length) % CYCLE.length;
   const kind = CYCLE[w];
-  const perWeek = CYCLE.filter((k) => k === kind).length;
-  const before = CYCLE.slice(0, w).filter((k) => k === kind).length;
+  const same = (k: CardKind) => SOURCE[k] === SOURCE[kind];
+  const perWeek = CYCLE.filter(same).length;
+  const before = CYCLE.slice(0, w).filter(same).length;
   return { kind, occurrence: week * perWeek + before };
 }
+
+/** The first sentence of a text. */
+export function firstSentence(text: string): string {
+  const m = text.trim().match(/^.*?[.?!](?=\s|$)/);
+  return m ? m[0] : text.trim();
+}
+
+/** The track a site path belongs to, e.g. /learn/llm/x/ gives "llm". */
+const trackOfPath = (path: string) => path.match(/^\/learn\/([^/]+)\//)?.[1];
+const plural = (n: number, one: string) => `${n} more ${one}${n === 1 ? '' : 's'}`;
 
 /** Cut text at a word boundary with an ellipsis so it fits the picture. */
 export function clip(text: string, max: number): string {
@@ -152,115 +186,183 @@ export const ANGLE: Record<CardKind, string[]> = {
 
 const LETTERS = ['A', 'B', 'C'];
 
-/** Item number n of a pool, wrapping round and also working for days before the start date. */
-const at = <T,>(pool: T[], n: number): T => pool[((n % pool.length) + pool.length) % pool.length];
+/** Days within which the same lesson or item is not shown again, whichever kind of card it is on. */
+export const SPACING = 30;
+
+/** The item each source shows, and the key that must not come back within SPACING days (usually a lesson path). */
+const sourceCache = new WeakMap<Pools, ReturnType<typeof makeSources>>();
+const sources = (pools: Pools) => {
+  let s = sourceCache.get(pools);
+  if (!s) sourceCache.set(pools, (s = makeSources(pools)));
+  return s;
+};
+const makeSources = (pools: Pools) => ({
+  experiment: { pool: shuffled(pools.whatif, (w) => w.slug), key: (w: WhatIfItem) => `/whatif/${w.slug}/` },
+  term: { pool: shuffled(pools.term, (t) => t.id), key: (t: TermItem) => t.lesson },
+  remember: { pool: shuffled(pools.remember, (r) => r.path), key: (r: RememberItem) => r.path },
+  interview: { pool: shuffled(pools.interview, (q) => q.id), key: (q: InterviewItem) => `/interview/q/${q.id}/` },
+});
+
+type Plan = { days: number[]; keys: string[]; pending: Record<string, number[]> };
+const plans = new WeakMap<Pools, Plan>();
+
+/**
+ * Which item of its source pool a day shows. Days are planned in order from 1 January 2026: each day takes the next
+ * item of its source that is not yet used in this round and whose lesson was not shown in the last SPACING days. A
+ * pool is used up completely before any item comes round again. The plan depends on the pools alone, so it is the
+ * same in every browser. Days before the start fall back to a plain rotation.
+ */
+export function itemIndexFor(dayIndex: number, pools: Pools): number {
+  const { kind, occurrence } = slotFor(dayIndex);
+  const src = sources(pools)[SOURCE[kind]];
+  const n = src.pool.length;
+  if (!n) return -1;
+  if (dayIndex < 0) return ((occurrence % n) + n) % n;
+  let plan = plans.get(pools);
+  if (!plan) {
+    plan = { days: [], keys: [], pending: {} };
+    plans.set(pools, plan);
+  }
+  const all = sources(pools);
+  for (let d = plan.days.length; d <= dayIndex; d++) {
+    const s = SOURCE[slotFor(d).kind];
+    const { pool, key } = all[s] as { pool: unknown[]; key: (x: unknown) => string };
+    if (!plan.pending[s]?.length) plan.pending[s] = pool.map((_, i) => i);
+    const pending = plan.pending[s];
+    const recent = new Set(plan.keys.slice(Math.max(0, d - SPACING), d));
+    let at = pending.findIndex((i) => !recent.has(key(pool[i])));
+    if (at < 0) at = 0;
+    const [chosen] = pending.splice(at, 1);
+    plan.days.push(chosen);
+    plan.keys.push(key(pool[chosen]));
+  }
+  return plan.days[dayIndex];
+}
 
 /** Pick the card for a day. `siteUrl` is the full address of the site, with no trailing slash. Returns null if a pool is empty. */
 export function cardForDay(dayIndex: number, pools: Pools, siteUrl: string): Card | null {
-  const { kind, occurrence } = slotFor(dayIndex);
+  let kind = slotFor(dayIndex).kind;
   const url = (path: string) => `${siteUrl}${path}`;
-  const iso = isoOf(dayIndex);
-  const base = { dayIndex, kind, label: KIND_LABEL[kind], angle: ANGLE[kind] };
+  const card = (c: Omit<Card, 'dayIndex' | 'kind' | 'label' | 'angle' | 'topic'>): Card => ({
+    dayIndex,
+    kind,
+    label: KIND_LABEL[kind],
+    angle: ANGLE[kind],
+    ...c,
+    topic: trackById(c.track)?.title ?? 'AI',
+  });
 
-  if (kind === 'guess') {
-    const pool = shuffled(pools.guess, (g) => g.slug);
+  if (kind === 'guess' || kind === 'whatif') {
+    // one sequence of experiments for both kinds, so an experiment is never shown twice in a row of cards
+    const pool = sources(pools).experiment.pool;
     if (!pool.length) return null;
-    const g = at(pool, occurrence);
-    const path = `/whatif/${g.slug}/`;
-    const options = g.options.map((o, i) => `${LETTERS[i]}) ${clip(o, 90)}`);
-    return {
-      ...base,
-      title: clip(g.question, 190),
-      body: '',
-      bullets: [],
-      bulletsHeading: '',
-      options,
-      footer: 'Answer in the first comment. Try it on Layerwise.',
+    const w = pool[itemIndexFor(dayIndex, pools)];
+    const g = pools.guess.find((x) => x.slug === w.slug);
+    if (kind === 'guess' && !g) kind = 'whatif';
+    const path = `/whatif/${w.slug}/`;
+    const track = w.track ?? g?.track ?? 'foundations';
+    if (kind === 'guess' && g) {
+      const options = g.options.map((o, i) => `${LETTERS[i]}) ${clip(o, 90)}`);
+      return card({
+        title: clip(g.question, 190),
+        body: '',
+        bullets: [],
+        bulletsHeading: '',
+        options,
+        more: '',
+        footer: 'Answer in the first comment. Try it on Layerwise.',
+        track,
+        path,
+        caption: `Guess first 👇\n\n${g.question}\n\n${options.join('\n')}\n\nAnswer in the first comment. Then flip the switch and see it for yourself, with the numbers worked out: ${url(path)}\n\n${ASK.guess}\n\n${TAGS.guess}`,
+        firstComment: `Answer: ${LETTERS[g.answer]}) ${g.options[g.answer]}\n\n${firstSentence(g.why)}\n\nThe numbers worked out, and a switch to try it yourself: ${url(path)}`,
+        alt: `A card titled Guess first, about ${trackById(track)?.title ?? 'AI'}. The question: ${g.question} Options: ${g.options.map((o, i) => `${LETTERS[i]}, ${o}`).join('. ')}.`,
+      });
+    }
+    // a What if card shows the question and one thing you will see; the rest is in the experiment
+    const shown = w.takeaways.slice(0, 1).map((x) => clip(x, 150));
+    const hidden = Math.max(0, w.takeaways.length - shown.length);
+    return card({
+      title: w.title,
+      body: clip(w.blurb, 200),
+      bullets: shown,
+      bulletsHeading: 'One thing you will see',
+      options: [],
+      more: hidden ? `+ ${plural(hidden, 'thing')} to see when you try it` : '',
+      footer: 'Interactive: guess first, then flip the switch',
+      track,
       path,
-      caption: `Guess first 👇\n\n${g.question}\n\n${options.join('\n')}\n\nAnswer in the first comment. Then flip the switch and see it for yourself, with the numbers worked out: ${url(path)}\n\n${ASK.guess}\n\n${TAGS.guess}`,
-      firstComment: `Answer: ${LETTERS[g.answer]}) ${g.options[g.answer]}\n\n${g.why}\n\nTry it: ${url(path)}`,
-      alt: `A card titled Guess first. The question: ${g.question} Options: ${g.options.map((o, i) => `${LETTERS[i]}, ${o}`).join('. ')}.`,
-    };
+      caption: `${w.title}\n\n${w.blurb}\n\nOne thing you will see:\n• ${shown[0] ?? ''}\n\n${hidden ? `There are ${plural(hidden, 'thing')} to see. ` : ''}Guess first, then flip the switch yourself: ${url(path)}\n\n${ASK.whatif}\n\n${TAGS.whatif}`,
+      firstComment: '',
+      alt: `A card titled What if, about ${trackById(track)?.title ?? 'AI'}. ${w.title} ${w.blurb} One thing you will see: ${shown.join(' ')}`,
+    });
   }
   if (kind === 'term') {
-    const pool = shuffled(pools.term, (t) => t.id);
+    const pool = sources(pools).term.pool;
     if (!pool.length) return null;
-    const t = at(pool, occurrence);
-    const more = (t.more ?? []).slice(0, 2).map((x) => clip(x, 140));
-    return {
-      ...base,
+    const t = pool[itemIndexFor(dayIndex, pools)];
+    const more = (t.more ?? []).slice(0, 1).map((x) => clip(x, 140));
+    const track = t.track ?? trackOfPath(t.lesson) ?? 'start';
+    return card({
       title: t.term,
       body: clip(t.short, 230),
       bullets: more,
       bulletsHeading: more.length ? 'Worth knowing' : '',
       options: [],
+      more: 'The whole lesson, with a quiz, on Layerwise',
       footer: t.lessonTitle ? `Learn more: ${clip(t.lessonTitle, 60)}` : 'AI terms in plain words',
+      track,
       path: t.lesson,
-      caption: `AI term of the day: ${t.term}\n\n${t.short}${more.length ? `\n\nWorth knowing:\n${more.map((b) => `• ${b}`).join('\n')}` : ''}\n\nLearn more, with a lesson and a quiz: ${url(t.lesson)}\n\n${ASK.term}\n\n${TAGS.term}`,
+      caption: `AI term of the day: ${t.term}\n\n${t.short}${more.length ? `\n\nWorth knowing:\n${more.map((b) => `• ${b}`).join('\n')}` : ''}\n\nThe rest of the lesson, with a quiz: ${url(t.lesson)}\n\n${ASK.term}\n\n${TAGS.term}`,
       firstComment: '',
-      alt: `A card titled Term of the day. ${t.term}: ${t.short}${more.length ? ` Worth knowing: ${more.join(' ')}` : ''}`,
-    };
-  }
-  if (kind === 'whatif') {
-    const pool = shuffled(pools.whatif, (w) => w.slug);
-    if (!pool.length) return null;
-    const w = at(pool, occurrence);
-    const path = `/whatif/${w.slug}/`;
-    const bullets = w.takeaways.slice(0, 3).map((x) => clip(x, 140));
-    return {
-      ...base,
-      title: w.title,
-      body: '',
-      bullets,
-      bulletsHeading: 'What you will see',
-      options: [],
-      footer: 'Interactive: guess first, then flip the switch',
-      path,
-      caption: `${w.title}\n\n${w.blurb}\n\n${bullets.map((b) => `• ${b}`).join('\n')}\n\nTry it, it asks you to guess first: ${url(path)}\n\n${ASK.whatif}\n\n${TAGS.whatif}`,
-      firstComment: '',
-      alt: `A card titled What if. ${w.title} ${w.takeaways.slice(0, 3).join(' ')}`,
-    };
+      alt: `A card titled Term of the day, about ${trackById(track)?.title ?? 'AI'}. ${t.term}: ${t.short}${more.length ? ` Worth knowing: ${more.join(' ')}` : ''}`,
+    });
   }
   if (kind === 'remember') {
-    const pool = shuffled(pools.remember, (r) => r.path);
+    const pool = sources(pools).remember.pool;
     if (!pool.length) return null;
-    const r = at(pool, occurrence);
-    const bullets = r.takeaways.slice(0, 3).map((x) => clip(x, 150));
-    return {
-      ...base,
+    const r = pool[itemIndexFor(dayIndex, pools)];
+    // two of the points on the card; the last one waits in the lesson
+    const shown = r.takeaways.slice(0, 2).map((x) => clip(x, 150));
+    const hidden = Math.max(0, r.takeaways.length - shown.length);
+    const track = r.track ?? trackOfPath(r.path) ?? 'start';
+    return card({
       title: clip(r.lesson, 90),
       body: '',
-      bullets,
+      bullets: shown,
       bulletsHeading: 'The short version',
       options: [],
-      footer: 'From a Layerwise lesson, with a quiz',
+      more: hidden ? `+ ${plural(hidden, 'point')} and a quiz in the lesson` : '+ a quiz in the lesson',
+      footer: 'From a Layerwise lesson',
+      track,
       path: r.path,
-      caption: `${r.lesson}: the short version\n\n${bullets.map((b) => `• ${b}`).join('\n')}\n\nThe whole lesson, with a quiz: ${url(r.path)}\n\n${ASK.remember}\n\n${TAGS.remember}`,
+      caption: `${r.lesson}: the short version\n\n${shown.map((b) => `• ${b}`).join('\n')}\n\n${hidden ? `The ${hidden === 1 ? 'last point is' : `other ${hidden} points are`} the one most people miss. ` : ''}Read it, and take the quiz: ${url(r.path)}\n\n${ASK.remember}\n\n${TAGS.remember}`,
       firstComment: '',
-      alt: `A card titled Remember this. ${r.lesson}. ${r.takeaways.slice(0, 3).join(' ')}`,
-    };
+      alt: `A card titled Remember this, about ${trackById(track)?.title ?? 'AI'}. ${r.lesson}. ${shown.join(' ')}`,
+    });
   }
-  const pool = shuffled(pools.interview, (q) => q.id);
+  const pool = sources(pools).interview.pool;
   if (!pool.length) return null;
-  const q = at(pool, occurrence);
+  const q = pool[itemIndexFor(dayIndex, pools)];
   const path = `/interview/q/${q.id}/`;
-  // a question with a written answer shows that answer; the others keep the points a strong answer covers
-  const written = q.answer && q.answer.points.length >= 3 ? q.answer : null;
-  const bullets = (written ? written.points : q.strong).slice(0, 3).map((x) => clip(x, 135));
-  const heading = written ? 'The short answer' : 'A strong answer covers';
-  return {
-    ...base,
+  // a question with a written answer shows where that answer starts; the others show the first point a strong answer covers
+  const written = q.answer && q.answer.points.length >= 1 ? q.answer : null;
+  const shown = (written ? written.points : q.strong).slice(0, 1).map((x) => clip(x, 135));
+  const heading = 'Where a strong answer starts';
+  const track = q.track ?? 'llm';
+  return card({
     title: clip(q.prompt, 220),
     body: '',
-    bullets,
+    bullets: shown,
     bulletsHeading: heading,
     options: [],
+    more: written ? '+ the full answer, a diagram and a worked example' : '+ the other points, follow-ups and red flags',
     footer: `${q.role}, ${q.level}`,
+    track,
     path,
-    caption: `Interview question (${q.role}, ${q.level}):\n\n${q.prompt}\n\n${heading}:\n${bullets.map((b) => `• ${b}`).join('\n')}\n\n${written ? 'The full answer, with a diagram and a worked example' : 'The full list of points, the follow-ups and the red flags'}: ${url(path)}\n\n${ASK.interview}\n\n${TAGS.interview}`,
+    caption: `Interview question (${q.role}, ${q.level}):\n\n${q.prompt}\n\n${heading}:\n${shown.map((b) => `• ${b}`).join('\n')}\n\n${written ? 'The rest of the answer, with a diagram and a worked example' : 'The other points, the follow-ups and the red flags'}: ${url(path)}\n\n${ASK.interview}\n\n${TAGS.interview}`,
     firstComment: '',
-    alt: `A card titled Interview question for a ${q.role}. ${q.prompt} ${heading}: ${bullets.join(' ')}`,
-  };
+    alt: `A card titled Interview question for a ${q.role}, about ${trackById(track)?.title ?? 'AI'}. ${q.prompt} ${heading}: ${shown.join(' ')}`,
+  });
 }
 
 /** Shrink the font until the text fits the box. `measure` returns the width in pixels of a line at a font size. */

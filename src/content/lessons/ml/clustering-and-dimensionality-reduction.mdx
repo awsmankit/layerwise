@@ -4,7 +4,7 @@ track: ml
 level: intermediate
 order: 5.5
 summary: k-means by hand and why it fails on moons and rings, DBSCAN for odd shapes, hierarchical clustering, why silhouette and the elbow can mislead, PCA as the best flat view of the data, and what t-SNE and UMAP pictures can and cannot tell you.
-updated: 2026-11-01
+updated: 2026-11-27
 sources:
   - label: "scikit-learn user guide: Clustering (k-means, DBSCAN, hierarchical, evaluation)"
     url: https://scikit-learn.org/stable/modules/clustering.html
@@ -101,6 +101,14 @@ The price is that eps is one global radius, and a good value depends on how dens
 **Agglomerative** clustering starts with every point alone and repeatedly merges the two closest clusters until one remains. The record of merges is a tree, a **dendrogram**. You choose k afterwards by cutting the tree, and the lab's bar chart shows the distances at which the last merges happened: a tall bar after short ones means two well-separated groups were forced together, which suggests where to cut.
 
 The **linkage** decides what "closest clusters" means. Single linkage uses the closest pair of points, so it follows chains and handles moons and rings (the lab shows this), but a few stray points can bridge two groups. Complete linkage uses the farthest pair, average linkage the mean over pairs, and Ward linkage tends to give round groups like k-means. The method needs all pairwise distances, so it suits thousands of points, not millions.
+
+## The curse of dimensionality
+
+**What is the curse of dimensionality, and why does it matter here?** Distance-based methods such as k-means, DBSCAN and nearest-neighbour search quietly assume that "near" and "far" are clearly different. In many dimensions that stops being true. Two things happen. First, **distances concentrate**: the nearest and the farthest points end up almost equally far away, so "nearest neighbour" carries little information. Second, volume grows exponentially with the number of dimensions, so a fixed number of points becomes sparse: covering a unit line with 10 bins takes 10 of them, covering a 10-dimensional cube the same way takes 10 billion.
+
+A small simulation shows the first effect. Put 1,000 random points in a unit cube, pick a random query point, and divide the distance to the farthest point by the distance to the nearest. Repeating this for 100 query points and taking the median, in 2 dimensions the farthest point is about 60 times as far as the nearest (the exact figure swings a lot from query to query). In 1,000 dimensions the ratio is about 1.1: every point is roughly equally far. This is a simulation on random uniform data, not a law for every dataset; real data often lies near a lower-dimensional shape, which is why nearest neighbours still work on embeddings.
+
+That is also why the tools in this lesson help. PCA keeps a few directions that hold most of the spread, so distances are measured in a space where they mean more. [Embeddings](../../foundations/tokens-and-embeddings/) are learned to place similar items close together in a few hundred dimensions, which puts the useful structure back into the distances.
 
 ## PCA: the best flat view
 

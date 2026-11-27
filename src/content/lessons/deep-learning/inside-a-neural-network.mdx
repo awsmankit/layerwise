@@ -4,7 +4,7 @@ track: deep-learning
 level: basic
 order: 1
 summary: Build a neural network from one neuron up, see why it needs a bend between its layers, and train a small one in your browser to watch it carve a boundary through dots.
-updated: 2026-11-01
+updated: 2026-11-27
 sources:
   - label: "Neural Networks and Deep Learning, chapter 1 (Michael Nielsen)"
     url: http://neuralnetworksanddeeplearning.com/chap1.html
@@ -62,6 +62,10 @@ The activation function is the fix. Put ReLU, which keeps positive numbers and t
 | Sigmoid | A smooth S into 0 to 1, read as a probability | 0 to 1 | Final layer for yes or no; rare in hidden layers |
 | GELU, SwiGLU | Smooth cousins of ReLU, the second one gated | about −0.2 up | Inside many current language models |
 | Softmax | Turns a list of scores into probabilities that add to 1 | 0 to 1 | Final layer when choosing between many options |
+
+**ReLU or sigmoid, and what is a dead ReLU?** The slope of ReLU is exactly 1 for any positive input, so a gradient passes back through it unchanged and can travel through many layers without shrinking. The slope of sigmoid is never more than 0.25, so each sigmoid layer can cut the gradient to a quarter or less: ten of them multiply it by at most 0.25 to the power 10, about one millionth (see [Training deep networks](../training-deep-networks/)). That is why ReLU replaced sigmoid in hidden layers.
+
+ReLU has its own failure. A **dead ReLU** is a unit whose input is negative for every example, so its output is 0 and its slope is 0, and the gradient reaching its weights is always exactly 0. It never changes, so it never recovers. It often follows a learning rate that was too large (one big step pushes the bias or weights far negative) or a big negative bias at the start. The usual fixes are Leaky ReLU (a small slope, such as 0.01, for negative inputs, so some gradient always gets through), GELU (a smooth cousin), a smaller learning rate, and careful initialisation.
 
 Softmax is a different kind of function, because it acts on a whole list at once. Scores of 2.0, 1.0 and 0.1 become probabilities of about 0.66, 0.24 and 0.10. A language model ends with a softmax over every token in its vocabulary, which is how it picks the next token.
 

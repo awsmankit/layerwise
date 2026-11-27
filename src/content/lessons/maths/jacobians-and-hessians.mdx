@@ -4,12 +4,14 @@ track: maths
 level: intermediate
 order: 9.13
 summary: What a Jacobian is, the grid of partial derivatives for a function with several outputs, and how it gives the best linear guess for a small change. Two sliders compare the guess with the exact change.
-updated: 2026-11-18
+updated: 2026-11-27
 sources:
   - label: "3Blue1Brown: Multivariable calculus (Essence of calculus)"
     url: https://www.3blue1brown.com/topics/multivariable-calculus
   - label: "Khan Academy: Multivariable calculus"
     url: https://www.khanacademy.org/math/multivariable-calculus
+  - label: "Identifying and attacking the saddle point problem in high-dimensional non-convex optimization (Dauphin et al., 2014)"
+    url: https://arxiv.org/abs/1406.2572
   - label: "Deep Learning, chapter 6.5 (Goodfellow, Bengio and Courville)"
     url: https://www.deeplearningbook.org/
 ---
@@ -55,6 +57,12 @@ Carl Gustav Jacob Jacobi studied these determinants and matrices in the 1830s, a
 The Hessian is the Jacobian of the gradient: the matrix of second partial derivatives $$\partial^2 f / \partial x_i \partial x_j$$. It describes curvature. At a minimum, the Hessian is positive in every direction, so the surface curves up on all sides. Optimisers that use curvature, such as Newton's method, use it to choose better steps, but for large models the full Hessian is too big to store, so practical methods approximate it.
 
 </Deep>
+
+## Does gradient descent get stuck in local minima?
+
+**Does gradient descent get stuck in local minima?** A point where the gradient is zero is a minimum only if the Hessian curves up in every direction. If it curves up in some directions and down in others, it is a **saddle point**: flat in the gradient, but not a valley. Take $$f(x, y) = x^2 - y^2$$ at $$(0, 0)$$. The gradient is $$(2x, -2y) = (0, 0)$$ there, and the Hessian is $$\begin{pmatrix} 2 & 0 \\ 0 & -2 \end{pmatrix}$$, with eigenvalues 2 and -2. It curves up along $$x$$ and down along $$y$$, so a step along $$y$$ goes downhill.
+
+In high dimensions, a point where every one of thousands of directions curves up is rare, while a mix of up and down is common. Research on large networks (Dauphin et al., 2014) found that the trouble in high dimensions is mostly saddle points and flat plateaus rather than bad local minima. Treat this as an empirical finding for large networks, not a theorem for every model. Gradient descent can slow down near a saddle, and the noise in stochastic gradient descent, or momentum, helps it roll off along a downward direction.
 
 ## What to take forward
 

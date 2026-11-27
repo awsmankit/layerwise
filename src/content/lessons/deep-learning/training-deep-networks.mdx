@@ -4,7 +4,7 @@ track: deep-learning
 level: intermediate
 order: 2
 summary: "Why deep networks are hard to train, and the standard fixes in the order you meet them: starting scale, normalisation layers, optimisers such as momentum and Adam, learning-rate schedules with warm-up, and regularisation."
-updated: 2026-11-01
+updated: 2026-11-27
 sources:
   - label: "Adam: A Method for Stochastic Optimization (Kingma and Ba, 2014)"
     url: https://arxiv.org/abs/1412.6980
@@ -54,6 +54,10 @@ The gradients travel backwards through the same layers, so they compound in the 
 
 Weights start as random numbers. The spread of those numbers decides whether the signal keeps its size from layer to layer. **Xavier** (also called Glorot) initialisation picks a spread that keeps the size steady for activations such as tanh. **He** initialisation uses a spread larger by a factor of the square root of 2, because ReLU zeroes about half of its inputs and the signal would otherwise halve in variance at every layer.
 
+**Why does He or Xavier initialisation use a variance of about 1 over fan-in?** Fan-in is the number of inputs a neuron receives. A neuron adds up that many products of an input and a weight. If the inputs and weights are independent and have zero mean, each product has variance Var(w) times Var(x), and the variance of a sum of independent terms is the sum of their variances (see [expectation and variance](../../maths/expectation-and-variance/)). So the output variance is fan-in times Var(w) times Var(x). To keep the signal the same size from one layer to the next, that factor must be 1, which means Var(w) = 1 / fan-in. For example, with 256 inputs of variance 1 and weights of variance 1, the output has variance 256, a standard deviation of 16. With weights of variance 1/256 the output has variance 1 again. (These are the calculation's assumptions, not guarantees for a trained network.)
+
+**Then where does the 2 come from, and what is Xavier doing differently?** Xavier (Glorot) uses 2 / (fan-in + fan-out). The forward pass wants 1 / fan-in and the backward pass, where gradients flow the other way, wants 1 / fan-out, so Xavier compromises between the two. He uses 2 / fan-in because ReLU zeroes about half of its inputs, which halves the variance, and the factor 2 puts it back. That is the same square root of 2 in the spread mentioned above.
+
 Move the slider and watch twenty layers. Each bar is the size of the numbers after one layer, on a log scale, with 1 in the middle.
 
 <InitDepth client:visible />
@@ -92,6 +96,8 @@ Adam's price is memory. It stores two extra numbers per weight, the running aver
 
 ## Learning-rate schedules and warm-up
 
+**How does batch size change training?** A gradient computed from a batch is an average over B examples, so its random noise falls roughly as 1 over the square root of B. Example: if one example's gradient has noise of size 1, a batch of 100 has noise of about 0.1, and a batch of 400 about 0.05; quadrupling the batch only halves the noise. Bigger batches therefore give smoother steps and use GPUs better, but each step costs more and returns diminish. Because the steps are less noisy, the learning rate is usually raised with the batch size, as below. Very large batches have often been observed to generalise slightly worse unless the learning rate and schedule are tuned; that is a tendency seen in practice, not a law.
+
 The best learning rate changes during a run. Early on, weights are random, the gradients are noisy and Adam's averages have not settled, so large steps can wreck the start. Later, a smaller rate lets the weights settle into a good spot. So most runs use a **schedule**: a short **warm-up** that raises the rate from zero to its peak, followed by a decay.
 
 | Step | Learning rate | Phase |
@@ -111,9 +117,11 @@ These are example numbers for a schedule with a 1,000-step linear warm-up and a 
 A network with enough weights can memorise its training data. Regularisation makes memorising harder. [Overfitting and bias-variance](../../ml/overfitting-and-bias-variance/) explains the idea in general; these are the deep learning versions.
 
 - **Weight decay** shrinks every weight slightly towards zero at each step, so large weights have to earn their place.
-- **Dropout** (Srivastava et al., 2014) randomly switches off a fraction of the neurons on every training step, for example half of them. No neuron can rely on a particular neighbour being there, so the network learns more robust features. At test time nothing is dropped. Many large language model pretraining runs use little or no dropout, because they see most of their data only about once and have less to memorise.
+- **Dropout** (Srivastava et al., 2014) randomly switches off a fraction p of the neurons on every training step, for example half of them. No neuron can rely on a particular neighbour being there, so the network learns more robust features. At test time nothing is dropped. Many large language model pretraining runs use little or no dropout, because they see most of their data only about once and have less to memorise.
 - **Early stopping** watches the validation loss and stops when it stops improving, keeping the best saved checkpoint.
 - **Data augmentation**, such as flipping or cropping images, gives the network more varied examples without collecting more.
+
+**Dropout: what changes at test time?** With p = 0.5, a unit feeding the next layer is on only half the time during training, so the next layer sees a smaller total input than it would at test time, when every unit is on. The usual fix, called **inverted dropout**, scales the kept units by 1 / (1 - p) during training, so the expected value matches. Example: a unit outputs 3. With p = 0.5 it becomes 6 half the time and 0 otherwise, an average of 3, the same as at test time. Nothing needs changing at test time. A second view: each training step trains a different thinned network, and using all units at test time approximates averaging the predictions of the very many thinned networks (Srivastava et al., 2014).
 
 ## A training doctor
 

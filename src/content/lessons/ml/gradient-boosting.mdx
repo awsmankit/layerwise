@@ -4,7 +4,7 @@ track: ml
 level: intermediate
 order: 5
 summary: Boosting builds many small trees in sequence, each fitted to the mistakes left by the ones before. Worked by hand on five rows, then the knobs that matter, early stopping, how the three big libraries differ, and an honest look at boosting versus deep learning on tables.
-updated: 2026-11-01
+updated: 2026-11-27
 sources:
   - label: "Greedy Function Approximation: A Gradient Boosting Machine (Friedman, 2001)"
     url: https://projecteuclid.org/journals/annals-of-statistics/volume-29/issue-5/Greedy-function-approximation-A-gradient-boosting-machine/10.1214/aos/1013203451.full
@@ -41,6 +41,8 @@ import BoostingSteps from '../../../components/viz/BoostingSteps.tsx';
 [Classical ML essentials](../../foundations/classical-ml-essentials/) calls gradient-boosted trees "the baseline to beat" for tables of data, and stops there. This lesson fills the gap: what boosting is, what its settings do, why the three well-known libraries (XGBoost, LightGBM and CatBoost) are so often the ones people reach for, and what the evidence really says about boosting versus deep learning.
 
 A random forest, from [the previous lesson](../decision-trees-and-random-forests/), grows many deep trees independently and averages them. Boosting does the opposite. It grows many **small** trees one after another, and each new tree is trained on **what the model so far still gets wrong**.
+
+**Bagging vs boosting: what is the real difference?** Both combine many trees, but they attack different errors. **Bagging**, which random forests use, trains deep trees (low bias, high variance) independently on resampled data and averages them. Averaging cancels the random wobble of each tree, so it lowers variance. **Boosting** adds shallow trees (high bias, low variance) one after another, each aimed at the errors left so far, so it lowers bias. See [Overfitting and bias-variance](../overfitting-and-bias-variance/) for the two terms. A consequence: adding more trees to a forest almost never hurts, because the average only gets steadier, but too many boosting rounds can overfit, because the model keeps chasing the noise left in the residuals. That is why boosting comes with a learning rate and early stopping on a validation set, both covered below.
 
 ## The idea, by hand, on five rows
 

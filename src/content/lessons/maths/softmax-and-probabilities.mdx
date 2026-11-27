@@ -4,7 +4,7 @@ track: maths
 level: basic
 order: 1.5
 summary: What softmax does, why a model needs it, how to work an example by hand, and why the word probability fits its output. No calculus needed.
-updated: 2026-11-18
+updated: 2026-11-27
 sources:
   - label: "CS231n: Linear classification and the softmax loss (Stanford)"
     url: https://cs231n.github.io/linear-classify/
@@ -72,6 +72,12 @@ If you divided each raw score by the sum of the scores, 2.0, 1.0 and 0.1 would g
 ## How it came into the picture
 
 The same formula is much older. It appears in 19th-century physics as the Boltzmann distribution, which describes how likely a system is to sit in each energy state. In 1989 John Bridle named it "softmax" when describing how a neural network's outputs can be read as probabilities: a soft version of picking the maximum. Once neural networks started predicting one word from thousands, a softmax on the output became the standard final step. It is still there in almost every language model.
+
+## Softmax or sigmoid for multi-label?
+
+**Softmax or sigmoid when an item can have several labels?** Softmax makes the classes compete: the probabilities must add to 1, so raising one lowers the others. That fits a problem with exactly one right answer. When an item can have several labels at once, such as a photo with a dog and a cat, competition is wrong, because both can be true. Use one **sigmoid** per label, each giving a separate yes-or-no probability between 0 and 1, with binary cross-entropy as the loss. The probabilities need not add to 1.
+
+**Example (scores 2.0 for dog, 1.0 for cat).** Softmax gives 0.73 and 0.27, which add to 1, so it can never say that both are likely. Sigmoids give 0.88 for dog and 0.73 for cat, so both are called present. Each label is judged on its own.
 
 <Deep title="The same idea in Python">
 

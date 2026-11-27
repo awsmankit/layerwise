@@ -4,7 +4,7 @@ track: foundations
 level: intermediate
 order: 4
 summary: The one mechanism inside every transformer, built up from a lookup analogy to a dozen lines of code.
-updated: 2026-11-12
+updated: 2026-11-27
 sources:
   - label: "Attention Is All You Need (Vaswani et al., 2017)"
     url: https://arxiv.org/abs/1706.03762
@@ -28,6 +28,8 @@ For each token the model makes three vectors (lists of numbers) from what it cur
 - a **value**: the information this token hands over when another token pays attention to it
 
 A token's new representation is a weighted sum of every token's value. The weights come from comparing its query with every key.
+
+**Why separate query and key matrices?** Suppose you compared the raw word vectors $$x$$ with each other. The score $$x_i \cdot x_j$$ is symmetric: word $$i$$ would look at word $$j$$ exactly as much as $$j$$ looks at $$i$$, and every word would match itself most strongly. Real language is not like that. A verb looks for its subject, but the subject does not need to look for the verb in the same way. So the model learns two different matrices, $$W_Q$$ and $$W_K$$, and compares $$x_i W_Q$$ with $$x_j W_K$$. Now "what I am looking for" can differ from "what I offer", and the score from $$i$$ to $$j$$ need not equal the score from $$j$$ to $$i$$.
 
 <AttentionViz client:visible />
 
@@ -57,6 +59,10 @@ $$
 $$
 
 In words: compare every query with every key ($$QK^{\top}$$), shrink the scores, turn each row into weights that add up to 1 (softmax), and use those weights to blend the values. The shrinking step divides by the square root of the dimension $$d$$ (the length of each vector). Without it, scores grow as vectors get longer. That pushes the softmax into regions where gradients vanish, meaning the learning signal becomes too tiny to train on.
+
+**Why the square root, and not d itself?** Suppose each number in a query and a key is random, with an average of 0 and a [variance](../../maths/expectation-and-variance/) of 1. The score $$q \cdot k$$ adds up $$d$$ products, and each product has a variance of 1. Variances of independent terms add, so the score has a variance of $$d$$, and its typical size, the standard deviation, is $$\sqrt{d}$$. Dividing by $$\sqrt{d}$$ brings the spread back to 1, whatever the vector length. Dividing by $$d$$ would shrink the scores too far: for long vectors they would all sit near 0, and the softmax would spread its weight almost evenly, so attention could not pick out the important words.
+
+**Example:** with $$d = 64$$, unscaled scores typically land around ±8. Then $$e^{8}$$ is about 3,000 times $$e^{0}$$, so one key takes almost all the weight. Divided by 8, the scores land around ±1, and the softmax still has room to learn.
 
 </Disclosure>
 

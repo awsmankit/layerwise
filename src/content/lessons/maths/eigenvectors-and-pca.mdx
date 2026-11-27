@@ -4,7 +4,7 @@ track: maths
 level: intermediate
 order: 9.7
 summary: What an eigenvector is, and how principal component analysis uses the direction of greatest spread to simplify data. Turn the line through a cloud of points and find the angle where the spread peaks.
-updated: 2026-11-18
+updated: 2026-11-27
 sources:
   - label: "3Blue1Brown: Eigenvectors and eigenvalues (Essence of linear algebra)"
     url: https://www.3blue1brown.com/lessons/eigenvalues
@@ -49,6 +49,18 @@ Karl Pearson introduced principal components in 1901, to find the best-fitting l
 For points with variances $$S_{xx}$$, $$S_{yy}$$ and covariance $$S_{xy}$$, the spread along a direction at angle $$\theta$$ is $$\cos^2\theta \, S_{xx} + 2\sin\theta\cos\theta \, S_{xy} + \sin^2\theta \, S_{yy}$$. Setting its derivative to zero gives $$\tan 2\theta = \dfrac{2S_{xy}}{S_{xx} - S_{yy}}$$, which is the angle the widget reports. The largest eigenvalue of the covariance matrix is the spread in that direction.
 
 </Deep>
+
+## Why principal components are eigenvectors
+
+**Why are principal components eigenvectors, in any number of dimensions?** Let $$C$$ be the covariance matrix of the (centred) data and $$u$$ a unit direction, so $$|u| = 1$$. The variance of the data along $$u$$ is $$u^\top C u$$. We want the $$u$$ that maximises this while keeping $$|u| = 1$$. A Lagrange multiplier $$\lambda$$ handles the constraint: set the gradient of $$u^\top C u - \lambda (u^\top u - 1)$$ to zero, which gives
+
+$$
+C u = \lambda u
+$$
+
+So the best direction must be an eigenvector of $$C$$. Multiplying by $$u^\top$$ shows the variance along it is $$u^\top C u = \lambda$$, the eigenvalue. The top eigenvector is therefore the direction of greatest spread, the next is the greatest spread at right angles to it, and so on, in any number of dimensions. Each eigenvalue divided by the sum of all eigenvalues is the share of the total variance that component keeps.
+
+**Example.** Take $$C = \begin{pmatrix} 2 & 1 \\ 1 & 2 \end{pmatrix}$$. Its eigenvalues are 3 and 1, with eigenvectors along $$(1, 1)$$ and $$(1, -1)$$. Along the unit vector $$(1,1)/\sqrt{2}$$ the variance is $$(2 + 1 + 1 + 2)/2 = 3$$, matching the eigenvalue. The first component keeps $$3/(3+1) = 75$$ per cent of the variance.
 
 ## What to take forward
 

@@ -8,6 +8,19 @@ Versions follow [semantic versioning](https://semver.org/), read for a learning 
 - **Minor**: new lessons, labs, tools or features.
 - **Patch**: fixes and small corrections (wording, links, layout, accessibility).
 
+## [2.17.0] - 2026-11-27: The follow-up questions interviewers ask, and Daily cards that send you to the lesson
+
+An audit of 101 common interview questions found 29 where a lesson answered the question but not the "why?" that comes next, or did not answer it at all. All 29 are now answered inside the existing lessons. Daily cards show a topic picture, never repeat soon, and show the start of a lesson rather than all of it.
+
+- Why attention divides by the square root of d and not by d, why the cache keeps keys and values but not queries, and why a low-rank LoRA update is enough.
+- Maths follow-ups: why L1 gives exact zeros, why cross-entropy beats squared error for classification, MLE versus MAP, why principal components are eigenvectors, which way round KL matters, and saddle points.
+- Machine learning follow-ups: why initialisation scales by fan-in, inverted dropout, batch size, dead ReLUs, bagging versus boosting, the curse of dimensionality, regression assumptions and R squared, and support vector machines.
+- Agents and retrieval: ReAct, plan-and-execute and reflection compared, how a model learns to call tools, and how to choose an embedding model.
+- A fix: output tokens cost more because they are written one at a time and wait on memory, not because each takes more arithmetic.
+- Daily cards carry the topic’s picture, never show the same lesson within about a month, and show the first points with the rest waiting in the lesson.
+
+**At this release:** 191 lessons in 18 topics, 24 practice labs, 880 glossary terms.
+
 ## [2.16.0] - 2026-11-27: Daily cards you can teach from, and a clearer path for newcomers
 
 The Daily card now teaches a little more and is built for you to add your own words. The topics and the "I’m new to AI" path follow one story, and every AI basics lesson opens with what was true before, what is true now and why it matters.
@@ -310,6 +323,7 @@ Animated AI engineering lessons, games and tools, covering AWS, Azure and Google
 
 **At this release:** 44 lessons in 12 topics, 0 practice labs, 79 glossary terms.
 
+[2.17.0]: https://github.com/awsmankit/layerwise/compare/v2.16.0...v2.17.0
 [2.16.0]: https://github.com/awsmankit/layerwise/compare/v2.15.0...v2.16.0
 [2.15.0]: https://github.com/awsmankit/layerwise/compare/v2.14.0...v2.15.0
 [2.14.0]: https://github.com/awsmankit/layerwise/compare/v2.13.1...v2.14.0

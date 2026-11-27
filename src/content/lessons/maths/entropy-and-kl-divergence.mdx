@@ -4,7 +4,7 @@ track: maths
 level: intermediate
 order: 9.4
 summary: Entropy measures how uncertain a distribution is, and KL divergence measures how much you lose by using a wrong distribution. Two sliders show the true and model distributions and their numbers in bits.
-updated: 2026-11-18
+updated: 2026-11-27
 sources:
   - label: "Visual Information Theory (Christopher Olah, 2015)"
     url: https://colah.github.io/posts/2015-09-Visual-Information/
@@ -57,6 +57,24 @@ Cross-entropy $$H(p, q) = H(p) + D_{\text{KL}}(p \parallel q)$$. When training a
 ## Where it came from
 
 Claude Shannon introduced entropy in 1948 to measure how much information a message carries, and it is still the basis of data compression. Solomon Kullback and Richard Leibler defined the divergence in 1951. Both are now standard in ML for losses, for comparing distributions, and for measuring how far a model's outputs drift.
+
+## KL is not symmetric: so what?
+
+**Why does the order of KL matter in practice?** Because the two orders ask the model to fail in different ways.
+
+- **Forward KL**, $$D_{\text{KL}}(p \parallel q)$$, adds a large penalty wherever the truth $$p$$ has mass but the model $$q$$ gives it almost none. So $$q$$ spreads out to cover every mode of $$p$$, even if it must also put mass in the gaps between them. This is **mass-covering**.
+- **Reverse KL**, $$D_{\text{KL}}(q \parallel p)$$, adds a large penalty wherever $$q$$ puts mass that $$p$$ gives almost none. So $$q$$ is happy to lock onto one mode of $$p$$ and ignore the rest. This is **mode-seeking**.
+
+**Example (bits, computed for a made-up case).** Four outcomes, with the truth $$p = (0.49, 0.01, 0.01, 0.49)$$: two modes at the ends. A spread-out model $$q_{\text{wide}} = (0.3, 0.2, 0.2, 0.3)$$ and a model that locks onto the first mode, $$q_{\text{lock}} = (0.94, 0.04, 0.01, 0.01)$$:
+
+| Model | Forward KL(p to q) | Reverse KL(q to p) |
+|---|---|---|
+| wide | 0.61 | 1.30 |
+| locked | 2.27 | 0.91 |
+
+Forward KL prefers the wide model, and reverse KL prefers the locked one.
+
+**Where each is used.** Training by maximum likelihood minimises the forward KL from the data distribution to the model (see [Maximum likelihood](../maximum-likelihood/)), so models trained this way tend to cover all the data. Variational inference and VAEs minimise the reverse KL from the approximation to the true posterior, so the approximation tends to lock onto one mode of the posterior. See [ELBO and variational inference](../elbo-and-variational-inference/).
 
 <Deep title="Nats, bits, and the two-line proof">
 

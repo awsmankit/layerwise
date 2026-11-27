@@ -4,7 +4,7 @@ track: llm
 level: advanced
 order: 4
 summary: How to build fine-tuning data, how LoRA and QLoRA cut the cost, how preference tuning works, and how to evaluate, ship and version a custom model without fooling yourself.
-updated: 2026-10-26
+updated: 2026-11-27
 sources:
   - label: "LoRA: Low-Rank Adaptation of Large Language Models (Hu et al., 2021)"
     url: https://arxiv.org/abs/2106.09685
@@ -85,6 +85,8 @@ Take one weight matrix W in a layer. LoRA freezes W and learns an update made of
 - LoRA: A has r x d and B has d x r, so 2 x d x r = 2 x 4,096 x 16 = **131,072**.
 - Ratio: 2r / d = 32 / 4,096 = 1/128, about **0.78%** of the full matrix.
 
+**Why is a low-rank update enough?** Fine-tuning rarely needs to rewrite what a model knows. It nudges existing behaviour in a few directions, such as a new tone or format. The LoRA paper reported that the weight change from adaptation has a low "intrinsic rank": a small number of directions captures most of it, and in their experiments ranks as small as 1 to 8 often worked well. Treat that as a finding from their tasks, not a guarantee: a task that teaches a lot of new material may need a higher rank, so try a few and measure. For the same matrix at r = 8 (an example setting), LoRA trains 2 x 4,096 x 8 = **65,536** parameters against 16,777,216 for the full matrix, a ratio of 1/256, about **0.39%**.
+
 ```python
 import torch, torch.nn as nn
 
@@ -135,6 +137,10 @@ SFT needs the right answer written down. Preference tuning needs only a judgemen
 ## Distillation
 
 Distillation trains a smaller **student** model to imitate a larger **teacher**: on the teacher's output probabilities, or more often today on the teacher's generated answers used as SFT data. It is how teams get a cheap, fast model for one task. Check the teacher provider's terms of use before training on its outputs.
+
+**Why do soft targets teach more than labels?** A label only says "the answer is cat". The teacher's full probability spread says more: perhaps 90% cat, 8% lynx and 0.1% truck, which tells the student that lynx is nearly right and truck is far off. Hinton and colleagues called this extra information "dark knowledge". Because the teacher is usually very confident, the small probabilities are almost invisible, so both models divide their scores by a temperature above 1 before the softmax, which flattens the spread until those small differences show. The student is trained to match this softened distribution with a KL divergence or cross-entropy loss. The probabilities in the cat example are illustrative.
+
+There are two ways to do it. **Token-level** distillation matches the teacher's next-token distribution at every position, which needs access to the teacher's probabilities. **Sequence-level** distillation trains the student on text the teacher generated, as ordinary SFT data. It is the common approach when the teacher is only available through an API that returns text.
 
 <Callout kind="cost" title="The cost is mostly after training">
 A LoRA run can be cheap. Hosting is the recurring bill: a custom model may need dedicated or provisioned capacity rather than pay-per-token pricing, and someone must evaluate it again every time the base model changes. Check your platform's docs for how fine-tuned models are hosted and billed. As of October 2026 it varies by provider and model. Compare with [self-hosting versus API economics](../../local/self-hosting-vs-api-economics/).

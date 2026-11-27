@@ -4,7 +4,7 @@ track: skills
 level: basic
 order: 2
 summary: "Build a spam filter yourself in plain Python. Collect labelled messages, turn words into counts, train a counting classifier, test it on messages it has never seen, study its mistakes and improve it."
-updated: 2026-11-01
+updated: 2026-11-27
 sources:
   - label: "scikit-learn: Getting started"
     url: https://scikit-learn.org/stable/getting_started.html
@@ -251,6 +251,8 @@ Naive Bayes uses Bayes' rule: the chance of a label given the words is proportio
 For example, `free` appears 6 times in the 102 spam words, and never in the 115 ham words. There are 133 different words in training. With the add-1 rule, its chance is (6 + 1) / (102 + 133) in spam and (0 + 1) / (115 + 133) in ham. The ratio is about 7.4, whose logarithm is about 2.0, the vote you see in the picture. The starting lean before any word is the log of 14 spam messages over 16 ham messages, about −0.13.
 
 Naive Bayes is one classifier among many. Another standard one learns a weight for each word instead of counting, called logistic regression. It is covered in [Linear and logistic regression](../../ml/linear-and-logistic-regression/). For the idea of Bayes' rule explained with pictures, see [3Blue1Brown's lesson on Bayes' theorem](https://www.3blue1brown.com/lessons/bayes-theorem). The [scikit-learn guide to naive Bayes](https://scikit-learn.org/stable/modules/naive_bayes.html) lists the variants.
+
+**Generative or discriminative?** The two classifiers differ in what they model. Naive Bayes is **generative**: it models how each class produces its data, the chance of the words given the label, and then uses Bayes' rule to turn that around into the chance of the label given the words. Logistic regression is **discriminative**: it models the chance of the label given the words directly, and spends no effort on how the words themselves are distributed. A common finding is that a generative model can do well with little data, and copes easily with a missing feature (you simply leave its factor out), while a discriminative model is usually more accurate once there is plenty of data. This is a tendency, not a rule, and it depends on how well the generative model's assumptions, such as words being independent given the label, match the data.
 
 </Deep>
 

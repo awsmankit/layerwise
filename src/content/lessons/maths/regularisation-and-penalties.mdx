@@ -4,7 +4,7 @@ track: maths
 level: intermediate
 order: 9.11
 summary: How adding a penalty for large weights pulls a model away from fitting noise and towards simpler answers. A slider shows the best setting sliding from the data's answer towards zero as the penalty grows.
-updated: 2026-11-18
+updated: 2026-11-27
 sources:
   - label: "Deep Learning, chapter 7.1 (Goodfellow, Bengio and Courville)"
     url: https://www.deeplearningbook.org/
@@ -41,6 +41,19 @@ Slide $$\lambda$$ from 0 upwards. With no penalty the best $$w$$ is 3, the value
 A bigger penalty makes the model simpler and less likely to chase noise, but too big a penalty underfits: it ignores real signal. The right strength is found by checking performance on held-out validation data, the same rule as the overfitting lesson. Set λ too low and you keep the overfitting; too high and the model is too rigid.
 
 </Callout>
+
+## Why L1 gives exact zeros and L2 does not
+
+**Why does L1 give exact zeros and L2 does not?** Look at the pull each penalty puts on a weight. The L1 penalty $$\lambda |w|$$ pulls with a constant force of size $$\lambda$$, whatever the weight is, always towards zero. The L2 penalty $$\lambda w^2$$ pulls with a force $$2\lambda w$$, which shrinks as the weight shrinks. So a small weight under L1 still feels the full pull and can be pushed all the way to zero, and stays there if the data's own pull is weaker than $$\lambda$$. Under L2 the pull fades to nothing as the weight nears zero, so the weight gets small but is rarely exactly zero.
+
+**Example (one weight, $$\lambda = 1$$).** The data wants $$w = 0.3$$, so the fit loss is $$(w - 0.3)^2$$.
+
+- With L2, minimise $$(w - 0.3)^2 + w^2$$. The slope $$2(w - 0.3) + 2w$$ is zero at $$w = 0.15$$. The weight halves but is not zero.
+- With L1, minimise $$(w - 0.3)^2 + |w|$$. For $$w > 0$$ the slope is $$2(w - 0.3) + 1$$, which would be zero at $$w = -0.2$$, a negative value, so there is no minimum on the positive side. By symmetry none on the negative side either, so the minimum is at $$w = 0$$ exactly. The data's pull at zero has size $$2 \times 0.3 = 0.6$$, which is less than $$\lambda = 1$$, so the penalty wins.
+
+With a gentler $$\lambda = 0.5$$, the data's pull of 0.6 beats the penalty, and L1 gives $$w = 0.3 - 0.5/2 = 0.05$$: not zero, but L1 has taken a fixed amount off, where L2 would take a fixed share.
+
+**The geometric picture.** Picture the weights as a point on a plane and the penalty as a budget on their size. The L2 budget is a circle, with no corners, so the best point on it is almost never exactly on an axis. The L1 budget is a diamond whose corners sit on the axes. The contours of the fit loss tend to touch the diamond at a corner, and at a corner one weight is exactly zero. In many dimensions the diamond has many such corners and edges, which is why L1 (the lasso) selects a sparse set of weights.
 
 ## Where it came from
 

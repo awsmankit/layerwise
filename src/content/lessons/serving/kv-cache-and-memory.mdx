@@ -4,7 +4,7 @@ track: serving
 level: advanced
 order: 2
 summary: Why generation needs a cache, how big it gets, and why it decides how many users fit on one GPU.
-updated: 2026-10-26
+updated: 2026-11-27
 sources:
   - label: "Efficient Memory Management for Large Language Model Serving with PagedAttention (Kwon et al., 2023)"
     url: https://arxiv.org/abs/2309.06180
@@ -38,6 +38,8 @@ Try it. Pick a model, then change the context length and the number of users, an
 <ModelMemory client:visible />
 
 Two things stand out. The **weights** are a fixed cost, paid once per copy of the model. The **KV cache** scales with context and with the number of users, so it is the part that decides how many requests one GPU can serve at the same time.
+
+**Why cache keys and values, but not queries?** A token's query is used once, at the step where that token is the newest. It asks "which earlier tokens matter to me?" by being compared with the keys of everything before it, and the answer is a blend of their values. At the next step it is a different token's turn to ask. So an old query is never needed again, while every old key and value is needed at every later step, because each new token compares itself against all of them. That is why the cache holds keys and values only.
 
 ## Why decode is limited by memory bandwidth
 

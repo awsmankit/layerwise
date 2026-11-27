@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { ANGLE, CYCLE, KIND_LABEL, cardForDay, clip, dayIndexFromIso, dayIndexOf, fitBullets, fitText, isoOf, shuffled, slotFor, type Pools } from './daily-card';
+import { ANGLE, CYCLE, KIND_LABEL, SOURCE, firstSentence, cardForDay, clip, dayIndexFromIso, dayIndexOf, fitBullets, fitText, isoOf, shuffled, slotFor, type Pools } from './daily-card';
 
 const mk = (n: number, f: (i: number) => object) => Array.from({ length: n }, (_, i) => f(i));
 const pools: Pools = {
   guess: mk(10, (i) => ({ slug: `g${i}`, title: `What if g${i}?`, question: `Question ${i}?`, options: [`one ${i}`, `two ${i}`, `three ${i}`], answer: (i % 3) as 0 | 1 | 2, why: `Because ${i}.` })) as Pools['guess'],
   term: mk(12, (i) => ({ id: `t${i}`, term: `Term ${i}`, short: `Short ${i}.`, lesson: `/learn/start/l${i}/` })) as Pools['term'],
-  whatif: mk(9, (i) => ({ slug: `w${i}`, title: `What if w${i}?`, blurb: `Blurb ${i}.`, takeaways: [`Take ${i} one.`, `Take ${i} two.`, `Take ${i} three.`, `Take ${i} four.`] })) as Pools['whatif'],
+  whatif: mk(10, (i) => ({ slug: `g${i}`, title: `What if g${i}?`, blurb: `Blurb ${i}.`, takeaways: [`Take ${i} one.`, `Take ${i} two.`, `Take ${i} three.`, `Take ${i} four.`] })) as Pools['whatif'],
   remember: mk(11, (i) => ({ path: `/learn/start/r${i}/`, lesson: `Lesson ${i}`, takeaways: [`Remember ${i} a.`, `Remember ${i} b.`, `Remember ${i} c.`] })) as Pools['remember'],
   interview: mk(8, (i) => ({ id: `q${i}`, prompt: `Prompt ${i}?`, role: 'AI engineer', level: 'Mid-level', strong: [`Point ${i} a.`, `Point ${i} b.`, `Point ${i} c.`] })) as Pools['interview'],
 };
@@ -24,9 +24,9 @@ describe('the weekly rhythm', () => {
   it('follows the cycle', () => {
     for (let d = 0; d < 21; d++) expect(slotFor(d).kind).toBe(CYCLE[d % 7]);
   });
-  it('counts occurrences without gaps or repeats within a kind', () => {
+  it('counts occurrences without gaps or repeats within a source', () => {
     const seen: Record<string, number[]> = {};
-    for (let d = 0; d < 70; d++) (seen[slotFor(d).kind] ||= []).push(slotFor(d).occurrence);
+    for (let d = 0; d < 70; d++) (seen[SOURCE[slotFor(d).kind]] ||= []).push(slotFor(d).occurrence);
     for (const occ of Object.values(seen)) expect(occ).toEqual(occ.map((_, i) => i));
   });
 });
@@ -44,13 +44,14 @@ describe('cardForDay', () => {
     }
     expect([...kinds].sort()).toEqual(['guess', 'interview', 'remember', 'term', 'whatif']);
   });
-  it('does not repeat an item until its pool is used up', () => {
-    const titles: string[] = [];
-    for (let d = 0; d < 7 * 5; d++) {
+  it('never shows an experiment twice, as either kind, until all of them have had a turn', () => {
+    const paths: string[] = [];
+    for (let d = 0; d < 7 * 4; d++) {
       const c = cardForDay(d, pools, URL)!;
-      if (c.kind === 'whatif') titles.push(c.title);
+      if (c.kind === 'whatif' || c.kind === 'guess') paths.push(c.path);
     }
-    expect(new Set(titles).size).toBe(titles.length); // 5 weeks, 9 items
+    expect(paths.length).toBe(8);
+    expect(new Set(paths).size).toBe(8); // 4 weeks, 10 experiments
   });
   it('puts the site address in every caption and keeps the answer out of guess captions', () => {
     for (let d = 0; d < 14; d++) {
@@ -72,10 +73,12 @@ describe('cardForDay', () => {
     expect(c.kind).toBe('guess');
     const g = pools.guess.find((x) => x.question === c.title)!;
     expect(c.firstComment).toContain(`Answer: ${'ABC'[g.answer]}) ${g.options[g.answer]}`);
-    expect(c.firstComment).toContain(g.why);
+    expect(c.firstComment).toContain(firstSentence(g.why));
   });
   it('returns null when a pool is empty', () => {
-    expect(cardForDay(0, { ...pools, guess: [] }, URL)).toBeNull();
+    expect(cardForDay(0, { ...pools, whatif: [] }, URL)).toBeNull();
+    // an experiment with no guess question is shown as a What if card instead
+    expect(cardForDay(0, { ...pools, guess: [] }, URL)!.kind).toBe('whatif');
   });
   it('handles days before the start date', () => {
     expect(cardForDay(-3, pools, URL)).not.toBeNull();
@@ -83,14 +86,27 @@ describe('cardForDay', () => {
 });
 
 describe('cards teach something', () => {
-  it('gives experiment, lesson and interview cards up to three real points', () => {
+  it('shows the start and leaves the rest for the site', () => {
+    const shown = { whatif: 1, remember: 2, interview: 1 } as Record<string, number>;
     for (let d = 0; d < 21; d++) {
       const c = cardForDay(d, pools, URL)!;
-      if (c.kind === 'whatif' || c.kind === 'remember' || c.kind === 'interview') {
-        expect(c.bullets.length).toBe(3);
+      if (c.kind in shown) {
+        expect(c.bullets.length, c.kind).toBe(shown[c.kind]);
         expect(c.bulletsHeading.length).toBeGreaterThan(5);
+        expect(c.more).toMatch(/^\+ /);
         for (const b of c.bullets) expect(c.caption).toContain(`• ${b}`);
       } else expect(c.bullets).toEqual([]);
+    }
+    const r = cardForDay(2, pools, URL)!;
+    expect(r.kind).toBe('remember');
+    expect(r.more).toBe('+ 1 more point and a quiz in the lesson');
+    expect(r.caption).not.toContain(pools.remember.find((x) => x.path === r.path)!.takeaways[2]);
+  });
+  it('names the topic of every card from the lesson it links to', () => {
+    for (let d = 0; d < 14; d++) {
+      const c = cardForDay(d, pools, URL)!;
+      if (c.kind === 'term' || c.kind === 'remember') expect(c.track).toBe('start');
+      expect(c.topic.length).toBeGreaterThan(1);
     }
   });
   it('names the lesson in a term card footer when it is known', () => {
@@ -157,14 +173,15 @@ describe('cards from written interview answers', () => {
     };
     const first = pools.interview.map((q) => q.id);
     const cards = Array.from({ length: 70 }, (_, d) => cardForDay(d, withAnswer, URL)!).filter((c) => c.kind === 'interview');
-    const written = cards.filter((c) => c.bulletsHeading === 'The short answer');
+    const written = cards.filter((c) => c.more.includes('full answer'));
     expect(written.length).toBeGreaterThan(0);
     for (const c of written) {
-      expect(c.bullets).toEqual(['First written point here.', 'Second written point here.', 'Third written point here.']);
-      expect(c.caption).toContain('The full answer, with a diagram');
+      expect(c.bullets).toEqual(['First written point here.']);
+      expect(c.caption).toContain('The rest of the answer, with a diagram');
+      expect(c.caption).not.toContain('Second written point here.');
       expect(c.path).toContain(first[0]);
     }
-    expect(cards.some((c) => c.bulletsHeading === 'A strong answer covers')).toBe(true);
+    expect(cards.some((c) => c.more.includes('follow-ups'))).toBe(true);
   });
 });
 
@@ -184,11 +201,30 @@ describe('cards to write on', () => {
     const withMore: Pools = { ...pools, term: [{ id: 't', term: 'Token', short: 'A piece of text.', lesson: '/learn/start/x/', more: ['First point from the lesson.', 'Second point from the lesson.', 'Third.'] }] };
     const day = Array.from({ length: 7 }, (_, d) => d).find((d) => slotFor(d).kind === 'term')!;
     const c = cardForDay(day, withMore, URL)!;
-    expect(c.bullets).toEqual(['First point from the lesson.', 'Second point from the lesson.']);
+    expect(c.bullets).toEqual(['First point from the lesson.']);
+    expect(c.caption).not.toContain('Second point from the lesson.');
     expect(c.bulletsHeading).toBe('Worth knowing');
     expect(c.caption).toContain('• First point from the lesson.');
     const plain = cardForDay(day, pools, URL)!;
     expect(plain.bullets).toEqual([]);
     expect(plain.bulletsHeading).toBe('');
+  });
+});
+
+describe('no repeats over a year with pools the size of the real site', () => {
+  it('shows no item twice within 300 days', async () => {
+    const big: Pools = {
+      guess: mk(87, (i) => ({ slug: `x${i}`, title: `t${i}`, question: `Q${i}?`, options: ['a', 'b', 'c'], answer: 0, why: 'W.' })) as Pools['guess'],
+      whatif: mk(87, (i) => ({ slug: `x${i}`, title: `What if ${i}?`, blurb: 'B.', takeaways: ['One.', 'Two.', 'Three.'] })) as Pools['whatif'],
+      term: mk(600, (i) => ({ id: `t${i}`, term: `T${i}`, short: 'S.', lesson: `/learn/llm/l${i}/` })) as Pools['term'],
+      remember: mk(191, (i) => ({ path: `/learn/ml/r${i}/`, lesson: `L${i}`, takeaways: ['a.', 'b.', 'c.'] })) as Pools['remember'],
+      interview: mk(151, (i) => ({ id: `q${i}`, prompt: `P${i}?`, role: 'r', level: 'l', strong: ['s.'] })) as Pools['interview'],
+    };
+    const seen = new Set<string>();
+    for (let d = 0; d < 300; d++) {
+      const c = cardForDay(d, big, URL)!;
+      expect(seen.has(c.path), `day ${d}: ${c.path}`).toBe(false);
+      seen.add(c.path);
+    }
   });
 });

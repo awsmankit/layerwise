@@ -4,7 +4,7 @@ track: maths
 level: intermediate
 order: 9.5
 summary: How to estimate a model's setting from data by choosing the value that makes the observed data most likely. Worked on coin flips, with a curve that peaks at the answer.
-updated: 2026-11-18
+updated: 2026-11-27
 sources:
   - label: "Seeing Theory: Bayesian inference and maximum likelihood (Brown University)"
     url: https://seeing-theory.brown.edu/
@@ -47,6 +47,16 @@ Products of many probabilities become tiny, so software works with the logarithm
 ## Where it came from
 
 Carl Friedrich Gauss and Pierre-Simon Laplace used likelihood-style reasoning in the early 1800s. Ronald Fisher made it the central method of estimation in the 1910s and 1920s, and it became the default way to fit most statistical models.
+
+## MLE versus MAP
+
+**What is MAP, and how does it differ from MLE?** Maximum likelihood picks the setting that makes the data most probable. **Maximum a posteriori** (MAP) picks the setting that maximises the likelihood times a **prior**, a belief about the setting held before seeing the data. The prior pulls the answer towards settings you thought plausible, and its pull matters most when data is scarce. Taking logs, MAP minimises the negative log-likelihood plus a penalty from the prior. A Gaussian prior on the weights gives an L2 penalty, and a Laplace prior (sharply peaked at zero) gives an L1 penalty. See [Regularisation](../regularisation-and-penalties/) for what each penalty does.
+
+## What do MSE and MAE assume?
+
+**MSE versus MAE: what do they assume?** Each loss is maximum likelihood under an assumption about the noise. Squared error is the MLE if the noise is Gaussian, and it predicts the **mean**. Absolute error is the MLE if the noise is Laplace (heavier tails), and it predicts the **median**, the middle value, which is less pulled by outliers.
+
+**Example.** For the data 1, 2, 3, 100 the mean is 26.5 and the median is 2.5. The one outlier drags the squared-error answer far from where most of the data sits, while the absolute-error answer barely notices it. If you expect occasional wild values, absolute error is the safer choice.
 
 <Deep title="The general recipe">
 

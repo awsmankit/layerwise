@@ -469,7 +469,7 @@ const baseExtras: Record<string, Extra> = {
     prereq: ['foundations/tokens-and-embeddings'],
     play: [CRUNCH, { label: 'Open the cost calculator', href: '/tools/cost/' }],
     quiz: [
-      { q: 'Why is output usually pricier per token than input?', options: ['Marketing', 'Generating a token takes more compute than reading one', 'There are fewer output tokens', 'Regulation'], answer: 1, why: 'Reading the prompt is parallel. Writing is one step at a time and memory-bound.' },
+      { q: 'Why is output usually pricier per token than input?', options: ['Marketing', 'Output is written one token at a time and is limited by memory speed, while input is read in parallel', 'There are fewer output tokens', 'Regulation'], answer: 1, why: 'Reading the prompt is parallel. Writing is one step at a time and memory-bound.' },
       { q: '3,000 input and 400 output tokens at $3 and $15 per million costs, per request, about…', options: ['$0.015', '$0.15', '$0.0015', '$1.50'], answer: 0, why: '$0.009 for input plus $0.006 for output.' },
       { q: 'Which number matters most?', options: ['Cost per request', 'Cost per successful task', 'Cost per token', 'Cost per word'], answer: 1, why: 'A task that needs several attempts costs several times the per-request price.' },
       { q: 'In the lesson’s example the prompt is 88 per cent of the tokens. Roughly what share of the cost is it?', options: ['About 88 per cent, because cost follows tokens', 'About 60 per cent, because each output token costs five times as much', 'About 12 per cent', 'About 40 per cent'], answer: 1, why: 'At the example prices an output token costs five times an input token, so the prompt is a smaller share of the cost than of the tokens.' },

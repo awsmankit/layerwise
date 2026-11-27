@@ -4,7 +4,7 @@ track: serving
 level: advanced
 order: 3
 summary: Storing weights in fewer bits to save memory and speed up generation, and how to check what it costs you in quality.
-updated: 2026-10-26
+updated: 2026-11-27
 sources:
   - label: "GPTQ: Accurate Post-Training Quantization for Generative Pre-trained Transformers (Frantar et al., 2022)"
     url: https://arxiv.org/abs/2210.17323
@@ -44,6 +44,9 @@ Real files are slightly larger because of scales and other metadata. Change the 
 ## How it is done
 
 **Post-training quantization (PTQ)** converts an already-trained model. Methods such as GPTQ and AWQ are smarter about which weights matter most, and so lose less accuracy at 4 bits. A small calibration set of representative inputs is typically used.
+
+- **GPTQ** quantises the weights of a layer one column at a time. After rounding each column, it adjusts the columns not yet done so that they cancel out the error just introduced, using a small calibration set to know which adjustments keep the layer's output close to the original.
+- **AWQ** observes that a small share of weight channels matter far more than the rest, and finds them by looking at how large the activations that flow through them are. It scales those channels up before quantising, which protects them from rounding error, and scales the matching inputs down to compensate.
 
 **Quantization-aware training (QAT)** simulates low precision during training so the model learns to be robust to it. It is more work and generally gives better quality at very low bit widths.
 

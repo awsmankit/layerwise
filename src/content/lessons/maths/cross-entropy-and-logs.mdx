@@ -4,7 +4,7 @@ track: maths
 level: basic
 order: 1.6
 summary: Why models are scored with cross-entropy, what the logarithm does in that score, and how to read the numbers. Builds on softmax, with worked examples and no calculus.
-updated: 2026-11-18
+updated: 2026-11-27
 sources:
   - label: "CS231n: Linear classification and the softmax loss (Stanford)"
     url: https://cs231n.github.io/linear-classify/
@@ -71,6 +71,17 @@ You will sometimes see the loss in **bits** instead of nats. Use the base-2 loga
 ## Where the loss meets the softmax
 
 The softmax from the last lesson produces $$p_{\text{correct}}$$. Cross-entropy takes that probability and scores it. Together they are the usual training setup for a classifier and for a language model's next-word prediction. There is one useful fact about the pair: when you work out how the loss changes with respect to each raw score, the answer is simply the model's predicted probability minus the true answer (1 for the right option, 0 for the others). That simple form is why the pair trains well, and it's the first step the training loop in [How a model learns](../../foundations/how-models-learn/) relies on.
+
+## Why cross-entropy and not squared error for classification?
+
+**Why not just use squared error, as in regression?** Take a model that outputs $$p = \sigma(z)$$ with a sigmoid, where $$z$$ is the raw score. With cross-entropy the gradient of the loss with respect to $$z$$ is $$p - y$$. With squared error $$(p - y)^2$$ it is $$2(p - y)\,\sigma'(z)$$, where $$\sigma'(z) = p(1-p)$$ is the slope of the sigmoid. That extra factor is close to 0 when the sigmoid is saturated, which is exactly when the model is confidently wrong. So squared error learns slowly just when it most needs to learn, while cross-entropy's gradient is largest there.
+
+**Example (true label $$y = 1$$, score $$z = -5$$).** The model gives $$p = \sigma(-5) \approx 0.0067$$, confidently wrong.
+
+- Cross-entropy gradient: $$p - y \approx -0.993$$.
+- Squared-error gradient: $$2 \times (-0.993) \times 0.0067 \times 0.9933 \approx -0.0132$$.
+
+The squared-error signal is about 75 times weaker, so the model barely moves. A second reason: for logistic regression, squared error through a sigmoid is not convex in the weights, so it can have flat regions and poor stopping points, while cross-entropy is convex, so gradient descent has a single valley to find.
 
 <Deep title="The same idea in Python">
 

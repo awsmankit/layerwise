@@ -4,7 +4,7 @@ track: cost
 level: basic
 order: 1
 summary: How generative AI is priced, where the hidden multipliers are, and a calculator you can change.
-updated: 2026-10-28
+updated: 2026-11-27
 sources:
   - label: "Amazon Bedrock pricing"
     url: https://aws.amazon.com/bedrock/pricing/
@@ -15,7 +15,7 @@ sources:
 import CostCalculator from '../../../components/viz/CostCalculator.tsx';
 import Callout from '../../../components/ui/Callout.astro';
 
-Hosted models are priced per token, with separate rates for **input** (what you send) and **output** (what the model writes). Output is usually several times more expensive per token than input, because generating a token costs more compute than reading one.
+Hosted models are priced per token, with separate rates for **input** (what you send) and **output** (what the model writes). Output is usually several times more expensive per token than input, because of how the two jobs run on the hardware. Your prompt is read in one parallel pass (called prefill), which keeps the GPU busy. The answer is written one token at a time (called decode), and every step has to read the model weights and the KV cache from memory. The arithmetic per token is similar, but the GPU spends output time waiting on memory, so it serves fewer output tokens per second. See [why decode is limited by memory bandwidth](../../serving/kv-cache-and-memory/).
 
 ## A worked example
 

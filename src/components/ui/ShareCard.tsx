@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { cardForDay, dayIndexFromIso, dayIndexOf, fitBullets, fitText, isoOf, type Card, type CardKind, type Pools } from '../../lib/daily-card';
 import { withBase } from '../../lib/url';
+import { iconShapes } from '../../lib/track-icons';
 
 const ACCENT: Record<CardKind, string> = { guess: '#FFC233', term: '#2ED3C0', whatif: '#FF8FB8', remember: '#C5E84A', interview: '#98A0F8' };
 const NAVY = '#120f3d';
@@ -18,6 +19,27 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.arcTo(x, y + h, x, y, r);
   ctx.arcTo(x, y, x + w, y, r);
   ctx.closePath();
+}
+
+/** Draw a track's hairline icon (a 64 by 64 drawing) at x, y, scaled to `size` pixels. */
+function drawIcon(ctx: CanvasRenderingContext2D, name: string, x: number, y: number, size: number, color: string, lineWidth: number) {
+  const k = size / 64;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(k, k);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lineWidth / k;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  for (const s of iconShapes(name)) {
+    if (s.t === 'p') ctx.stroke(new Path2D(s.d));
+    else {
+      ctx.beginPath();
+      ctx.arc(s.cx, s.cy, s.r, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
 }
 
 /** Draw one card. Pure drawing: the same card and size always give the same picture. */
@@ -44,6 +66,10 @@ function draw(ctx: CanvasRenderingContext2D, card: Card, format: Format, siteHos
   ctx.beginPath();
   ctx.arc(60, H - 60, 200, 0, Math.PI * 2);
   ctx.fill();
+  // the topic's picture, large and faint, in the lower right
+  const wm = format === '4x5' ? 420 : 340;
+  ctx.globalAlpha = 0.13;
+  drawIcon(ctx, card.track, W - wm - 30, H - wm - 200, wm, accent, 7);
   ctx.globalAlpha = 1;
 
   // brand
@@ -75,8 +101,24 @@ function draw(ctx: CanvasRenderingContext2D, card: Card, format: Format, siteHos
   ctx.fillStyle = NAVY;
   ctx.fillText(label, W - M - lw + 24, 126);
 
+  // topic: the track's icon on a plate, and its name
+  // the square card is short, so its topic row is smaller
+  const sq = format === '1x1';
+  const plate = sq ? 52 : 76;
+  const py = sq ? 170 : 178;
+  ctx.fillStyle = 'rgba(255,255,255,0.08)';
+  roundRect(ctx, M, py, plate, plate, sq ? 14 : 20);
+  ctx.fill();
+  ctx.strokeStyle = accent;
+  ctx.lineWidth = 3;
+  ctx.stroke();
+  drawIcon(ctx, card.track, M + plate * 0.13, py + plate * 0.13, plate * 0.74, accent, 3.2);
+  ctx.fillStyle = '#d9d5ff';
+  ctx.font = `700 ${sq ? 26 : 30}px ${DISPLAY}`;
+  ctx.fillText(card.topic.toUpperCase(), M + plate + 20, py + plate / 2 + (sq ? 9 : 11));
+
   // main text area
-  const top = 230;
+  const top = py + plate + (sq ? 26 : 50);
   const bottom = H - 230;
   const hasOptions = card.options.length > 0;
   const hasBody = card.body.length > 0;
@@ -95,7 +137,7 @@ function draw(ctx: CanvasRenderingContext2D, card: Card, format: Format, siteHos
 
   if (hasBody) {
     const bodyFont = `400 {s}px ${BODY}`;
-    const b = fitText(card.body, W - 2 * M, hasBullets ? (bottom - y) * 0.4 : bottom - y, { max: 44, min: 28, step: 2, lineHeight: 1.35 }, measure(bodyFont));
+    const b = fitText(card.body, W - 2 * M, hasBullets ? (bottom - y) * 0.4 : bottom - y - (card.more ? 56 : 0), { max: 44, min: 28, step: 2, lineHeight: 1.35 }, measure(bodyFont));
     ctx.fillStyle = '#e7e4ff';
     ctx.font = bodyFont.replace('{s}', String(b.size));
     y += b.size;
@@ -114,7 +156,7 @@ function draw(ctx: CanvasRenderingContext2D, card: Card, format: Format, siteHos
       y += 52;
     }
     const bulletFont = `500 {s}px ${BODY}`;
-    const bl = fitBullets(card.bullets, W - 2 * M, bottom - y, { max: 40, min: 24, step: 2, lineHeight: 1.32, indent: 44 }, measure(bulletFont));
+    const bl = fitBullets(card.bullets, W - 2 * M, bottom - y - (card.more ? 56 : 0), { max: 40, min: 24, step: 2, lineHeight: 1.32, indent: 44 }, measure(bulletFont));
     ctx.font = bulletFont.replace('{s}', String(bl.size));
     for (const block of bl.blocks) {
       ctx.fillStyle = accent;
@@ -128,6 +170,15 @@ function draw(ctx: CanvasRenderingContext2D, card: Card, format: Format, siteHos
       }
       y += bl.gap;
     }
+  }
+
+  // what else is waiting on the site
+  if (card.more && !hasOptions) {
+    ctx.fillStyle = accent;
+    const moreFont = `700 {s}px ${DISPLAY}`;
+    const mf = fitText(card.more, W - 2 * M, 44, { max: 32, min: 22, step: 2, lineHeight: 1.2 }, measure(moreFont));
+    ctx.font = moreFont.replace('{s}', String(mf.size));
+    ctx.fillText(mf.lines[0] ?? '', M, Math.min(y + 4, bottom) + mf.size);
   }
 
   if (hasOptions) {

@@ -4,7 +4,7 @@ track: rag-agents
 level: intermediate
 order: 4.65
 summary: "Six ways to build with a model, compared on who picks the next step, where state lives, cost, pausing for a person and testing. What an agent harness is (and the other meaning of the word), when you need a framework, an example priced three ways, and a short chooser."
-updated: 2026-11-06
+updated: 2026-11-27
 sources:
   - label: "Building effective agents (Anthropic, 19 December 2024)"
     url: https://www.anthropic.com/research/building-effective-agents
@@ -20,6 +20,10 @@ sources:
     url: https://docs.langchain.com/oss/python/langgraph/interrupts
   - label: "Runtimes, frameworks, and harnesses (LangChain documentation)"
     url: https://docs.langchain.com/oss/javascript/concepts/products
+  - label: "ReAct: Synergizing Reasoning and Acting in Language Models (Yao et al., 2022)"
+    url: https://arxiv.org/abs/2210.03629
+  - label: "Reflexion: Language Agents with Verbal Reinforcement Learning (Shinn et al., 2023)"
+    url: https://arxiv.org/abs/2303.11366
   - label: "Running agents (OpenAI Agents SDK documentation)"
     url: https://openai.github.io/openai-agents-python/running_agents/
 ---
@@ -109,6 +113,22 @@ A framework is a library of parts. A harness is a whole working scaffold, and a 
 Anthropic's advice about frameworks is cautious: they "often create extra layers of abstraction that can obscure the underlying prompts", and it suggests that "developers start by using LLM APIs directly". The LangGraph documentation is similar in spirit about the other direction: "Use LangGraph when you need explicit control over state and control flow", and for a higher-level loop "use Deep Agents or LangChain agents" (as of 6 November 2026).
 
 **Orchestration** is the code that decides what runs when. A **durable execution** runtime keeps going through failures and pauses: LangChain's documentation calls it a runtime capability, where "agents persist through failures and can run for extended periods, resuming from where they left off". LangGraph's `interrupt()` is the example: the graph "waits indefinitely until you resume execution", and a durable checkpointer is recommended for production. The OpenAI Agents SDK documentation points to Temporal and Dapr for runs that "may span long waits, retries, or process restarts". A **checkpoint** is one saved copy of a run's state, and a **state machine** is a system that is always in one named state and moves along allowed transitions.
+
+## Inside the loop: ReAct, plan-and-execute and reflection
+
+**ReAct, plan-and-execute, reflection: what is the difference?** The agent loop above is the base, and these are three ways of arranging what the model does inside it.
+
+- **ReAct** (Yao et al., 2022) is the loop exactly as described: each turn the model writes a short reasoning step, then an action (a tool call), then your code returns the observation, and the cycle repeats. It decides one step at a time, so it adapts after every result.
+- **Plan-and-execute** writes the whole plan first (for example "1. find the order, 2. check the policy, 3. draft the reply"), then runs the steps, and re-plans only when a step fails. Executing steps does not need the full reasoning each time, so a long task can use fewer or cheaper model calls. The weakness is brittleness: if the plan is wrong, or the world changes after step 1, the later steps are wasted until a failure forces a re-plan.
+- **Reflection** adds a self-critique step. After an output or a failed attempt, the model (or a second call) reviews it against the goal, writes what went wrong, and tries again with that note in context. Reflexion (Shinn et al., 2023) is the best-known version. It costs extra calls, and it helps most when there is a signal to critique against, such as a failing test or a checklist.
+
+| Pattern | Fits when | Watch out for |
+| --- | --- | --- |
+| ReAct | The next step depends on what the last tool returned, such as searching or debugging | History grows each turn; can wander without a turn cap |
+| Plan-and-execute | The task is long, its steps are fairly predictable, and you want a reviewable plan up front | A wrong plan; needs a clear re-plan rule |
+| Reflection | Quality matters more than speed and you can check the result (tests, rules, a rubric) | Extra cost; self-critique with no outside signal can approve a wrong answer |
+
+They combine: many systems plan first, run each step as a small ReAct loop, and reflect on the final result. In the lesson's terms, they are all ways of letting the model steer, so the same guards apply: caps, permissions and an outcome check.
 
 ## How each style fails
 

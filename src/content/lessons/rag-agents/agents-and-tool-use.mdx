@@ -4,7 +4,7 @@ track: rag-agents
 level: intermediate
 order: 4
 summary: The loop that turns a model into a system that acts, the protocols around it, and the guardrails it needs.
-updated: 2026-10-28
+updated: 2026-11-27
 sources:
   - label: "Building effective agents (Anthropic)"
     url: https://www.anthropic.com/research/building-effective-agents
@@ -51,6 +51,10 @@ tools = [{
     },
 }]
 ```
+
+**How does a model know when to call a tool?** The model is never given a special tool port. The tool names, descriptions and input schemas are written into the prompt as text, by the provider's chat template (the fixed format that turns a conversation into the tokens the model reads). The model was also post-trained on many example conversations in which a tool call was the right next move, so it learned to emit a structured call, often a JSON block or special marker tokens, when a tool fits the request, and to answer in plain text when none does. The exact format differs between providers and is handled by their API, so rely on the documented interface, not on a guessed token format.
+
+Then the boundary from the loop applies: the model only produces the request. Your application runs the tool and sends the result back as a new message. Because the model chooses from text alone, two practical rules follow. Write descriptions that say what the tool does and when to use it, and keep the set small and distinct, since two tools with overlapping descriptions look the same to a reader who cannot see the code. See [Designing tools for agents](../designing-tools-for-agents/).
 
 The **Model Context Protocol** (MCP) standardises how tools and data sources are described and exposed, so a tool written once can be used by different applications. It does not change the loop. Your application is still responsible for what a model is allowed to do.
 
