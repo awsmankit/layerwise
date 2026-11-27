@@ -36,6 +36,23 @@ export const repoUrl = 'https://github.com/awsmankit/layerwise';
 
 export const releases: Release[] = [
   {
+    version: '2.18.0',
+    date: '2026-11-27',
+    title: 'Quick interview questions, answered in plain words',
+    summary: 'Every interview topic now opens with short, direct questions such as "What is a KV cache?" or "What is RAG?", answered in two to four plain sentences with an example. The longer scenario and system design questions follow, so a reader goes from the idea to the real case.',
+    highlights: [
+      '147 quick questions across the 12 interview topics, each with a plain answer, a worked example, the follow-up an interviewer often asks next, and a link to the lesson that explains it.',
+      'Where it fits, a quick question links to a full scenario or system design question to try next.',
+      'Quick questions are also in search, so a search for a term lands on the answer.',
+      'The examples were checked against their numbers, and 28 answers were corrected or clarified in review, including a wrong claim about RAG failures and an unclear canary example.',
+    ],
+    tryIt: [
+      { label: 'How language models work', href: '/interview/c/llm-basics/' },
+      { label: 'Retrieval, embeddings and search', href: '/interview/c/rag-search/' },
+    ],
+    stats: { lessons: 191, topics: 18, labs: 24, glossary: 880 },
+  },
+  {
     version: '2.17.0',
     date: '2026-11-27',
     title: 'The follow-up questions interviewers ask, and Daily cards that send you to the lesson',

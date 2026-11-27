@@ -7,6 +7,7 @@ import type { SearchItem } from '../lib/search';
 import { questions, kinds } from '../data/interview';
 import { answers } from '../data/interview/answers';
 import { categories, categoryById, categoryOf } from '../data/interview/categories';
+import { quickQuestions } from '../data/interview/quick';
 import { searchPages } from '../data/search-pages';
 import { labs } from '../data/labs';
 import { libraries, categoryLabels } from '../data/libraries';
@@ -32,6 +33,7 @@ export const GET: APIRoute = async () => {
     ...cases.map((c) => ({ t: c.title, u: u('/cases/'), k: 'Case study', s: `${c.company}. ${c.learn ?? 'Link only.'}` })),
     ...pulse.map((p) => ({ t: p.data.title, u: u(`/pulse/${p.id}/`), k: 'News', s: p.data.tags.join(', ') })),
     ...categories.map((c) => ({ t: c.title, u: u(`/interview/c/${c.id}/`), k: 'Interview', s: `Interview questions by topic. ${c.promise}` })),
+    ...quickQuestions.map((q) => ({ t: q.q, u: u(`/interview/c/${q.category}/#${q.id}`), k: 'Interview', s: `Quick question. ${q.answer}` })),
     ...questions.map((q) => {
       const a = answers[q.id];
       const cat = categoryById(categoryOf(q))!.title;

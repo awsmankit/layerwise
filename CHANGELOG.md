@@ -8,6 +8,17 @@ Versions follow [semantic versioning](https://semver.org/), read for a learning 
 - **Minor**: new lessons, labs, tools or features.
 - **Patch**: fixes and small corrections (wording, links, layout, accessibility).
 
+## [2.18.0] - 2026-11-27: Quick interview questions, answered in plain words
+
+Every interview topic now opens with short, direct questions such as "What is a KV cache?" or "What is RAG?", answered in two to four plain sentences with an example. The longer scenario and system design questions follow, so a reader goes from the idea to the real case.
+
+- 147 quick questions across the 12 interview topics, each with a plain answer, a worked example, the follow-up an interviewer often asks next, and a link to the lesson that explains it.
+- Where it fits, a quick question links to a full scenario or system design question to try next.
+- Quick questions are also in search, so a search for a term lands on the answer.
+- The examples were checked against their numbers, and 28 answers were corrected or clarified in review, including a wrong claim about RAG failures and an unclear canary example.
+
+**At this release:** 191 lessons in 18 topics, 24 practice labs, 880 glossary terms.
+
 ## [2.17.0] - 2026-11-27: The follow-up questions interviewers ask, and Daily cards that send you to the lesson
 
 An audit of 101 common interview questions found 29 where a lesson answered the question but not the "why?" that comes next, or did not answer it at all. All 29 are now answered inside the existing lessons. Daily cards show a topic picture, never repeat soon, and show the start of a lesson rather than all of it.
@@ -323,6 +334,7 @@ Animated AI engineering lessons, games and tools, covering AWS, Azure and Google
 
 **At this release:** 44 lessons in 12 topics, 0 practice labs, 79 glossary terms.
 
+[2.18.0]: https://github.com/awsmankit/layerwise/compare/v2.17.0...v2.18.0
 [2.17.0]: https://github.com/awsmankit/layerwise/compare/v2.16.0...v2.17.0
 [2.16.0]: https://github.com/awsmankit/layerwise/compare/v2.15.0...v2.16.0
 [2.15.0]: https://github.com/awsmankit/layerwise/compare/v2.14.0...v2.15.0

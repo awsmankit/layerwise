@@ -4,6 +4,8 @@ import TrackIcon from '../../../components/ui/TrackIcon.astro';
 import { questions, roles, ilevels, kinds, type Question } from '../../../data/interview';
 import { answers } from '../../../data/interview/answers';
 import { categories, groupByCategory, type CategorySet } from '../../../data/interview/categories';
+import { quickFor } from '../../../data/interview/quick';
+import { questionById } from '../../../data/interview';
 import { swatch } from '../../../lib/palette';
 import { cardStyle } from '../../../lib/color';
 import { withBase } from '../../../lib/url';
@@ -16,11 +18,12 @@ const { category } = set;
 const blocks = [
   { level: 'junior' as const, title: 'Fundamentals', note: 'Start here. Junior-level questions.' },
   { level: 'mid' as const, title: 'Going deeper', note: 'Mid-level questions.' },
-  { level: 'senior' as const, title: 'Advanced', note: 'Senior-level questions, often a whole design or a judgement call.' },
+  { level: 'senior' as const, title: 'Advanced: scenarios and designs', note: 'Senior-level questions, often a whole design, a real-world scenario or a judgement call.' },
 ]
   .map((b) => ({ ...b, items: set.questions.filter((q) => q.level === b.level) }))
   .filter((b) => b.items.length > 0);
 const others = categories.filter((c) => c.id !== category.id);
+const quick = quickFor(category.id);
 const roleList = (q: Question) => q.roles.slice(0, 3).map((r) => roles[r]);
 ---
 
@@ -31,8 +34,50 @@ const roleList = (q: Question) => q.roles.slice(0, 3).map((r) => roles[r]);
       <span class="iv-plate"><TrackIcon name={category.icon} size={44} /></span>
       <h1>{category.title}</h1>
       <p>{category.intro}</p>
-      <p class="iv-hero-note">{set.questions.length} questions, from fundamentals to advanced.</p>
+      <p class="iv-hero-note">{quick.length > 0 && `${quick.length} quick questions, then `}{set.questions.length} questions in depth, from fundamentals to real-world scenarios.</p>
     </header>
+
+    {
+      quick.length > 0 && (
+        <section class="iv-level-block iv-quick" aria-labelledby="lv-quick">
+          <h2 id="lv-quick">Quick questions</h2>
+          <p>The short questions asked in almost every round, answered in plain words. Jump to one, or read them in order.</p>
+          <ol class="iv-quick-toc">
+            {quick.map((q) => (
+              <li>
+                <a href={`#${q.id}`}>{q.q}</a>
+              </li>
+            ))}
+          </ol>
+          <ul class="iv-quick-list">
+            {quick.map((q) => {
+              const deeper = q.scenario ? questionById(q.scenario) : undefined;
+              return (
+                <li id={q.id}>
+                  <article class="iv-qcard iv-quick-item">
+                    <h3>{q.q}</h3>
+                    <p class="iv-qshort"><b>The answer</b>{q.answer}</p>
+                    <p class="iv-quick-ex"><b>Example</b>{q.example}</p>
+                    {q.next && (
+                      <p class="iv-quick-next">
+                        <b>They often ask next: {q.next.q}</b>
+                        {q.next.a}
+                      </p>
+                    )}
+                    <p class="iv-quick-links">
+                      <a href={withBase(`/learn/${q.lesson}/`)}>Read the lesson<span aria-hidden="true"> →</span></a>
+                      {deeper && (
+                        <a href={withBase(`/interview/q/${deeper.id}/`)}>Try the scenario<span aria-hidden="true"> →</span></a>
+                      )}
+                    </p>
+                  </article>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )
+    }
 
     {
       blocks.map((b) => (

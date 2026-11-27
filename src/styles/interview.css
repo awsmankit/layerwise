@@ -955,3 +955,50 @@
     display: none !important;
   }
 }
+
+/* Quick questions: short questions answered in the open at the top of a category page */
+.iv-quick-toc {
+  margin: 0.9rem 0 0;
+  padding-left: 1.4rem;
+  columns: 2 22rem;
+  column-gap: 2rem;
+  font-family: var(--font-display);
+  line-height: 1.4;
+}
+.iv-quick-toc li {
+  break-inside: avoid;
+  margin-bottom: 0.35rem;
+}
+.iv-quick-list {
+  list-style: none;
+  margin: 1.2rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+}
+.iv-quick-list > li {
+  scroll-margin-top: 5rem;
+}
+.iv-quick-ex,
+.iv-quick-next {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+.iv-quick-ex b,
+.iv-quick-next b {
+  display: block;
+  margin-bottom: 0.15rem;
+  font-family: var(--font-display);
+  color: var(--ink);
+}
+.iv-quick-links {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.2rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+}
