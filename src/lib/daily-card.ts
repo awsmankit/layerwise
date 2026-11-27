@@ -7,7 +7,8 @@
 export type CardKind = 'guess' | 'term' | 'whatif' | 'remember' | 'interview';
 
 export type GuessItem = { slug: string; title: string; question: string; options: [string, string, string]; answer: 0 | 1 | 2; why: string };
-export type TermItem = { id: string; term: string; short: string; lesson: string; lessonTitle?: string };
+/** `more` is up to two points from the lesson the term links to, so the card teaches more than the definition. */
+export type TermItem = { id: string; term: string; short: string; lesson: string; lessonTitle?: string; more?: string[] };
 export type WhatIfItem = { slug: string; title: string; blurb: string; takeaways: string[] };
 export type RememberItem = { path: string; lesson: string; takeaways: string[] };
 /** `answer` is present when the question has a written answer: its short answer and up to three points from it. */
@@ -43,6 +44,8 @@ export type Card = {
   path: string;
   /** Post text ready to paste. */
   caption: string;
+  /** Sentence starters the poster can finish in their own words (shown beside the caption, not on the picture). */
+  angle: string[];
   /** Text for a first comment (guess cards: the answer). Empty for other kinds. */
   firstComment: string;
   /** Description of the picture for the alt-text field. */
@@ -129,6 +132,24 @@ const TAGS: Record<CardKind, string> = {
   interview: '#AI #AIInterview #MachineLearning',
 };
 
+/** The closing question of each caption, to invite replies. */
+const ASK: Record<CardKind, string> = {
+  guess: 'What would you pick? Tell me in the comments.',
+  term: 'Had you met this one before? Tell me where.',
+  whatif: 'What do you think happens? Guess before you try it.',
+  remember: 'Which of these would you add?',
+  interview: 'How would you answer this? Share your take below.',
+};
+
+/** Sentence starters for the poster's own words. `___` marks the blank to fill in. */
+export const ANGLE: Record<CardKind, string[]> = {
+  guess: ['I guessed ___ at first, because ___.', 'The part that surprised me was ___.', 'If you build with AI, this matters because ___.'],
+  term: ['Where I first met this term: ___.', 'For a friend new to AI, in one sentence: ___.', 'A mix-up I see people make with this: ___.'],
+  whatif: ['I expected ___, and what happened was ___.', 'The number that surprised me was ___.', 'Where this shows up in real products: ___.'],
+  remember: ['The one point I will use this week: ___.', 'What I wish I had known before learning this: ___.', 'A question this raised for me: ___.'],
+  interview: ['In my own words, I would answer: ___.', 'A follow-up an interviewer might ask: ___.', 'A mistake I made on this topic: ___.'],
+};
+
 const LETTERS = ['A', 'B', 'C'];
 
 /** Item number n of a pool, wrapping round and also working for days before the start date. */
@@ -139,7 +160,7 @@ export function cardForDay(dayIndex: number, pools: Pools, siteUrl: string): Car
   const { kind, occurrence } = slotFor(dayIndex);
   const url = (path: string) => `${siteUrl}${path}`;
   const iso = isoOf(dayIndex);
-  const base = { dayIndex, kind, label: KIND_LABEL[kind] };
+  const base = { dayIndex, kind, label: KIND_LABEL[kind], angle: ANGLE[kind] };
 
   if (kind === 'guess') {
     const pool = shuffled(pools.guess, (g) => g.slug);
@@ -156,7 +177,7 @@ export function cardForDay(dayIndex: number, pools: Pools, siteUrl: string): Car
       options,
       footer: 'Answer in the first comment. Try it on Layerwise.',
       path,
-      caption: `Guess first 👇\n\n${g.question}\n\n${options.join('\n')}\n\nAnswer in the first comment. Then flip the switch and see it for yourself, with the numbers worked out: ${url(path)}\n\n${TAGS.guess}`,
+      caption: `Guess first 👇\n\n${g.question}\n\n${options.join('\n')}\n\nAnswer in the first comment. Then flip the switch and see it for yourself, with the numbers worked out: ${url(path)}\n\n${ASK.guess}\n\n${TAGS.guess}`,
       firstComment: `Answer: ${LETTERS[g.answer]}) ${g.options[g.answer]}\n\n${g.why}\n\nTry it: ${url(path)}`,
       alt: `A card titled Guess first. The question: ${g.question} Options: ${g.options.map((o, i) => `${LETTERS[i]}, ${o}`).join('. ')}.`,
     };
@@ -165,18 +186,19 @@ export function cardForDay(dayIndex: number, pools: Pools, siteUrl: string): Car
     const pool = shuffled(pools.term, (t) => t.id);
     if (!pool.length) return null;
     const t = at(pool, occurrence);
+    const more = (t.more ?? []).slice(0, 2).map((x) => clip(x, 140));
     return {
       ...base,
       title: t.term,
       body: clip(t.short, 230),
-      bullets: [],
-      bulletsHeading: '',
+      bullets: more,
+      bulletsHeading: more.length ? 'Worth knowing' : '',
       options: [],
       footer: t.lessonTitle ? `Learn more: ${clip(t.lessonTitle, 60)}` : 'AI terms in plain words',
       path: t.lesson,
-      caption: `AI term of the day: ${t.term}\n\n${t.short}\n\nLearn more, with a lesson and a quiz: ${url(t.lesson)}\n\n${TAGS.term}`,
+      caption: `AI term of the day: ${t.term}\n\n${t.short}${more.length ? `\n\nWorth knowing:\n${more.map((b) => `• ${b}`).join('\n')}` : ''}\n\nLearn more, with a lesson and a quiz: ${url(t.lesson)}\n\n${ASK.term}\n\n${TAGS.term}`,
       firstComment: '',
-      alt: `A card titled Term of the day. ${t.term}: ${t.short}`,
+      alt: `A card titled Term of the day. ${t.term}: ${t.short}${more.length ? ` Worth knowing: ${more.join(' ')}` : ''}`,
     };
   }
   if (kind === 'whatif') {
@@ -194,7 +216,7 @@ export function cardForDay(dayIndex: number, pools: Pools, siteUrl: string): Car
       options: [],
       footer: 'Interactive: guess first, then flip the switch',
       path,
-      caption: `${w.title}\n\n${w.blurb}\n\n${bullets.map((b) => `• ${b}`).join('\n')}\n\nTry it, it asks you to guess first: ${url(path)}\n\n${TAGS.whatif}`,
+      caption: `${w.title}\n\n${w.blurb}\n\n${bullets.map((b) => `• ${b}`).join('\n')}\n\nTry it, it asks you to guess first: ${url(path)}\n\n${ASK.whatif}\n\n${TAGS.whatif}`,
       firstComment: '',
       alt: `A card titled What if. ${w.title} ${w.takeaways.slice(0, 3).join(' ')}`,
     };
@@ -213,7 +235,7 @@ export function cardForDay(dayIndex: number, pools: Pools, siteUrl: string): Car
       options: [],
       footer: 'From a Layerwise lesson, with a quiz',
       path: r.path,
-      caption: `${r.lesson}: the short version\n\n${bullets.map((b) => `• ${b}`).join('\n')}\n\nThe whole lesson, with a quiz: ${url(r.path)}\n\n${TAGS.remember}`,
+      caption: `${r.lesson}: the short version\n\n${bullets.map((b) => `• ${b}`).join('\n')}\n\nThe whole lesson, with a quiz: ${url(r.path)}\n\n${ASK.remember}\n\n${TAGS.remember}`,
       firstComment: '',
       alt: `A card titled Remember this. ${r.lesson}. ${r.takeaways.slice(0, 3).join(' ')}`,
     };
@@ -235,7 +257,7 @@ export function cardForDay(dayIndex: number, pools: Pools, siteUrl: string): Car
     options: [],
     footer: `${q.role}, ${q.level}`,
     path,
-    caption: `Interview question (${q.role}, ${q.level}):\n\n${q.prompt}\n\n${heading}:\n${bullets.map((b) => `• ${b}`).join('\n')}\n\n${written ? 'The full answer, with a diagram and a worked example' : 'The full list of points, the follow-ups and the red flags'}: ${url(path)}\n\n${TAGS.interview}`,
+    caption: `Interview question (${q.role}, ${q.level}):\n\n${q.prompt}\n\n${heading}:\n${bullets.map((b) => `• ${b}`).join('\n')}\n\n${written ? 'The full answer, with a diagram and a worked example' : 'The full list of points, the follow-ups and the red flags'}: ${url(path)}\n\n${ASK.interview}\n\n${TAGS.interview}`,
     firstComment: '',
     alt: `A card titled Interview question for a ${q.role}. ${q.prompt} ${heading}: ${bullets.join(' ')}`,
   };

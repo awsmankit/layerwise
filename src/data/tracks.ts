@@ -18,6 +18,13 @@ export const tracks = [
     blurb: 'Short lessons in simple words for anyone new to AI, including school students: what AI is, how a chatbot answers you, and how to use it safely.',
   },
   {
+    id: 'skills',
+    ...pair('mint'),
+    hue: 'mint',
+    title: 'Skills and first projects',
+    blurb: 'Python, notebooks and a first model you build yourself. No experience needed.',
+  },
+  {
     id: 'ml',
     ...pair('slate'),
     hue: 'slate',
@@ -25,11 +32,11 @@ export const tracks = [
     blurb: 'Regression, trees, boosting, clean data and honest statistics, plus recommenders, forecasting and anomaly detection: the methods behind most real-world prediction.',
   },
   {
-    id: 'skills',
-    ...pair('mint'),
-    hue: 'mint',
-    title: 'Skills and first projects',
-    blurb: 'Python, notebooks and a first model you build yourself. No experience needed.',
+    id: 'maths',
+    ...pair('olive'),
+    hue: 'olive',
+    title: 'Maths for ML',
+    blurb: 'The maths behind AI, one picture at a time: probability, calculus, linear algebra, statistics and information. Every idea has a widget to move.',
   },
   {
     id: 'deep-learning',
@@ -44,13 +51,6 @@ export const tracks = [
     hue: 'turquoise',
     title: 'Foundations',
     blurb: 'From classical machine learning to transformers: what changed and why it matters.',
-  },
-  {
-    id: 'maths',
-    ...pair('olive'),
-    hue: 'olive',
-    title: 'Maths for ML',
-    blurb: 'The maths behind AI, one picture at a time: probability, calculus, linear algebra, statistics and information. Every idea has a widget to move.',
   },
   {
     id: 'llm',
@@ -102,18 +102,18 @@ export const tracks = [
     blurb: 'Run models on your own laptop or GPUs: the memory maths, the serving engines, and when it beats an API.',
   },
   {
-    id: 'cloud',
-    ...pair('sky'),
-    hue: 'sky',
-    title: 'Cloud AI platforms',
-    blurb: 'AWS, Azure and Google Cloud side by side: model APIs, ML platforms, agents, security and capacity.',
-  },
-  {
     id: 'edge',
     ...pair('cocoa'),
     hue: 'cocoa',
     title: 'Edge and on-device AI',
     blurb: 'Latency, memory and power budgets when the model runs on the device: hardware, runtimes, real-time audio, tiny models and shipping to a fleet.',
+  },
+  {
+    id: 'cloud',
+    ...pair('sky'),
+    hue: 'sky',
+    title: 'Cloud AI platforms',
+    blurb: 'AWS, Azure and Google Cloud side by side: model APIs, ML platforms, agents, security and capacity.',
   },
   {
     id: 'cost',

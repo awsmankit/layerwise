@@ -15,6 +15,8 @@ sources:
   - label: "Denoising Diffusion Probabilistic Models (Ho et al., 2020)"
     url: https://arxiv.org/abs/2006.11239
 ---
+import Callout from '../../../components/ui/Callout.astro';
+
 
 import PipelineFlow from '../../../components/viz/PipelineFlow.tsx';
 import Deep from '../../../components/ui/Deep.astro';
@@ -22,6 +24,16 @@ import Deep from '../../../components/ui/Deep.astro';
 In the last lesson, words became numbers. But many AI apps do more than read. They can look at photos, listen to voices and even draw.
 
 How? The trick is the same as before: turn everything into numbers first.
+
+<Callout title="Before, now and why">
+
+**Before:** A photo looks like a picture to us, and sound like noise.
+
+**Now:** A photo is a grid of pixel numbers and sound is a stream of numbers, cut into pieces for the model to read.
+
+**Why it matters:** It is the same trick as words, which is why one kind of model can handle text, images and audio.
+
+</Callout>
 
 ## A photo is already numbers
 

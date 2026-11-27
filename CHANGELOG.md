@@ -8,6 +8,18 @@ Versions follow [semantic versioning](https://semver.org/), read for a learning 
 - **Minor**: new lessons, labs, tools or features.
 - **Patch**: fixes and small corrections (wording, links, layout, accessibility).
 
+## [2.16.0] - 2026-11-27: Daily cards you can teach from, and a clearer path for newcomers
+
+The Daily card now teaches a little more and is built for you to add your own words. The topics and the "I’m new to AI" path follow one story, and every AI basics lesson opens with what was true before, what is true now and why it matters.
+
+- Term cards now carry one or two points from the lesson behind the term, under "Worth knowing", so the picture teaches more than the definition.
+- Every caption ends with a question that invites replies, and the Daily card page has a "Make it yours" panel with sentence starters to finish in your own words.
+- The topics on the home page and the lesson list now run in a learning order, from AI basics and skills through maths, machine learning, deep learning, LLMs and agents to running AI in production.
+- The "I’m new to AI" path now tells one story: what AI is, where you meet it, its history, how it learns, how a chatbot answers, how to use it safely, and what to watch for.
+- 16 AI basics lessons open with a short "Before, now and why" box. The lessons themselves are unchanged.
+
+**At this release:** 191 lessons in 18 topics, 24 practice labs, 880 glossary terms.
+
 ## [2.15.0] - 2026-11-18: Maths for ML: its own track, with interactive lessons
 
 The maths behind machine learning now has its own track. Each lesson explains one idea in plain words, with a picture you can move, the formula, and where it shows up in models. The track starts with integration for beginners and covers probability, calculus, linear algebra, statistics and information theory.
@@ -298,6 +310,7 @@ Animated AI engineering lessons, games and tools, covering AWS, Azure and Google
 
 **At this release:** 44 lessons in 12 topics, 0 practice labs, 79 glossary terms.
 
+[2.16.0]: https://github.com/awsmankit/layerwise/compare/v2.15.0...v2.16.0
 [2.15.0]: https://github.com/awsmankit/layerwise/compare/v2.14.0...v2.15.0
 [2.14.0]: https://github.com/awsmankit/layerwise/compare/v2.13.1...v2.14.0
 [2.13.1]: https://github.com/awsmankit/layerwise/compare/v2.13.0...v2.13.1

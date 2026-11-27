@@ -36,6 +36,24 @@ export const repoUrl = 'https://github.com/awsmankit/layerwise';
 
 export const releases: Release[] = [
   {
+    version: '2.16.0',
+    date: '2026-11-27',
+    title: 'Daily cards you can teach from, and a clearer path for newcomers',
+    summary: 'The Daily card now teaches a little more and is built for you to add your own words. The topics and the "I\u2019m new to AI" path follow one story, and every AI basics lesson opens with what was true before, what is true now and why it matters.',
+    highlights: [
+      'Term cards now carry one or two points from the lesson behind the term, under "Worth knowing", so the picture teaches more than the definition.',
+      'Every caption ends with a question that invites replies, and the Daily card page has a "Make it yours" panel with sentence starters to finish in your own words.',
+      'The topics on the home page and the lesson list now run in a learning order, from AI basics and skills through maths, machine learning, deep learning, LLMs and agents to running AI in production.',
+      'The "I\u2019m new to AI" path now tells one story: what AI is, where you meet it, its history, how it learns, how a chatbot answers, how to use it safely, and what to watch for.',
+      '16 AI basics lessons open with a short "Before, now and why" box. The lessons themselves are unchanged.',
+    ],
+    tryIt: [
+      { label: 'Daily card', href: '/share/' },
+      { label: 'A short history of AI', href: '/learn/start/a-short-history-of-ai/' },
+    ],
+    stats: { lessons: 191, topics: 18, labs: 24, glossary: 880 },
+  },
+  {
     version: '2.15.0',
     date: '2026-11-18',
     title: 'Maths for ML: its own track, with interactive lessons',

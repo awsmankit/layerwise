@@ -95,7 +95,7 @@ function draw(ctx: CanvasRenderingContext2D, card: Card, format: Format, siteHos
 
   if (hasBody) {
     const bodyFont = `400 {s}px ${BODY}`;
-    const b = fitText(card.body, W - 2 * M, bottom - y, { max: 44, min: 28, step: 2, lineHeight: 1.35 }, measure(bodyFont));
+    const b = fitText(card.body, W - 2 * M, hasBullets ? (bottom - y) * 0.4 : bottom - y, { max: 44, min: 28, step: 2, lineHeight: 1.35 }, measure(bodyFont));
     ctx.fillStyle = '#e7e4ff';
     ctx.font = bodyFont.replace('{s}', String(b.size));
     y += b.size;
@@ -337,6 +337,13 @@ export default function ShareCard({ siteUrl, buildDay }: { siteUrl: string; buil
           <div className="sh-text">
             <h2>Caption</h2>
             <pre className="sh-pre">{card.caption}</pre>
+            <h2>Make it yours</h2>
+            <p>Finish one of these in your own words and put it at the top of the caption. A post in your voice gets more replies than the card alone.</p>
+            <ul>
+              {card.angle.map((a) => (
+                <li key={a}>{a}</li>
+              ))}
+            </ul>
             {card.firstComment && (
               <>
                 <h2>First comment (the answer)</h2>

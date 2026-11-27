@@ -11,6 +11,8 @@ sources:
   - label: "Google's Machine Learning Crash Course: Embeddings"
     url: https://developers.google.com/machine-learning/crash-course/embeddings
 ---
+import Callout from '../../../components/ui/Callout.astro';
+
 
 import TokenChips from '../../../components/viz/TokenChips.tsx';
 import EmbeddingSpace from '../../../components/viz/EmbeddingSpace.tsx';
@@ -19,6 +21,16 @@ import Deep from '../../../components/ui/Deep.astro';
 Computers only work with numbers. Every photo, song and message on your phone is stored as numbers. So how does a chatbot read the words you type?
 
 It turns them into numbers, in three steps. Think of it as a post office: first cut the letter up, then number each piece, then work out where it lives.
+
+<Callout title="Before, now and why">
+
+**Before:** A computer only handles numbers, so words look like nothing to it.
+
+**Now:** Text is cut into tokens, each token gets a number, and that number is placed in a space of meaning.
+
+**Why it matters:** A model can only do sums on numbers, so this step is what makes language work at all.
+
+</Callout>
 
 ## Step one: cut the text into pieces
 

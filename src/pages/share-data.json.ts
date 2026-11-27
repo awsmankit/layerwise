@@ -25,7 +25,11 @@ export const GET: APIRoute = async () => {
 
   const term: Pools['term'] = glossary
     .filter((g) => g.lesson && g.short.length >= 40 && g.short.length <= 190)
-    .map((g) => ({ id: g.id, term: g.term, short: g.short, lesson: g.lesson as string, lessonTitle: lessonTitleByPath.get(g.lesson as string) }));
+    .map((g) => {
+      const key = (g.lesson as string).replace(/^\/learn\//, '').replace(/\/$/, '');
+      const more = (extras[key]?.takeaways ?? []).filter((x) => x.length >= 30 && x.length <= 140).slice(0, 2);
+      return { id: g.id, term: g.term, short: g.short, lesson: g.lesson as string, lessonTitle: lessonTitleByPath.get(g.lesson as string), ...(more.length ? { more } : {}) };
+    });
 
   const whatif: Pools['whatif'] = whatifs.map((w) => ({ slug: w.slug, title: w.title, blurb: w.blurb, takeaways: w.takeaways }));
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CYCLE, KIND_LABEL, cardForDay, clip, dayIndexFromIso, dayIndexOf, fitBullets, fitText, isoOf, shuffled, slotFor, type Pools } from './daily-card';
+import { ANGLE, CYCLE, KIND_LABEL, cardForDay, clip, dayIndexFromIso, dayIndexOf, fitBullets, fitText, isoOf, shuffled, slotFor, type Pools } from './daily-card';
 
 const mk = (n: number, f: (i: number) => object) => Array.from({ length: n }, (_, i) => f(i));
 const pools: Pools = {
@@ -165,5 +165,30 @@ describe('cards from written interview answers', () => {
       expect(c.path).toContain(first[0]);
     }
     expect(cards.some((c) => c.bulletsHeading === 'A strong answer covers')).toBe(true);
+  });
+});
+
+describe('cards to write on', () => {
+  it('gives every kind three sentence starters and ends each caption with a question before the tags', () => {
+    for (let d = 0; d < 14; d++) {
+      const c = cardForDay(d, pools, URL)!;
+      expect(c.angle).toEqual(ANGLE[c.kind]);
+      expect(c.angle).toHaveLength(3);
+      const lines = c.caption.trim().split('\n\n');
+      expect(lines[lines.length - 1]).toMatch(/^#AI/);
+      expect(lines[lines.length - 2]).toMatch(/\?$|\.$/);
+    }
+  });
+
+  it('lets a term card teach more than the definition when the lesson has points', () => {
+    const withMore: Pools = { ...pools, term: [{ id: 't', term: 'Token', short: 'A piece of text.', lesson: '/learn/start/x/', more: ['First point from the lesson.', 'Second point from the lesson.', 'Third.'] }] };
+    const day = Array.from({ length: 7 }, (_, d) => d).find((d) => slotFor(d).kind === 'term')!;
+    const c = cardForDay(day, withMore, URL)!;
+    expect(c.bullets).toEqual(['First point from the lesson.', 'Second point from the lesson.']);
+    expect(c.bulletsHeading).toBe('Worth knowing');
+    expect(c.caption).toContain('• First point from the lesson.');
+    const plain = cardForDay(day, pools, URL)!;
+    expect(plain.bullets).toEqual([]);
+    expect(plain.bulletsHeading).toBe('');
   });
 });

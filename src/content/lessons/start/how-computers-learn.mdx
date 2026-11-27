@@ -13,6 +13,8 @@ sources:
   - label: "Google's Machine Learning Crash Course: Fairness"
     url: https://developers.google.com/machine-learning/crash-course/fairness
 ---
+import Callout from '../../../components/ui/Callout.astro';
+
 
 import FruitSort from '../../../components/viz/FruitSort.tsx';
 import DoodleTrainer from '../../../components/viz/DoodleTrainer.tsx';
@@ -21,6 +23,16 @@ import Deep from '../../../components/ui/Deep.astro';
 How did you learn what a dog looks like? Nobody gave you a list of rules. You saw lots of dogs, big and small, and your brain worked it out.
 
 Many computers learn in a similar way. In this lesson, you will teach one yourself.
+
+<Callout title="Before, now and why">
+
+**Before:** A person wrote the rules one by one, such as 'longer than this means banana'.
+
+**Now:** The computer is shown examples with the right answers and finds the best setting of its dial.
+
+**Why it matters:** Messy questions like 'is this a dog?' are too hard to write as rules, but examples can teach them.
+
+</Callout>
 
 ## Rules or examples
 

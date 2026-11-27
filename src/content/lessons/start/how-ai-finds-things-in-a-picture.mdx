@@ -21,6 +21,8 @@ sources:
   - label: "EuroShop magazine: AI product recognition in self-checkout (27 May 2026)"
     url: https://www.euroshop-tradefair.com/en/media-news/euroshopmag/retail-technology/ai-product-recognition-in-self-checkout
 ---
+import Callout from '../../../components/ui/Callout.astro';
+
 
 import PixelDetective from '../../../components/viz/PixelDetective.tsx';
 import PipelineFlow from '../../../components/viz/PipelineFlow.tsx';
@@ -29,6 +31,16 @@ import Deep from '../../../components/ui/Deep.astro';
 You spot a cat in a photo in a blink. For a computer, the same job is hard. Why?
 
 In this lesson you will see how it can be done. Then you will play detective yourself.
+
+<Callout title="Before, now and why">
+
+**Before:** A photo is just a grid of coloured dots, and a cat is nowhere in it.
+
+**Now:** The computer starts with tiny patterns like edges, then combines them into bigger shapes.
+
+**Why it matters:** Starting small makes an impossible-looking job a long list of easy ones.
+
+</Callout>
 
 ## A photo is a grid of numbers
 
